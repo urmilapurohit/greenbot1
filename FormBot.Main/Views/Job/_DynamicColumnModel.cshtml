@@ -1,0 +1,251 @@
+﻿<div class="modal fade" id="EditColumnsPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Edit Columns</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="form-border" id="EditColumnsView">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div  id="AddColumnsView">
+                        </div>
+                        
+                    </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" style="float: left" class="btn primary icon-btn" tabindex="100" id="btnResetColumns"><span class="sprite-img save_ic"></span>Reset Columns</button>
+                <button type="button" class="btn primary icon-btn" tabindex="100" id="btnSaveUserWiseColumns"><span class="sprite-img save_ic"></span>Save</button>
+                <button type="button" class="btn default cancel_ic" tabindex="101" id="btnCancelUserWiseColumns">Cancel</button>
+            </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ColumnsMasterPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Add Columns</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border" id="AddColumnsView">
+                    @*@Html.Action("AddColumns", "Job")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var MenuId = 0;
+    $(document).ready(function () {
+        //$(document).on('click', '#btnAddColumnID', function (e) {
+        //    var orderNo = 0;
+        //    e.preventDefault();
+        //    $('.columnmaster li[data-columnid="2"]').find('input[type="checkbox"]').prop("checked", true);
+        //    if ($('.columnmaster input[type=checkbox]:checked').closest('li').length > 0) {
+        //        $('ul#userWiseColumnsList li').remove();
+        //        $('.columnmaster input[type=checkbox]:checked').closest('li').each(function () {
+        //            var columnid = $(this).data("columnid");
+        //            var columndisplay = $(this).data("columndisplay");
+        //            if ($('ul#userWiseColumnsList li[data-columnid=' + columnid + ']').length == 0) {
+        //                var orderNo = $('ul#userWiseColumnsList li').length;
+        //                orderNo = orderNo + 1;
+        //                var $html = $($('#divAddNewColumnTemplate').html()
+        //                    .replace(/##OrderNumber##/gi, orderNo)
+        //                    .replace(/##ColumnID##/gi, columnid)
+        //                    .replace(/##DisplayName##/gi, columndisplay)
+        //                );
+        //                if (columnid == 2) {
+        //                    $html.find('.delete').removeAttr('href');
+        //                    $html.find('.delete').removeAttr('onclick');
+        //                    $html.find('.delete').removeAttr('title');
+        //                    $html.find('.delete').attr("disabled", "true");
+        //                    $html.find('.delete').attr("title", "Ref Number is mandatory column for JobList.")
+        //                }
+        //                $("#userWiseColumnsList").append($html);
+        //            }
+        //        });
+        //        $("#ColumnsMasterPopup").modal('hide');
+        //    }
+        //    else {
+        //        showErrorMessageColumnMaster("select atleast one column.");
+        //    }
+        //});
+
+        $(document).on("keyup", "#search-box", function (e) {
+            var filter = $(this).val();
+            $(".columnmaster li").each(function () {
+                if ($(this).text().search(new RegExp(filter, "i")) < 0) {
+                    $(this).hide();
+                } else {
+                    $(this).show()
+                }
+            });
+        })
+        //$(document).on("click", '#btnClearSearch', function (e) {
+        //    $('.columnmaster li').find('input[type="checkbox"]').prop("checked", false);
+        //    $('.panel').find('input[type="checkbox"]').prop("checked", false);
+        //    $('.columnmaster li[data-columnid="2"]').find('input[type="checkbox"]').prop("checked", true);
+        //});
+
+        $(document).on("click", "#EditColumnsPopup .collection-item", function (e) {
+            if ($(this).hasClass("active")) {
+                $(this).find('span').find(".sprite-img").removeClass("active")
+                $(this).removeClass("active")
+            } else {
+                $(this).find('span').find(".sprite-img").addClass("active")
+                $(this).addClass("active")
+            }
+            AddColumn()
+        })
+        $('#EditColumnsPopup').on('shown.bs.modal', function () {
+            fnNiceScroll();
+            fnNiceScrollResize();
+        });
+    });
+
+    function EditColumns(MenuId) {
+        MenuId = MenuId;
+        $("#errorMsgRegionUserWiseColumns").hide();
+        $("#successMsgRegionUserWiseColumns").hide();
+        $('#EditColumnsPopup').modal({ backdrop: 'static', keyboard: false });
+        $.get(urlEditColumnsForJobIndex + "?MenuId=" + MenuId, function (data) {
+            $('#EditColumnsView').empty();
+            $('#EditColumnsView').append(data);
+            $.get(urlAddColumns + "?MenuId=" + MenuId, function (data) {
+                $('#AddColumnsView').empty();
+                $('#AddColumnsView').append(data);
+                SelectColumnBasedOnColumnList();
+                fnNiceScroll();
+                fnNiceScrollResize();
+            });
+        });
+        
+        
+    }
+
+    function AddColumn() {
+        if ($('.columnmaster li.active').length > 0) {
+            $('ul#userWiseColumnsList li').remove();
+            $('.columnmaster li.active').each(function () {
+                var columnid = $(this).data("columnid");
+                var columndisplay = $(this).data("columndisplay");
+                if ($('ul#userWiseColumnsList li[data-columnid=' + columnid + ']').length == 0) {
+                    var orderNo = $('ul#userWiseColumnsList li').length;
+                    orderNo = orderNo + 1;
+                    var $html = $($('#divAddNewColumnTemplate').html()
+                        .replace(/##OrderNumber##/gi, orderNo)
+                        .replace(/##ColumnID##/gi, columnid)
+                        .replace(/##DisplayName##/gi, columndisplay)
+                    );
+                    if (MenuId == JobView) {
+                        if (columnid == 2) {
+                            $html.find('.delete').removeAttr('href');
+                            $html.find('.delete').removeAttr('onclick');
+                            $html.find('.delete').removeAttr('title');
+                            $html.find('.delete').attr("disabled", "true");
+                            $html.find('.delete').attr("title", "Ref Number is mandatory column for JobList.")
+                        }
+                    } else if (MenuId == STCSubmissionView) {
+                        if (columnid == 146 || columnid == 148 || columnid == 149 || columnid == 151 || columnid == 152 || columnid == 153 || columnid == 155 || columnid == 175) {
+                            $html.find('.delete').removeAttr('href');
+                            $html.find('.delete').removeAttr('onclick');
+                            $html.find('.delete').removeAttr('title');
+                            $html.find('.delete').attr("disabled", "true");
+                            $html.find('.delete').attr("title", columndisplay + " is mandatory column for STC Submission.")
+                        }
+                    } else if (MenuId == STCInvoiceView) {
+                        if (columnid == 314 || columnid == 315 || columnid == 316 || columnid == 321 || columnid == 322 || columnid == 323 || columnid == 317 || columnid == 318 || columnid == 319 || columnid == 320 || columnid == 324) {
+                            $html.find('.delete').removeAttr('href');
+                            $html.find('.delete').removeAttr('onclick');
+                            $html.find('.delete').removeAttr('title');
+                            $html.find('.delete').attr("disabled", "true");
+                            $html.find('.delete').attr("title", columndisplay + " is mandatory column for STC Invoice.")
+                        }
+                    }
+                    
+                    $("#userWiseColumnsList").append($html);
+                }
+            });
+        }
+        else {
+            showErrorMessageColumnMaster("select atleast one column.");
+        }
+    }
+
+    function showErrorMessageUserWiseColumns(message) {
+        $(".alert").hide();
+        $("#successMsgRegionUserWiseColumns").hide();
+        $("#errorMsgRegionUserWiseColumns").html(closeButton + message);
+        $("#errorMsgRegionUserWiseColumns").show();
+    }
+
+    function showSuccessMessageUserWiseColumns(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionUserWiseColumns").hide();
+        $("#successMsgRegionUserWiseColumns").html(closeButton + message);
+        $("#successMsgRegionUserWiseColumns").show();
+    }
+
+    function showErrorMessageColumnMaster(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionColumnMaster").html(closeButton + message);
+        $("#errorMsgRegionColumnMaster").show();
+    }
+
+    function DeleteUserWiseColumnsItem(columnid) {
+        if (confirm('Are you sure you want to delete this column item?')) {
+            $('ul#userWiseColumnsList li[data-columnid=' + columnid + ']').remove();
+            SelectColumnBasedOnColumnList();
+        }
+    }
+
+    function SelectColumnBasedOnColumnList() {
+        $('.columnmaster li').removeClass("active");
+        $('.columnmaster li').find('span').find('.sprite-img').removeClass("active");
+        $('ul#userWiseColumnsList li').each(function (i, item) {
+            var colid = $(item).data('columnid');
+            $('.columnmaster li[data-columnid=' + colid + ']').addClass("active");
+            $('.columnmaster li[data-columnid=' + colid + ']').find('span').find('.sprite-img').addClass("active");
+            if (MenuId == JobView && colid == 2) {
+                $('.columnmaster li[data-columnid=' + colid + ']').addClass("disabled");
+                $(this).find('.delete').removeAttr('href');
+                $(this).find('.delete').removeAttr('onclick');
+                $(this).find('.delete').removeAttr('title');
+                $(this).find('.delete').attr("disabled", "true");
+                $(this).find('.delete').attr("title", "Ref Number is mandatory column for JobList.")
+            }
+            if (MenuId == STCSubmissionView && (colid == 146 || colid == 148 || colid == 149 || colid == 151 || colid == 152 || colid == 153 || colid == 155 || colid == 175)) {
+                $('.columnmaster li[data-columnid=' + colid + ']').addClass("disabled");
+                $(this).find('.delete').removeAttr('href');
+                $(this).find('.delete').removeAttr('onclick');
+                $(this).find('.delete').removeAttr('title');
+                $(this).find('.delete').attr("disabled", "true");
+                $(this).find('.delete').attr("title", $(this).text().trim() + " is mandatory column for JobList.")
+            }
+            else if (MenuId == STCInvoiceView && (colid == 314 || colid == 315 || colid == 316 || colid == 321 || colid == 322 || colid == 323 || colid == 317 || colid == 318 || colid == 319 || colid == 320 || colid == 324)) {
+                $('.columnmaster li[data-columnid=' + colid + ']').addClass("disabled");
+                $(this).find('.delete').removeAttr('href');
+                $(this).find('.delete').removeAttr('onclick');
+                $(this).find('.delete').removeAttr('title');
+                $(this).find('.delete').attr("disabled", "true");
+                $(this).find('.delete').attr("title", $(this).text().trim() + " is mandatory column for STC Invoice.")
+            }
+            
+        });
+
+    }
+</script>
+

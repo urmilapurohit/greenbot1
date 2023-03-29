@@ -1,0 +1,327 @@
+﻿@model FormBot.Entity.CreateVEEC
+@using FormBot.Helper;
+
+<style type="text/css">
+    .deleteJobVisit {
+        background: #EDD6D6 !important;
+    }
+
+    .deleteInfo {
+        color: #6b6b6b;
+        font-size: 12px;
+        padding-right: 20px;
+        background: url('../Images/ic-info.png') no-repeat 100% center;
+        position: absolute;
+        top: 14px;
+        right: 35px;
+        cursor: default !important;
+        z-index: 1;
+    }
+
+    #mdlSlideShow .modal {
+        text-align: center;
+    }
+
+    .disableNavigation {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+
+
+    #mdlSlideShow .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .arrow-next {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prev {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    /*@@media screen and (min-width: 768px) {
+        .lb-outerContainer .lb-image {
+            height: 500px !important;
+            width: 500px !important;
+        }
+    }
+
+     .lb-outerContainer .lb-image {
+            height: 800px !important;
+            width: 800px !important;
+        }
+        */
+    .lb-dataContainer .lb-details {
+        /*display: none !important;*/
+    }
+
+    .lb-dataContainer {
+        z-index: 9999;
+        position: fixed;
+        padding: 10px;
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    /*.lb-outerContainer {
+        background: none !important;
+    }*/
+
+    .lb-closeContainer {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainer > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainer > a:hover {
+                opacity: 0.5;
+            }
+
+    /*.lb-container img {
+        width: auto !important;
+        height: auto !important;
+        border: 2px solid #fff;
+    }*/
+
+    .HideOverflow {
+        overflow: hidden;
+    }
+
+    #lightbox {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        /* bring your own prefixes */
+        transform: translate(-50%, -50%) !important;
+    }
+
+    #MapPopup {
+        z-index: 9999999 !important;
+    }
+
+    
+
+</style>
+
+@*<link href="~/Content/lightbox.css" rel="stylesheet" />*@
+@*<script src="~/Scripts/jqueryrotate.min.js"></script>*@
+@*<script src="~/Scripts/jQueryRotate.js"></script>*@
+
+<script>
+    //$('#clpsAll').click(function (e) {
+    //    $('.collapse').collapse('hide');
+    //    e.preventDefault();
+    //});
+
+    //$('#lnkDwnldAll').click(function (e) {
+    //    e.preventDefault();
+    //    downloadAllAsZip(1);
+    //});
+
+    //$('#lnkDwnld').click(function (e) {
+    //    e.preventDefault();
+    //    downloadAllAsZip(0);
+    //});
+
+    function resizeImage() {
+        $('body').addClass('HideOverflow');
+    }
+</script>
+
+
+
+
+
+<div class="job-com-box" id="divJobPhotos">
+
+        <div class="sub-title clearfix">
+            <h4>Veecs Photos</h4>
+            <ul class="option-list">
+                <li><a href="javascript:void(0)" onclick="clpsAllVeecPhotos_click()" title="Collapse All" id="clpsAll">Collapse All</a></li>
+                <li><a href="javascript:void(0)" onclick="lnkDwnldVeecPhotos_click()" title="Download" id="lnkDwnld">Download</a></li>
+                <li><a href="javascript:void(0)" onclick="lnkDwnldAllVeecPhotos_click()" title="Download All" id="lnkDwnldAll">Download All</a></li>
+                <li>
+                    <input id="uploadBtnPhotoVeec" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    <a href="javascript:void(0)" onclick="uploadBtnVeecPhoto_click()" title="Upload Photos" style="text-decoration:none;" id="btnUpload">Upload Photos</a>
+                <li><a href="javascript:void(0)" title="Delete" onclick="lnkUncheckVeecPhotos_click()" id="lnkUncheck">Uncheck</a></li>
+                <li><a href="javascript:void(0)" title="Delete" onclick="lnkDeleteVeecPhotos_click()" id="lnkDelete">Delete</a></li>
+            </ul>
+        </div>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionVeecPhoto" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionVeecPhoto" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <!-- ====================== -->
+        <div class="visit-list" id="divVisitList">
+            <div class="panel-group" id="accordion8" role="tablist" aria-multiselectable="true">
+                @if (Model.lstArea != null)
+                {
+                    for (int i = 0; i < Model.lstArea.Count; i++)
+                    {
+                        <div class="panel" id="pnlMain1@(i)" data-isdeleted="@Model.lstArea[i].IsDeleted" data-veecareaid="@Model.lstArea[i].VEECAreaId">
+
+                            @if (Model.lstArea[i].IsDeleted)
+                            {
+                                <div class="panel-heading submission-add deleteJobVisit visitParent" role="photo-tab" id="heading1@(i)">
+                                    <span class="deleteInfo" title="Visit item has been deleted">&nbsp;</span>
+                                    <input type="checkbox" class="veec-visit-list-check" data-veecareaid="@Model.lstArea[i].VEECAreaId">
+                                    <a role="button" data-toggle="collapse" data-name="@Model.lstArea[i].Name" data-parent="#accordion8" href="#collapse1@(i)" aria-expanded="false" aria-controls="collapse1@(i)">
+                                        <i class="sprite-img folder-icon"></i>
+                                        <span>@Model.lstArea[i].Name</span>
+                                        <i class="sprite-img arrow-icon"></i>
+                                    </a>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="panel-heading submission-add visitParent" role="photo-tab" id="heading1@(i)">
+                                    <input type="checkbox" class="visit-list-check" data-veecareaid="@Model.lstArea[i].VEECAreaId">
+                                    <a role="button" data-toggle="collapse" data-name="@Model.lstArea[i].Name" data-parent="#accordion8" href="#collapse1@(i)" aria-expanded="false" aria-controls="collapse1@(i)">
+                                        <i class="sprite-img folder-icon"></i>
+                                        <span>@Model.lstArea[i].Name</span>
+                                        <i class="sprite-img arrow-icon"></i>
+                                    </a>
+                                </div>
+                            }
+
+                            <div id="collapse1@(i)" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="heading1@(i)">
+
+                                <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+
+                                    @for (int k = 0; k < Model.lstArea[i].veecFolder.Count; k++)
+                                    {
+                                        <div class="panel">
+                                            <div class="panel-heading mainFolder" role="photo-subtab" id="headingpanel-011@(k)">
+                                                <input type="checkbox" class="visit-list-check parentInput" data-veecareaid="@Model.lstArea[i].VEECAreaId" data-veecareaname="@Model.lstArea[i].Name" data-vcpid="@Model.lstArea[i].veecFolder[k].Id" data-folder="@Model.lstArea[i].veecFolder[k].FolderName" data-parentFolder="">
+                                                <a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial1@(i)@(k)@Model.lstArea[i].veecFolder[k].Id" data-name="@Model.lstArea[i].veecFolder[k].FolderName" aria-expanded="false" aria-controls="panel-serial1@(i)@(k+Model.lstArea[i].veecFolder[k].Id)">
+                                                    @Model.lstArea[i].veecFolder[k].FolderName
+                                                </a>
+                                            </div>
+                                            @if (Model.lstArea[i].veecFolder[k].subFolder.Count == 0)
+                                            {
+                                                <div id="panel-serial1@(i)@(k)@Model.lstArea[i].veecFolder[k].Id" class="panel-collapse collapse in" role="photo-subtab" aria-labelledby="headingpanel-011@(k)">
+                                                    <ul class="panel-body">
+                                                        @for (int j = 0; j < Model.lstArea[i].veecFolder[k].lstPhotos.Count; j++)
+                                                        {
+                                                            <li data-path="@Model.lstArea[i].veecFolder[k].lstPhotos[j].FullPath" data-vclid="@Model.lstArea[i].veecFolder[k].lstPhotos[j].veecPhotosId">
+                                                                <input type="checkbox" class="visit-list-check">
+                                                                <a data-date="@Model.lstArea[i].veecFolder[k].lstPhotos[j].CreatedDate" data-lat="@Model.lstArea[i].veecFolder[k].lstPhotos[j].Longitude" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath, Model.lstArea[i].veecFolder[k].lstPhotos[j].FullPath)" data-lightbox="property" title=" ">@Model.lstArea[i].veecFolder[k].lstPhotos[j].Name</a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div id="panel-serial1@(i)@(k)@Model.lstArea[i].veecFolder[k].Id" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingpanel-011@(k)">
+                                                    <div class="panel-group inner-panel" id="accordion03" role="tablist" aria-multiselectable="true">
+                                                        @for (int j = 0; j < Model.lstArea[i].veecFolder[k].subFolder.Count; j++)
+                                                        {
+                                                            <div class="panel">
+                                                                <div class="panel-heading subFolder" role="photo-subtab" id="headingpanel-012@(k)">
+                                                                    <input type="checkbox" class="visit-list-check parentInput" data-veecareaid="@Model.lstArea[i].VEECAreaId" data-veecareaname="@Model.lstArea[i].Name" data-vcpid="@Model.lstArea[i].veecFolder[k].subFolder[j].Id" data-folder="@Model.lstArea[i].veecFolder[k].subFolder[j].FolderName" data-parentFolder="@Model.lstArea[i].veecFolder[k].FolderName">
+                                                                    <a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial1@(k)@(j)@(i)@Model.lstArea[i].veecFolder[k].subFolder[j].Id" data-name="@Model.lstArea[i].veecFolder[k].subFolder[j].FolderName" aria-expanded="false" aria-controls="panel-serial1@(k)@(j + Model.lstArea[i].veecFolder[k].subFolder[j].Id)">
+                                                                        @Model.lstArea[i].veecFolder[k].subFolder[j].FolderName
+                                                                    </a>
+                                                                </div>
+                                                                <div id="panel-serial1@(k)@(j)@(i)@Model.lstArea[i].veecFolder[k].subFolder[j].Id" class="panel-collapse collapse in" role="photo-subtab" aria-labelledby="headingpanel-012@(k)">
+                                                                    <ul class="panel-body">
+                                                                        @for (int l = 0; l < Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos.Count; l++)
+                                                                        {
+                                                                            <li data-path="@Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].FullPath" data-vclid="@Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].veecPhotosId">
+                                                                                <input type="checkbox" class="visit-list-check">
+                                                                                <a data-date="@Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].CreatedDate" data-lat="@Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].Longitude" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath, Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].FullPath)" data-lightbox="property" title=" ">@Model.lstArea[i].veecFolder[k].subFolder[j].lstPhotos[l].Name</a>
+                                                                            </li>
+                                                                        }
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+        </div>
+    </div>
+
+
+<div class="modal fade bd-example-modal-lg" id="mdlSlideShow">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    @*<div class="modal-header">
+
+
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <img src="~/images/close-btn.png" alt="">
+                            </button>
+
+                            <h4 class="modal-title" id="myModalLabel"><span id="mdlTitle">Modal title</span> - <span id="hdrFileName"></span></h4>
+
+                        </div>*@
+                    <div class="modal-body" id="slideBody">
+                        <div class="form-border" style="position:relative;">
+                            <div id="signMyProfile">
+                                <div style="max-width:1200px;max-height:800px;" class="text-center">
+                                    <img id="imgSlide" style="display:inline;" />
+                                </div>
+                            </div>
+                            <div class="arrow-block" style="position:absolute; left:0px; right:0px; top:50%;">
+                                <button type="button" class="btn btn-primary" id="btnPrev"><</button>
+                                <button type="button" class="btn btn-primary" style="float:right;" id="btnNext">></button>
+                            </div>
+                        </div>
+                        @*<div class="modal-footer">
+                                <button type="button" class="btn btn-primary" id="btnR">Previous</button>
+                                <button type="button" class="btn btn-primary" style="margin-right: 5px;" id="btnL">Next</button>
+                            </div>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+<link href="~/Content/lightbox.css" rel="stylesheet" />
+<script src="~/Scripts/jqueryrotate.min.js"></script>
+@*<script src="~/Scripts/jQueryRotate.js"></script>*@
+<script src="~/Scripts/View/VEEC/_VeecPhotosNew.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>

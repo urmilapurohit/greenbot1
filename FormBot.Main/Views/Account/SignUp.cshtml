@@ -1,0 +1,723 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+@using (Html.BeginForm("SignUp", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+    <div class="container-fluid">
+        <div class="title">
+            @if (Model.LoginCompanyName == null)
+            {
+                <h1>FormBot Sign Up</h1>
+                <a href="@Url.Action("Login", "Account" )" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+            }
+            else
+            {
+                <h1>Solar Company Sign Up</h1>
+                <a href="@Model.ResellerUrl" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+            }
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @Html.HiddenFor(m => m.AspNetUserId)
+        @Html.HiddenFor(m => m.UserId)
+        @Html.HiddenFor(m => m.UserTypeID)
+        @Html.HiddenFor(m => m.CreatedDate)
+        @Html.HiddenFor(m => m.Signature)
+        @Html.HiddenFor(m => m.SolarCompanyId)
+        @Html.HiddenFor(m => m.ResellerID)
+        @Html.HiddenFor(m => m.RoleID)
+        @Html.HiddenFor(m => m.Theme)
+        @Html.HiddenFor(m => m.ResellerUrl)
+        @Html.Partial("~/Views/User/_Details.cshtml", Model)
+    </div>
+}
+@section Scripts
+    {
+    @*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+        <script src="~/Scripts/jquery-1.11.0.min.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/jquery-1.10.2.js"></script>
+        <script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/bootstrap.min.js"></script>*@
+    <script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+    @*@Scripts.Render("~/bundles/jqueryval")
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        @Scripts.Render("~/Scripts/FormBot.js")*@
+    <script type="text/javascript">
+        var activeTab = 't1';
+        var chkUserName = true;
+        var chkCompanyABN = true;
+        var chkCECAccreditationNumber = true;
+        var chkLoginCompanyName = true;
+        var BaseURL= '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+        var resellerID='@Model.ResellerID';
+        var userID ='@Model.UserId';
+        var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+        var maxsize = Math.round(documentSizeLimit);
+        var USERID =@Model.UserId;
+        var logoWidth = 0, logoHeight = 0,SRCSign;
+
+        $(document).ready(function () {
+            $('.viewPre').show();
+            FillDropDown('UserTypeId', '@Url.Action("GetUserType", "UserType")', '@Model.UserTypeID', true, null);
+            FillDropDown('UnitTypeId', '@Url.Action("GetUnitType", "UnitType")', '@Model.UnitTypeID', true, null);
+            FillDropDown('StreetTypeId', '@Url.Action("GetStreetType", "StreetType")', '@Model.StreetTypeID', true, null);
+            FillDropDown('PostalAddressID', '@Url.Action("GetPostalAddress", "User")', @Model.PostalAddressID, true, null);
+            var userTypeId = '@Model.UserTypeID';
+            if (userTypeId != 0) {
+                ChangeUserType('@Model.UserTypeID');
+            }
+
+            if($('#imgSign').attr('src') != "")
+            {
+                var SignName = $('#imgSign').attr('src');
+                var guid = '@Model.UserId';
+                var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                var SRC = imagePath + "/" + SignName;
+                SRCSign = SRC;
+                //$('#imgSign').attr('src', SRC).load(function() { logoWidth=this.width; logoHeight=this.height});
+                $('#imgSign').attr('class',SignName);
+
+                $('#imgSignature').show();
+            }
+            if('@Model.FromDate' == "")
+            {
+                $("#fromDate").val("");
+            }
+            if('@Model.ToDate' == "")
+            {
+                $("#toDate").val("");
+            }
+            if(userTypeId == 4){
+                if(@Model.chkSTC == 0){
+                    $('.chkSCASignUp').hide();
+                }
+                else{
+                    $('.chkSCASignUp').show();
+                }
+            }
+
+            $("#Status").val(parseInt('@Model.Status'));
+            $('[name=SEDesigner][value=@Model.SEDesigner]').prop('checked',true)
+
+            //$("#UserTypeId").prop("disabled", true);
+            //$("#ResellerID").prop("disabled", true);
+            //$("#SolarCompanyId").prop("disabled", true);
+            //$("#CompanyName").prop("disabled", true);
+            //$("#UnitTypeId").prop("disabled", true);
+            //$("#StreetTypeId").prop("disabled", true);
+            //$("#Note").removeAttr("disabled");
+            //$('.ViewPassword').hide();
+
+            $('.viewPre').show();
+            $('.ViewBtn').hide();
+            $('.viewDetail').hide();
+            $('#btnCancelLast').show();
+            $('.SignUp').show();
+            $("#btnClosePopUpBox").click(function () {
+                $('#popupbox').modal('hide');
+            });
+            $("#btnClosepopupProof").click(function () {
+                $('#popupProof').modal('toggle');
+            });
+
+            $("#btnViewCancel").click(function () {
+                if(@Model.UserTypeID == 4)
+                {
+                    window.location.href = '@Url.Action("SCA","User")';
+                }else{
+                    window.location.href = '@Url.Action("SE","User")';
+                }
+            });
+
+            $('#horizontalTab').easyResponsiveTabs({
+                type: 'default', //Types: default, vertical, accordion
+                width: 'auto', //auto or any width like 600px
+                fit: true,   // 100% fit in a container
+                closed: 'accordion', // Start closed if in accordion view
+                activate: function (event) {
+                    // Callback function if tab is switched
+                    addRules();
+                    var $this = $(this);
+
+                    if (isValid && CheckShowMessages()) {
+                        activeTab = $this.attr('id');
+                        $('.form-box').find('input:first').focus();
+                    }
+                    else {
+                        // e.preventDefault();
+                        $this.removeClass('resp-tab-active');
+                        $('.resp-tab-content-active').css('display', 'none').removeClass('resp-tab-content-active');
+                        $('#' + activeTab).addClass('resp-tab-active');
+                        $('.tab' + activeTab.replace('t', '')).addClass('resp-tab-content-active').css('display', 'block');
+                        CheckShowMessages();
+                        return false;
+                    }
+                }
+            });
+            addressID = @Model.AddressID;
+            POAddress(addressID);
+            $("#AddressID").val(parseInt('@Model.AddressID'));
+
+            $('#verticalTab').easyResponsiveTabs({
+                type: 'vertical',
+                width: 'auto',
+                fit: true
+            });
+
+            var id = '@Model.CompanyABN';
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCompanyABN", "User")',
+                data: { id: id },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+                    if (data == 0) {
+                        $('#CompanyName').empty();
+                        $('#fromDate').val("");
+                        $('#toDate').val("");
+                        $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                    }
+                    else {
+                        if ($('#CompanyName option').length > 1) {
+                            $('#CompanyName').empty();
+                            $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        else {
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        initialize(data);
+                        var str ='@Model.CompanyName';
+                        if(str.indexOf('&#39') != -1)
+                        {
+                            var str =str.replace(/&#39;/g, "'");
+                        }
+                        else if(str.indexOf('&amp') != -1)
+                        {
+                            var str =str.replace(/&amp;/g, '&');
+                        }
+                        else if(str.indexOf('&quot') != -1)
+                        {
+                            var str =str.replace(/&quot;/g, '"');
+                        }
+                        else if(str.indexOf('&lt') != -1)
+                        {
+                            var str =str.replace(/&lt;/g, '<');
+                        }
+                        else if(str.indexOf('&gt') != -1)
+                        {
+                            var str =str.replace(/&gt;/g, '>');
+                        }
+                        $("#CompanyName").val(str);
+                        return data;
+                    }
+                }
+            });
+            $('.form-box').find('input:first').focus();
+        });
+
+        function validateForm() {
+            $.validator.unobtrusive.parse("#UserDetails");
+            addRules();
+            if ($("#UserDetails").valid() && CheckShowMessages()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        $('#ValidationSummaryClose').click(function(){
+            $("#ValidationSummary").hide();
+        });
+
+        function initialize(data) {
+            $("#CompanyName").change(function () {
+                $.each(data, function (key, value) {
+                    var Cname = value.CompanyName;
+                    var drpVal = $('select#CompanyName option:selected').val();
+                    if (Cname == drpVal) {
+                        $('#fromDate').val(value.strFromDate);
+                        $('#toDate').val(value.strToDate);
+                    }
+                });
+            });
+        }
+
+        function ChangeUserType(unitTypeID) {
+            $('.form-box').find('input:first').focus();
+            $('input[type=text]').each(function () {
+                // $(this).val('');
+                $(this).attr('class', 'form-control valid');
+            });
+
+            $(".field-validation-error").attr('class', 'field-validation-valid');
+
+            if (unitTypeID == "") {
+                defaultHideField();
+            }
+            else if (unitTypeID == 1) {
+                $('.RA').hide();
+                $('.RAM').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.SCO').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.FSA').show();
+                $('.defaultFormBot').show();
+            }
+            else if (unitTypeID == 2) {
+                $('.FSA').hide();
+                $('.FCO').hide();
+                $('.RAM').hide();
+                $('.SCA').hide();
+                $('.SCO').hide();
+                $('.SSC').hide();
+                $('.SE').hide();
+                $('.SC').hide();
+                $('.RA').show();
+                if ($("#UsageType").val() == "3") {
+                    $('.SAAS').show();
+                }
+                $('.defaultFormBot').show();
+            }
+            else if (unitTypeID == 3) {
+                $('.FSA').hide();
+                $('.RA').hide();
+                $('.RAM').hide();
+                $('.SCA').hide();
+                $('.SCO').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.FCO').show();
+                $('.defaultFormBot').show();
+            }
+            else if (unitTypeID == 4) {
+                $('.FSA').hide();
+                $('.FCO').hide();
+                $('.RA').hide();
+                $('.RAM').hide();
+                $('.SCO').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.SCA').show();
+                $('.ProfileSCO').show();
+                $('.ProfileRA').hide();
+                $('.defaultFormBot').show();
+                $('#lblCECAccreditationNumber').addClass("required");
+            }
+            else if (unitTypeID == 5) {
+                $('.RA').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.FSA').hide();
+                $('.SCO').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.RAM').show();
+                $('.defaultFormBot').show();
+            }
+            else if (unitTypeID == 6) {
+                $('.RA').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.FSA').hide();
+                $('.SCO').hide();
+                $('.RAM').hide();
+                $('.SE').hide();
+                $('.SC').hide();
+                $('.SSC').show();
+                $('.defaultFormBot').show();
+            }
+            else if (unitTypeID == 7) {
+                $('.RA').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.FSA').hide();
+                $('.SCO').hide();
+                $('.RAM').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.SE').show();
+                $('.ProfileSCO').show();
+                $('.ProfileRA').hide();
+                $('.defaultFormBot').show();
+                $('#lblCECAccreditationNumber').addClass("required");
+            }
+            else if (unitTypeID == 8) {
+                $('.RA').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.FSA').hide();
+                $('.RAM').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC').hide();
+                $('.SCO').show();
+                $('#UserTypeId').val('8');
+                $('.defaultFormBot').show();
+            }
+            else {
+                $('.RA').hide();
+                $('.SCA').hide();
+                $('.FCO').hide();
+                $('.FSA').hide();
+                $('.RAM').hide();
+                $('.SE').hide();
+                $('.SSC').hide();
+                $('.SC0').hide();
+                $('.SC').show();
+            }
+        }
+
+        $("#UserTypeId").change(function () {
+            var unitTypeID = $('#UserTypeId option:selected').val();
+            ChangeUserType(unitTypeID);
+
+        });
+
+        $("#CompanyABN").change(function () {
+            var id = $('#CompanyABN').val();
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCompanyABN", "User")',
+                data: { id: id },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+                    if (data == 0) {
+                        $('#CompanyName').empty();
+                        $('#fromDate').val("");
+                        $('#toDate').val("");
+                        $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                    }
+                    else {
+                        if ($('#CompanyName option').length > 1) {
+                            $('#CompanyName').empty();
+                            $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        else {
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        initialize(data);
+                        return data;
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $('#txtTown').autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest","User")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    $('#txtState').val(ui.item.state);
+                    $('#txtPostCode').val(ui.item.postcode);
+                }
+            });
+
+            $('#txtPostCode').autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest","User")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    $('#txtState').val(ui.item.state);
+                    $('#txtTown').val(ui.item.location);
+                }
+            });
+        });
+
+        //File browse get FileName
+        function getNameFromPath(strFilepath) {
+            var objRE = new RegExp(/([^\/\\]+)$/);
+            var strName = objRE.exec(strFilepath);
+
+            if (strName == null) {
+                return null;
+            }
+            else {
+                return strName[0];
+            }
+        }
+
+        $('#imgSignature').click(function () {
+            $("#loading-image").css("display","");
+            $('#imgSign').attr('src', SRCSign).load(function()
+            {
+                logoWidth=this.width;
+                logoHeight=this.height;
+
+                $('#popupbox').modal({ backdrop: 'static', keyboard: false });
+
+                if($(window).height() <= logoHeight)
+                {
+                    //$("#imgSign").height($(window).height() - 205);
+                    $("#imgSign").closest('div').height($(window).height() - 205);
+                    $("#imgSign").closest('div').css('overflow-y', 'scroll');
+                    $("#imgSign").height(logoHeight);
+                }
+                else
+                {
+                    $("#imgSign").height(logoHeight);
+                    $("#imgSign").closest('div').removeAttr('style');
+                }
+
+                if(screen.width <= logoWidth || logoWidth >= screen.width - 250)
+                {
+                    //$("#imgSign").width(screen.width - 10);
+                    //$('#popupbox').find(".modal-dialog").width(screen.width - 10);
+                    $('#popupbox').find(".modal-dialog").width(screen.width - 250);
+                    $("#imgSign").width(logoWidth);
+                }
+                else
+                {
+                    $("#imgSign").width(logoWidth);
+                    $('#popupbox').find(".modal-dialog").width(logoWidth);
+                }
+                $("#loading-image").css("display","none");
+            });
+            $("#imgSign").unbind("error");
+            $('#imgSign').attr('src', SRCSign).error(function()
+            {
+                alert('Image does not exist.');
+                $("#loading-image").css("display","none");
+            });
+        });
+
+        function SaveStatusAndNote()
+        {
+            var status = $('#Status').val();
+            var note = $('#Note').val();
+            var userId = @Model.UserId;
+
+            $.ajax(
+            {
+
+                url: '@Url.Action("InsertStatusNote", "User")',
+                type: "POST",
+                async: false,
+                data: JSON.stringify({ Id: userId,Status:status,Note:note }),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data.success) {
+                        if(@Model.UserTypeID==7)
+                        {
+                            window.location.href = "@Url.Action("SE", "User")";
+                        }
+                        else{
+                            window.location.href = "@Url.Action("SCA", "User")";
+                        }
+                    }
+                }            });
+        }
+
+        $('.resp-tabs-list li').click(function (e, c) {
+            var $this = $(this);
+            isValid = $("#UserDetails").valid();
+        });
+
+        function POAddress(addressID){
+            $(".POID").find('input[type=text]').each(function () {
+                //$(this).attr('class', 'form-control valid');
+            });
+            $(".POID").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+            if (addressID == 1) {
+                $('.DPA').show();
+                $('.PDA').hide();
+                //$('#PostalAddressID').val('');
+                //$('#PostalDeliveryNumber').val('');
+                $('#PostalAddressID').attr('class', 'form-control valid');
+                $('#PostalDeliveryNumber').attr('class', 'form-control valid');
+            }
+            else {
+                $('.DPA').hide();
+                $('.PDA').show();
+                //$('#UnitTypeId').val('');
+                //$('#UnitNumber').val('');
+                //$('#StreetNumber').val('');
+                //$('#StreetName').val('');
+                //$('#StreetTypeId').val('');
+                $('#UnitTypeId').attr('class', 'form-control valid');
+                $('#UnitNumber').attr('class', 'form-control valid');
+                $('#StreetNumber').attr('class', 'form-control valid');
+                $('#StreetTypeId').attr('class', 'form-control valid');
+                $('#StreetName').attr('class', 'form-control valid');
+            }
+        }
+
+        $("#AddressID").change(function () {
+            var addressID = $('#AddressID option:selected').val();
+            POAddress(addressID);
+        });
+
+        $('#chkSCA').change(function () {
+            if ($(this).is(":checked")) {
+                $('.chkSCASignUp').show();
+            }
+            else {
+                $('.chkSCASignUp').hide();
+            }
+        });
+
+        function getDropDownValue() {
+            if (validateForm()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
+        function addRules() {
+            if (@Model.UserTypeID == 4 || (@Model.UserTypeID == 7 && $("#IsPVDUser").prop('checked')))
+            {
+                $("#CECAccreditationNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "CEC Accreditation Number is required."
+                    }
+                });
+            }
+            if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() != null && $("#UnitNumber").val() != "") {
+                $("#StreetNumber").rules("add", {
+                    required: false,
+                });
+            }
+            else {
+                $("#StreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+                if ($("#StreetNumber").val() != null && $("#StreetNumber").val() != "") {
+                    $("#UnitTypeId").rules("add", {
+                        required: false,
+                    });
+                    $("#UnitNumber").rules("add", {
+                        required: false,
+                    });
+                }
+                else {
+                    $("#UnitTypeId").rules("add", {
+                        required: true,
+                    });
+                    $("#UnitNumber").rules("add", {
+                        required: true,
+                    });
+                }
+            }
+        }
+
+        function DeleteDocumentFolderOnCancel() {
+            var guid = USERID;
+            var Name = [];
+            Name = document.getElementsByName("FileNamesCreate");
+            var Sign = document.getElementsByName("Signature");
+            var SignName = Sign[0].id;
+            if (Name.length > 0) {
+                for (var i = 0; i < Name.length; i++) {
+                    var docname = Name[i].id;
+                    DeleteFileFromUserOnCancel(docname, guid);
+                }
+            }
+            //if (SignName != null && SignName != "") {
+            //    DeleteFileFromUserOnCancel(SignName, guid);
+            //}
+
+        }
+    </script>
+}
+

@@ -1,0 +1,921 @@
+﻿@using FormBot.Helper;
+@{ ViewBag.Title = "CreateAndClearCache";
+    Layout = "~/Views/Shared/_Layout.cshtml"; }
+<style type="text/css">
+    #btnClearCacheForStcSubmission, #btnClearCacheForJob, #btnClearCacheForPeakPay {
+        background-color: #FA8072 !important;
+    }
+
+    #btnCacheKeyStatusStcSubmission, #btnCacheKeyStatusJob, #btnCacheKeyStatusPeakPay,
+    #btnCreateCacheForStcSubmissionMissing, #btnCreateCacheForJobMissing, #btnCreateCacheForPeakPayMissing, #btnCacheSetJobID,
+    #btnCreateSTCSubmissionCacheMissing {
+        background-color: #6495ED !important;
+    }
+
+    .SumoSelect {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .cacheConsole {
+        margin-top: 25px;
+    }
+
+        .cacheConsole input {
+            float: left !important;
+            margin: 0 10px;
+        }
+
+            .cacheConsole input[type=text] {
+                width: 10% !important;
+            }
+
+    .cacheConsoleWindow {
+        margin-top: 25px;
+        max-height: 500px;
+        overflow: auto;
+    }
+
+    .cache-snippet span {
+        display: block;
+        margin: 5px;
+    }
+
+        .cache-snippet span.spanCacheValue {
+            border-bottom: 1px solid black;
+        }
+</style>
+
+<div class="container-fluid">
+
+
+    <div class="title">
+        <h1>CreateAndClearCache</h1>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="ui-tabs">
+        <ul class="create-job-menu" style="margin-bottom:10px">
+            <li class="active" style="display:inline-block"><a id="aStcSubmissionFull" href="javascript:void(0)" title="CreateAndClearCache" style="text-decoration:none;">STC Submission</a></li>
+            <li style="display:inline-block"><a id="aStcSubmission" href="javascript:void(0)" title="CreateAndClearCache" style="text-decoration:none;">STC Submission Archive</a></li>
+            <li style="display:inline-block"><a id="aJobList" href="javascript:void(0)" title="CreateAndClearCache" style="text-decoration:none;">Job Listing</a></li>
+            <li style="display:inline-block"><a id="aPeakPayList" href="javascript:void(0)" title="CreateAndClearCache" style="text-decoration:none;">Peak Pay</a></li>
+
+        </ul>
+    </div>
+
+    <form class="form-block" style="margin-top:10px;" id="job-search-form">
+        <div class="row" style="padding-left:15px;padding-right:15px;">
+            <div class="col-sm-4 col-md-4 col-lg-4" id="dvYear">
+                <div class="form-group">
+                    <label class="control-label">Year:</label>
+                    <select class="form-control" id="drpYear" name="Year">
+                        @for (int i = DateTime.Now.Year; i >= ProjectConfiguration.ArchiveMinYear; i--)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    <select class="form-control resellerData" id="drpReseller" name="Reseller" multiple="multiple"></select>
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Solar Company:</label>
+                    <input type="hidden" id="hdnsolarCompanyid" />
+                    <input id="txtSolarCompany" name="SolarCompany" class="form-control " />
+                </div>
+            </div>
+
+            <div class="col-sm-4 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Reseller Batch:</label>
+                    <select class="form-control resellerBatchData" id="drpResellerBatch" name="ResellerBatch"></select>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div id="stcSubmission" class="clearfix">
+        <input type="button" id="btnCreateCacheForStcSubmissionMissing" class="primary" value="Create Missing Cache For Archive STCSubmission">
+        @*<input type="button" id="btnClearCacheForStcSubmission" class="primary" value="Clear Cache For STCSubmission">
+            <input type="button" id="btnCacheKeyStatusStcSubmission" class="primary" value="Cache Status For STCSubmission">*@
+        <input type="button" id="btnCreateCacheForStcSubmission" class="primary" value="Create All Cache For Archive STCSubmission">
+    </div>
+    <div id="jobListing" style="margin-top:10px;">
+        <input type="button" id="btnCreateCacheForJobMissing" class="primary" value="Create Missing Cache For Job">
+        @*<input type="button" id="btnClearCacheForJob" class="primary" value="Clear Cache For Job">
+            <input type="button" id="btnCacheKeyStatusJob" class="primary" value="Cache Status For Job">*@
+        <input type="button" id="btnCreateCacheForJob" class="primary" value="Create All Cache For Job">
+    </div>
+    <div id="peakPay" style="margin-top:10px;">
+        <input type="button" id="btnCreateCacheForPeakPayMissing" class="primary" value="Create Missing Cache For PeakPay">
+        @*<input type="button" id="btnClearCacheForPeakPay" class="primary" value="Clear Cache For PeakPay">
+            <input type="button" id="btnCacheKeyStatusPeakPay" class="primary" value="Cache Status For PeakPay">*@
+        <input type="button" id="btnCreateCacheForPeakPay" class="primary" value="Create All Cache For PeakPay">
+    </div>
+    <div id="stcSubmissionFull" class="clearfix">
+        <input type="button" id="btnCreateSTCSubmissionCacheMissing" class="primary" value="Create Missing Cache for STC Submission" />
+        <input type="button" id="btnCreateSTCSubmissionCacheFull" class="primary" value="Create All Cache for STC Submission" />
+    </div>
+
+    <div class="clearfix cacheConsole">
+        <input type="button" id="btnGetParentCacheObject" class="primary" value="Get Parent Cache" data-parent="true" />
+        <input type="button" id="btnCacheResetInstaller" class="primary" value="ReSet All Installer" />
+        <input type="button" id="btnCacheResetSC" class="primary" value="ReSet All Solar Company" />
+    </div>
+    <div class="clearfix cacheConsole">
+        <input type="text" id="txtCacheGetSCID" placeholder="Enter Solar Company ID" class="form-control " />
+        <input type="text" id="txtCacheGetJobID" placeholder="Enter Job ID" class="form-control " />
+        <input type="button" id="btnCacheGetJobID" class="primary" value="Get Cache for Job" />
+        <input type="button" id="btnCacheSetJobID" class="primary" value="Set Cache for Job" />
+    </div>
+    <div class="clearfix cacheConsole">
+
+        <input type="text" id="txtCacheToGetInstaller" placeholder="Enter ID to Get InstallerDesigner" class="form-control " />
+        <input type="button" id="btnCacheGetInstaller" class="primary" value="Get Installer" />
+    </div>
+    <div class="clearfix cacheConsole">
+        <input type="text" id="txtCacheToGetSC" placeholder="Enter ID to Get SolarCompany Details" class="form-control " />
+        <input type="button" id="btnCacheGetSC" class="primary" value="Get Solar Company" />
+    </div>
+    <div class="clearfix cacheConsole">
+        <input type="text" id="txtCreateCacheFull" placeholder="Enter Key to full cache" class="form-control " />
+        <input type="button" id="btnCreateCacheFull" class="primary" value="Create Full Cache" />
+    </div>
+
+    <div class="cacheConsoleWindow form-block">
+        @*<div class="cache-snippet">
+                <span class="spanCacheKey">Key : {key}  Time: {time}</span>
+                <span class="spanCacheValue">LLorem IpsumLLorem IpsumLLorem IpsumLLorem IpsumLLorem IpsumLLorem IpsumLLorem Ipsum</span>
+            </div>*@
+    </div>
+
+    <div class="master-cache-snippet" style="display:none;">
+        <div class="cache-snippet">
+            <span class="spanCacheKey"></span>
+            <span class="spanCacheValue"></span>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/jquery.sumoselect.min.js"></script>
+<link href="~/Content/sumoselect.css" rel="stylesheet" />
+<script>
+        var isPeakPay = false;
+        var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByMultipleResellerId","SolarCompany")',
+        urlGetAllReseller = '@Url.Action("GetAllResellerForCache", "JobSetting")',
+        urlCreateCacheForStcSubmission = '@Url.Action("CreateCacheForSTCSubmission", "Reseller")',
+        urlCreateCacheForStcSubmissionNonApproved = '@Url.Action("CreateCacheForSTCSubmissionNonApproved", "Reseller")',
+        urlClearCacheForStcSubmission = '@Url.Action("ClearCacheForSTCSubmission", "Reseller")',
+        urlCreateCacheForJobListing = '@Url.Action("CreateCacheForJobListing", "Reseller")',
+        urlClearCacheForJobListing = '@Url.Action("ClearCacheForJobListing", "Reseller")',
+        urlCachekeyStatusSTC = '@Url.Action("CachekeyStatusSTC","Reseller")',
+        urlCachekeyStatusJob = '@Url.Action("CachekeyStatusJob","Reseller")',
+        urlCreateCacheForPeakPay = '@Url.Action("CreateCacheForPeakPay", "Reseller")',
+        urlClearCacheForPeakPay = '@Url.Action("ClearCacheForPeakPay", "Reseller")',
+        urlCachekeyStatusPeakPay = '@Url.Action("CacheKeyStatusPeakPay", "Reseller")';
+        urlCacheKeyStatus = '@Url.Action("CacheKeyStatus", "Reseller")',
+        urlSetCacheKeyStatus = '@Url.Action("SetCacheKeyStatus", "Reseller")',
+        urlCacheKeyStatusInstallerDesigner= '@Url.Action("CacheKeyStatusInstallerDesigner", "Reseller")',
+        urlCacheKeyStatusSolarCompany = '@Url.Action("CacheKeyStatusSolarCompany", "Reseller")',
+        urlCacheKeyResetSolarCompany = '@Url.Action("CacheKeyResetSolarCompany", "Reseller")',
+        urlCacheKeyResetInstallerDesigner = '@Url.Action("CacheKeyResetInstallerDesginer", "Reseller")',
+        urlCreateCacheFull = '@Url.Action("CreateCacheFull", "Service")',
+
+        $(document).ready(function () {
+            $("#jobListing").hide();
+            $("#peakPay").hide();
+            $("#stcSubmission").hide();
+            $('#dvYear').hide();
+            $("#aStcSubmission").click(function () {
+                $("#jobListing").hide();
+                $("#stcSubmission").show();
+                $("#peakPay").hide();
+                $("#stcSubmissionFull").hide();
+                $('#dvYear').show();
+                UnSelectItem();
+                $(this).closest('ul').find('.active').removeClass('active');
+                $(this).closest('li').addClass('active');
+                GetAllReseller(false);
+                GetAllResellerBatch(false);
+                isPeakPay = false;
+                //$("#drpReseller").val('');
+            });
+            $("#aJobList").click(function () {
+                $("#stcSubmission").hide();
+                $("#jobListing").show();
+                $("#peakPay").hide();
+                $("#stcSubmissionFull").hide();
+                $('#dvYear').show();
+                UnSelectItem();
+                $(this).closest('ul').find('.active').removeClass('active');
+                $(this).closest('li').addClass('active');
+                GetAllReseller(false);
+                GetAllResellerBatch(false);
+                isPeakPay = false;
+            });
+            $("#aPeakPayList").click(function () {
+                $("#stcSubmission").hide();
+                $("#jobListing").hide();
+                $("#peakPay").show();
+                $("#stcSubmissionFull").hide();
+                $('#dvYear').hide();
+                UnSelectItem();
+                $(this).closest('ul').find('.active').removeClass('active');
+                $(this).closest('li').addClass('active');
+                GetAllReseller(true);
+                GetAllResellerBatch(true);
+                isPeakPay = true;
+            });
+            $("#aStcSubmissionFull").click(function () {
+                $("#jobListing").hide();
+                $("#stcSubmission").hide();
+                $("#peakPay").hide();
+                $("#stcSubmissionFull").show();
+                $('#dvYear').hide();
+                UnSelectItem();
+                $(this).closest('ul').find('.active').removeClass('active');
+                $(this).closest('li').addClass('active');
+                GetAllReseller(false);
+                GetAllResellerBatch(false);
+                isPeakPay = false;
+                //$("#drpReseller").val('');
+            });
+
+            $('.resellerData').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+            GetAllReseller();
+            GetAllResellerBatch();
+        });
+
+    function UnSelectItem() {
+        var num = $('.options').find('li').length;
+        for (var i = 0; i < num; i++) {
+            $('.resellerData')[0].sumo.unSelectItem(i);
+        }
+        $("#drpReseller").val('');
+        $("#txtSolarCompany").val('');
+        $("#drpResellerBatch").val('0');
+        $('.CaptionCont').find('span').text('Select here');
+    }
+
+    function GetAllReseller(isPeakPayValue, resellerIds) {
+        if (isPeakPayValue != isPeakPay) {
+            $('.sumo_Reseller .options').empty();
+            $.ajax({
+                url: '@Url.Action("GetAllResellerForCache", "JobSetting")' + "?IsPeakPay=" + isPeakPayValue,
+                type: "GET",
+                dataType: "json",
+                data: '',
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    if (result != null && result.length > 0) {
+                        for (var i = 0; i < result.length; i++) {
+                            $('.resellerData')[0].sumo.add(result[i].Value, result[i].Text);
+                        }
+                    }
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+            return false;
+        }
+    }
+    $("#drpReseller").change(function () {
+        var obj = [];
+        $('.resellerData option:selected').each(function (i) {
+            obj.push($(this).val());
+            //$('.resellerData')[0].sumo.unSelectItem(i);
+        });
+        //var ResellerIds = $("#drpReseller").val();
+        BindSolarCompany(obj);
+    });
+
+    function BindSolarCompany(resellerID) {
+        $("#hdnsolarCompanyid").val(0);
+        if (resellerID.length > 0) {
+            $("#txtSolarCompany").val("");
+            $.ajax({
+                type: 'POST',
+                url: urlGetSolarCompanyByResellerId,
+                dataType: 'json',
+                async: false,
+                data: { id: resellerID, isAll: true },
+                success: function (solarcompany) {
+                    solarCompanyList = [];
+                    $.each(solarcompany, function (i, company) {
+                        solarCompanyList.push({ value: company.Value, text: company.Text });
+                    });
+
+                    $('#txtSolarCompany').autocomplete({
+                        minLength: 0,
+                        source: function (request, response) {
+                            var data = [];
+                            $("#hdnsolarCompanyid").val(0);
+                            $.each(solarCompanyList, function (key, value) {
+                                if (value.text.toLowerCase().indexOf($("#txtSolarCompany").val().toLowerCase()) > -1) {
+                                    data.push({ Title: value.text, id: value.value });
+                                }
+                            });
+
+
+                            response($.map(data, function (item) {
+                                return { label: item.Title, value: item.Title, id: item.id };
+                            }));
+                        },
+                        select: function (event, ui) {
+                            $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+                        }
+                    }).on('focus', function () { $(this).keydown(); });
+
+                    $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+                        var re = new RegExp($.trim(this.term.toLowerCase()));
+                        var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                            "</span>");
+                        return $("<li style='font-size:14px;'></li>")
+                            .data("item.autocomplete", item)
+                            .append("<a>" + t + "</a>")
+                            .appendTo(ul);
+                    };
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+            return false;
+        }
+    }
+
+     function GetAllResellerBatch(isPeakPayValue) {
+        if (isPeakPayValue != isPeakPay) {
+            $.ajax({
+                url: '@Url.Action("GetAllResellerBatchForCache", "JobSetting")' + "?IsPeakPay=" + isPeakPayValue,
+                type: "GET",
+                dataType: "json",
+                data: '',
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    if (result != null && result.length > 0) {
+                        $('.resellerBatchData').find('option').remove();
+                        for (var i = 0; i < result.length; i++) {
+                            //$('.resellerBatchData')[0].sumo.add(result[i].Value, result[i].);
+                            $('.resellerBatchData').append($("<option></option>").attr("value", result[i].Value).text(result[i].Text));
+                        }
+                    }
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+            return false;
+        }
+    }
+
+    $("#btnCreateCacheForStcSubmission,#btnCreateCacheForStcSubmissionMissing").click(function () {
+        var RaId = $("#drpReseller").val();
+        var year = $("#drpYear").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        RaId = getRaIDs(RaId);
+        var isMissingOnly = $(this).attr("id") == "btnCreateCacheForStcSubmissionMissing" ? true : false;
+
+        if (RaId != null && RaId.length > 0) {
+            $.ajax({
+                url: urlCreateCacheForStcSubmission,
+                type: 'post',
+                dataType: 'Json',
+                data: { resellerID: RaId, solarCompanyId: SCAId, year: year, isMissingOnly: isMissingOnly },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        var selectedResellerdropdown = "";
+                        $("#drpReseller option:selected").each(function () {
+                            selectedResellerdropdown += $(this).text() + ", ";
+                        });
+                        showSuccessMessage('Create cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + selectedResellerdropdown + '\"' + ' Reseller.');
+                    }
+                    else {
+
+                        showErrorMessage("Something went wrong in creating cache.");
+                    }
+                },
+
+                error: function () {
+                    showErrorMessage("Something went wrong in creating cache.");
+                }
+            });
+        }
+        else
+            showErrorMessage("Select Reseller or Solar Company to set.");
+    });
+
+    $("#btnClearCacheForStcSubmission").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        var year = $("#drpYear").val();
+        if (RaId != null) {
+            $.ajax({
+                url: urlClearCacheForStcSubmission,
+                type: 'post',
+                dataType: 'Json',
+                data: { resellerID: RaId, solarCompanyId: SCAId,year : year },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        var selectedResellerdropdown = "";
+                        $("#drpReseller option:selected").each(function () {
+                            selectedResellerdropdown += $(this).text() + ", ";
+                        });
+
+                        showSuccessMessage('Clear cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + selectedResellerdropdown + '\"' + ' Reseller.');
+                    }
+                    else {
+
+                        showErrorMessage("Something went wrong in clear cache.");
+                    }
+                },
+
+                error: function () {
+                    showErrorMessage("Something went wrong in clear cache.");
+                }
+            });
+        }
+    });
+
+    $("#btnCreateCacheForJob,#btnCreateCacheForJobMissing").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        var year = $("#drpYear").val();
+        RaId = getRaIDs(RaId);
+        var isMissingOnly = $(this).attr("id") == "btnCreateCacheForJobMissing" ? true : false;
+
+        if (RaId != null && RaId.length > 0) {
+            $.ajax({
+                url: urlCreateCacheForJobListing,
+                type: 'post',
+                dataType: 'Json',
+                data: { resellerID: RaId, solarCompanyId: SCAId, year: year, isMissingOnly: isMissingOnly },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        var selectedResellerdropdown = "";
+                        $("#drpReseller option:selected").each(function () {
+                            selectedResellerdropdown += $(this).text() + ", ";
+                        });
+                        showSuccessMessage('Create cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + selectedResellerdropdown + '\"' + ' Reseller.');
+                    }
+                    else {
+
+                        showErrorMessage("Something went wrong in creating cache.");
+                    }
+                },
+
+                error: function () {
+                    showErrorMessage("Something went wrong in creating cache.");
+                }
+            });
+        }
+        else
+            showErrorMessage("Select Reseller or Solar Company to set.");
+    });
+
+    function getRaIDs(RaId) {
+        var resellerBatchs = $("#drpResellerBatch").val();
+        var ids = RaId === null ? [] : RaId;
+
+        if (resellerBatchs != null && resellerBatchs != '' && resellerBatchs != "0") {
+            $(resellerBatchs.split(',')).each(function (i, e) {
+                if (e != "" && e != "0" && (RaId == null || !(RaId.indexOf(e) > -1 || RaId.indexOf(e.toString()) > -1)))
+                    ids.push(e);
+            });
+        }
+        return ids;
+    }
+
+    $("#btnClearCacheForJob").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        var year = $("#drpYear").val();
+        if (RaId != null) {
+            $.ajax({
+                url: urlClearCacheForJobListing,
+                type: 'post',
+                dataType: 'Json',
+                data: { resellerID: RaId, solarCompanyId: SCAId,year : year },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        var selectedResellerdropdown = "";
+                        $("#drpReseller option:selected").each(function () {
+                            selectedResellerdropdown += $(this).text() + ", ";
+                        });
+                        showSuccessMessage('Clear cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + selectedResellerdropdown + '\"' + ' Reseller.');
+                    }
+                    else {
+
+                        showErrorMessage("Something went wrong in clear cache.");
+                    }
+                },
+
+                error: function () {
+                    showErrorMessage("Something went wrong in clear cache.");
+                }
+            });
+        }
+    });
+
+    $("#btnCacheKeyStatusStcSubmission").click(function () {
+        var SCAId = $("#hdnsolarCompanyid").val();
+        if (SCAId == "0" || SCAId == "" || SCAId == "-1") {
+            showErrorMessage("Select particular solar company to get cache.");
+            return false;
+        }
+        else {
+            var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+            var year = $("#drpYear").val();
+            $.ajax({
+                url: urlCachekeyStatusSTC,
+                type: 'post',
+                dataType: 'Json',
+                data: { solarCompanyId: SCAId,year: year },
+
+                success: function (status) {
+                    if (status.status == true) {
+
+                        showSuccessMessage('Cache key found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.You can see this using this url: ' + '<a href="javascript:void(0)" target="_blank" id="cachelink"> Click Here.</a>');
+                        $("#cachelink").click(function () {
+                            window.open('@Url.Action("cachekeystatus","job")' + '?key=' + status.key, '_blank');
+                        });
+                    }
+                    else {
+                        showErrorMessage('Cache key not found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.');
+                    }
+
+                },
+                error: function () {
+                    showErrorMessage("Something went wrong in getting cache for STC Submission.");
+                }
+            });
+        }
+
+    });
+
+    $("#btnCacheKeyStatusJob").click(function () {
+        var SCAId = $("#hdnsolarCompanyid").val();
+        if (SCAId == "0" || SCAId == "" || SCAId == "-1") {
+            showErrorMessage("Select particular solar compnay to get cache.");
+            return false;
+        }
+        else {
+            var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+            var year = $("#drpYear").val();
+            $.ajax({
+                url: urlCachekeyStatusJob,
+                type: 'post',
+                dataType: 'Json',
+                data: { solarCompanyId: SCAId,year:year },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        showSuccessMessage('Cache key found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.You can see this using this url: ' + '<a href="javascript:void(0)" target="_blank" id="cachelink"> Click Here.</a>');
+                        $("#cachelink").click(function () {
+                            window.open('@Url.Action("cachekeystatus","job")' + '?key=' + status.key, '_blank');
+                        });
+                    }
+                    else {
+                        showErrorMessage('Cache key not found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.');
+                    }
+
+                },
+                error: function () {
+                    showErrorMessage("Something went wrong in getting cache for Job.");
+                }
+            });
+        }
+
+    });
+
+    $("#btnCreateCacheForPeakPay,#btnCreateCacheForPeakPayMissing").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        RaId = getRaIDs(RaId);
+        var isMissingOnly = $(this).attr("id") == "btnCreateCacheForPeakPayMissing" ? true : false;
+
+        if (RaId != null && RaId.length > 0) {
+            $.ajax({
+                url: urlCreateCacheForPeakPay,
+                type: 'post',
+                dataType: 'Json',
+                data: { resellerID: RaId, solarCompanyId: SCAId, isMissingOnly: isMissingOnly },
+                success: function (status) {
+                    if (status.status == true) {
+                        showSuccessMessage('Create cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.');
+                    }
+                    else {
+                        showErrorMessage("Something went wrong in creating cache.");
+                    }
+                },
+                error: function () {
+                    showErrorMessage("Something went wrong in creating cache.");
+                }
+            });
+        }
+        else
+            showErrorMessage("Select Reseller or Solar Company to set.");
+    });
+
+    $("#btnClearCacheForPeakPay").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        $.ajax({
+            url: urlClearCacheForPeakPay,
+            type: 'post',
+            dataType: 'Json',
+            data: { resellerID: RaId, solarCompanyId: SCAId },
+
+            success: function (status) {
+                if (status.status == true) {
+                    showSuccessMessage('Clear cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.');
+                }
+                else {
+
+                    showErrorMessage("Something went wrong in clear cache.");
+                }
+            },
+
+            error: function () {
+                showErrorMessage("Something went wrong in clear cache.");
+            }
+        });
+    });
+
+    $("#btnCacheKeyStatusPeakPay").click(function () {
+        var SCAId = $("#hdnsolarCompanyid").val();
+        if (SCAId == "0" || SCAId == "" || SCAId == "-1") {
+            showErrorMessage("Select particular solar compnay to get cache.");
+            return false;
+        }
+        else {
+          var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+            $.ajax({
+                url: urlCachekeyStatusPeakPay,
+                type: 'post',
+                dataType: 'Json',
+                data: { solarCompanyId: SCAId },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        showSuccessMessage('Cache key found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.You can see this using this url: ' + '<a href="javascript:void(0)" target="_blank" id="cachelink"> Click Here.</a>');
+                        $("#cachelink").click(function () {
+                            window.open('@Url.Action("cachekeystatus","job")' + '?key=' + status.key, '_blank');
+                        });
+                    }
+                    else {
+                        showErrorMessage('Cache key not found for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + $("#drpReseller option:selected").text() + '\"' + ' Reseller.');
+                    }
+                },
+                error: function () {
+                    showErrorMessage("Something went wrong in getting cache for Job.");
+                }
+            });
+        }
+    });
+
+    $("#btnGetParentCacheObject,#btnCacheGetJobID").click(function () {
+        if (($(this).attr('id') == 'btnCacheGetJobID' && $("#txtCacheGetSCID").val() != '' && $("#txtCacheGetJobID").val() != '')
+            || $(this).attr('id') == 'btnGetParentCacheObject') {
+            if (confirm('Are you sure?')) {
+                var activeTab = $(".create-job-menu li.active a").text();
+                if (activeTab) {
+                    var year = $("#drpYear").val();
+                    isSTC = activeTab.toLowerCase().indexOf('stc submission archive') > -1 ? true : false
+                    isSTCMain = activeTab.toLowerCase().indexOf('stc submission') > -1 && !isSTC ? true : false
+                    isJob = activeTab.toLowerCase().indexOf('job') > -1 ? true : false;
+                    isPeakPay = activeTab.toLowerCase().indexOf('peak') > -1 ? true : false;
+                    isParent = $(this).attr("data-parent") ? true : false;
+                    solarCompanyID = !isParent ? $("#txtCacheGetSCID").val() : 0;
+                    jobID = !isParent ? $("#txtCacheGetJobID").val() : 0;
+
+                    $.ajax({
+                        url: urlCacheKeyStatus,
+                        type: 'post',
+                        dataType: 'Json',
+                        data: { year: year, isSTC: isSTC, isSTCMain: isSTCMain, isJob: isJob, isPeakPay: isPeakPay, isParent: isParent, jobID: jobID, solarCompanyID: solarCompanyID },
+                        success: function (result) {
+                            prepareCacheConsole(result);
+                        },
+                        error: function () {
+                            showErrorMessage("Something went wrong in cache.");
+                        }
+                    });
+                }
+            }
+        }
+        else { showErrorMessage("Enter valid SolarCompnyId and JobId."); }
+    });
+
+    $("#btnCacheSetJobID").click(function () {
+        var solarCompanyID = $("#txtCacheGetSCID").val();
+        jobID = $("#txtCacheGetJobID").val();
+        if (jobID != '') {
+            if (confirm('Are you sure?')) {
+                var activeTab = $(".create-job-menu li.active a").text();
+                if (activeTab) {
+                    $.ajax({
+                        url: urlSetCacheKeyStatus,
+                        type: 'post',
+                        dataType: 'Json',
+                        data: { jobID: jobID, solarCompanyID: solarCompanyID },
+
+                        success: function (result) {
+                            if (result.status == true) {
+                                showSuccessMessage('Cache key set for ' + '\"' + jobID + '\"' + ' Job');
+                            }
+                            else {
+                                showErrorMessage('Error occured on set Cache key for ' + '\"' + jobID + '\"' + ' Job');
+                            }
+                        },
+
+                        error: function () {
+                            showErrorMessage("Something went wrong in cache.");
+                        }
+                    });
+                }
+            }
+        }
+        else { showErrorMessage("Please add valid Job Id."); }
+    });
+
+    $("#btnCacheGetInstaller").click(function () {
+        var instDesgID = $("#txtCacheToGetInstaller").val();
+        if (instDesgID) {
+            if (confirm('Are you sure?')) {
+                $.ajax({
+                    url: urlCacheKeyStatusInstallerDesigner,
+                    type: 'post',
+                    dataType: 'Json',
+                    data: { instDesgID: instDesgID },
+
+                    success: function (result) {
+                        prepareCacheConsole(result);
+                    },
+
+                    error: function () {
+                        showErrorMessage("Something went wrong in cache.");
+                    }
+                });
+
+            }
+        }
+        else { showErrorMessage("Please add valid Installer Id."); }
+    });
+
+    $("#btnCacheGetSC").click(function () {
+        var solarCompanyID = $("#txtCacheToGetSC").val();
+        if (solarCompanyID) {
+            if (confirm('Are you sure?')) {
+                $.ajax({
+                    url: urlCacheKeyStatusSolarCompany,
+                    type: 'post',
+                    dataType: 'Json',
+                    data: { solarCompanyID: solarCompanyID },
+
+                    success: function (result) {
+                        prepareCacheConsole(result);
+                    },
+
+                    error: function () {
+                        showErrorMessage("Something went wrong in cache.");
+                    }
+                });
+            }
+        }
+        else { showErrorMessage("Please add correct solar CompanyId."); }
+    });
+
+    $("#btnCacheResetInstaller,#btnCacheResetSC").click(function () {
+        if (confirm('Are you sure?')) {
+            var urlSend = urlCacheKeyResetSolarCompany;
+            if ($(this).attr('id') == 'btnCacheResetInstaller')
+                urlSend = urlCacheKeyResetInstallerDesigner;
+                $.ajax({
+                    url: urlSend,
+                    type: 'post',
+                    dataType: 'Json',
+                    data: { },
+
+                    success: function (result) {
+                        prepareCacheConsole(result);
+                    },
+
+                    error: function () {
+                        showErrorMessage("Something went wrong in cache.");
+                    }
+                });
+        }
+    });
+
+    $("#btnCreateCacheFull").click(function () {
+        var key = $("#txtCreateCacheFull").val();
+        if (key != '') {
+            if (confirm('it will take a very longer to create cache for all items in application, Are you sure?') && $("txtCreateCacheFull").val() != '') {
+                $.ajax({
+                    url: urlCreateCacheFull,
+                    type: 'post',
+                    dataType: 'Json',
+                    data: { key: key },
+
+                    success: function (result) {
+                        prepareCacheConsole(result);
+                    },
+
+                    error: function () {
+                        showErrorMessage("Something went wrong in cache.");
+                    }
+                });
+            }
+        }
+        else { showErrorMessage("Please add valid value for Key."); }
+    });
+
+    $("#btnCreateSTCSubmissionCacheFull,#btnCreateSTCSubmissionCacheMissing").click(function () {
+        var RaId = $("#drpReseller").val();
+        var SCAId = $("#hdnsolarCompanyid").val();
+        var SCAName = document.getElementById('txtSolarCompany').value == "" ? "All" : document.getElementById('txtSolarCompany').value;
+        RaId = getRaIDs(RaId);
+        var isMissingOnly = $(this).attr("id") == "btnCreateSTCSubmissionCacheMissing" ? true : false;
+
+        if (RaId != null && RaId.length > 0) {
+            $.ajax({
+                url: urlCreateCacheForStcSubmissionNonApproved,
+                type: 'post',
+                dataType: 'Json',
+                data: { lstResellerID: RaId, solarCompanyId: SCAId, year: 0, isMissingOnly: isMissingOnly },
+
+                success: function (status) {
+                    if (status.status == true) {
+                        var selectedResellerdropdown = "";
+                        $("#drpReseller option:selected").each(function () {
+                            selectedResellerdropdown += $(this).text() + ", ";
+                        });
+                        showSuccessMessage('Create cache successfully for ' + '\"' + SCAName + '\"' + ' Solar Company of ' + '\"' + selectedResellerdropdown + '\"' + ' Reseller and Reseller batch.');
+                    }
+                    else {
+
+                        showErrorMessage("Something went wrong in creating cache.");
+                    }
+                },
+
+                error: function () {
+                    showErrorMessage("Something went wrong in creating cache.");
+                }
+            });
+        }
+        else
+            showErrorMessage("Select Reseller or Solar Company to set.");
+    });
+
+    function prepareCacheConsole(result) {
+        if (result.status == true) {
+            var data = "";
+            if (result.value)
+                data = JSON.stringify(result.value);
+            var $div = $(".master-cache-snippet").find('div.cache-snippet').clone();
+            $div.find("span.spanCacheKey").html("<b>Key</b>: " + result.key + " <b>Time</b> : " + new Date($.now()));
+            $div.find("span.spanCacheValue").html("<b>Value</b>: " + data);
+            $(".cacheConsoleWindow").prepend($div);
+        }
+        else {
+            showErrorMessage("Key not exist.");
+        }
+    }
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegion").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+    }
+</script>

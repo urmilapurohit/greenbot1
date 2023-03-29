@@ -1,0 +1,38 @@
+﻿@model List<FormBot.Entity.NotificationViewModel>
+@using FormBot.Helper;
+
+
+<div class="details-block details-mag-0" id="NotesNotificationSection">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionJobHistory" style="display: none;">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionJobHistory" style="display: none;">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+        </div>
+    </div>
+    <div class="job-com-box" id="NotesNotificationTab" style="border:0px !important;box-shadow:initial!important">
+        <div id="notesNotication">
+            @if (Model != null && Model.Count == 0)
+            {
+                <h3>No New Notification to Display</h3>
+            }
+            <ul>
+
+                @foreach (var item in Model)
+                {
+                    <li style="margin-bottom: 15px" notification-id="@item.NotificationId">
+                        <a>@item.SendByName</a> added a note - <span>@(new HtmlString(item.JobLink))</span>
+                        <span> @(new HtmlString(@item.Notes)) </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    $("#notificationCount").html(@Model.Count);
+</script>

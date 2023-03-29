@@ -1,0 +1,583 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+
+
+@if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+{
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label class="control-label">Filters:</label>
+        <div class="rep-list">
+            <ul>
+                <li><a href="javascript:void(0);" id="UserID" onclick="Users();">Solar Company<span id="cntUsers">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SSCUser" onclick="SSCUser();">SSC Users<span id="cntSSC">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SEUser" onclick="SEUser();">SE Users<span id="cntSE">0</span></a></li>
+            </ul>
+        </div>
+        <label class="control-label">Restriction:</label>
+        <ul id="Restrictions" class="control-label">
+            <li>
+                Minimum 1 Solar-Sub Contractor must be selected.
+            </li>
+            <li>
+                Minimum 1 Solar Electrician must be selected.
+            </li>
+        </ul>
+    </div>
+}
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <label>Job Status:</label>
+    @Html.DropDownListFor(m => m.JobStageID, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="All Job", Value = "1" },
+                                        new SelectListItem{ Text="Completed Job", Value = "2" },
+                                        new SelectListItem{ Text="Outstanding Job", Value = "3" },
+                                     }, new { @id = "drdJobStatus", @class = "form-control" }
+                            )
+</div>
+<div class="rep-btn">
+    <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" id="btnReset" value="Reset Filters" class="">
+    </div>
+    </div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" id="closeUsers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0/1</label> Selected
+                    </label>
+                </div>
+                @if (FormBot.Helper.ProjectSession.UserTypeId != 4)
+                {
+                    <div class="form-border">
+                        @Html.Action("_SolarCompany", "FormBotReport")
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="popupSSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSSC">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SSC Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSSC">0/1</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SSCView", "FormBotReport", new { id = "6" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSE" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSE">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SE Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSE">0/1</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SEView", "FormBotReport", new { id = "7" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    $(document).ready(function () {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+        if (@FormBot.Helper.ProjectSession.UserTypeId == 7)
+        {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        if (@FormBot.Helper.ProjectSession.UserTypeId == 6)
+        {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        $('#txtFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtToDate").val('');
+                    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                    $('#btnJobStatusBarReport').css('opacity', '0.5');
+                }
+            }
+
+            var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtToDate').data('datepicker')) {
+                $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+    });
+
+    $("#txtToDate").change(function () {
+        if ($("#txtToDate").val() != '') {
+            if ($("#hdnUsers").val() != "" || $("#hdnResellers").val() != "") {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }
+        }
+    });
+
+    function Users() {
+        $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        $('#SCABit').val('0');
+    }
+
+    function SSCUser() {
+        $('#popupSSC').modal({ backdrop: 'static', keyboard: false });
+        $('#SSCBit').val('1');
+        $('#AvailableSSC').html($('#LstSSCAssignedUser option').length +'/'+$('#SSCBit').val());
+    }
+
+    function SEUser() {
+        $('#popupSE').modal({ backdrop: 'static', keyboard: false });
+        $('#SEBit').val('1');
+        $('#AvailableSE').html($('#LstSEAssignedUser option').length +'/'+$('#SEBit').val());
+    }
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetSSCSEJobsDetailReportList", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                $('#divGrid').show();
+                BindGrid(result.dsSSCSEJobsDetail,result.dsSSCSEJobsDetailInnerTable);
+                BindChart(result.dsSSCSEJobsDetailInnerTable);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result,resultFooter) {
+        $('#chartbox').hide();
+
+        var tableHeaders = '';
+        var tableFooters = '';
+        var tableColumns = [];
+
+        tableColumns.push("Solar Company Name");
+        tableColumns.push("Reference Number");
+        tableColumns.push("Owner Name");
+        tableColumns.push("Visit Date");
+        tableColumns.push("Invoice Sent?");
+        tableColumns.push("Stage Name");
+        tableFooters = '<th colspan="2"></th>';
+
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th>" + val + "</th>";
+        });
+        $("#displayTable").empty();
+
+        // Generate CSV Report Logic (To append export csv button manually and remove export csv button from Datatable initialization)
+        var jsonObj ="["+JSON.stringify($("#FormBotReportDetails").serializeToJson())+"]";
+        var arrayobject = eval('(' + jsonObj + ')');
+        var temparr = [];
+        var data='';
+        for (i in arrayobject )
+        {
+            data="hdnFormBotSSCAssignedUser="+arrayobject [i]["hdnFormBotSSCAssignedUser"]+"&&hdnFormBotSEAssignedUser="+arrayobject [i]["hdnFormBotSEAssignedUser"]+"&&hdnFormBotSolarCompanyAssignedUser="+arrayobject [i]["hdnFormBotSolarCompanyAssignedUser"]
+                +"&&JobStageID="+arrayobject [i]["JobStageID"];
+        }
+        var url='@Url.Action("Generate_SSE_SC_JobDetail_CSV", "FormBotReport")?'+data;
+        // End here
+
+        $("#displayTable").append('<div class="dt-buttons"><a class="dt-button buttons-excel buttons-html5 primary pull-right" tabindex="0" aria-controls="datatable" href="'+url+'" "><span>Export to Excel</span></a></div><table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead><tfoot><tr>' + tableFooters + '</tr></tfoot></table>');
+
+        columnsArray = [
+            {
+                'data': 'CompanyName',
+                "orderable": false,
+                "visible": false,
+            },
+            {
+                'data': 'RefNumber',
+                "orderable": false
+            },
+            {
+                'data': 'Owner_Name',
+                "orderable": false
+            },
+            {
+                'data': 'visitdate',
+                "orderable": false,
+                "render": function (data, type, full, meta) {
+                    if(full.visitdate != null || full.visitdate != ''){
+                        return ConvertToDateWithFormat(full.visitdate,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                    }
+                    else
+                        return '';
+                }
+            },
+            {
+                'data': 'InvoiceSent',
+                "orderable": false,
+                //"render": function (data, type, full, meta) {
+                //    if(full.InvoiceSent == 1){
+                //        return 'Yes';
+                //    }
+                //    else
+                //        return 'No';
+                //}
+            },
+            {
+                'data': 'StageName',
+                "orderable": false
+            },
+        ];
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            info :false,
+            retrieve: true,
+            columns: columnsArray,
+            //dom: 'Bfrtip',
+            //buttons: [
+            //    {
+            //        extend: 'excel',
+            //        footer: true,
+            //        exportOptions: {
+            //            columns: [1,2,3,4,5]
+            //        }
+            //    }
+            //],
+            order: [[0, "asc"]],
+            "drawCallback": function ( settings ) {
+                var api = this.api();
+                var rows = api.rows( {page:'current'} ).nodes();
+                var last=null;
+                if(rows.length > 0)
+                {
+                    var colonne = api.row(0).data().length;
+                }
+                var totale = new Array();
+                totale['Totale']= new Array();
+                var groupid = -1;
+                var subtotale = new Array();
+                if(rows.length > 0){
+                    api.column(0, {page:'current'} ).data().each( function ( group, i ) {
+                        if ( last !== group ) {
+                            groupid++;
+                            $(rows).eq( i ).before(
+                                '<tr class="group odd" role="row"><td colspan="5"></td></tr>'
+                            );
+                            last = group;
+                        }
+
+                        val = api.row(api.row($(rows).eq( i )).index()).data();      //current order index
+                        $.each(val,function(index2,val2){
+                            if (typeof subtotale[groupid] =='undefined'){
+                                subtotale[groupid] = new Array();
+                            }
+                            if (typeof subtotale[groupid][index2] =='undefined'){
+                                subtotale[groupid][index2] = 0;
+                            }
+                            if (typeof totale['Totale'][index2] =='undefined'){ totale['Totale'][index2] = 0; }
+
+                            //valore = Number(val2.replace('€',"").replace('.',"").replace(',',"."));
+                            subtotale[groupid][index2] += val2;
+                            totale['Totale'][index2] += val2;
+                        });
+                    } );
+                }
+                $('tbody').find('.group').each(function (i,v) {
+                    var rowCount = $(this).nextUntil('.group').length;
+                    var CompletedJob_StageCount=0;
+                    var OutstandingJob_StageCount=0;
+
+                    $(this).nextUntil('.group').each(function(){
+                        var StageName= $(this).find('td:nth-child(5)').text();
+                        //outstanding job count
+                        if(StageName=='New Installation')
+                            OutstandingJob_StageCount+=1;
+                        if(StageName=='In Progress')
+                            OutstandingJob_StageCount+=1;
+                        //completed job count
+                        if(StageName=='New')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='Preapproval')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='Complete')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='STC Trade')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='Aftersales')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='Cancellations')
+                            CompletedJob_StageCount+=1;
+                        if(StageName=='Installation Completed')
+                            CompletedJob_StageCount+=1;
+                    })
+                    var TotalCountText='<div> Total Job('+rowCount+')'+'<span class="subtotalSpace"> Completed Job('+ CompletedJob_StageCount+')</span>'+
+                        '<span class="subtotalSpace"> Outstanding Job('+OutstandingJob_StageCount+')</span></div>';
+
+                    $(this).find('td:first').append($('<span />', { 'class': 'rowCount-grid' }).append($('<b />', { 'html': $.parseHTML(TotalCountText) })));
+
+                });
+            }
+        });
+
+        $('table thead').css('color', '#383838 !important');
+        $('table thead').css('font-family', 'OpenSansSemibold !important');
+        $('table thead').css('font-size', '13px !important');
+        $('table thead tr th').css('width', '20% !important');
+        $('table thead').css('background', '#f8f8f8 none repeat scroll 0 0 !important');
+        //$('.buttons-excel').addClass('primary pull-right');
+        //$('.buttons-excel').html('<span>Export to Excel</span>');
+        if(resultFooter.length > 0){
+            var totaljobs = 0;
+            var completedJobs = 0;
+            var outStandingJobs = 0 ;
+            for (i = 0; i < resultFooter.length; i++) {
+                totaljobs += parseInt(resultFooter[i].TotalJobs);
+                completedJobs += parseInt(resultFooter[i].CompletedJobs);
+                outStandingJobs += parseInt(resultFooter[i].OutStandingJobs);
+            }
+            $('#datatable tfoot tr').append('<th>Total:</th><th> <span class="">Completed Job Count: '+completedJobs + '</span></th><th><span class="">OutStanding Job Count: '
+                + outStandingJobs + '</span></th><th><span class="">Total Job Count: ' + totaljobs+'</th>');
+        }else{
+            $('#datatable tfoot').remove();
+        }
+    }
+
+    function BindChart(resultData) {
+        var chartType = 'bar';
+        var groupedData = {};
+        var xAxis = ['xAxis'];
+        var data1 = ['TotalJobs'];
+        var data2 = ['CompletedJobs'];
+        var data3 = ['OutStandingJobs'];
+        var result = [];
+
+        for (var i = 0; i < resultData.length; i++) {
+            var item = resultData[i];
+            xAxis.push(item.CompanyName);
+            data1.push(item.TotalJobs);
+            data2.push(item.CompletedJobs);
+            data3.push(item.OutStandingJobs);
+        }
+        result.push(xAxis);
+        result.push(data1);
+        result.push(data2);
+        result.push(data3);
+
+        $('#chartbox').css('display', 'block');
+        chartdiv = c3.generate({
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if(chartType == 'pie'){
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    function ResetSearchFilters() {
+        $('#cntUsers').html('0');
+        $("#hdnUsers").val('');
+        $('#drdJobStatus').val('1');
+        $('#cntSSC').html('0');
+        $("#hdnSSC").val('');
+        $('#cntSE').html('0');
+        $("#hdnSE").val('');
+
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+
+        $('#LstSEAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSE");
+        });
+
+        $('#LstSSCAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSSC");
+        });
+
+        document.getElementById('UserID').style.pointerEvents = 'auto';
+        $('#UserID').css('opacity', '1');
+
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dataTables_scrollHeadInner table th {
+        color: #383838 !important;
+        font-family: "OpenSansSemibold" !important;
+        font-size: 13px !important;
+        background: #f8f8f8 none repeat scroll 0 0 !important;
+        padding: 10px 9px !important;
+    }
+
+    .dataTables_scrollHeadInner thead tr {
+        border: 3px solid #e4e4e4;
+        border-bottom: 0px;
+    }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+
+    .dataTables_scrollBody thead {
+        visibility: hidden;
+    }
+
+    .group {
+        background-color: #e6e6e6 !important;
+        font-size: 13px;
+        color: #000 !important;
+        opacity: 0.7;
+    }
+
+    .subtotalSpace {
+        margin-left: 3%;
+    }
+</style>
+

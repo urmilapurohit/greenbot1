@@ -1,0 +1,111 @@
+﻿
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Change Reseller";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<form>
+    <link href="~/Content/select2.min.css" rel="stylesheet" />
+    <div class="container">
+        <div class="form-group row">
+            <label for="staticEmail" class="col-sm-2 col-form-label">Solar Company</label>
+            <div class="col-sm-10">
+                <select class="form-control" id="ddlCompanyList"></select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="inputPassword" class="col-sm-2 col-form-label">Reseller</label>
+            <div class="col-sm-10">
+                <select class="form-control" id="ddlReseller"></select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <button id="btnChange" class="btn btn-primary">Change</button>
+        </div>
+    </div>
+</form>
+
+@section scripts{
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/select2.min.js"></script>
+    <script type="text/javascript">
+        var appData = {};
+        var $ddlCompanyList = $("#ddlCompanyList"),
+                        $ddlReseller = $("#ddlReseller");
+        $.ajax(
+         {
+             url: '@Url.Action("GetCompanyList", "Settings")',
+             dataType: 'json',
+             contentType: 'application/json; charset=utf-8',
+             type: 'get',
+             //async: false,
+             success: function (response) {
+                 if (response.status) {
+                     var data = JSON.parse(response.data);
+                     appData.companyListData = data.Table,
+                      appData.resellerData = data.Table1;
+
+                     $.each(appData.companyListData, function () {
+                         $ddlCompanyList.append($("<option />").val(this.SolarCompanyId).text(this.CompanyName));
+                     });
+                     $ddlCompanyList.select2();
+                     $.each(appData.resellerData, function () {
+                         $ddlReseller.append($("<option />").val(this.ResellerID).text(this.ResellerName));
+                     });
+                     $ddlReseller.select2();
+                     $ddlCompanyList.change();
+                     
+                 }
+
+             },
+             error: function (response) {
+                 showErrorMessage("Account has not been synced.");
+             }
+         });
+
+        $ddlCompanyList.change(function () {
+            var company = appData.companyListData.filter(e=>e.SolarCompanyId == this.value);
+            if (company.length > 0 && company[0].ResellerId) {
+                $ddlReseller.select2("val", company[0].ResellerId);
+            }
+            else {
+                $ddlReseller.select2("val", "");
+            }
+            EnableDisableChange();
+        });
+        $ddlReseller.change(function () {
+            EnableDisableChange();
+        });
+
+        $('#btnChange').click(function (e) {
+            e.preventDefault();
+            $.ajax({
+        url: '@Url.Action("ChangeReseller", "Settings")',
+        dataType: 'json',
+        contentType: 'application/json; charset=utf-8',
+        type: 'POST',
+        data: JSON.stringify({ SolarCompanyId: $ddlCompanyList.val(), NewResellerId: $ddlReseller.val() }),
+        success: function (response) {
+            if (response.status) {
+                alert('Reseller Changed Successfully.');
+                var index = appData.companyListData.findIndex((obj => obj.SolarCompanyId == $ddlCompanyList.val()))
+                appData.companyListData[index].ResellerId = $ddlReseller.val();
+                return false;
+            }
+            alert('Error Occured.');
+            return false;
+
+        },
+        error: function (response) {
+            showErrorMessage("Account has not been synced.");
+        }
+    });
+        });
+
+        function EnableDisableChange() {
+            $('#btnChange').attr('disabled', !($ddlReseller.val() && $ddlCompanyList.val()));
+        }
+    </script>
+}

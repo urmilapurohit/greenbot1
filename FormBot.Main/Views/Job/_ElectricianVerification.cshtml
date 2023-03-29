@@ -1,0 +1,92 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@using (Html.BeginForm("_ElectricianVerification", "Job", FormMethod.Post, new { id = "CreateJob", enctype = "multipart/form-data" }))
+{
+    @Html.HiddenFor(m => m.BasicDetails.JobID)
+    @Html.HiddenFor(m => m.Id)
+    <div class="container-fluid">
+        <div class="title">
+            <div class="row">
+                <h1>Electrician verification</h1>
+            </div>
+        </div>
+        <div class="container-fluid faq-block fix-width" style="max-width: 600px !important">
+
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobElectricians.FirstName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.JobElectricians.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1 })
+                @Html.ValidationMessageFor(m => m.JobElectricians.FirstName)
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobElectricians.LastName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.JobElectricians.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                @Html.ValidationMessageFor(m => m.JobElectricians.LastName)
+            </div>
+
+            <div class="form-group">
+                <input type="button" value="verify" class="login-btn primary" tabindex="3" id="btnVerify">
+            </div>
+
+        </div>
+    </div>
+}
+
+@section Scripts
+    {
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+       var themeId = '@(ViewData.ContainsKey("theme") ? ViewData["theme"] : "green")';
+            $('body').attr('id', themeId);
+
+
+    });
+
+    $("#btnVerify").click(function () {
+        var eleFirstName = escape($("#JobElectricians_FirstName").val());
+        var elelastName = escape($("#JobElectricians_LastName").val());
+        var JobId = $("#BasicDetails_JobID").val();
+        var id = $("#Id").val();
+
+        if ($("#CreateJob").valid()) {
+            $.ajax(
+                      {
+                          url: '@Url.Action("_ElectricianVerification", "Job")?eleFirstName=' + eleFirstName + '&Jobid=' + JobId + '&elelastName=' + elelastName,
+                          contentType: 'application/json',
+                          method: 'post',
+                          success: function (data) {
+                              if (data == true) {
+                                  @*window.location.href = '@Url.Action("_ElectricianSignature", "Job")?Id=' + id + '&Type=@Model.Type';*@
+                                   window.location.href = '@Url.Action("_ElectricianSignature", "Job")?Id=' + id + '&Type=@Model.Type' + '&SMSOrMail=@Model.SMSOrMail' ;
+                              }
+                              else {
+                                  $("#errorMsgRegion").html(closeButton + "Please verify inserted electrician details.");
+                                  $("#errorMsgRegion").show();
+                                  $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                  $('body').animate({ scrollTop: 0 }, 'slow');
+                              }
+                          },
+                      });
+        }
+    });
+
+    </script>
+}
+
+

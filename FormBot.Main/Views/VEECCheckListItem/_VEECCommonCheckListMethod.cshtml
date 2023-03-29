@@ -1,0 +1,173 @@
+﻿<script type="text/javascript">
+
+    var isVisitCheckListTemplateChange = false;
+    function CommonOpenaAddTemplate(templateId, itemId) {
+        if ($("#veecCheckListTemplate_VEECCheckListTemplateName")) {
+            $("#veecCheckListTemplate_VEECCheckListTemplateName").removeClass('input-validation-error');
+            $("#veecCheckListTemplate_VEECCheckListTemplateName").next("span").attr('class', 'field-validation-valid');
+        }
+
+        $("#veecCheckListTemplate_VEECCheckListTemplateId").val(0);
+        $("#veecCheckListTemplate_CopyOfCheckListTemplateId").val(0);
+        $("#veecCheckListTemplate_DeleteDefaultItemId").val(0);
+
+        clearTemplate();
+        $('#popupAddTemplate').modal({ backdrop: 'static', keyboard: false });
+        $('#popupAddTemplate').css('z-index', 10000);
+        
+        if (templateId) {
+            $("#veecCheckListTemplate_CopyOfCheckListTemplateId").val(templateId);
+        }
+        if (itemId) {
+            $("#veecCheckListTemplate_DeleteDefaultItemId").val(itemId);
+        }
+    }
+
+    function clearTemplate() {
+        
+        $("#veecCheckListTemplate_VEECCheckListTemplateName").val('');
+        $("#veecCheckListTemplate_IsDefault").prop("checked", false);
+    }
+
+    function CommonAddTemplate(isCheckListView) {
+        
+        var data = JSON.stringify($('#addVEECTemplateForm').serializeToJson());
+        var id = $("#veecCheckListTemplate_VEECCheckListTemplateId").val();
+        var copyTemplateId = $("#veecCheckListTemplate_CopyOfCheckListTemplateId").val();
+        var deleteDefaultItemId = $("#veecCheckListTemplate_DeleteDefaultItemId").val();
+
+        var itemIds = [];
+        var isSetFromSetting = isCheckListView;
+        var visitCheckListItemIdsString = ''
+
+        if (isCheckListView == "true") {
+            $.each($("#chkListOfScheduling").find(".checklist").find('li'), function () {
+                itemIds.push($(this).data('visitchecklistitemid'));
+            });
+
+            visitCheckListItemIdsString = itemIds.join(',');
+        }
+
+        var objData = JSON.parse(data);
+        objData.veecCheckListTemplate.isSetFromSetting = isCheckListView == "true" ? false : true;
+        objData.veecCheckListTemplate.VisitCheckListItemIds = visitCheckListItemIdsString;
+        $.ajax(
+           {
+               url: '@Url.Action("AddTemplate", "VEECCheckListTemplate")',
+               dataType: 'json',
+               contentType: 'application/json; charset=utf-8',
+               type: 'post',
+               data: JSON.stringify(objData),
+               success: function (response) {
+
+                   if (response.id && response.id > 0) {
+                       $('#popupAddTemplate').modal('toggle');
+                       $(".datatableTemplateList").dataTable().fnDraw();
+
+                       var jobSchedulingId = $("#JobSchedulingID").val();
+                       var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+
+                       if (copyTemplateId) {
+                           
+                           if (isCheckListView)
+                               
+                               CommonOpenCheckListItemPopup(response.templateEncodedId, "false", jobSchedulingId, false, tempJobSchedulingId, $("#VeecID").val());
+                           else
+                               OpenCheckListItemPopup(response.templateEncodedId);
+                       }
+
+                       if (id > 0)
+                           showSuccessMessage("CheckList template has been updated successfully.");
+                       else
+                           showSuccessMessage("CheckList template has been added successfully.");
+                   }
+                   else {
+                       if (response.error.toLowerCase() == 'sessiontimeout')
+                           window.location.href = '@Url.Action("Logout", "Account")';
+                       else
+                           showErrorMessageAddTemplate(response.error);
+                   }
+               },
+               error: function () {
+                   if (id > 0)
+                       showErrorMessageAddTemplate("CheckList template has not been updated.");
+                   else
+                       showErrorMessageAddTemplate("CheckList template has not been added.");
+               }
+           });
+    }
+
+    function CommonOpenCheckListItemPopup(templateId, isSetFromSetting, jobSchedulingId, isTemplateChange, TempJobSchedulingId, jobId, isAddVisit, jobType) {
+        
+        if (isTemplateChange)
+            isTemplateChange = true;
+        else
+            isTemplateChange = false;
+
+        var visitCheckListIdsString = '';
+
+        if (isSetFromSetting == "false" && visitCheckListItemIds.length > 0) {
+            visitCheckListIdsString = visitCheckListItemIds.join(',');
+        }
+
+        var url = '@Url.Action("GetCheckListItemByTemplateId", "VEECCheckListItem")?id=' + templateId + '&isSetFromSetting=' + isSetFromSetting + '&jobSchedulingId=' + jobSchedulingId + '&isTemplateChange=' + isVisitCheckListTemplateChange + '&tempJobSchedulingId=' + TempJobSchedulingId + '&veecid=' +$('#VeecID').val() + '&visitCheckListIdsString=' + visitCheckListIdsString + '&isAddVisit=' + isAddVisit + '&JobType=' + jobType;
+        $.get(url, function (data) {
+
+            $('#checkListTemplateForm').empty();
+            $('#checkListTemplateForm').append(data);
+
+            if (isSetFromSetting == true) {
+                $("#popupCheckListTemplate").modal({ backdrop: 'static', keyboard: false });
+            }
+
+            if (templateId == '') {
+                $(".liAddCheckListItem").hide();
+            }
+
+            if (isSetFromSetting.toString() == "false") {
+                visitCheckListItemIds = [];
+                $.each($("#chkListOfScheduling").find(".checklist").find('li'), function () {
+                    visitCheckListItemIds.push($(this).data('visitchecklistitemid'));
+                });
+            }
+
+            $("#loading-image").hide();
+
+        });
+    }
+
+    function showErrorMessageAddTemplate(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionAddTemplate").html(closeButton + message);
+        $("#errorMsgRegionAddTemplate").show();
+    }
+    function TempCheckListTemplateItemAdd(checkListTemplateId, isAddVisit, jobId, jobType) {
+        var tempJobSchedulingId = $("#TempVeecSchedulingId").val();
+        var jobSchedulingId = $("#VeecSchedulingID").val() > 0 ? $("#VeecSchedulingID").val() : 0;
+        var jobId = $("#VEECDetail_VEECId").val();
+
+        $.ajax(
+              {
+                  url: '@Url.Action("TempVEECCheckListTemplateItemAdd", "VEECCheckListItem")',
+                  dataType: 'json',
+                  contentType: 'application/json; charset=utf-8',
+                  type: 'get',
+                  data: { checkListTemplateId: checkListTemplateId, tempJobSchedulingId: tempJobSchedulingId, jobSchedulingId: jobSchedulingId, jobId: jobId },
+                  success: function (response) {
+                      
+                      if (response.status) {
+
+                          if (response.visitCheckListItemIds) {
+                              visitCheckListItemIds = [];
+                              visitCheckListItemIds = response.visitCheckListItemIds.split(',');
+                          }
+                          
+                          CommonOpenCheckListItemPopup(checkListTemplateId, "false", jobSchedulingId, true, tempJobSchedulingId, jobId, isAddVisit, jobType);
+                      }
+                  },
+                  error: function () {
+                      showErrorMessageItem("CheckList item has not been deleted.");
+                  }
+              });
+    }
+</script>

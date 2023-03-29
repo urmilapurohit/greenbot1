@@ -1,0 +1,85 @@
+﻿@using FormBot.Main
+@using FormBot.Main.Models
+@using FormBot.Helper
+@model LoginViewModel
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_NewLoginLayout.cshtml";
+}
+<style>
+    .alert button{
+        margin-top:0px !important;
+    }
+</style>
+<div class="container h-100">
+    <div class="d-flex h-100 text-center">
+        <div class="w-100 text-white">
+            <div class="row p-4 bg-dark-transparent">
+                <div id="msgSection" style="width:100%;text-align:left;">
+                    @Html.RenderMessages()
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="logo logo576 col-sm-6 col-md-5 col-lg-3 col-xl-3">
+                    <img src="~/Images/NewLogin/GreenBot_logo_Master_Colour.png" alt="Greenbot Logo Master Colour" />
+                </div>
+                <div class="register register-mobile col-3 col-xl-2 col-lg-2 col-md-2 offset-sm-3 offset-1 offset-md-5">
+                    <a href="/Account/ResellerSignUp/@Model.CompanyName">Register</a>
+                </div>
+
+                <div class="col-sm-12 col-md-12 col-xl-9 col-lg-9">
+                    @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-inline", id = "LoginDetails", role = "form" }))
+                    {
+
+
+                        @Html.TextBoxFor(m => m.Username, new { @class = "form-control input-mobile col-12 col-md-4 col-lg-3 col-xl-3 usernameMargin valid", @placeholder = "Username", @autofocus = true, @tabindex = "1" })
+                        @*@Html.ValidationMessageFor(m => m.Username)*@
+
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control input-mobile col-12 col-md-4 col-lg-3 col-xl-3 passwordMargin", @placeholder = "Password", @tabindex = "2" })
+                        @*@Html.ValidationMessageFor(m => m.Password)*@
+
+                        <button type="submit" class="btn btn-success login-btn col-md-3 col-lg-2 input-mobile" tabindex="3" id="btnSubmit">Login</button>
+
+                        <div class="forgot-mobile text-center col-sm-12 col-md-12 col-lg-2">
+                            <span class="link_password"><a id="ForgotPassword" href="@Url.Action("ForgotPassword", "Account")">Forgot Password?</a></span>
+                        </div>
+
+                        if (Model.CompanyName != null)
+                        {
+                            <div class="register register-desktop col-xl-2 offset-xl-1 col-lg-2 offset-lg-1 col-md-2">
+                                <a id="ResellerSignUp" href="/Account/ResellerSignUp/@Model.CompanyName">Register</a>
+                            </div>
+                        }
+                    }
+
+                    @*<form class="form-inline" action="/action_page.php">*@
+                    @*<input autofocus="True" class="form-control input-mobile col-12 col-md-4 col-lg-3 col-xl-3 usernameMargin valid" data-val="true" data-val-required="The Username field is required." id="Username" name="Username" placeholder="Username" tabindex="1" type="text" value="" autocomplete="off">
+            <span class="field-validation-valid" data-valmsg-for="Username" data-valmsg-replace="true"></span>*@
+                    @*<input class="form-control input-mobile col-12 col-md-4 col-lg-3 col-xl-3 passwordMargin" data-val="true" data-val-required="The Password field is required." id="Password" name="Password" placeholder="Password" tabindex="2" type="password" autocomplete="off">
+            <span class="field-validation-valid" data-valmsg-for="Password" data-valmsg-replace="true"></span>*@
+
+                    @*<button type="submit" class="btn btn-success login-btn col-md-3 col-lg-2 input-mobile" tabindex="3" id="btnSubmit">Login</button>*@
+
+                    @*<div class="forgot-mobile text-center col-sm-12 col-md-12 col-lg-2">
+                <span class="link_password"><a id="ForgotPassword" href="/Account/ForgotPassword">Forgot password?</a></span>
+            </div>*@
+                    @*<div class="register register-desktop col-xl-2 offset-xl-1 col-lg-2 offset-lg-1 col-md-2">
+                <a id="ResellerSignUp" href="/Account/ResellerSignUp/emergingenergy">Register</a>
+            </div>*@
+                    @*</form>*@
+                </div>
+                <div class="row col-12">
+                    <div class="forgot-desktop col-xl-3 offset-xl-3 offset-lg-3 col-lg-3 col-md-3">
+                        @*<a href="#forgot">Forgot password?</a>*@
+                        <a id="ForgotPassword" href="@Url.Action("ForgotPassword", "Account")">Forgot Password?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

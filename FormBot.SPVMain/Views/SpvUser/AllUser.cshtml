@@ -1,0 +1,183 @@
+﻿@model FormBot.Entity.SpvUser
+@using FormBot.SPVMain.Infrastructure
+@using FormBot.Helper
+@{
+    ViewBag.Title = "All Users";
+}
+
+@{
+    bool isAdd = false, isEdit = false, isDelete = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.SPVMain.Controllers.MenuIdList>
+    )TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+    {
+        if (d.SpvMenuID == (int)SystemEnums.MenuId.UserAdd.GetHashCode()) { isAdd = true; }
+        if (d.SpvMenuID == (int)SystemEnums.MenuId.UserEdit.GetHashCode()) { isEdit = true; }
+        if (d.SpvMenuID == (int)SystemEnums.MenuId.UserDelete.GetHashCode()) { isDelete = true; }
+    });
+    }
+}
+<script src="~/Scripts/User/UserListing.dev.js"></script>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <h1>All Users</h1>
+        @if (isAdd)
+        {
+            <a href="@Url.Action("Create","SpvUser")" class="btn primary pull-right icon-btn"><span class="sprite-img add_ic"></span>Create New User</a>
+
+        }
+
+        @*<input type="button" id="btnSendMail" value="Send Mail" class="primary pull-right mail_ic" data-toggle="modal" data-target="" data-backdrop="static" data-keyboard="false" onclick="SendMail();" />*@
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+
+    <form class="form-block" style="margin-top:10px;">
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Name:</label>
+                <input type="text" id="txtName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">UserName:</label>
+                <input type="text" id="txtUserName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Email:</label>
+                <input type="text" id="txtEmail" class="form-control" maxlength="256" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        @if (ProjectSession.UserTypeId != 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">User Type:</label>
+                    @Html.DropDownListFor(model => model.SpvUserTypeId, new List<SelectListItem>(), new { id = "SpvUserTypeId", @class = "form-control" })
+                </div>
+            </div>
+
+
+        }
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">User Role:</label>
+                @Html.DropDownListFor(model => model.SpvRoleId, new List<SelectListItem>(), new { id = "SpvRoleId", @class = "form-control" })
+            </div>
+        </div>
+
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Role:</label>
+                @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleId", @class = "form-control" })
+            </div>
+        </div>*@
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Is Active:</label><br />
+                <input type="checkbox" name="IsActive" id="btnchkIsActive" checked="checked" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" />
+            </div>
+        </div>
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="LoadSpvUsers();">
+
+            <div class="default btn icon-btn" onclick="ResetSpvUsers();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    </form>
+    @*<div class="grid_topbar col-xs-12" ">
+            <p class="job_result" id="numRecords"></p>
+        </div>*@
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+
+            <div class="toggle-table-row table-responsive kendo-grid">
+                <div id="datatableAllSpvUser">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.custom.css" rel="stylesheet" />
+<link href="~/Content/KendoGrid.css" rel="stylesheet" />
+<style>
+.edituser { background-image: url('../../Images/edit-icon.png'); }
+</style>
+
+<script>
+
+    var urlGetAllSpvUser = '@Url.Action("GetAllSpvUserKendo", "SpvUser")';
+    var UserId = '@Model.SpvUserId';
+     var SpvUserTypeId = $('#SpvUserTypeId option:selected').val();
+    function ChangeSpvUserType(SpvUserTypeId) {
+
+           $.ajax({
+                    url: '@Url.Action("GetSpvRole", "SpvUser")',
+                    type: "get",
+                    async: false,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    data: { UserTypeId: SpvUserTypeId },
+                    success: function (data) {
+                        if (data == 0) {
+                            $("#SpvRoleId").empty();
+                            $("#SpvRoleId").append('<option value="">' + "Select" + '</option>');
+                        }
+                        else {
+                            $("#SpvRoleId").empty();
+                            $("#SpvRoleId").append('<option value="">' + "Select" + '</option>');
+                            var name = '';
+                            $.each(data, function (i, role) {
+                                if (role.Selected == true) {
+                                    name = role.Value;
+                                }
+                                $("#SpvRoleId").append('<option value="' + role.Value + '">' +
+                                                                      role.Text + '</option>');
+                            });
+                            $("#SpvRoleId").val(parseInt(name));
+                        }
+                        $("#SpvRoleId").val("");
+                    },
+             });
+    }
+
+    $("#SpvUserTypeId").change(function () {
+        var SpvUserTypeIdValue = $('#SpvUserTypeId').val();
+        ChangeSpvUserType(SpvUserTypeIdValue);
+    });
+    $(document).ready(function () {
+        if ('@ProjectSession.UserTypeId' == '3') {
+             FillDropDown('SpvRoleId', '@Url.Action("GetSpvRole", "SpvUser")', '@(Model.SpvRoleId)' ? '@(Model.SpvRoleId)' : 0, true,  null);
+           
+        }
+        else {
+         FillDropDown('SpvUserTypeId', '@Url.Action("GetSpvUserType", "SpvUser")', '@(Model.SpvUserTypeId)' ? '@(Model.SpvUserTypeId)' : 0, true,  ChangeSpvUserType('@Model.SpvUserTypeId'));
+
+        }
+       LoadSpvUsers();
+    });
+
+</script>
+
+

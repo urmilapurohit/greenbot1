@@ -1,0 +1,882 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+
+<style type="text/css">
+    .signatureCanvas canvas {
+        width: 220px;
+        height: 80px;
+        border: 1px dotted #000;
+    }
+</style>
+
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+
+@using (Html.BeginForm("_InstallerSignatureSave", "Job", FormMethod.Post, new { id = "CreateJob", enctype = "multipart/form-data" }))
+{
+    @Html.HiddenFor(m => m.BasicDetails.JobID)
+    @Html.HiddenFor(m => m.InstallerView.Longitude)
+    @Html.HiddenFor(m => m.InstallerView.Latitude)
+    @Html.HiddenFor(m => m.InstallerView.Location)
+    @Html.HiddenFor(m => m.InstallerView.IpAddress)
+    @Html.HiddenFor(m => m.BasicDetails.Email)
+    @Html.HiddenFor(m => m.BasicDetails.RefNumber)
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <section id="content" class="container signature-outer">
+
+        @*@if (Model.BasicDetails.JobType == 1)
+        {
+            <h1 class="title">SGU - Collecting Installer Signature email template</h1>
+        }
+        else
+        {
+            <h1 class="title">SWH - Collecting Installer Signature email template</h1>
+        }*@
+        <h1 class="title">Installer Signature Required - Please Sign</h1>
+        <p>Dear <label>@(ViewData.ContainsKey("InstallerName") ? ViewData["InstallerName"] : "")</label> ,</p>
+
+        @if (Model.BasicDetails.JobType == 1)
+        {
+    <p><strong> @(ViewData.ContainsKey("ScaName") ? ViewData["ScaName"] : "") </strong> from <strong>@(ViewData.ContainsKey("ScaCompanyName") ? ViewData["ScaCompanyName"] : "")</strong> is requesting a signature for the assignment of STCs  for the Solar Generation Unit (SGU) they have installed on property <strong id="lblOwnerAddress"></strong> :</p> }
+else
+{
+    <p><strong> @(ViewData.ContainsKey("ScaName") ? ViewData["ScaName"] : "") </strong> from <strong>@(ViewData.ContainsKey("ScaCompanyName") ? ViewData["ScaCompanyName"] : "")</strong> is requesting a signature for the assignment of STCs for the Solar Water Heater/Air Source Heat Pump they have installed on property <strong id="lblOwnerAddress"></strong> :</p>}
+
+        <h4 class="sub-title"> Before signing please verify your system details below:</h4>
+
+        <ul class="ulSystemDetails list-block">
+            @if (Model.BasicDetails.JobType == 1)
+            {
+    <li>
+        Panel brand : <label>
+            @foreach (var jobPanelDetails in Model.lstJobPanelDetails.FindAll(m => m.IsDeleted == false))
+            {
+    <span>[</span> @jobPanelDetails.Brand.ToString() <span>]</span>}
+        </label>
+    </li>
+                        <li>
+                            Panel Model: <label>
+                                @foreach (var jobPanelDetails in Model.lstJobPanelDetails.FindAll(m => m.IsDeleted == false))
+                                {
+            <span>[</span> @jobPanelDetails.Model.ToString() <span>]</span>}
+                            </label>
+                        </li>
+                                            <li>
+                                                Inverter brand : <label>
+
+                                                    @foreach (var jobInverterDetails in Model.lstJobInverterDetails.FindAll(m => m.IsDeleted == false))
+                                                    {
+                                <span>[</span> @jobInverterDetails.Brand <span>]</span>;
+                            }
+                                                </label>
+                                            </li>
+                                                                <li>
+                                                                    Inverter Model: <label>
+                                                                        @foreach (var jobInverterDetails in Model.lstJobInverterDetails.FindAll(m => m.IsDeleted == false))
+                                                                        {
+                                                    <span>[</span> @jobInverterDetails.Model <span>]</span>;
+                                                }
+                                                                    </label>
+                                                                </li>
+                                                                                    <li>System Total Rated Output kW: <label>@Model.JobSystemDetails.SystemSize</label></li>
+                                                                                                        <li>No Of Panel: <label id="lblnoOfpanel"></label></li>
+                                                                                                                            <li>Panel Serial Numbers: <label id="lblserialno"></label></li>
+ }
+                                                                                                                        else
+                                                                                                                        {
+                                                                                                        <li>System Brand: <label id="lblbrand"></label></li>
+                                                                                                                            <li>System Model: <label id="lblmodel"></label></li>
+                                                                                                                                                <li>Tank Size: <label id="lblsize"></label></li>
+                                                                                                                                                                    <li>Serial Number: <label id="lblserialno"></label></li>
+                                                                                                                                                                                        <li>No Of Panel: <label id="lblnoOfpanel"></label></li>
+}
+        </ul>
+
+        <h4 class="sub-title">Mandatory Declaration:</h4>
+
+        <ul class="list-block">
+            @if (Model.BasicDetails.JobType == 1)
+            {
+    <li>
+        <p>Mandatory written statement by the CEC Installer/Designer/Electrician : </p>
+        <p>
+            I <label>@(ViewData.ContainsKey("InstallerName") ? ViewData["InstallerName"] : "")</label> was the accredited CEC installer and/or CEC designer and/or electrician that completed the SGU installation at <label id="lblOwnerAddress2"></label>
+            and verify that i have installed the system, it meets the CEC Accreditation Code of Practice and I am bound by their Code of Conduct., have used panels and inverters approved by the CEC, followed all of the Clean Energy Regulator's Guidelines, have $5m in Public Liability insurance and the system meets the following Australian Standards, where applicable : -
+        </p>
+    </li>
+                        <li>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <td style="width:33.33%;">
+                                                <p><b>PV & Inverter Standards</b></p>
+                                                <p>
+                                                    AS/NZS 5033:2005,Installation of photovoltaic (PV) arrays
+                                                    AS/NCS 1170:2002,Strucural Design actions. Part 2 : Wild Action (PV Arrays)
+                                                    AS/NZS 5033,PV modules are compliant and the product is listed at
+                                                    <a href="http://www.cleanenergycouncil.org.au" target="_blank">www.cleanenergycouncil.org.au</a><br />
+                                                    The grid connected inverter used has been tested to Standard AS 4777
+                                                    and the product is listed at cleanenergycouncil.org.au
+                                                </p>
+
+                                            </td>
+                                            <td style="width:33.33%;">
+                                                <p><b>Grid connected system</b></p>
+                                                <p>
+                                                    AS/NZS 3000:2007, Wiring Rules
+                                                    AS 4777, this installation complies to this
+                                                    standard <br />
+                                                    AS/NZS 51768:2007, Lightning Protection
+                                                    AS 4777:2005, Grid connection of energy
+                                                    System via inverters
+                                                </p>
+                                            </td>
+                                            <td style="width:33.33%;">
+                                                <p><b>Standalone System</b></p>
+                                                <p>
+                                                    AS/NZS 4509:2009, Standalone Power systems part 1: Safety &
+                                                    Installation <br />
+                                                    AS 4086:2:1992. Secondary batteries for use with standalone
+                                                    power system. Part 2: Installation & maintenance,wind system
+                                                    AS/NZS 3000:2007, Wiring Rules
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </li>
+                                            <li>
+                                                <p>
+                                                    I verify that all Local, State or Territory government requirements have been met for,(i)The siting of the unit (ii) The attachment of the unit to the building or structure, (iii) The grid connection of the system for the SGU installation.
+                                                    I verify that the SGU is <input type="checkbox" id="isGridConnected" @(Convert.ToBoolean(ViewData["isGridConnected"]) ? "checked='checked'" : "") disabled /> Grid connected  <input id="isBattery" type="checkbox" @(Convert.ToBoolean(ViewData["isBattery"]) ? "checked='checked'" : "") disabled /> Connected to the grid with battery storage
+                                                    <input type="checkbox" id="isWithOutBattery" @(Convert.ToBoolean(ViewData["isWithOutBattery"]) ? "checked='checked'" : "") disabled /> on off grid installation and an electrical worker holding an unrestricted licence for electrical work issued by the State of Territory authority for the place where the unit was installed undertook all writing of the unit that involes alternating current of 50 or more volts or direct current of 120.
+                                                    I confirm that I am the installer for this SGU (Solar Generation Unit) and confirm that the details in the above statement is correct
+                                                    @*I confirm that the details in the above statement is correct*@
+                                                </p>
+                                            </li>
+                                            @*<li><input type="checkbox" id="isAll" @ViewData["IsAll"] /> I am also signing as the Designer and Electrician for this job.</li>*@
+                                                                <li><input type="checkbox" id="isSameDesigner" @ViewData["IsSameDesigner"] /> I am also signing as the Designer for this job.</li>
+                                                                                    <li><input type="checkbox" id="isSameElectrician" @ViewData["IsSameElectrician"] /> I am also signing as the Electrician for this job.</li>
+ }
+                                                                                else
+                                                                                {
+                                                                <li>* I am the legal owner of the above Solar Water Heater (SWH) and assign the right to create STCs to <label> @(ViewData.ContainsKey("RaName") ? ViewData["RaName"] : "") </label>.</li>
+                                                                                    <li>* I understand I am under no obligation to assign STCs to <label> @(ViewData.ContainsKey("RaName") ? ViewData["RaName"] : "") </label>.</li>
+                                                                                                        <li>* I agree to repay the STC payment to <label> @(ViewData.ContainsKey("RaName") ? ViewData["RaName"] : "") </label>.</li>
+                                                                                                                            <li>* I understand that an agent of the Clean Energy Regulator or <label> @(ViewData.ContainsKey("RaName") ? ViewData["RaName"] : "") </label> may wish to inspect SGU within the first five years of certificate redemption.</li>
+                                                                                                                                                <li>* I must retain receipts and proof of the installation date for the life of the STCs.</li>
+                                                                                                                                                                    <li>* I am aware that penalties can be applied for providing misleading information in this form under the Renewable (Electricity) Act 2000.</li>
+                                                                                                                                                                                        <li>* I understand that this system is eligible for <label>@Model.JobSystemDetails.CalculatedSTC</label>&nbsp; STCs in exchange for assigning my right to create these STCs I will receive from the installer/supplier a point of sale discount.</li>
+}
+
+        </ul>
+
+        <p>
+            <ul class="list-block">
+                <li class="modal-sign">
+                    @*<img class="img-responsive" id="imgModalInstallerSign" alt="" style="margin-bottom:7px;">
+                    <button type="button" class="btn primary icon-btn" onclick="SignInstallerSignature()">
+                        <span class="sprite-img signature-ic"></span>Sign here
+                    </button>*@
+                </li>
+            </ul>
+        </p>
+
+        <h4 class="sub-title">Installer written statement</h4>
+
+        <p>
+            I <strong> @(ViewData.ContainsKey("InstallerWrittenStatementName") ? ViewData["InstallerWrittenStatementName"] : "") </strong> was the accredited installer and hold the appropriate accreditation type <strong> (@(ViewData.ContainsKey("TypeOfConnections") ? ViewData["TypeOfConnections"] : ""))</strong> for the solar PV system installed at  <strong id="lblInstallationAddress"></strong> and verify that:
+        </p>
+        <ul class="list-block">
+            <li>•	I’m an</li>
+            <li><input type="radio" id="isEmployee" name="workType"  @(Convert.ToBoolean(ViewData["isEmployee"]) ? "checked='checked'" : "") value="Employee"/> employee</li>
+            <li><input type="radio" id="isSubContractor" name="workType" @(Convert.ToBoolean(ViewData["isSubContractor"]) ? "checked='checked'" : "") value="SubContractor"/> subcontractor</li>
+            <li>of <strong> (@(ViewData.ContainsKey("ScaCompanyName") ? ViewData["ScaCompanyName"] : ""))</strong> </li>
+        </ul>
+        <p>
+            •	I complied with the relevant installation requirements of the accreditation scheme under which I am accredited for the installation of the unit<br />
+            •	All local, State or Territory government requirements have been met for the installation of the unit<br />
+            •	The electrical wiring associated with the installation of the unit was undertaken by an electrical worker holding an unrestricted licence for electrical work issued by the State or Territory authority for the place where the unit was installed<br />
+            •	I have provided the owner of the unit with any documents required by the laws of the jurisdiction in which the unit was installed certifying that the installation of the unit complies with the relevant laws relating to safety and technical standards<br />
+            •	I received a copy of the design of the unit, and<br />
+        </p>
+        <ul class="list-block">
+            <li><input type="radio" id="DesignedNotModified" name="designModification" @(Convert.ToBoolean(ViewData["DesignedNotModified"]) ? "checked='checked'" : "") value="DesignedNotModified"/> The design was not modified during the installation of the unit and it was installed in all material aspects, in accordance with the design, or</li>
+            <li><input type="radio" id="DesignedModified" name="designModification"@(Convert.ToBoolean(ViewData["DesignedModified"]) ? "checked='checked'" : "") value="DesignedModified"/> The design was modified during the installation of the unit and the modifications were consistent with all relevant requirements of the accreditation scheme for the design of the unit and that the unit was installed, in all material aspects, in accordance with the modified design</li>
+            <li>»	The unit will perform consistently with the design or modified design (as applicable)</li>
+        </ul>
+        <p>
+            •	That the inverter used in the installation of the unit was an approved eligible model of inverter and if grid-connected complies with AS/NZS 4777.2:2020<br />
+            •	That the model(s) of PV modules used in the installation of the unit was an approved eligible PV module<br />
+            •	I was on-site to install or supervise the installation of the unit in accordance with the accreditation scheme under which I am accredited<br />
+            •	I have and can provide evidence demonstrating that I have met the on-site attendance obligations in accordance with the accreditation scheme under which I am accredited.<br /><br />
+
+            I declare that the above statements are true, correct and complete and understand that under the Renewable Energy (Electricity) Act 2000 and Renewable Energy (Electricity) Regulations 2001 penalties apply for providing false or misleading information. I understand that giving false or misleading information is a serious offence under the Criminal Code Act 1995.
+
+        </p>
+        <table>
+            <tr>
+                <td>Installer signature</td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="width:200px;">
+                        <img class="img-responsive" id="imgModalInstallerSign" alt="" style="margin-bottom:7px;">
+                        <button type="button" class="btn primary icon-btn" onclick="SignInstallerSignature(true)">
+                            <span class="sprite-img signature-ic"></span>Sign here
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Installer full name</td>
+            </tr>
+            <tr>
+                <td>
+                    <label id="lblInstallerName"><strong> (@(ViewData.ContainsKey("InstallerName") ? ViewData["InstallerName"] : ""))</strong> </label>
+                </td>
+            </tr>
+            <tr>
+                <td>Signature date</td>
+            </tr>
+            <tr>
+                <td>
+                    <label id="txtInstallersignatureDate"></label>
+                </td>
+            </tr>
+        </table>
+
+        <br />
+        <p><strong>Privacy Declaration:</strong> <label> @(ViewData.ContainsKey("RaName") ? ViewData["RaName"] : "") </label> will only use this personal information as intended and will not sell or divulge this to any parties other than the Clean Energy Regulator. If you are not the intended recipient of this email - Please dispose this email and disregard the information within.</p>
+
+        <div class="text-center">
+            <button id="btnSaveInstallerSignature" type="button" class="btn default icon-btn" onclick="SaveInstallerSignature()">
+                <span class="sprite-img save_ic"></span>Complete Signing
+            </button>
+            <span id="spansign" class="" style="color: #b94a48;display:none"></span>
+        </div>
+
+    </section>
+}
+
+<div class="modal fade popupSignature" tabindex="-1" id="popupInstallerSignature">
+    @Html.Partial("_SignaturePopup", new ViewDataDictionary { { "isCopySign", false } }););
+</div>
+
+@section Scripts
+    {
+
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="../../Scripts/jSignature.dev.js" type="text/javascript"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyC9JGh32nUUr3-ArB0sn_BeP7r3g5pVacw&sensor=false&libraries=places"></script>
+
+    <script type="text/javascript">
+        var $ = $.noConflict();
+        $(document).ready(function () {
+            GetOwnerAddress();
+            getSystemDetails();
+
+            var themeId = '@(ViewData.ContainsKey("theme") ? ViewData["theme"] : "green")';
+            $('body').attr('id', themeId);
+            // getLocation();
+            var d = new Date();
+            var curr_date = d.getDate();
+            var curr_month = d.getMonth();
+            var curr_year = d.getFullYear();
+            var todayDate = curr_date + "/" + curr_month
+             + "/" + curr_year;
+            $("#lblDate").text(todayDate);
+
+            //   var IPAddress = GetUserIP();
+            //   $("#lblIPAddress").text(IPAddress);
+
+            var OwnerAddress = GetOwnerAddress();
+            $("#lblOwnerAddress").text(OwnerAddress);
+            $("#lblOwnerAddress2").text(OwnerAddress);
+            $("#lblInstallationAddress").text(OwnerAddress);
+            var url = '@Url.Action("UploadOwnerSignature", "Job")';
+            var logoWidth = 0, logoHeight = 0, SRCOwnerSign;
+
+            $('#uploadBtnSignature').fileupload({
+
+                url: url,
+                dataType: 'json',
+                done: function (e, data) {
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    for (var i = 0; i < data.result.length; i++) {
+                        if (data.result[i].Status == true) {
+                            var guid = '@Model.Guid';
+                            var signName = $('#imgUploadSign').attr('class');
+                            var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                            var imagePath = proofDocumentURL + "JobDocuments" + "/" + guid;
+                            var SRC = imagePath + "/" + data.result[i].FileName.replace("%", "$");
+                            SRCOwnerSign = SRC;
+                            $('#imgUploadSign').attr('class', data.result[i].FileName.replace("%", "$"));
+                        }
+                        else {
+                            UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                    }
+                    if (UploadFailedFiles.length > 0) {
+                        showErrorMessageForPopup("Signature has not been uploaded.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                    }
+                    else {
+                        $('#imgUploadSign').show();
+                        $("#imgUploadSign").attr('src', SRCOwnerSign);
+                        $("#deleteSign").show();
+                        showSuccessMessageForPopup("Signature has been uploaded successfully.", $("#successMsgRegionSignPopup"), $("#errorMsgRegionSignPopup"));
+                    }
+                },
+                progressall: function (e, data) {
+
+                },
+                singleFileUploads: false,
+                send: function (e, data) {
+
+                    var documentType = data.files[0].type.split("/");
+                    var mimeType = documentType[0];
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                                showErrorMessageForPopup(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            showErrorMessageForPopup("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                            return false;
+                        }
+                    }
+                    if (mimeType != "image") {
+                        showErrorMessageForPopup("Please upload a file with .jpg , .jpeg or .png extension.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    if (data.files[0].size > parseInt(1024000)) {
+                        showErrorMessageForPopup("Please upload Signature Within 1 MB otherwise it will slow down your job performance", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("");
+                    $("#errorMsgRegion").hide();
+                    return true;
+                },
+                formData: { jobId: '@Model.Guid' }
+            });
+            var guid = '@Model.Guid';
+
+            //  JSignature api to render signature area in div whose id is "cSignature"
+            //  and handling mousedown event that sets IsSignature property to true indicating that user initiated writing.
+            //$("#cSignature").jSignature({ height: 200,width:500, mousedown: function () { $('#IsSignature').val('True') }, signatureLine : true });
+            //$("#cSignature").jSignature({ height: 100, signatureLine: true });
+            //var cdIsmouseIn = false;
+            //$("#cSignature").jSignature({ height: 100, mousedown: function () { $('#IsSignature').val('True') }, signatureLine: true });
+            var $sigdiv = $("#cSignature").jSignature({ height: 220, mousedown: function () { $('#IsSignature').val('True') }, signatureLine: true });
+            var cdIsmouseIn = false;
+
+            $("#cSignature").bind('change', function (e) {
+                if ($sigdiv.jSignature('getData', 'native').length > 0)
+                    $("#cSignature .signLabel").addClass('hidden');
+                else
+                    $("#cSignature .signLabel").removeClass('hidden');
+            });
+
+            $("#aDrawSign").click(function () {
+                showHideDrawUploadSection(this);
+            });
+
+            $("#aUploadSign").click(function () {
+                showHideDrawUploadSection(this);
+            });
+
+            $('#popupInstallerSignature').off().on('shown.bs.modal', function () {
+                var widthVal = $('#cSignature .jSignature').width();
+                $('#cSignature').find("canvas.jSignature").width(widthVal)
+                $('#cSignature').find('canvas').attr('width', widthVal + 'px !important');
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").$controlbarLower.css('margin-bottom', '3.0em')
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['data'])
+            })
+        });
+
+        function CDMouseOut() {
+            cdIsmouseIn = false;
+        }
+
+        function deleteSign(imageId) {
+            var FolderName = '@Model.Guid';
+            var fileDelete = $('#imgUploadSign').attr('class');
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax({
+                    url: '@Url.Action("DeleteOwnerSignFromFolderandTable", "Job")',
+                    data: { fileName: fileDelete, FolderName: FolderName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        var sign = $('#imgUploadSign').attr('class');
+                        $('#imgUploadSign').removeAttr('src');
+                        $('#imgUploadSign').removeAttr('class');
+                        $('#popupInstallerSign').modal('hide');
+                        $("#imgUploadSign").hide();
+                        showSuccessMessageForPopup("Signature has been deleted successfully.", $("#successMsgRegionSignPopup"), $("#errorMsgRegionSignPopup"));
+                        return false;
+                    }
+                });
+            }
+        }
+
+        function DeleteFileFromUserOnCancel(fileNames, guid) {
+            $.ajax({
+                url: '@Url.Action("DeleteFileFromFolder", "Job")',
+                data: { fileName: fileNames, FolderName: guid },
+                contentType: 'application/json',
+                method: 'get',
+                success: function (data) {
+
+                },
+            });
+        }
+
+        function SaveInstallerSignature() {
+            //toDo
+            if (typeof($('#imgModalInstallerSign').attr('src')) == "undefined") {
+                showErrorMessage("Please draw/upload signature.");
+                return false;
+            }
+
+            var IsUploaded;
+            var InstallerSignature;
+            var StringInstallerBaseSignature;
+            var InstallerBaseSignature;
+            var terms;
+
+            var Latitude = $("#JobOwnerDetails_Latitude").val();
+            var Longitude = $("#JobOwnerDetails_Longitude").val();
+            var IpAddress = $("#JobOwnerDetails_IpAddress").val();
+            var Location = $("#JobOwnerDetails_Location").val();
+            var CompanyName = '@ViewData["ScaName"]';
+            var email = $("#BasicDetails_Email").val();
+            var RefNumber = $("#BasicDetails_RefNumber").val();
+            var typeOfSignature = 2;
+            var installerEmail ='@ViewData["Email"]';
+            var installerMobile = '@ViewData["Mobile"]';
+            var jobid = $("#BasicDetails_JobID").val();
+            terms = 1;
+
+            var URL = '@Url.Action("_InstallerSignatureSave", "Job")';
+            var dataInstaller = {};
+            dataInstaller.Type = '@Model.Type';
+            dataInstaller.jobid = jobid;
+            dataInstaller.latitude = Latitude;
+            dataInstaller.longitude = Longitude;
+            dataInstaller.IpAddress = IpAddress;
+            dataInstaller.Location = Location;
+            dataInstaller.typeOfSignature = typeOfSignature;
+            //dataInstaller.isAll = $('#isAll')[0].checked;
+            dataInstaller.name = '@ViewData["InstallerName"]';
+            dataInstaller.CompanyName = CompanyName;
+            dataInstaller.Email = email;
+            dataInstaller.RefNumber = RefNumber;
+            dataInstaller.InstallerEmail = installerEmail;
+            dataInstaller.InstallerMobile = installerMobile;
+            dataInstaller.SMSOrMail = '@Model.SMSOrMail';
+            dataInstaller.IsEmployee = $($("input[type=radio][name=workType]").filter(":checked")).val() == 'Employee' ? true : false;
+            dataInstaller.IsChangedDesign = $($("input[type=radio][name=designModification]").filter(":checked")).val() == 'DesignedModified' ? true : false;
+            if (terms == 1) {
+                if ($("#imgModalInstallerSign").attr('isDraw') == 'false') {
+                    IsUploaded = true;
+                    InstallerSignature = $('#imgModalInstallerSign').attr('fileName');
+                    StringInstallerBaseSignature = "";
+
+                    dataInstaller.InstallerSignature = InstallerSignature;
+                    dataInstaller.IsUploaded = IsUploaded;
+
+                    if (InstallerSignature != "" && InstallerSignature != null && InstallerSignature != undefined) {
+                        if(@Model.Type == 2)
+                        {
+                            //dataInstaller.isAll = false;
+                            dataInstaller.isSameDesigner = false;
+                            dataInstaller.isSameElectrician = false;
+                            $.ajax({
+                                url: URL,
+                                data: JSON.stringify(dataInstaller),//'{ InstallerSignature :\'' + InstallerSignature + '\', jobid:\'' + jobid + '\', IsUploaded:\'' + IsUploaded + '\', StringInstallerBaseSignature:\'' + StringInstallerBaseSignature + '\', Latitude:\'' + Latitude + '\', Longitude:\'' + Longitude + '\', IpAddress:\'' + IpAddress + '\', Location:\'' + Location + '\', typeOfSignature:\'' + typeOfSignature + '\', isAll:\'' + false + '\', name:\'' + '@ViewData["InstallerName"]' + '\', CompanyName:\'' + CompanyName + '\', Email:\'' + email + '\', RefNumber:\'' + RefNumber + '\', InstallerEmail :\'' + installerEmail + '\' , InstallerMobile:\'' + installerMobile + '\'  }',
+                                contentType: 'application/json',
+                                method: 'post',
+                                success: function (data) {
+                                    if (data.status == true) {
+                                        location.href = "@Url.Action("ThankYou","Home")";
+                                        return false;
+                                    }
+                                    else {
+                                        showErrorMessage(data.error);
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                        else
+                        {
+                            //dataInstaller.isAll = $('#isAll')[0].checked;
+                            dataInstaller.isSameDesigner = $('#isSameDesigner')[0].checked;
+                            dataInstaller.isSameElectrician = $('#isSameElectrician')[0].checked;
+                            $.ajax({
+                                url: URL,
+                                data: JSON.stringify(dataInstaller),//'{ InstallerSignature :\'' + InstallerSignature + '\', jobid:\'' + jobid + '\', IsUploaded:\'' + IsUploaded + '\', StringInstallerBaseSignature:\'' + StringInstallerBaseSignature + '\', Latitude:\'' + Latitude + '\', Longitude:\'' + Longitude + '\', IpAddress:\'' + IpAddress + '\', Location:\'' + Location + '\', typeOfSignature:\'' + typeOfSignature + '\', isAll:\'' + $('#isAll')[0].checked + '\', name:\'' + '@ViewData["InstallerName"]' + '\', CompanyName:\'' + CompanyName + '\', Email:\'' + email + '\', RefNumber:\'' + RefNumber + '\', InstallerEmail :\'' + installerEmail + '\' , InstallerMobile:\'' + installerMobile + '\'  }',
+                                contentType: 'application/json',
+                                method: 'post',
+                                success: function (data) {
+                                    if (data.status == true) {
+                                        location.href = "@Url.Action("ThankYou","Home")";
+                                        return false;
+                                    }
+                                    else {
+                                        showErrorMessage(data.error);
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        $("#spansign").show().text("Signtaure is required.").fadeOut(5000);
+                        return false;
+                    }
+                }
+                else {
+
+                    IsUploaded = false;
+                    InstallerSignature = "InstallerSign" + "_" + jobid + "." + "Png";
+                    AddRemoveSignatureLine(true);
+                    StringInstallerBaseSignature = $('#cSignature').jSignature('getData','image');
+                    Base30 = $('#cSignature').jSignature('getData','base30');
+
+                    dataInstaller.InstallerSignature = InstallerSignature;
+                    dataInstaller.IsUploaded = IsUploaded;
+                    dataInstaller.StringInstallerBaseSignature = StringInstallerBaseSignature.join(',');
+                    dataInstaller.Base30 = Base30;
+
+                    if (StringInstallerBaseSignature != "" && StringInstallerBaseSignature != null && StringInstallerBaseSignature != undefined ) {
+                        if(@Model.Type == 2)
+                        {
+                            //dataInstaller.isAll = false;
+                            dataInstaller.isSameDesigner = false;
+                            dataInstaller.isSameElectrician = false;
+
+                            $.ajax({
+                                url: URL,
+                                data: JSON.stringify(dataInstaller),
+                                contentType: 'application/json',
+                                method: 'post',
+                                success: function (data) {
+                                    if (data.status == true) {
+                                        location.href = "@Url.Action("ThankYou","Home")";
+                                        return false;
+                                    }
+                                    else {
+                                        showErrorMessage(data.error);
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                        else
+                        {
+                            //dataInstaller.isAll = $('#isAll')[0].checked;
+                            dataInstaller.isSameDesigner = $('#isSameDesigner')[0].checked;
+                            dataInstaller.isSameElectrician = $('#isSameElectrician')[0].checked;
+                            $.ajax({
+                                url: URL,
+                                data: JSON.stringify(dataInstaller),
+                                contentType: 'application/json',
+                                method: 'post',
+                                success: function (data) {
+                                    if (data.status == true) {
+                                        location.href = "@Url.Action("ThankYou","Home")";
+                                        return false;
+                                    }
+                                    else {
+                                        showErrorMessage(data.error);
+                                        return false;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        $("#spansign").show().text("Signtaure is required.").fadeOut(3000);
+                        return false;
+                    }
+                }
+            }
+            else {
+                $("#spansign").show().text("Please accept terms and conditions").fadeOut(3000);
+            }
+        }
+        //function GetUserIP() {
+        //    var ret_ip;
+        //    $.ajaxSetup({ async: false });
+        //    $.get('https://jsonip.com/', function (r) {
+        //        ret_ip = r.ip;
+        //    });
+        //    var ip = ret_ip.split(",")[1];
+        //    $("#JobOwnerDetails_IpAddress").val(ip);
+        //    return ip;
+        //}
+
+        function GetOwnerAddress() {
+
+            var address;
+            var UnitTypeId = '@(ViewData.ContainsKey("UnitTypeID") ? ViewData["UnitTypeID"] : "")';
+            var UnitNumber = '@Model.JobInstallationDetails.UnitNumber';
+            var StreetNumber = '@Model.JobInstallationDetails.StreetNumber';
+            var StreetName = '@Model.JobInstallationDetails.StreetName';
+            var StreetTypeId = '@(ViewData.ContainsKey("StreetTypeId") ? ViewData["StreetTypeId"] : "")';
+            var PostalAddressID = '@(ViewData.ContainsKey("PostalAddressID") ? ViewData["PostalAddressID"] : "")';
+            var PostalDeliveryNumber = '@Model.JobInstallationDetails.PostalDeliveryNumber';
+            var Town = '@Model.JobInstallationDetails.Town';
+            var State = '@Model.JobInstallationDetails.State';
+            var PostCode = '@Model.JobInstallationDetails.PostCode';
+
+
+            if ('@Model.JobInstallationDetails.IsPostalAddress' == 'True') {
+                address = PostalAddressID + ' ' + PostalDeliveryNumber + ', ' + Town + ' ' + State + ' ' + PostCode;
+            }
+            else {
+                if (UnitNumber != "") {
+                    address = UnitTypeId + ' ' + UnitNumber + "/" + StreetNumber + ' ' + StreetName  + ' '+ StreetTypeId +  ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                }
+                else {
+                    address = UnitTypeId + ' '+ StreetNumber+ ' ' + StreetName+ ' ' + StreetTypeId  + ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                }
+            }
+            return address;
+        }
+
+        function getSystemDetails() {
+
+            var systemDetails, Brand, Model, NOOfPanel, TankSize, SerialNumber;
+
+            Brand = '@(ViewData.ContainsKey("Brand") ? ViewData["Brand"] : "")';
+            Model = '@(ViewData.ContainsKey("Model") ? ViewData["Model"] : "")';
+            NOOfPanel = '@Model.JobSystemDetails.NoOfPanel';
+            TankSize = '@Model.JobSTCDetails.VolumetricCapacity';
+            SerialNumber = "@Model.JobSystemDetails.SerialNumbers".replace(/(?:\r\n|\r|\n)/g, ' ');
+
+            if (Brand != "") {
+                $("#lblbrand").text(Brand);
+            }
+            if (Model != "") {
+                $("#lblmodel").text(Model);
+
+            }
+            if (NOOfPanel != "") {
+                $("#lblnoOfpanel").text(NOOfPanel);
+
+            }
+            if (SerialNumber != "") {
+                $("#lblserialno").text(SerialNumber);
+
+            }
+            if (TankSize == "Yes") {
+                $("#lblsize").text("> 700L");
+            }
+            if (TankSize == "No") {
+                $("#lblsize").text("< 700L");
+            }
+        }
+
+        //var x = document.getElementById("lblLocation");
+
+        //function getLocation() {
+        //    if (navigator.geolocation) {
+        //        navigator.geolocation.getCurrentPosition(showPosition);
+        //    } else {
+        //        x.innerHTML = "Geolocation is not supported by this browser.";
+        //    }
+        //}
+
+        //function showPosition(position) {
+        //    $("#JobOwnerDetails_Latitude").val(position.coords.latitude);
+        //    $("#JobOwnerDetails_Longitude").val(position.coords.longitude);
+        //    GetAddress(position.coords.latitude, position.coords.longitude);
+        //}
+
+        //function GetAddress(lat, lng) {
+        //    var address = '';
+        //    var latlng = new google.maps.LatLng(lat, lng);
+        //    var geocoder = geocoder = new google.maps.Geocoder();
+        //    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+        //        if (status == google.maps.GeocoderStatus.OK) {
+        //            if (results[1]) {
+        //                address = results[1].formatted_address;
+        //                $("#JobOwnerDetails_Location").val(results[1].formatted_address);
+        //                x.innerHTML = results[1].formatted_address;
+        //            }
+        //        }
+        //    });
+        //    return address;
+        //}
+
+        function SignInstallerSignature(isInstaller) {
+            $("#errorMsgRegionSignPopup").hide();
+            $("#successMsgRegionSignPopup").hide();
+            AddRemoveSignatureLine(false);
+            $('#popupInstallerSignature').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        function SaveModalSignature() {
+
+            $(".alert").hide();
+            $("#errorMsgRegionSignPopup").hide();
+
+            if ($('.signature-menu').find('.active').attr('isDraw') == "false") {
+                var imgSrc = $("#imgUploadSign").attr('src');
+                if (typeof (imgSrc) == "undefined") {
+                    showErrorMessageForPopup("Please draw/upload signature.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                    return false;
+                }
+                $("#imgModalInstallerSign").attr('src', imgSrc);
+                $("#imgModalInstallerSign").attr('fileName', imgSrc.split(/[\\\/]/).pop());
+                $("#imgModalInstallerSign").attr('isDraw', false);
+            }
+            else {
+                base30 = $('#cSignature').jSignature('getData', 'base30');
+                if (base30[1] == '') {
+                    showErrorMessageForPopup("Please draw/upload signature.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                    return false;
+                }
+                AddRemoveSignatureLine(true);
+                StringInstallerBaseSignature = $('#cSignature').jSignature('getData', 'image');
+                var imgSrc = StringInstallerBaseSignature.join(',');
+                $("#imgModalInstallerSign").attr('src', "data:" + imgSrc);
+                $("#imgModalInstallerSign").attr('isDraw', true);
+            }
+            enableCompleteSigning($("#imgModalInstallerSign").attr('src'));
+            $('#popupInstallerSignature').modal('toggle');
+
+            var d = new Date,
+                dformat = [d.getDate(), d.getMonth() + 1, d.getFullYear()].join('/') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].join(':');
+
+            $("#txtInstallersignatureDate").text(dformat);
+        }
+
+        function ClosePopupSignature() {
+            if ($("#imgModalInstallerSign").attr('isDraw') == 'false') {
+                $('.signature-menu').find('.active').removeClass('active');
+                $('.signature-menu').find('.primary').removeClass('primary');
+                $('#aUploadSign').closest('li').addClass('active');
+                $('#aUploadSign').closest('li').addClass('primary');
+                $("#divUpload").show();
+                $("#divDraw").hide();
+            }
+            else {
+                $('.signature-menu').find('.active').removeClass('active');
+                $('.signature-menu').find('.primary').removeClass('primary');
+                $('#aDrawSign').closest('li').addClass('active');
+                $('#aDrawSign').closest('li').addClass('primary');
+                $("#divUpload").hide();
+                $("#divDraw").show();
+            }
+            enableCompleteSigning($("#imgModalInstallerSign").attr('src'));
+            $('#popupInstallerSignature').modal('toggle');
+        }
+
+        function AddRemoveSignatureLine(isRemove) {
+            if (isRemove) {
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['background-color'] = 'transparent';
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['decor-color'] = 'transparent'
+            }
+            else {
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['background-color'] = 'rgb(255, 255, 255)';
+                $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['decor-color'] = 'rgb(134, 134, 134)';
+            }
+            $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['data']);
+        }
+
+        function showErrorMessage(message) {
+            $(".alert").hide();
+            $("#successMsgRegion").hide();
+            $("#errorMsgRegion").html(closeButton + message);
+            $("#errorMsgRegion").show();
+            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+            $('body').animate({ scrollTop: 0 }, 'slow');
+        }
+
+        function showSuccessMessage(message) {
+            $(".alert").hide();
+            $("#errorMsgRegion").hide();
+            $("#successMsgRegion").html(closeButton + message);
+            $("#successMsgRegion").show();
+            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+            $('body').animate({ scrollTop: 0 }, 'slow');
+        }
+
+        function showErrorMessageForPopup(message, objError, objSuccess) {
+            $(".alert").hide();
+            if (objSuccess)
+                objSuccess.hide();
+            objError.html(closeButton + message);
+            objError.show();
+        }
+
+        function showSuccessMessageForPopup(message, objSuccess, objError) {
+            $(".alert").hide();
+            if (objError)
+                objError.hide();
+            objSuccess.html(closeButton + message);
+            objSuccess.show();
+        }
+
+        function showHideDrawUploadSection(obj) {
+
+            $(".alert").hide();
+            $("#errorMsgRegionSignPopup").hide();
+            $("#successMsgRegionSignPopup").hide();
+
+            if ($(obj).attr('id').toLowerCase() == "auploadsign") {
+                $("#divDraw").hide();
+                $("#divUpload").show();
+            }
+            else {
+                $("#divDraw").show();
+                $("#divUpload").hide();
+            }
+
+            $(obj).closest('ul').find('.active').removeClass('active');
+            $(obj).closest('ul').find('.primary').removeClass('primary');
+            $(obj).closest('li').addClass('active');
+            $(obj).closest('li').addClass('primary');
+        }
+
+        function enableCompleteSigning(obj) {
+            if (typeof (obj) != "undefined") {
+                $('#btnSaveInstallerSignature').removeClass('default');
+                $('#btnSaveInstallerSignature').addClass('primary');
+            }
+            else {
+                $('#btnSaveInstallerSignature').removeClass('primary');
+                $('#btnSaveInstallerSignature').addClass('default');
+            }
+        }
+    </script>
+}

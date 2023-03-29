@@ -1,0 +1,749 @@
+﻿@model FormBot.Entity.CheckList.CheckListItem
+@using FormBot.Helper;
+
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionAddEditItem" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="form-box">
+    <div class="row">
+
+        @Html.HiddenFor(m => m.CheckListItemId)
+        @Html.HiddenFor(m => m.CheckListTemplateId)
+        @Html.HiddenFor(m=>m.VisitCheckListItemId)
+
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.TemplateId, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.TemplateId, new List<SelectListItem>(), new { @class = "form-control", @id = "TemplateId" })
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.CheckListItemId, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.Id, new List<SelectListItem>(), new { @class = "form-control", @id = "ItemId" })
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
+                @Html.LabelFor(m => m.CheckListClassTypeId, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.CheckListClassTypeId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.CheckListClassTypeId)
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber capturePhoto captureSignature imageToPDF customItem">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.ItemName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.ItemName, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.ItemName)
+            </div>
+        </div>
+        <div class="col-sm-6 FolderName">
+            <div class="form-group">
+                @Html.LabelFor(m => m.FolderName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.FolderName, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.FolderName)
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber capturePhoto">
+        <div class="col-sm-12">
+            <div class="form-group">
+                @Html.LabelFor(m => m.TotalNumber, new { @class = "control-label required" })
+                <div class="clearfix">
+                    @Html.RadioButtonFor(m => m.NumberOptions, "1") Same As Total Panel Amount
+                    @Html.RadioButtonFor(m => m.NumberOptions, "2") At Least 1
+                    @Html.RadioButtonFor(m => m.NumberOptions, "3") Specify Amount
+                </div>
+                <div style="margin-top:5px;">
+                    @Html.TextBoxFor(m => m.TotalNumber, new { @class = "form-control", @maxlength = "3", onkeypress = "return isNumber(event);" })
+                    @Html.ValidationMessageFor(m => m.TotalNumber)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber">
+        <div class="col-sm-12">
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobFieldId, new { @class = "control-label required" })
+
+                @Html.RadioButtonFor(m => m.IsCustomSerialNumField, false) Existing Field
+                @Html.RadioButtonFor(m => m.IsCustomSerialNumField, true) Custom Field
+                @Html.DropDownListFor(m => m.JobFieldId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.JobFieldId)
+                @Html.DropDownListFor(m => m.CustomFieldId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.CustomFieldId)
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.SeparatorId, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.SeparatorId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.SeparatorId)
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.SerialNumTitle, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.SerialNumTitle, new { @class = "form-control", @maxlength = "100" })
+                @*@Html.ValidationMessageFor(m => m.SerialNumTitle)*@
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber">
+        <div class="col-sm-12 chkboxlist">
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsSaveCopyofSerialNum, new { @class = "form-control" })
+                    @*Want to save copy of serial number.*@
+                    Save a copy to .TXT?
+                </label>
+            </div>
+            <div class="form-group SerialNumFileName">
+                @Html.LabelFor(m => m.SerialNumFileName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.SerialNumFileName, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.SerialNumFileName)
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row captureSignature">
+        <div class="col-sm-12 chkboxlist">
+            @Html.Label("Type of Signature (Please select at least one option)", new { @class = "control-label required" })
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsOwnerSignature, new { @class = "form-control" })Home Owner
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsInstallerSignature, new { @class = "form-control" })Installer
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsDesignerSignature, new { @class = "form-control" })Designer
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsElectricianSignature, new { @class = "form-control" })Electrician
+                </label>
+            </div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsOtherSignature, new { @class = "form-control" })Other
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row otherSignature">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.OtherSignLabel, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.OtherSignLabel, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.OtherSignLabel)
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.OtherSignName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.OtherSignName, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.OtherSignName)
+            </div>
+        </div>
+    </div>
+
+    <div class="row imageToPDF">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.CaptureUploadImagePDFName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.CaptureUploadImagePDFName, new { @class = "form-control", @maxlength = "100" })
+                @Html.ValidationMessageFor(m => m.CaptureUploadImagePDFName)
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.PDFLocationId, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.PDFLocationId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.PDFLocationId)
+            </div>
+        </div>
+    </div>
+
+    <div class="row customItem">
+        <div class="col-sm-12 chkboxlist">
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsLinkToDocument, new { @class = "form-control" })
+                    Link to a document?
+                </label>
+            </div>
+            <div class="form-group LinkDocument">
+                @Html.LabelFor(m => m.LinkedDocumentId, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.LinkedDocumentId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.LinkedDocumentId)
+            </div>
+        </div>
+    </div>
+
+    <div class="row customItem">
+        <div class="col-sm-12 chkboxlist">
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsCompletedCustomCheckListItem, new { @class = "form-control" })
+                    Check Item?
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row serialNumber capturePhoto imageToPDF">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m => m.PhotoQualityId, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.PhotoQualityId, new List<SelectListItem>(), new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.PhotoQualityId)
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.IsDefaultTemplateItem || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+    {
+        <div class="modal-footer">
+            <button type="button" class="btn primary save_ic" tabindex="100" id="btnSaveCheckListItem">Save</button>
+            <button type="button" class="btn default cancel_ic" tabindex="101" id="btnCancelCheckListItem">Clear</button>
+        </div>
+    }
+
+</div>
+
+@Scripts.Render("~/bundles/jqueryval")
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        var solarCompanyId = $("#hdnsolarCompanyid").val();
+
+        FillDropDown('TemplateId', '@Url.Action("GetCheckListTemplate", "CheckListTemplate")?solarCompanyId=' + solarCompanyId, '@Model.TemplateId', true, null);
+        FillDropDown('SeparatorId', '@Url.Action("GetSeparator", "CheckListItem")', '@Model.SeparatorId', true, null);
+        FillDropDown('PhotoQualityId', '@Url.Action("GetPhotoQuality", "CheckListItem")', '@Model.PhotoQualityId', true, null);
+        FillDropDown('PDFLocationId', '@Url.Action("GetPDFLocation", "CheckListItem")', '@Model.PDFLocationId', true, null);
+        FillDropDown('CheckListClassTypeId', '@Url.Action("GetCheckListClassType", "CheckListClassType")?isSetFromSetting=' + '@Model.isSetFromSetting', '@Model.CheckListClassTypeId', false, null);
+        FillDropDown('JobFieldId', '@Url.Action("GetJobFieldData", "Job")', '@Model.JobFieldId', true, null);
+        FillDropDown('ItemId', '@Url.Action("GetCheckListItem", "CheckListItem")?templateId=' + '@Model.TemplateId', '@Model.Id', true, SetDefaultValueOnCheckListItem);
+
+        FillDropDown('CustomFieldId', '@Url.Action("GetAllCustomFieldOfCompany", "JobSetting")', '@Model.CustomFieldId', true, null);
+
+        if ('@Model.isSetFromSetting.ToString().ToLower()' == 'false') {
+            FillDropDown('LinkedDocumentId', '@Url.Action("GetCheckListDocument", "CheckListItem")?jobId=' + $("#BasicDetails_JobID").val(), '@Model.LinkedDocumentId', true, null);
+        }
+
+        $("#TemplateId").change(function () {
+            FillDropDown('ItemId', '@Url.Action("GetCheckListItem", "CheckListItem")?templateId=' + $("#TemplateId").val(), '', true, null);
+        });
+
+        $("#SeparatorId").val('@Model.SeparatorId');
+        $("#PhotoQualityId").val('@Model.PhotoQualityId');
+
+        $("#CheckListClassTypeId").change(function () {
+            BindPropertiesOnCheckListClassType($("#CheckListClassTypeId").val());
+            ClearAllField();
+            resetValidation();
+        });
+
+        BindPropertiesOnCheckListClassType('@Model.CheckListClassTypeId');
+
+        Array.prototype.pushArray = function () {
+            var toPush = this.concat.apply([], arguments);
+            for (var i = 0, len = toPush.length; i < len; ++i) {
+                this.push(toPush[i]);
+            }
+        };
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        $("#btnSaveCheckListItem").click(function () {
+            SaveCheckListItem();
+        });
+
+        $('input[type=radio][name=NumberOptions]').change(function () {
+            changeSerialNuberOption($(this).val(), true);
+            SerialNumValidationRule();
+        });
+
+        $('input[type=radio][name=IsCustomSerialNumField]').change(function () {
+            changeSerialNumCustomExistingField($(this).val(), true);
+            SerialNumValidationRule();
+        });
+
+        $("#IsSaveCopyofSerialNum").change(function () {
+            changeOptionOfSaveSerialNum($(this).is(':checked'), true);
+            SerialNumValidationRule();
+        });
+
+        $("#IsLinkToDocument").change(function () {
+            changeOptionOfLinkDocument($(this).is(':checked'), true);
+        });
+
+        $("#IsOtherSignature").change(function () {
+            changeOtherSignature($(this).is(':checked'), true);
+        });
+
+        FillTotalNumber(@Model.NumberOptions);
+        FillSerialNumField('@Model.IsCustomSerialNumField');
+
+        changeOptionOfSaveSerialNum('@Model.IsSaveCopyofSerialNum');
+        changeOtherSignature('@Model.IsOtherSignature');
+        changeOptionOfLinkDocument('@Model.IsLinkToDocument');
+
+        $("#btnCancelCheckListItem").click(function () {
+            //$('#popupCheckListItem').modal('toggle');
+            ClearAllField();
+            resetValidation();
+        });
+
+        $("#ItemId").change(function () {
+            GetCheckListItemById($("#ItemId").val());
+        });
+    });
+
+    function FillCheckListItem(data) {
+        var checkListData = JSON.parse(data);
+        BindPropertiesOnCheckListClassType(checkListData.CheckListClassTypeId);
+        ClearAllField();
+        resetValidation();
+        FillTotalNumber(checkListData.NumberOptions);
+        FillSerialNumField(checkListData.IsCustomSerialNumField == true ? "True" : "False");
+        changeOptionOfSaveSerialNum(checkListData.IsSaveCopyofSerialNum);
+        changeOtherSignature(checkListData.IsOtherSignature);
+        changeOptionOfLinkDocument(checkListData.IsLinkToDocument);
+
+        $("#CheckListClassTypeId").val(checkListData.CheckListClassTypeId);
+
+        if (checkListData.IsSaveCopyofSerialNum == true)
+            $("#IsSaveCopyofSerialNum").prop('checked', true);
+        else
+            $("#IsSaveCopyofSerialNum").prop('checked', false);
+
+        $("#ItemName").val(checkListData.ItemName);
+        $("#FolderName").val(checkListData.FolderName);
+
+        $("#TotalNumber").val(checkListData.TotalNumber);
+        $("#JobFieldId").val(checkListData.JobFieldId);
+        //$("#SerialFieldName").val(checkListData.SerialFieldName);
+        $("#CustomFieldId").val(checkListData.CustomFieldId);
+        $("#SeparatorId").val(checkListData.SeparatorId);
+        $("#PhotoQualityId").val(checkListData.PhotoQualityId);
+        $("#SerialNumTitle").val(checkListData.SerialNumTitle);
+        $("#SerialNumFileName").val(checkListData.SerialNumFileName);
+
+
+        if (checkListData.IsOwnerSignature)
+            $("#IsOwnerSignature").prop('checked', true);
+        if (checkListData.IsInstallerSignature)
+            $("#IsInstallerSignature").prop('checked', true);
+        if (checkListData.IsDesignerSignature)
+            $("#IsDesignerSignature").prop('checked', true);
+        if (checkListData.IsElectricianSignature)
+            $("#IsElectricianSignature").prop('checked', true);
+        if (checkListData.IsOtherSignature) {
+            $("#IsOtherSignature").prop('checked', true);
+            $("#OtherSignLabel").val(checkListData.OtherSignLabel);
+            $("#OtherSignName").val(checkListData.OtherSignName);
+        }
+
+        $("#CaptureUploadImagePDFName").val(checkListData.CaptureUploadImagePDFName);
+        $("#PDFLocationId").val(checkListData.PDFLocationId);
+        $("#LinkedDocumentId").val(checkListData.LinkedDocumentId);
+    }
+
+    function FillTotalNumber(number) {
+        if (number > 0) {
+            $('[name=NumberOptions][value=' + number + ']').prop('checked', true);
+            changeSerialNuberOption(number);
+        }
+        else
+            $('[name=NumberOptions][value=1]').prop('checked', true).trigger('change');
+    }
+
+    function SetDefaultValueOnCheckListItem() {
+        if ('@Model.CheckListItemId' == 0 || '@Model.CheckListItemId' == null) {
+            $("#ItemId").val('');
+        }
+    }
+
+    function FillSerialNumField(IsCustomSerialNumField) {
+
+        if (IsCustomSerialNumField != null && IsCustomSerialNumField != '') {
+            $('[name=IsCustomSerialNumField][value=' + IsCustomSerialNumField + ']').prop('checked', true);
+            changeSerialNumCustomExistingField(IsCustomSerialNumField);
+        }
+        else
+            $('[name=IsCustomSerialNumField][value=False]').prop('checked', true).trigger('change');
+    }
+
+    function GetCheckListItemById(itemId) {
+        $.ajax(
+                   {
+                       url: '@Url.Action("FillCheckListItemByItemId", "CheckListItem")',
+                       dataType: 'json',
+                       contentType: 'application/json; charset=utf-8',
+                       type: 'get',
+                       data: { itemId: itemId },
+                       success: function (response) {
+                           if (response.status) {
+                               if (response.data) {
+                                   FillCheckListItem(response.data);
+                               }
+                           }
+                           else {
+                               showErrorMessageAddEditItem("CheckList item has not been filled");
+                           }
+                       },
+                       error: function () {
+                           if (id > 0)
+                               showErrorMessageAddEditItem("CheckList item has not been updated.");
+                           else
+                               showErrorMessageAddEditItem("CheckList item has not been added.");
+                       }
+                   });
+    }
+
+
+
+    function ClearAllField() {
+        $("#checkListItemForm").find("input[type=text]").each(function () {
+            $(this).val('');
+        });
+        $("#checkListItemForm").find("input[type=checkbox]").each(function () {
+            $(this).prop('checked', false).trigger('change');
+        });
+
+        $('[name=NumberOptions][value=1]').prop('checked', true).trigger('change');
+        $('[name=IsCustomSerialNumField][value=False]').prop('checked', true).trigger('change');
+
+        $("#checkListItemForm").find("textarea").each(function () {
+            $(this).val('');
+        });
+
+        $("#checkListItemForm").find('.serialNumber').find("select").each(function () {
+            $(this).val($(this).find('option:first').val());
+        });
+        $("#checkListItemForm").find('#PDFLocationId').each(function () {
+            $(this).val($(this).find('option:first').val());
+        });
+        $("#checkListItemForm").find('.LinkDocument').find("select").each(function () {
+            $(this).val($(this).find('option:first').val());
+        });
+    }
+
+    function BindPropertiesOnCheckListClassType(classTypeId) {
+        if (classTypeId == 1) // serial num
+        {
+            $(".capturePhoto").hide();
+            $(".captureSignature").hide();
+            $(".imageToPDF").hide();
+            $(".customItem").hide();
+            $(".serialNumber").show();
+        }
+        else if (classTypeId == 2) {
+            $(".serialNumber").hide();
+            $(".captureSignature").hide();
+            $(".imageToPDF").hide();
+            $(".customItem").hide();
+            $(".capturePhoto").show();
+        }
+        else if (classTypeId == 3) {
+            $(".serialNumber").hide();
+            $(".capturePhoto").hide();
+            $(".imageToPDF").hide();
+            $(".customItem").hide();
+            $(".captureSignature").show();
+            changeOtherSignature('false');
+        }
+        else if (classTypeId == 4) {
+            $(".serialNumber").hide();
+            $(".capturePhoto").hide();
+            $(".captureSignature").hide();
+            $(".customItem").hide();
+            $(".imageToPDF").show();
+        }
+        else if (classTypeId == 5) {
+
+            $(".FolderName").hide();
+
+            $(".serialNumber").hide();
+            $(".capturePhoto").hide();
+            $(".captureSignature").hide();
+            $(".imageToPDF").hide();
+            $(".customItem").show();
+        }
+    }
+
+    function showErrorMessageAddEditItem(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionAddEditItem").html(closeButton + message);
+        $("#errorMsgRegionAddEditItem").show();
+    }
+
+    function changeSerialNuberOption(number, isChange) {
+        if (isChange)
+            $("#TotalNumber").val('');
+
+        if (number == 3) {
+            $("#TotalNumber").show();
+        }
+        else
+            $("#TotalNumber").hide();
+    }
+
+    function changeSerialNumCustomExistingField(value, isChange) {
+        if (isChange) {
+            $("#JobFieldId").val('');
+            //$("#SerialFieldName").val('')
+            $("#CustomFieldId").val('');
+        }
+        if (value.toString().toLowerCase() == 'false') {
+            $("#JobFieldId").show();
+            //$("#SerialFieldName").hide();
+            $("#CustomFieldId").hide();
+        }
+        else {
+            //$("#SerialFieldName").show();
+            $("#CustomFieldId").show();
+            $("#JobFieldId").hide();
+        }
+    }
+
+    function changeOptionOfSaveSerialNum(value, isChange) {
+        if (isChange)
+            $("#SerialNumFileName").val('');
+
+        if (value.toString().toLowerCase() == 'true')
+            $(".SerialNumFileName").show();
+        else
+            $(".SerialNumFileName").hide();
+    }
+
+    function changeOptionOfLinkDocument(value, isChange) {
+        if (isChange)
+            $("#LinkedDocumentId").val('');
+
+        if (value.toString().toLowerCase() == 'true')
+            $(".LinkDocument").show();
+        else
+            $(".LinkDocument").hide();
+    }
+
+
+
+    function changeOtherSignature(value, isChange) {
+        if (isChange) {
+            $("#OtherSignLabel").val('');
+            $("#OtherSignName").val('');
+        }
+        if (value.toString().toLowerCase() == 'true') {
+            $(".otherSignature").show();
+            $("#OtherSignName").rules("add", {
+                required: true,
+                messages: {
+                    required: "Signature Name is required."
+                }
+            });
+            $("#OtherSignLabel").rules("add", {
+                required: true,
+                messages: {
+                    required: "Signature Label is required."
+                }
+            });
+        }
+        else {
+            $(".otherSignature").hide();
+            $("#OtherSignLabel").rules("add", {
+                required: false
+            });
+            $("#OtherSignLabel").valid();
+
+            $("#OtherSignName").rules("add", {
+                required: false
+            });
+            $("#OtherSignName").valid();
+        }
+    }
+
+    function SerialNumValidationRule() {
+        if ($('input[type=radio][name=NumberOptions]:checked').val() != 3) {
+            $("#TotalNumber").rules("add", {
+                required: false
+            });
+            $("#TotalNumber").valid();
+        }
+        else {
+            $("#TotalNumber").rules("add", {
+                required: true,
+                messages: {
+                    required: "Total Number is required."
+                }
+            });
+        }
+
+        if ($('input[type=radio][name=IsCustomSerialNumField]:checked').val() == 'False') {
+            $("#CustomFieldId").rules("add", {
+                required: false
+            });
+            $("#JobFieldId").rules("add", {
+                required: true,
+                messages: {
+                    required: "Field Name is required."
+                }
+            });
+            //$("#SerialFieldName").valid();
+            $("#CustomFieldId").valid();
+        }
+        else {
+
+            $("#CustomFieldId").rules("add", {
+                required: true,
+                messages: {
+                    required: "Custom field is required."
+                }
+            });
+
+            $("#JobFieldId").rules("add", {
+                required: false,
+            });
+
+            $("#JobFieldId").valid();
+        }
+
+        if (!$("#IsSaveCopyofSerialNum").is(':checked')) {
+            $("#SerialNumFileName").rules("add", {
+                required: false,
+            });
+            $("#SerialNumFileName").valid();
+        }
+        else {
+            $("#SerialNumFileName").rules("add", {
+                required: true,
+                messages: {
+                    required: "File Name is required."
+                }
+            });
+        }
+    }
+
+    function resetValidation() {
+        var $validator = $('#checkListItemForm').validate();
+        var $errors = $('#checkListItemForm').find(".field-validation-error span");
+        $errors.each(function () { $validator.settings.success($(this)); })
+        $validator.resetForm();
+    }
+
+    function SaveCheckListItem() {
+        SerialNumValidationRule();
+        if ($("#checkListItemForm").valid()) {
+            var id = '@Model.CheckListItemId';
+            var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+            var data = JSON.stringify($('#checkListItemForm').serializeToJson());
+            var jobSchedulingId = $("#JobSchedulingID").val();
+            var visitCheckListItem = '@Model.VisitCheckListItemId';
+            var isSetFromSetting = '@Model.isSetFromSetting.ToString().ToLower()';
+
+            var objData = JSON.parse(data);
+            objData.isSetFromSetting = isSetFromSetting;
+            objData.JobSchedulingId = jobSchedulingId;
+            objData.TempJobSchedulingId = tempJobSchedulingId;
+            objData.JobId = $("#BasicDetails_JobID").val();
+
+            $.ajax(
+               {
+                   url: '@Url.Action("AddEditCheckListItem", "CheckListItem")',
+                   dataType: 'json',
+                   contentType: 'application/json; charset=utf-8',
+                   type: 'post',
+                   data: JSON.stringify(objData),
+                   success: function (response) {
+                       if (response.id && response.id > 0) {
+
+                           if (isSetFromSetting == "false") {
+                               var isAdd = false;
+                               $.each(visitCheckListItemIds, function (i, e) {
+                                   if ($(this) == response.id) {
+                                       isAdd = true;
+                                   }
+                               });
+                               if (!isAdd) {
+                                   visitCheckListItemIds.push(response.id);
+                               }
+                           }
+
+                           // bind and refresh row
+                           CommonOpenCheckListItemPopup(response.templateId, isSetFromSetting, response.jobSchedulingId, false, response.TempJobSchedulingId, $("#BasicDetails_JobID").val());
+
+                           if ((isSetFromSetting == "true" && id > 0) || (isSetFromSetting == "false" && visitCheckListItem > 0))
+                               showSuccessMessageAddEditItem("CheckList item has been updated successfully.");
+                           else
+                               showSuccessMessageAddEditItem("CheckList item has been added successfully.");
+
+                           $('#popupCheckListItem').modal('toggle');
+                       }
+                       else {
+                           if (response.error.toLowerCase() == 'sessiontimeout')
+                               window.location.href = '@Url.Action("Logout", "Account")';
+                           else
+                               showErrorMessageAddEditItem(response.error);
+                       }
+                   },
+                   error: function () {
+                       if ((isSetFromSetting == "true" && id > 0) || (isSetFromSetting == "false" && visitCheckListItem > 0))
+                           showErrorMessageAddEditItem("CheckList item has not been updated.");
+                       else
+                           showErrorMessageAddEditItem("CheckList item has not been added.");
+                   }
+               });
+        }
+    }
+
+</script>

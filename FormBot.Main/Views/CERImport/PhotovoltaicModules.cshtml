@@ -1,0 +1,743 @@
+﻿@model FormBot.Entity.PVModules
+@using FormBot.Helper;
+@*@Html.AntiForgeryToken()*@
+@Html.ValidationSummary(true)
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.custom.css" rel="stylesheet" />
+<link href="~/Content/KendoGrid.css" rel="stylesheet" />
+@*<style>
+    #datatableSpvManufacturerList .k-grid-content.k-grid-content {
+        max-height: 500px;
+    }
+    #datatableSpvManufacturerList .k-grid-header {
+        border: 0px;
+    }
+        #datatableSpvManufacturerList .k-grid-header th {
+            border: 0px;
+            font-size:14px;
+            font-weight: 700;
+            background-color: #dadada;
+            padding: 1.186em .6em;
+        }
+    #datatableSpvManufacturerList .k-grid-content table tr td, .k-grid-content-locked table tr td {
+        vertical-align: middle;
+        font-size: 14px;
+        color: #505050;
+    }
+        #datatableSpvManufacturerList .k-grid-content table tr td .onoffswitch {top:7px;}
+</style>*@
+<div class="container-fluid">
+    <h1 class="title">PV Module List</h1>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+           
+            <div class="alert alert-success" id="successMessage" style="display:none;">
+                File has been imported successfully.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+            <div class="alert alert-success" id="successMessageSPV" style="display:none;">
+                PVModule has been Synced successfully.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="failureMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="noRecordMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+    @using (Html.BeginForm("PhotovoltaicModules", "CERImport", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-block", @style = "margin-bottom:8px;" }))
+    {
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Certificate Holder:</label>
+                @Html.TextBoxFor(model => model.CertificateHolder, new { @class = "form-control", @maxlength = "100" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Model Number:</label>
+                @Html.TextBoxFor(model => model.ModelNumber, new { @class = "form-control", @maxlength = "100" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Wattage:</label>
+                @Html.TextBoxFor(model => model.Wattage, new { @class = "form-control", @maxlength = "6" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">CEC Approved Date:</label>
+                @Html.TextBoxFor(model => model.CECApprovedDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Expiry Date:</label>
+                @Html.TextBoxFor(model => model.ExpiryDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSendRequest" value="Search" class="primary search_ic">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+          
+        </div>
+    }
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="grid_topbar">
+                <p class="job_result" id="numRecords"></p>
+            </div>
+        </div>
+        <div class="col-lg-9 text-right">
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div class="control-label ver-text" id="headerTitle" style="vertical-align:top; padding-top:10px;">
+                    @ViewBag.Version
+                </div>
+                <div class="fileUpload botpad primary upload_ic" style="display: inline-block; vertical-align: middle;">
+                    <span>Upload</span>
+                    <input type="file" id="fileUpload" class="upload" value="Upload" />
+                </div>
+                <div class="botpad btn primary icon-btn" style="display:inline-block; vertical-align:middle;">
+                    <span class="sprite-img download_ic"></span>
+                    <input type="button" id="btnDownload" value="Download" class="fileUpload">
+                </div>
+                <div class="botpad btn primary icon-btn" style="display:inline-block; vertical-align:middle;">
+                    <span class="sync-h-ic"></span>
+                    <input type="button" id="btnSyncPVModules" value="Sync PVModules" class="fileUpload">
+                </div>
+                @*<div class="fileUpload botpad primary upload_ic" style="display: inline-block; vertical-align: middle;">
+                <span>Upload Json</span>
+                <input type="file" id="btnUploadSPVJson" class="upload" value="Upload" />
+            </div>*@
+                @*<div class="botpad btn primary icon-btn" style="display:inline-block; vertical-align:middle;padding-right:0px;">
+
+                <input type="button" id="btnSyncSPVJson" value="Set SPV" class="btn primary" onclick="SetSPVByManufacturer();">
+            </div>*@
+                @*<button class="btn primary " type="button" onclick="SetSPVByManufacturer();" style="border-radius: 4px;margin-bottom: 14px;
+            ">
+                                Set SPV
+                            </button>*@
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%"><span>@Html.DisplayName("PVModuleId") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Certificate Holder")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Model Number")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Wattage") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("CEC Approved Date")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Expiry Date")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Fire Tested")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog vertical-align-center">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            Update Wattage &nbsp;
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="form-block">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="control-label required">Wattage:</label>
+                                <input type="text" id="wattage" class="form-control" maxlength="6" />
+                                <span class="field-validation-error error-message" data-valmsg-for="FirstName" data-valmsg-replace="true" style="display:none;">Wattage is required.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <input type="button" id="btnSaveRequest" name="submit" value="Update" class="primary" style="margin-top:10%" />
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="hdnPVModuleId" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="spv-SetBy-Manufacturer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog modal-lg vertical-align-center">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            Set SPV By Manufacturer
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" tabindex="3">
+                                <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div id="datatableSpvManufacturerList">
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary icon-btn"  tabindex="239" onclick="return saveSpvSetByManufacturerPopUp();">
+                            <span class="sprite-img save_ic"></span>Save
+                        </button>
+                        <button class="btn default cancel_ic" type="button" data-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                    <input type="hidden" id="hdnJobId" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+        width: inherit;
+        height: inherit;
+        /* To center horizontally */
+        margin: 0 auto;
+    }
+</style>
+@Styles.Render("~/datatableCSS")
+<link href="~/Content/style.css" rel="stylesheet" />
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        var obj;
+        $(document).ready(function () {
+
+            if (@ProjectSession.UserTypeId==3) {
+                $('.fco').hide();
+            }
+
+            $('#date-pick, #date-pick1, .date-pick').datepicker({
+
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('change', function () {
+                $(this).valid();
+                $(this).removeClass('input-validation-error');
+                $(this).datepicker('hide');
+            });
+
+            var result = '';
+            var result = '@ViewBag.Result';
+            if (result == 'failure'){
+                $("#noRecordMessage").show();
+                setTimeout(function () {
+                    $('.alert').fadeOut(4000);
+                }, 4000);
+            }
+
+            $("#fileUpload").change(function () {
+                $("#successMessage").hide();
+                $("#failureMessage").hide();
+
+                var fileUpload = $("#fileUpload").get(0);
+                var files = fileUpload.files;
+                var test = '';
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    // Create FormData object
+                    var fileData = new FormData();
+
+                    // Looping over all files and add it to FormData object
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("PhotovoltaicModulesFile", "CERImport")',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if (result[0] == "success") {
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                Searching('', '', '', '', '');
+                                $("#datatable").width($("#datatable").width() - 10);
+                                $("#headerTitle").html(result[1]);
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                        },
+                    });
+                }
+                else {
+                    $("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#successMessage").hide();
+                }
+                this.value = null;
+            });
+
+
+            //$("#CECApprovedDate").datepicker({ format: 'dd/mm/yyyy' });
+            //$("#ExpiryDate").datepicker({ format: 'dd/mm/yyyy' });
+
+            $('#btnDownload').click(function(e){
+                window.location.href = '@Url.Action("DownloadModules", "CERImport")';
+            });
+
+            $('#btnSendRequest').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchPVModules();
+            });
+
+            $("#btnUploadSPVJson").change(function () {
+                var fileUpload = $("#btnUploadSPVJson").get(0);
+                var files = fileUpload.files;
+                var fileData = new FormData();
+                if (files[0].name.split('.').pop().toLowerCase() == 'json') {
+                    fileData.append(files[0].name, files[0]);
+                }
+                else {
+                    alert('Please upload json format file');
+                    return false;
+                }
+                $.ajax({
+                    url: '@Url.Action("UploadSPVJsonFile", "CERImport")',
+                    type: "POST",
+                    data: fileData,
+                    contentType: false, // Not to set any content header
+                    processData: false, // Not to process data                   
+                    success: function (result) {
+                        if (result.status) {
+                            $("#successMessageSPV").show();
+                            $("#successMessage").hide();
+                        }
+                    },
+                });
+            });
+
+            $("#btnSyncPVModules").click(function () {
+                $.ajax({
+                    url: '@Url.Action("SyncPvModuleList", "CERImport")',
+                    type: "GET",
+                    contentType: false, // Not to set any content header
+                    processData: false, // Not to process data
+                    data: {},
+                    success: function (result) {
+                        if (result.status) {
+                            $("#successMessageSPV").show();
+                            $("#successMessage").hide();
+                        }
+                    },
+                });
+            })
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'PVModuleId', "visible": false },
+                        { 'data': 'CertificateHolder', "orderable": true },
+                        { 'data': 'ModelNumber' },
+                        {
+                            'data': 'Wattage',
+                            "render": function (data, type, full, meta) {
+                                var imgedit = 'background:url(../Images/edit-icon.png) no-repeat center; text-decoration:none;margin-left:5px';
+                                var result = data + '<a title="edit" href="#" onclick="editWattage(this,' + full['PVModuleId'] + ',' + full['Wattage'] + ');" class="edit" style="' + imgedit + '">&nbsp;&nbsp;</a>';
+                                if (@ProjectSession.UserTypeId==3) {
+                                    return full.Wattage;
+                                } else {
+                                    return result;
+                                }
+                            }
+                        },
+                        {
+                            'data': 'CECApprovedDate',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                        {
+                            'data': 'ExpiryDate',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                        { 'data': 'FireTested' },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetPVModulesList", "CERImport")',
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Photovoltaic Module(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Photovoltaic Module(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                }
+            });
+
+            $("#btnSaveRequest").click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if ($("#wattage").val() != '') {
+                    $("#popupbox").modal('hide');
+                    var postUrl = '@Url.Action("UpdatePVModules", "CERImport")' + '?moduleId=' + $("#hdnPVModuleId").val() + '&Wattage=' + $("#wattage").val();
+                    $.ajax({
+                        url: postUrl,
+                        type: "POST",
+                        contentType: 'application/json',
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        success: function (result) {
+                            obj.parentNode.innerHTML = $("#wattage").val()+'<a title="edit" href="#" onclick="editWattage(this,'+$("#hdnPVModuleId").val()+','+$("#wattage").val()+');" class="edit" style="background:url(../Images/edit-icon.png) no-repeat center; text-decoration:none;margin-left:5px">&nbsp;&nbsp;</a>'
+                        }
+                    });
+                    $(".error-message").hide();
+                } else { $(".error-message").show(); }
+
+
+            });
+
+            $("#Wattage").keypress(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                    return true;
+                } else if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+                    return false;
+                }
+                else { return true; }
+            });
+
+            $("#wattage").keypress(function (e) {
+                if (e.which == 13) {
+                    $('#btnSaveRequest').click();
+                    return true;
+                } else if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+                    return false;
+                }
+                else { return true; }
+            });
+
+            $("#CECApprovedDate,#ExpiryDate").keydown(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                    return true;
+                }
+                else if (e.which == 46 || e.which == 8 || e.which == 9 ) {
+                    return true;
+                }
+                return false;
+            });
+
+            $("#CertificateHolder,#ModelNumber").keypress(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                }
+            });
+
+            $("#CertificateHolder").focus();
+        });
+
+        function ResetSearchFilters() {
+            $("#CertificateHolder").val('');
+            $("#ModelNumber").val('');
+            $("#Wattage").val('');
+            $("#CECApprovedDate").val('');
+            $("#ExpiryDate").val('');
+            Searching('', '', '', '', '');
+            $("#CertificateHolder").focus();
+        }
+
+        function Searching(certificate, modelNumber, wattage, cecApprovedDate, expiryDate) {
+            var certificate = certificate;
+            var modelNumber = modelNumber;
+            var wattage = wattage;
+            var cecApprovedDate = cecApprovedDate;
+            var expiryDate = expiryDate;
+
+            var dTable = $("#datatable").dataTable();
+            var dSettings = dTable.fnSettings();
+            dSettings.sAjaxSource = '@Url.Action("GetPVModulesList", "CERImport")' + '?certificate=' + certificate + "&modelNumber=" + modelNumber + "&wattage=" + wattage + "&cecApprovedDate=" + cecApprovedDate + "&expiryDate=" + expiryDate;
+            $('#datatable').DataTable().ajax.reload();
+        }
+
+        function searchPVModules() {
+            var certificate = $("#CertificateHolder").val();
+            var modelNumber = $("#ModelNumber").val();
+            var wattage = $("#Wattage").val();
+            var cecApprovedDate = $("#CECApprovedDate").val();
+            var expiryDate = $("#ExpiryDate").val();
+
+            if (cecApprovedDate !='' && cecApprovedDate !=undefined && cecApprovedDate !=null) {
+                var tickcecApprovedDate = ConvertDateToTick(cecApprovedDate, '@ProjectConfiguration.GetDateFormat');
+                cecApprovedDate= moment(tickcecApprovedDate).format("YYYY-MM-DD");
+            }
+
+            if (expiryDate !='' && expiryDate!=undefined && expiryDate !=null) {
+                var tickexpiryDate = ConvertDateToTick(expiryDate, '@ProjectConfiguration.GetDateFormat');
+                expiryDate= moment(tickexpiryDate).format("YYYY-MM-DD");
+            }
+
+            Searching(certificate, modelNumber, wattage, cecApprovedDate, expiryDate);
+        }
+
+        function ConvertToDate(data) {
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+
+        function editWattage(t,pvmoduleid, wattage) {
+            obj = t;
+            $(".error-message").hide();
+            $("#wattage").val(wattage);
+            $("#hdnPVModuleId").val(pvmoduleid);
+            $("#popupbox").modal();
+            $("#wattage").focus();
+        }
+        @*var urlSetSPVByManufacturer='@Url.Action("GetManufacturerForSetSpv", "CERImport")';
+        function SetSPVByManufacturer() {
+            $("#spvSetByManufacturer-div").load(urlSetSPVByManufacturer, function () {
+                $("#spv-SetBy-Manufacturer").modal({ backdrop: 'static', keyboard: false });
+                $("#errorMsgRegionSPVset").hide();
+            })
+        }*@
+        function SetSPVByManufacturer() {
+            $('#spv-SetBy-Manufacturer').modal('show');
+            $("#datatableSpvManufacturerList").kendoGrid({
+                dataSource: {
+                    type: "json",
+                    transport: {
+                        read: {
+                            url: "@Url.Action("GetManufacturerForSetSpv", "CERImport")",
+                            data: {},
+                            contentType: 'application/json',
+                            dataType: 'json',
+                            type: 'POST',
+                            async: false
+                        },
+
+                    },
+                    schema: {
+                        data: "data", // records are returned in the "data" field of the response
+                        total: "total"
+                    },
+                    pageSize: 100,
+                },
+                noRecords: true,
+                scrollable: true, 
+                columns: [
+
+
+                {
+                template: "#= ++rowNumber #",
+                field: "",
+                title: "No.",
+                width: "60px"
+                    },
+                    {
+                        field: "SpvUserId",
+                        title: "SpvUserId",
+                        width: "100px",
+                        hidden: true
+
+                    },
+                    {
+                    field: "SPVManufactureName",
+                    title: "SPVManufactureName",
+                    filterable: false
+                    },
+                    //{
+                    //field: "SPVManufactureProductVerificationUrl",
+                    //title: "ProductVerificationUrl",
+                    //filterable: false
+                    //},
+                    //{
+                    //field: "SPVManufactureInstallationVerificationUrl",
+                    //title: "IVUrl",
+                    //filterable: false
+                    //},
+                    //{
+                    //    field: "Supplier",
+                    //    title: "Supplier",
+                    //    filterable: false
+                    //},
+                    {
+                        field: "IsSpvAllowedBySpvmanufacturer",
+                        width: "120px",
+                        template: "#= kendo_IsSpvAllowedBySpvmanufacturer(data)#"
+                        //template:'<div class="onoffswitch" style="position:relative!important;"><input type = "checkbox" name = "onoffswitchIsSpvAllowedBySpvmanufacturer" class="onoffswitch-checkbox switch" id = "onoffswitchIsSpvAllowedBySpvmanufacturer_' + data.SPVManufactureId + '" ison = "1"> <label class="onoffswitch-label" for="onoffswitchIsSpvAllowedBySpvmanufacturer"><span class="onoffswitch-inner" ></span ><span class="onoffswitch-switch"></span></label ></div >'
+                    }],
+
+              
+            dataBinding: function() {
+                rowNumber = (this.dataSource.page() - 1) * this.dataSource.pageSize();
+
+                },
+                dataBound: function () {
+                    $(".onoffswitchIsSpvAllowedBySpvmanufacturer").each(function (text, value) {
+                        if ($(value).attr("data-check") == "true") {
+                            $(value).prop("checked", true);
+                        }
+                        else
+                            $(value).prop("checked", false);
+                    });
+
+                }
+
+        });
+
+        }
+        function kendo_IsSpvAllowedBySpvmanufacturer(data) {
+
+            var DynamicSwitch = '<div class="onoffswitch" style="position:relative!important;"><input type = "checkbox" data-check="' + data.IsSpvAllowedBySpvmanufacturer +'" name = "onoffswitchIsSpvAllowedBySpvmanufacturer" class="onoffswitch-checkbox switch onoffswitchIsSpvAllowedBySpvmanufacturer" id = "' + data.SPVManufactureId + '" ison = "1"> <label class="onoffswitch-label" for="' + data.SPVManufactureId + '"><span class="onoffswitch-inner" ></span ><span class="onoffswitch-switch"></span></label ></div >';
+            //if (data.IsSpvAllowedBySpvmanufacturer) {
+            //    $('#onoffswitchIsSpvAllowedBySpvmanufacturer_' + data.SPVManufactureId).prop("checked", true);
+            //}
+            //else
+            //    $('#onoffswitchIsSpvAllowedBySpvmanufacturer_' + data.SPVManufactureId).prop("checked", false);
+            return DynamicSwitch;
+        }
+        function saveSpvSetByManufacturerPopUp()
+        {
+            var chkArray = [];
+            $(".onoffswitchIsSpvAllowedBySpvmanufacturer:checked").each(function () {
+                chkArray.push($(this).attr("id"));
+            });
+            var JsonData = {
+                Spvmanufacturerid: chkArray.toString()
+
+                }
+                
+                $.ajax({
+                    url: '@Url.Action("saveSpvSetByManufacturerPopUp", "CERImport")',
+                    type: 'post',
+                    dataType: 'Json',
+                    data: (JsonData),
+
+                    success: function (status) {
+                        debugger
+                        if (status.status == true) {
+                            showSuccessMessage("SPV allowance set by particular manufacturers successfully.");
+                        }
+                         else {
+                           
+                            showErrorMessage("SPV allowance could not set by particular manufacturers successfully.");
+                        }
+                        },
+
+                    error: function () {
+                        showErrorMessage("SPV allowance could not set by particular manufacturers successfully.");
+                    }
+                });
+        }
+        function showErrorMessage(message) {
+            $(".alert").hide();
+            $("#successMsgRegion").hide();
+            $("#errorMsgRegion").html(closeButton + message);
+            $("#errorMsgRegion").show();
+        }
+        function showSuccessMessage(message) {
+            $(".alert").hide();
+            $("#errorMsgRegion").hide();
+            $("#successMsgRegion").html(closeButton + message);
+            $("#successMsgRegion").show();
+        }
+    </script>
+
+}

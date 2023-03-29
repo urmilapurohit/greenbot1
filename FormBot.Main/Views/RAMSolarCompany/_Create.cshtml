@@ -1,0 +1,174 @@
+﻿@model FormBot.Entity.RAMSolarCompany
+@{
+    ViewBag.Title = "Create RAMSolarCompany";
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<form id="UserDetails" style="background-color:#f8f8f8;clear:both;display:inline;width:100%;">
+    <div class="container-fluid">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <label class="control-label required">Reseller Account Manager:</label>
+                    @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "UserTypeId", @class = "form-control" ,@tabindex="1"})
+                    @Html.ValidationMessageFor(m => m.UserTypeID)
+                </div>
+            </div>
+        </div>
+
+        <div class="row malti-list">
+            <div class="col-sm-5 ">
+                <div class="form-group">
+                    <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">All Solar companies:</label>
+                    <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                        @Html.ListBoxFor(m => m.LstRAMSolarCompanyUser, new MultiSelectList(Model.LstRAMSolarCompanyUser, "Value", "Text"), new { id = "lstAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 2 })
+                    </div>
+                </div>
+            </div>
+            <div class=" col-sm-2 tra-btn">
+                <div class="form-group">
+                    <a id="btnLtoR" href="javascript:void(0);" class="linkbutton">
+                        <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+                    </a>
+                    <a id="btnRtoL" href="javascript:void(0);" class="linkbutton">
+                        <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+                    </a>
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <label class="col-md-10 col-sm-10 control-label " for="md" style="padding-top: 8px;margin-left:-13px;">Assigned Solar Companies:</label>
+                    <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                        @Html.ListBoxFor(m => m.RAMSolarCompanyAssignedUser, new MultiSelectList(Model.LstRAMSolarCompanyAssignedUser, "Value", "Text"), new { id = "lstAssignedAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 5 })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group defaultFormBot tab_bottomrow">
+            <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnRAMSCMapping" tabindex="6">
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" data-dismiss="modal" tabindex="7">
+        </div>
+
+    </div>
+</form>
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+<script src="~/Scripts/jquery-1.11.0.min.js"></script>*@
+@*<link href="~/Content/jquery-ui.css" rel="stylesheet" />*@
+@*<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+<script type="text/javascript">
+    $(document).off('click', '#btnRAMSCMapping').on('click', '#btnRAMSCMapping', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (typeof (validateExtraFields) == "function") {
+            if (validateExtraFields() == false) {
+                return false;
+            }
+        }
+
+        if (typeof (validateForm) != "function" || (typeof (validateForm) == "function" && validateForm())) {
+            $(this).closest('form').ajaxformSubmit();
+        }
+    });
+
+    function validateForm() {
+        $.validator.unobtrusive.parse("#UserDetails");
+        if ($("#UserDetails").valid()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    $(document).ready(function () {
+        FillDropDown('UserTypeId', '@Url.Action("GetResellerAccountManagerType", "RAMSolarCompany")', null, true, null);
+    });
+
+    $("#btnLtoR").click(function () {
+        $('#lstAttendee option:selected').each(function () {
+            $(this).remove().appendTo("#lstAssignedAttendee");
+        });
+    });
+
+    $("#btnRtoL").click(function () {
+        $('#lstAssignedAttendee option:selected').each(function () {
+            $(this).remove().appendTo("#lstAttendee");
+        });
+    });
+    
+    $("#btnCloseRAM").click(function () { $("#UserTypeId").next("span").attr('class', 'field-validation-valid'); });
+    $("#btnCancel").click(function () {
+        location.reload();
+
+    });
+
+    $("#UserTypeId").change(function () {
+        var ramid = $("#UserTypeId").val();
+        $.ajax({
+            url: '@Url.Action("GetSolarCompanyByRAMChanageDropDown", "RAMSolarCompany")',
+            type: "GET",
+            data: { ramId: ramid },
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                $('#lstAttendee').empty();
+                $('#lstAssignedAttendee').empty();
+                $.each(data.nodeList, function (key, value) {
+                    $("#lstAttendee").append($("<option></option>").val(value.Value).html(value.Text));
+                });
+                $.each(data.nodeListAssigned, function (key, value) {
+
+                    $("#lstAssignedAttendee").append($("<option></option>").val(value.Value).html(value.Text));
+                });
+            },
+        });
+    });
+
+    $('#btnRAMSCMapping').click(function (e) {
+        if ($('#lstAttendee option').text() == "" && $('#lstAssignedAttendee option').text() == "" && $('#UserTypeId').val() != "") {
+            $(".alert").hide();
+            $("#popuperrorMsgRegion").removeClass("alert-success");
+            $("#popuperrorMsgRegion").addClass("alert-danger");
+            $("#popuperrorMsgRegion").html(closeButton + "There is no solar company which can be assigned to reseller account manager.");
+            $("#popuperrorMsgRegion").show();
+           
+            e.preventDefault();
+            return false;
+        }
+        else {
+            var ramid = $("#UserTypeId").val();
+            var strAssignedAttendeeList = [];
+            $("#lstAssignedAttendee option").each(function (i) {
+                strAssignedAttendeeList.push($(this).val().trim());
+            });
+            var lstAssignedSC = strAssignedAttendeeList.join(',');
+
+            $.ajax({
+                url: '@Url.Action("SaveSCAAssignmentToRAM", "RAMSolarCompany")',
+                type: "GET",
+                data: { ramId: ramid, assignedsc: lstAssignedSC },
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data.success) {
+                        $(".alert").hide();
+                        $("#popuperrorMsgRegion").removeClass("alert-danger");
+                        $("#popuperrorMsgRegion").addClass("alert-success");
+                        $("#popuperrorMsgRegion").html(closeButton + "Solar Company assigned to RAM successfully.");
+                        $("#popuperrorMsgRegion").show();
+                       
+                    }
+                }
+            });
+        }
+    });
+</script>

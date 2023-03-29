@@ -1,0 +1,164 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "Create New User";
+    int temUserTypeId = FormBot.Helper.ProjectSession.UserTypeId;
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<style type="text/css">
+    .SumoSelect > .optWrapper > .options > li label {
+        font-weight: normal;
+    }
+</style>
+@using (Html.BeginForm("Create", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+@Html.ValidationSummary(true)
+
+<div class="container-fluid">
+    <div class="title">
+        <h1>Create New User</h1>
+        <a href="@Url.Action("Index", "User")" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="">Back</a>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="form-group">
+                @Html.LabelFor(m => m.UserTypeID, new { @class = "control-label" })
+                @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "UserTypeId", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.UserTypeID)
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 SCA RAM RAMdrp RAMCreate SC SCO SCACreateSCO" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 6, 7, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text>  }>
+            <div class="form-group">
+                @Html.LabelFor(m => m.ResellerID, new { @class = "control-label required", id = "lblResellerID" })
+                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerID", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.ResellerID)
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 SCO SCdrp SC SCACreate" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 4, 5, 6, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text>  }>
+            <div class="form-group">
+                @Html.LabelFor(m => m.SolarCompany, new { @class = "control-label required", id = "lblSolarCompanyId" })
+                @Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.SolarCompanyId)
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 SCO SC SCACreateSCO" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 4, 5, 6, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text>  }>
+            <div class="form-group">
+                @Html.LabelFor(m => m.SolarSubContractorID, new { @class = "control-label" })
+                @Html.DropDownListFor(model => model.SolarSubContractorID, new List<SelectListItem>(), new { id = "SolarSubContractorID", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.SolarSubContractorID)
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3 Role" @if (Common.IsExistsInArray(new int[] { 1, 2, 4, 6, 7, 9, 10 }, Model.UserTypeID)) { <text> style='display:none;' </text>  }>
+            <div class="form-group">
+                @Html.LabelFor(m => m.RoleID, new { @class = "control-label required" })
+                @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.RoleID)
+            </div>
+        </div>
+        @if (ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "Create" && ViewContext.Controller.ValueProvider.GetValue("controller").RawValue.ToString().ToLower() == "User")
+            {
+                bool result = true;
+                if (Model.UserId > 0)
+                {
+                    if (Model.UserTypeID != 7)
+                    {
+                        result = false;
+                    }
+                }
+                if (result)
+                {
+        <div class="col-sm-6 col-md-3 drpjobtype" style='display:none;'>
+            <div class="form-group">
+                @Html.Label("Job Type", new { @class = "control-label required" })
+                <div class="checkbox-box" style="color:#494949;">
+                    <label>
+                        @Html.CheckBox("IsPVDUser", Model.IsPVDUser.HasValue ? Model.IsPVDUser : false) PVD Job
+                    </label>
+                    <label>
+                        @Html.CheckBox("IsSWHUser", Model.IsSWHUser.HasValue ? Model.IsSWHUser : false) SWH Job
+                    </label>
+                    @*<label>
+                            @Html.CheckBox("IsVEECUser", Model.IsVEECUser.HasValue ? Model.IsVEECUser : false) VEEC
+                        </label>*@
+                </div>
+            </div>
+        </div>
+                }
+            }
+        <div class="col-sm-6 col-md-3 RA FCO" @if (Common.IsExistsInArray(new int[] { 1, 4, 5, 6, 7, 8, 9, 10 }, Model.UserTypeID)) { <text> style='display:none;' </text>  }>
+            <div class="form-group">
+                @Html.LabelFor(m => m.FCOGroupId, new { @class = "control-label required" })
+                @Html.DropDownListFor(model => model.lstFCOGroup1, new SelectList(Model.lstFCOGroup1, "FCOGroupId", "GroupName"), new { @multiple = "multiple", @placeholder = "Select", @class = "SlectBox", id = "FCOGroupId" })
+                <span id="spanFCOGroup" style="display: none; color:#b94a48">FCO Group is required.</span>
+            </div>
+        </div>
+    </div>
+    @Html.Partial("_Details", Model)
+</div>
+}
+<script src="~/Scripts/User/Create.dev.js"></script>
+@section Scripts
+    {
+    <script type="text/javascript">
+        var pageType = 'create';
+        var USERID = '@Model.Guid';
+        var userID = '@Model.UserId';
+        var resellerID='@Model.ResellerID';
+        var accreditedInstallerId = '@Model.AccreditedInstallerId';
+        var sessionUserTypeID = '@temUserTypeId';
+        var modelPassword = '@Model.Password';
+        var modelSEDesignRoleId = '@Model.SEDesignRoleId';
+        var getRoleURL1 = '@Url.Action("GetRole", "Role", new { id = 1 })';
+        var getRoleURL2 = '@Url.Action("GetRole", "Role", new { id = 2 })';
+        var getRoleURL3 = '@Url.Action("GetRole", "Role", new { id = 3 })';
+        var getRoleURL4 = '@Url.Action("GetRole", "Role", new { id = 4 })';
+        var getRoleURL5 = '@Url.Action("GetRole", "Role", new { id = 5 })';
+        var getRoleURL6 = '@Url.Action("GetRole", "Role", new { id = 6 })';
+        var getRoleURL7 = '@Url.Action("GetRole", "Role", new { id = 7 })';
+        var getRoleURL8 = '@Url.Action("GetRole", "Role", new { id = 8 })';
+        var getRoleURL9 = '@Url.Action("GetRole", "Role", new { id = 9 })';
+        var getRoleURL10 = '@Url.Action("GetRole", "Role", new { id = 10 })';
+        var urlRoleHasSaasUser = '@Url.Action("CheckRoleHasSaasUser", "Role")';
+        var modelSSCId = '@Model.SolarSubContractorID';
+        var getSCAIsSSCByRAIdURL = '@Url.Action("GetSolarCompany_IsSSCByResellerId", "SolarCompany")';
+        var getSCAByRAIdURL = '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")';
+        var getUserIndexURL = '@Url.Action("Index","User")';
+        var getUserCreateURL = '@Url.Action("Create", "User")';
+        var getCheckWholesalerByRAIdURL = '@Url.Action("CheckIsWholeSaler_ByResellerId", "SolarCompany")';
+    </script>
+    <link href="~/Content/dropdownliststyle.css" rel="stylesheet" />
+    @Scripts.Render("~/bundles/UserCreate")
+    
+    <script>
+    var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+    $(document).ready(function () {
+        $("#UserTypeId").change(function () {
+            var unitTypeID = $('#UserTypeId option:selected').val();
+            if (unitTypeID == 4) {
+                $(".btnCheckInXero").hide();
+                autoCompleteRAM(0, $("#ResellerID").val());
+            }
+            if (unitTypeID == 6) {
+                $("#RecUsernamePwd").hide();
+            }
+            $("#UserTypeId").val(unitTypeID);
+            ChangeUserType(unitTypeID);
+        });
+    });
+    </script>
+    @*<script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+        <script src="~/Scripts/User/CommonRulesForUser.js"></script>
+        <script src="~/Scripts/jquery.sumoselect.js"></script>
+        <script src="~/Scripts/User/Create.dev.js"></script>*@
+}

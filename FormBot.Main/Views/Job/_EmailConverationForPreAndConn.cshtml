@@ -1,0 +1,81 @@
+﻿@model IEnumerable<FormBot.Entity.JobEmailMessageInfo>
+@{
+    ViewBag.Title = "_EmailConverationForPreAndConn";
+}
+
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+<script src="~/Areas/Email/js/ckeditor/bootstrap-ckeditor-modal-fix.js"></script>
+<div class="message-box">
+    <div class="col-xs-12">
+        <div class="panel-group message-collapse load-email" id="accordion111" role="tablist" aria-multiselectable="true">
+            @if (Model.Count() > 0)
+            {
+                foreach (var item in Model)
+                {
+                    <div class="panel panel-default">
+                        <div id="ClickedLiEmailTab@(item.id_msg)" class="panel-heading" role="tab" acct_id="@item.id_acct" onclick="LoadEmailContent('@item.id_msg','@item.id_acct','@item.FolderName','@item.SendOrReceiveFromEmail')"
+                             data-idmsg="@item.id_msg" data-idacct="@item.id_acct" data-foldername="@item.FolderName" data-sendorreceivefromemail="@item.SendOrReceiveFromEmail">
+                            <a class="collapsed" role="button">
+                                <span class="send-form">@item.from_msg</span>
+                                <span class="send-to"><em>send email to</em> @item.to_msg</span>
+                                <span class="subject">@item.subject </span>
+                                <div class="message-date-and-time">
+                                    <span><em>@item.FullDate</em><em></em></span>
+                                </div>
+                                @*<span class="name-text">
+                                    <strong>@item.from_msg send email to </strong>
+                                    <em class="email-link">&lt;@item.from_msg&gt;</em>
+                                    <strong> @item.to_msg</strong>
+                                    <em class="email-link">&lt;@item.to_msg&gt;</em>
+                                </span>*@
+                                @*<span class="subject">@item.subject</span>
+                                <span class="created-data">Message thread created : @item.FullDate</span>
+                                <div class="message-date-and-time">
+                                    <span><em>@item.FullDate</em></span>
+                                </div>*@
+                            </a>
+                        </div>
+                        <div id="collapse@(item.id_msg)" class="collapsedDivOfEmail panel-collapse collapse" role="tabpanel" aria-labelledby="heading@(item.id_msg)" style="display:table; width:100%;">
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="panel panel-default" style="text-align:center">No Record(s) Found.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@Html.Hidden("SelectedMessageIdInEmailTab")
+<script type="text/javascript">
+
+    CKEDITOR.replace('editor1');
+
+    function LoadEmailContent(id_msg, id_acct, folderName, sendOrReceiveFromEmail) {
+        var data = JSON.stringify({ id_msg: id_msg, id_acct: id_acct, "folderName": folderName, "sendOrReceiveFromEmail": sendOrReceiveFromEmail });
+        var urlForGetRequest = '@Url.Action("ReadEmailForJobEmail", "JobEmailThread", new { area="" })' + "?id_msg=" + id_msg + "&id_acct=" + id_acct + "&folderName=" + folderName + "&sendOrReceiveFromEmail=" + sendOrReceiveFromEmail;
+        if ($("#collapse" + id_msg).attr("data-alreadyOpened") == "true") {
+            $(".collapsedDivOfEmail").html("");
+            $(".collapsedDivOfEmail").attr("data-alreadyOpened", "false");
+        }
+        else {
+            $("#SelectedMessageIdInEmailTab").val(id_msg);
+            $.ajax({
+                url: urlForGetRequest,
+                type: "GET",
+                data: data,
+                async: true,
+                processData: false,
+                success: function (Data) {
+                    $(".collapsedDivOfEmail").attr("data-alreadyOpened", "false");
+                    $(".collapsedDivOfEmail").html("");
+                    $("#collapse" + id_msg).html(Data);
+                    $("#collapse" + id_msg).attr("data-alreadyOpened", "true");
+                }
+            });
+        }
+    }
+</script>

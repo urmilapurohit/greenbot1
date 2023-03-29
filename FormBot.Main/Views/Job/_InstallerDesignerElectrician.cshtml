@@ -1,0 +1,346 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    
+    bool isUploadSignAfterTrade = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+
+            if (d.MenuId == (int)SystemEnums.MenuId.UploadSignAfterTrade.GetHashCode()) { isUploadSignAfterTrade = true; }
+        });
+    }
+}
+
+
+<style type="text/css">
+    .disInstallerSignature {
+        opacity: 0.5 !important;
+        cursor: default !important;
+        pointer-events: none;
+    }
+
+    .disDesignerSignature {
+        opacity: 0.5 !important;
+        cursor: default !important;
+        pointer-events: none;
+    }
+
+    .disElectricianSignature {
+        opacity: 0.5 !important;
+        cursor: default !important;
+        pointer-events: none;
+    }
+
+    .scrollSignature {
+        /*overflow : scroll !important;*/
+        width: 300px;
+        height: 100px;
+    }
+</style>
+
+<div class="sub-title">
+    <h4 style="border-right: 1px solid #e7e7e7; width:15%">Installer Details</h4>
+    <div style="position:relative">
+        <a href="#" title="Find Installer" class="icon-btn pull-right add-btn-icon sprite-img" id="btnFindInstaller" style="position: absolute;margin-left: 100px;"></a>
+        <p><strong style="left: 7px;position: absolute;top: 8px;">Find Installer</strong></p>
+    </div>
+    <div class="col-sm-offset-9 alignright">
+        <div class="form-group">
+            <a title="Help" class="helpic" style="padding-right:19px;padding-left:23px;padding-bottom: 2px;text-decoration:none" href="javascript:void(0);" id="InstallerDetailHelp">Help</a>
+        </div>
+    </div>
+</div>
+
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionInstallerDetails" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInstallerDetails" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 signature-block">
+        <div class="details-block">
+            @if (@Model.BasicDetails.JobType == 1)
+            {
+                @Html.HiddenFor(m => m.InstallerView.FirstName)
+                @Html.HiddenFor(m => m.InstallerView.LastName)
+                @Html.HiddenFor(m => m.InstallerView.Mobile)
+                @Html.HiddenFor(m => m.InstallerView.Email)
+                @Html.HiddenFor(m => m.InstallerView.CECAccreditationNumber)
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Installer: </label>
+                    </div>
+                    <div>
+                        <div class="edit-block">
+                            <input type="hidden" id="hdBasicDetails_InstallerID" name="pvdInstaller" />
+                            <input type="text" id="txtBasicDetails_InstallerID" name="txtBasicDetails_InstallerID" class="form-control" maxlength="100" onchange="RemoveInstallerDesignerElectrician($('#txtBasicDetails_InstallerID'),$('#hdBasicDetails_InstallerID'))" />
+                            <a href="#" title="Edit Installer" class="icon-link sprite-img edit-icon" id="btnUpdateInstaller" name="UpdateInstaller"></a>
+                        </div>
+                    </div>
+                    <div class="right-link">
+                        <button class="btn-link" type="button" id="btnInstaller_SystemUser">
+                            <img src="" id="imgInstaller_SystemUser" />
+                        </button>
+                        <button class="btn-link" type="button" id="btnInstallerQuickVisit" onclick="">
+                            <img src="" id="schdeuledInstallerVisit" />
+                        </button>
+                    </div>
+                </div>
+            }
+            @if (@Model.BasicDetails.JobType == 2)
+            {
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Installer: </label>
+                    </div>
+                    <div>
+                        <div class="edit-block">
+                            <input type="hidden" id="hdBasicDetails_SWHInstallerID" name="swhInstaller" />
+                            <input type="text" id="txtBasicDetails_SWHInstallerID" name="txtBasicDetails_SWHInstallerID" class="form-control" maxlength="100" onchange="RemoveInstallerDesignerElectrician($('#txtBasicDetails_SWHInstallerID'),$('#hdBasicDetails_SWHInstallerID'))" />
+                            <a href="#" title="Edit Installer" class="icon-link sprite-img edit-icon" id="btnUpdateSWHInstaller" name="UpdateSWHInstaller"></a>
+                        </div>
+                    </div>
+                    <div class="right-link">
+                        <button class="btn-link" type="button" id="btnInstaller_SystemUser">
+                            <img src="" id="imgInstaller_SystemUser" />
+                        </button>
+                        <button class="btn-link" type="button" id="btnInstallerQuickVisit" onclick="">
+                            <img src="" id="schdeuledInstallerVisit" />
+                        </button>
+                        @*<a href="#" title="Add Custom SWHInstaller" class="icon-btn pull-right add-btn-icon sprite-img" id="btnAddCustomSWHInstaller" style="margin-top: -30px;"></a>*@
+                    </div>
+                </div>
+            }
+
+        <p class="signature">
+            <strong>Signature :</strong>
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || isUploadSignAfterTrade)
+            {
+                <span class="fileUpload default upload_sign GetSignByUpload" title="Upload Installer Signature" signtype="2" style="background-color:transparent">
+                    <input id="installerGetSignByUpload" type="file" accept="image/*" class="upload fileUpload" title="Upload Installer Signature" name="Upload Installer Signature" typeofsignature="2">
+                    <span id="installerGetSignByUploadIcon" class="icon-btn sprite-img browse-icon"></span>
+                </span>
+            }
+            <a href="#" title="Populate Signature" class="icon-btn sprite-img signature-02 GetSignFromVisit" id="installerGetSignFromVisit"></a>
+            <a href="#" title="Draw signature" class="icon-btn" id="installerGetSignByDrawing" style="display:none;"></a>
+            <a href="#" title="Get Installer Signature" class="icon-btn sprite-img signature-04" data-type="installer" id="installerGetSignFromPopup"></a>
+            <a href="#" title="Get Signature Selfie" class="icon-btn sprite-img signature-05" id="installerGetSignatureSelfie" style="margin-top: -3px; margin-left: 3px"></a>
+        </p>
+
+        </div>
+        <div class="signechar-box scrollSignature" id="divInstallerSign" style="margin-bottom: 15px;"><img class="img-responsive" id="imgInstallerSign" alt=""></div>
+        @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5) && @Model.BasicDetails.InstallerLatLong != "")
+        {
+            <div class="form-group">
+                @*<strong style="color: #222;">Location </strong>*@
+                <a href="#" title="" class="icon-link pull-right MapBtn sprite-img map-icon" id="InstallerMap" style="margin-bottom:15px;"></a>
+                @Html.TextBoxFor(m => m.BasicDetails.InstallerLatLong, new { style = "width: 60%;border: none;margin-top: 10px;", @tabindex = 20, id = "InstallerLatLong" })
+            </div>
+        }
+    </div>
+
+    @if (@Model.BasicDetails.JobType == 1)
+    {
+        <div class="col-lg-4 signature-block">
+            <div class="details-block">
+                @Html.HiddenFor(m => m.DesignerView.FirstName)
+                @Html.HiddenFor(m => m.DesignerView.LastName)
+                @Html.HiddenFor(m => m.DesignerView.Mobile)
+                @Html.HiddenFor(m => m.DesignerView.Email)
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Designer: </label>
+                    </div>
+                    <div>
+                        <div class="edit-block">
+                            @*<input type="hidden" id="hdDesigner_UserId"/>*@
+                            <input type="hidden" id="hdBasicDetails_DesignerID" name="Designer" />
+                            <input type="text" id="txtBasicDetails_DesignerID" name="txtBasicDetails_DesignerID" class="form-control" maxlength="100" onchange="RemoveInstallerDesignerElectrician($('#txtBasicDetails_DesignerID'),$('#hdBasicDetails_DesignerID'))" />
+                            <a href="#" title="Edit Designer" class="icon-link sprite-img edit-icon" id="btnUpdateDesigner" name="UpdateDesigner"></a>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn-link" type="button" id="btnDesigner_SystemUser">
+                            <img src="" id="imgDesigner_SystemUser" />
+                        </button>
+                    </div>
+                </div>
+                <p class="signature">
+                    <strong>Signature :</strong>
+                    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || isUploadSignAfterTrade)
+                    {
+                        <span class="fileUpload default upload_sign GetSignByUpload" title="Upload Designer Signature" signtype="4" style="background-color:transparent">
+                            <input id="designerGetSignByUpload" type="file" accept="image/*" class="upload fileUpload " title="Upload Designer Signature" name="Upload Designer Signature" typeofsignature="4">
+                            <span id="designerGetSignByUploadIcon" class="icon-btn sprite-img browse-icon"></span>
+                        </span>
+                    }
+                    <a href="#" title="Populate Signature" class="icon-btn sprite-img signature-02 GetSignFromVisit" id="designerGetSignFromVisit"></a>
+                    <a href="#" title="Draw signature" class="icon-btn" id="designerGetSignByDrawing" style="display:none;"></a>
+                    <a href="#" title="Get Designer Signature" class="icon-btn sprite-img signature-04" data-type="designer" id="designerGetSignFromPopup"></a>
+                    <a href="#" title="Get Signature Selfie" class="icon-btn sprite-img signature-05" id="designerGetSignatureSelfie" style="margin-top: -3px; margin-left: 3px"></a>
+                </p>
+            </div>
+            <div class="signechar-box scrollSignature" id="divDesignerSign" style="margin-bottom: 15px;"><img class="img-responsive" id="imgDesignerSign" alt=""></div>
+            @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5) && @Model.BasicDetails.DesignerLatLong != "")
+            {
+                <div class=" form-group">
+                    @*<strong style="color: #222;">Location </strong>*@
+                    <a href="#" title="" class="icon-link pull-right MapBtn sprite-img map-icon" id="DesignerMap" style="margin-bottom:15px;"></a>
+                    @Html.TextBoxFor(m => m.BasicDetails.DesignerLatLong, new { style = "width: 60%;border: none;margin-top: 10px;", @tabindex = 20, id = "DesignerLatLong" })
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4 signature-block" style="border-right:none">
+            <div class="details-block">
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Electrician: </label>
+                    </div>
+                    <div>
+                        <div class="edit-block">
+                            <input type="hidden" id="hdBasicDetails_ElectricianID" name="Electrician" />
+                            <input type="text" id="txtBasicDetails_ElectricianID" name="txtBasicDetails_ElectricianID" class="form-control" maxlength="100" onchange="RemoveInstallerDesignerElectrician($('#txtBasicDetails_ElectricianID'),$('#hdBasicDetails_ElectricianID'))" />
+                            <a href="#" title="Edit Electrician" class="icon-link sprite-img edit-icon" id="btnUpdateElectrician" name="UpdateElectrician"></a>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="#" title="Add Custom Electrician" class="icon-btn pull-right add-btn-icon sprite-img" id="btnAddElectrician"></a>
+                    </div>
+                </div>
+                <p class="signature">
+                    <strong>Signature :</strong>
+                    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || isUploadSignAfterTrade)
+                    {
+                        <span class="fileUpload default upload_sign GetSignByUpload" id="divEleSign" title="Upload Electrician Signature" signtype="3" style="background-color:transparent">
+                            <input id="eleGetSignByUpload" type="file" accept="image/*" class="upload fileUpload" title="Upload Electrician Signature" name="Upload Electrician Signature" typeofsignature="3">
+                            <span id="eleGetSignByUploadIcon" class="icon-btn sprite-img browse-icon"></span>
+                        </span>
+                    }
+                    <a href="#" title="Populate Signature" class="icon-btn sprite-img signature-02 GetSignFromVisit" id="eleGetSignFromVisit"></a>
+                    <a href="#" title="Draw signature" class="icon-btn" id="eleGetSignByDrawing" style="display:none;"></a>
+                    <a href="#" title="Get Electrician Signature" class="icon-btn sprite-img signature-04" data-type="electrician" id="eleGetSignFromPopup"></a>
+                    <a href="#" title="Get Signature Selfie" class="icon-btn sprite-img signature-05" id="elecGetSignatureSelfie" style="margin-top: -3px; margin-left: 3px"></a>
+                </p>
+            </div>
+            <div class="signechar-box scrollSignature" id="divElectricianSign" style="margin-bottom: 15px;"><img class="img-responsive" id="imgElectricianSign" alt=""></div>
+            @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5) && Model.BasicDetails.ElectricianLatLong != "")
+            {
+                <div class=" form-group">
+                    <a href="#" title="" class="icon-link pull-right MapBtn sprite-img map-icon" id="ElectricianMap" style="margin-bottom:15px;"></a>
+                    @Html.TextBoxFor(m => m.BasicDetails.ElectricianLatLong, new { style = "width: 60%;border: none;margin-top: 10px;", @tabindex = 20, id = "ElectricianLatLong" })
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script type="text/javascript">
+    var ElectrianAddressJson = [];
+    var SRCSign, logoWidth = 0, logoHeight = 0;
+    var SRCSignInstall, logoHeightSignInstall = 0, logoWidthSignInstall = 0;
+    var SRCSignDesigner, logoHeightSignDesigner = 0, logoWidthSignDesigner = 0;
+    var isDrawSignatureOn = 0;
+    var SRCSignSWHInstall, logoHeightSignSWHInstall = 0, logoWidthSignSWHInstall = 0;
+    var InstallerJson = [];
+    var fillInstallerAddress = '';
+    var InstallerEmailFromJson;
+    var InstallerFirstNameFromJson;
+    var InstallerLastNameFromJson;
+    var //jobTypeNewScreen = '@Model.BasicDetails.JobType',
+        JobElectricians_PostalAddressID = '@Model.JobElectricians.PostalAddressID',
+        JobElectricians_UnitTypeID = '@Model.JobElectricians.UnitTypeID',
+        JobElectricians_StreetTypeID = '@Model.JobElectricians.StreetTypeID',
+        GetUnitTypeURL = '@Url.Action("GetUnitType", "UnitType")',
+        GetStreetTypeURL = '@Url.Action("GetStreetType", "StreetType")',
+        GetPostalAddressURL = '@Url.Action("GetPostalAddress", "User")',
+        BasicDetails_JobElectricianID = '@Model.BasicDetails.JobElectricianID',
+        BasicDetails_InstallerID = '@Model.BasicDetails.InstallerID',
+        GetInstallerDesignerWithStatus = '@Url.Action("GetInstallerDesignerWithStatus", "Job")',
+        InstallerView_UnitTypeID = '@Model.InstallerView.UnitTypeID',
+        InstallerView_StreetTypeID = '@Model.InstallerView.StreetTypeID',
+        BasicDetails_JobID = '@Model.BasicDetails.JobID',
+        InstallerView_PostalAddressID = '@Model.InstallerView.PostalAddressID',
+        DesignerView_UnitTypeID = '@Model.DesignerView.UnitTypeID',
+        DesignerView_StreetTypeID = '@Model.DesignerView.StreetTypeID',
+        DesignerView_PostalAddressID = '@Model.DesignerView.PostalAddressID',
+        BasicDetails_DesignerID = '@Model.BasicDetails.DesignerID',
+        JobInstallerDetails_PostalAddressID = '@Model.JobInstallerDetails.PostalAddressID',
+        JobInstallerDetails_UnitTypeID = '@Model.JobInstallerDetails.UnitTypeID',
+        JobInstallerDetails_StreetTypeID = '@Model.JobInstallerDetails.StreetTypeID',
+        GetElectricianURL = '@Url.Action("GetElectrician", "Job")',
+        JobElectricians_ElectricianID = '@Model.JobElectricians.ElectricianID',
+        JobInstallerDetails_AddressID = '@Model.JobInstallerDetails.AddressID',
+        JobElectricians_AddressID = '@Model.JobElectricians.AddressID',
+        InstallerView_SERole = '@Model.InstallerView.SERole',
+        DesignerView_SERole = '@Model.DesignerView.SERole',
+        ProcessRequest_User = '@Url.Action("ProcessRequest", "User")',
+        GetElectricianDetailbyInstallerURL = '@Url.Action("GetElectricianDetailbyInstaller", "Job")',
+        GetElectricianDetailbySolarcompanyURL = '@Url.Action("GetElectricianDetailbySolarcompany", "Job")',
+        InstallerView_SESignature = '@(!string.IsNullOrEmpty(Model.InstallerView.SESignature)? HttpUtility.JavaScriptStringEncode(Model.InstallerView.SESignature.Replace("\\", "/")) : Model.InstallerView.SESignature)',
+        DesignerView_SESignature = '@(!string.IsNullOrEmpty(Model.DesignerView.SESignature) ? HttpUtility.JavaScriptStringEncode(Model.DesignerView.SESignature.Replace("\\", "/")) : Model.DesignerView.SESignature)',
+        JobInstallerDetailsSWH_SESignature = '@Model.JobInstallerDetails.SESignature',
+        DeleteInstallerDesignerSignature = '@Url.Action("DeleteInstallerDesignerSignature", "Job")',
+        DeleteFileFromFolderAndElectricianURL = '@Url.Action("DeleteFileFromFolderAndElectrician", "Job")',
+        JobElectricians_Signature= '@(!string.IsNullOrEmpty(Model.JobElectricians.Signature) ? HttpUtility.JavaScriptStringEncode(Model.JobElectricians.Signature.Replace("\\", "/")) : Model.JobElectricians.Signature)',
+        Model_Guid = '@Model.Guid',
+        ProjectSession_UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+        BasicDetails_ElectricianSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.ElectricianSignature)',
+        BasicDetails_ElectricianSignature_Replace = '@(!string.IsNullOrEmpty(Model.BasicDetails.ElectricianSignature) ?HttpUtility.JavaScriptStringEncode(Model.BasicDetails.ElectricianSignature.Replace("\\", "/")):Model.BasicDetails.ElectricianSignature)',
+        BasicDetails_InstallerSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature)',
+        BasicDetails_InstallerSignature_Replace = '@(!string.IsNullOrEmpty(Model.BasicDetails.InstallerSignature)? HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature.Replace("\\", "/")): Model.BasicDetails.InstallerSignature)',
+        UploadURL = '@Url.Action("Upload", "Job")',
+        ProjectSession_MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize',
+        UploadJobSignatureURL = '@Url.Action("UploadJobSignature", "Job")',
+        Model_JobID = '@Model.JobID',
+        UpdateJobSignatureURL = '@Url.Action("UpdateJobSignature", "Job")',
+        GetSignatureFromVisitURL = '@Url.Action("GetSignatureFromVisit", "Job")',
+        DrawJobSignatureURL = '@Url.Action("DrawJobSignature", "Job")',
+        company_Id = $("#BasicDetails_SolarCompanyId").val(),
+        CheckUserExistURL = '@Url.Action("CheckUserExist", "User")',
+        CheckSWHUserExistURL = '@Url.Action("CheckSWHUserExist", "User")',
+        ProjectSession_LoggedInUserId = '@ProjectSession.LoggedInUserId',
+        Upload_User = '@Url.Action("Upload", "User")',
+        BasicDetails_DesignerSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.DesignerSignature)',
+        BasicDetails_DesignerSignature_Replace = '@(!string.IsNullOrEmpty(Model.BasicDetails.DesignerSignature)? HttpUtility.JavaScriptStringEncode(Model.BasicDetails.DesignerSignature.Replace("\\", "/")): Model.BasicDetails.DesignerSignature)',
+        AddInstallerDesignerURL = '@Url.Action("AddInstallerDesigner", "User")',
+        FillInstallerDesignerURL = '@Url.Action("FillInstallerDesigner", "User")',
+        IsSubContractor = '@ProjectSession.IsSubContractor',
+        companyId = 0,
+        isSCADashboard = false;
+    if ('@ProjectSession.UserTypeId' == 4)
+        companyId = '@ProjectSession.SolarCompanyId';
+    else
+        companyId = $("#BasicDetails_SolarCompanyId").val() ? parseInt($("#BasicDetails_SolarCompanyId").val()) : 0;
+
+    var urlInstallerDesignerView = '@Url.Action("_InstallerDesignerView", "Job")';
+    InstallerDesignerView_UnitTypeID = '@Model.InstallerDesignerView.UnitTypeID',
+    InstallerDesignerView_StreetTypeID = '@Model.InstallerDesignerView.StreetTypeID',
+    InstallerDesignerView_PostalAddressID = '@Model.InstallerDesignerView.PostalAddressID',
+    urlUpdateJobDetailInstallerDesigner = '@Url.Action("UpdateJobDetailInstallerDesigner", "User")';
+    urlUpdateJobDetailJobElectrician = '@Url.Action("UpdateJobDetailJobElectrician", "User")';
+    url_JobSchedulingDetail = '@Url.Action("JobSchedulingDetail", "JobScheduling")';
+    BasicDetails_InstallationDate = '@Model.BasicDetails.InstallationDate';
+    defaultTemplateId = '@Model.JobScheduling.DefaultTemplateId';
+    getDateFormat = '@ProjectConfiguration.GetDateFormat';
+    InstallerView_IsSystemUser = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.IsSystemUser':'@Model.JobInstallerDetails.IsSystemUser';
+    DesignerView_IsSystemUser = '@Model.DesignerView.IsSystemUser';
+    InstallerView_IsVisitScheduled = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.IsVisitScheduled':'@Model.JobInstallerDetails.IsVisitScheduled';
+    InstallerView_SEStatus = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.SEStatus':'@Model.JobInstallerDetails.SEStatus';
+    urlGetElectricianListForJob = '@Url.Action("GetElectricianListForJob", "Job")';
+    urlDeleteCustomElectrician = '@Url.Action("DeleteCustomElectrician", "Job")';
+    urlCheckExistingCustomElectrician = '@Url.Action("CheckExistingCustomElectrician", "Job")';
+    ProjectConfiguration_GetPageSize=-@ProjectConfiguration.GetPageSize;
+    urlSWHInstallerList = '@Url.Action("SWHInstallerList","User")';
+    urlJobElectricians = '@Url.Action("JobElectricians", "Job")';
+    JobInstallerDetails_SWHInstallerDesignerId = '@Model.JobInstallerDetails.SWHInstallerDesignerId';
+    var IsFromFindInstaller = false;
+    var SRCSignInstallerDesigner;
+</script>
+<script src="~/Scripts/View/Job/_InstallerDesignerElectrician.min.js"></script>
+

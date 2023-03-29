@@ -1,0 +1,875 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper
+@{
+    ViewBag.Title = "Reseller Sign Up";
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+@using (Html.BeginForm("ResellerSignUp", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary(true)
+
+    if (Model.Status == 4 || Model.UserId == 0)
+    {
+        <div class="container-fluid">
+
+            @if (!string.IsNullOrEmpty(Model.ResellerUrl))
+            {
+                <div class="title">
+                    <h1>Solar Company Sign Up</h1>
+                    <a href="@Model.ResellerUrl" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+                </div>
+            }
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            @*<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>*@
+            @Html.HiddenFor(m => m.AspNetUserId)
+            @Html.HiddenFor(m => m.UserId)
+            @Html.HiddenFor(m => m.UserTypeID)
+            @Html.HiddenFor(m => m.CreatedDate)
+            @Html.HiddenFor(m => m.Signature)
+            @Html.HiddenFor(m => m.ResellerID)
+            @Html.HiddenFor(m => m.SolarCompanyId)
+            @Html.HiddenFor(m => m.IsFirstLogin)
+            @Html.HiddenFor(m => m.Theme)
+            @Html.HiddenFor(m => m.ResellerUrl)
+           @* @Html.HiddenFor(m => m.ResellerID)*@
+            @Html.HiddenFor(m => m.Logo)
+            @Html.HiddenFor(m => m.RoleID)
+            @if (Model.UserId > 0)
+            {
+                @Html.HiddenFor(m => m.UserName)
+                @Html.HiddenFor(m => m.Note)
+                @Html.HiddenFor(m => m.ComplainBy)
+                @Html.HiddenFor(m => m.IsSCDetailConfirm)
+                @Html.HiddenFor(m => m.IsInstaller)
+                @Html.HiddenFor(m => m.IsSEDetailConfirm)
+                @Html.HiddenFor(m => m.IsFirstLogin)
+                @Html.HiddenFor(m => m.IsActive)
+            }
+            @if (!string.IsNullOrEmpty(Model.ResellerUrl))
+            {
+                @Html.Partial("~/Views/Account/_SignUpDetails.cshtml", Model)
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="title text-center">
+            <h1>This link is no longer active as your account is in @Model.StatusName.</h1>
+        </div>
+    }
+}
+@section Scripts
+    {
+    @*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+        <script src="~/Scripts/jquery-1.11.0.min.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/jquery-1.10.2.js"></script>
+        <script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/bootstrap.min.js"></script>*@
+    <script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+    @*<script src="~/Scripts/jquery.fileupload.js"></script>
+    @Scripts.Render("~/Scripts/FormBot.js")*@
+    <script type="text/javascript">
+        var activeTab = 't1';
+        var chkUserName = true;
+        var chkCompanyABN = true;
+        var chkCECAccreditationNumber = true;
+        var chkLoginCompanyName = true;
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+        var resellerID = '@Model.ResellerID';
+        var userID = '@Model.UserId';
+        var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+        var maxsize = Math.round(documentSizeLimit);
+        var oldFileName ='@Model.Signature';
+        var logoWidth = 0, logoHeight = 0, logoWidth1 = 0, logoHeight1 = 0,SRCSign, SRCLogo;
+
+        if(@Model.UserId > 0)
+        {
+            var USERID = '@Model.UserId';
+        }
+        else
+        {
+            var USERID = '@Model.Guid';
+        }
+        var Theme = '@FormBot.Helper.ProjectSession.Theme';
+        $(document).ready(function () {
+            if ('@Model.Logo' != null && '@Model.Theme' != null && '@Model.Logo' != '' && '@Model.Theme' != '') {
+                if ('@Model.Logo' == 'Images/logo.png') {
+                    $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + '@ProjectSession.Logo')).load(function() { logoWidth1=this.width; logoHeight1=this.height});
+                }
+                else {
+                    $('body').attr('id', '@Model.Theme');
+                    var proofDocumentURL = UploadedDocumentPath;
+                    var logo = '@Model.Logo';
+                    var SRC = proofDocumentURL + 'UserDocuments' + '/' + logo;
+                    $('#imgLogo').attr('src', SRC).load(function() { logoWidth1=this.width; logoHeight1=this.height});
+                    $('.hd-top .logo img').css('height', '60px');
+                    $('.hd-top .logo img').css('margin-top', '0px');
+                }
+                $('body').attr('id', '@Model.Theme');
+            }
+            $('[name=SEDesigner][value=@Model.SEDesigner]').prop('checked',true);
+            FillDropDown('UnitTypeId', '@Url.Action("GetUnitType", "UnitType")', @Model.UnitTypeID, true, null);
+            FillDropDown('StreetTypeId', '@Url.Action("GetStreetType", "StreetType")', @Model.StreetTypeID, true, null);
+            FillDropDown('PostalAddressID', '@Url.Action("GetPostalAddress", "User")', @Model.PostalAddressID, true, null);
+
+            $("#btnClosePopUpBox").click(function () {
+                $('#popupbox').modal('toggle');
+            });
+            $("#btnClosepopupProof").click(function () {
+                $('#popupProof').modal('toggle');
+            });
+            $('#lblCECAccreditationNumber').addClass("required");
+            //$("#fromDate").val("");
+            //$("#toDate").val("");
+            addressID = @Model.AddressID;
+            POAddress(addressID);
+            if(@Model.chkSTC == 0){
+                $('.chkisSTC').hide();
+                $('.chkSCASignUp').hide();
+            }
+            else{
+                $('.chkisSTC').show();
+                $('.chkSCASignUp').show();
+            }
+
+            $('#horizontalTab').easyResponsiveTabs({
+                type: 'default', //Types: default, vertical, accordion
+                width: 'auto', //auto or any width like 600px
+                fit: true,   // 100% fit in a container
+                closed: 'accordion', // Start closed if in accordion view
+                activate: function (event) {
+                    //addRules();
+                    addressValidation();
+                    // Callback function if tab is switched
+                    var $this = $(this);
+
+                    if (isValid && CheckShowMessages() && addRules()) {
+                        activeTab = $this.attr('id');
+                        $('.form-box').find('input:first').focus();
+                    }
+                    else {
+                        $this.removeClass('resp-tab-active');
+                        $('.resp-tab-content-active').css('display', 'none').removeClass('resp-tab-content-active');
+                        $('#' + activeTab).addClass('resp-tab-active');
+                        $('.tab' + activeTab.replace('t', '')).addClass('resp-tab-content-active').css('display', 'block');
+                        CheckShowMessages();
+                        addRules();
+                        return false;
+                    }
+                }
+            });
+
+            if ('@Model.Logo' != null && Theme != null && '@Model.Logo' != '' && Theme != '') {
+                if ('@Model.Logo' == 'Images/logo.png') {
+                    $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + '@Model.Logo')).load(function() { logoWidth1=this.width; logoHeight1=this.height});
+                }
+                else {
+                    $('body').attr('id', Theme);
+                    $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + logo));
+                    var proofDocumentURL = UploadedDocumentPath;
+                    var logo = '@Model.Logo';
+                    var SRC = proofDocumentURL + 'UserDocuments' + '/' + logo;
+                    $('#imgLogo').attr('src', SRC).load(function() { logoWidth1=this.width; logoHeight1=this.height});
+                }
+                $('body').attr('id', Theme);
+            }
+            $('.RA').hide();
+            $('.SE').hide();
+            $('.FCO').hide();
+            $('.FSA').hide();
+            $('.SCO').hide();
+            $('.RAM').hide();
+            $('.SSC').hide();
+            $('.SCA').show();
+            $('.defaultFormBot').show();
+
+            $('.SERole').hide();
+
+            $('#verticalTab').easyResponsiveTabs({
+                type: 'vertical',
+                width: 'auto',
+                fit: true
+            });
+            if('@Model.strFromDate' == "")
+            {
+                $("#fromDate").val("");
+            }
+            if('@Model.strToDate' == "0001-01-01")
+            {
+                $("#toDate").val("");
+            }
+            if(@Model.UserId == 0)
+            {
+                $('.chkSCASignUp').hide();
+                $('.DPA').show();
+                $('.PDA').hide();
+                if(@Model.AddressID == 2)
+                {
+                    $('.DPA').hide();
+                    $('.PDA').show();
+                }
+            }
+            if(@Model.UserId > 0)
+            {
+                $('.UserPass').hide();
+                if ($('#imgSign').attr('src') != "") {
+                    var SignName = $('#imgSign').attr('src');
+                    var guid = '@Model.UserId';
+                    var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                    var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                    var SRC = imagePath + "/" + SignName;
+                    SRCSign = SRC;
+                    //$('#imgSign').attr('src', SRC).load(function() { logoWidth=this.width; logoHeight=this.height});
+                    $('#imgSign').attr('class', SignName);
+
+                    $('#imgSignature').show();
+                }
+                if ($('#UnitTypeId option:selected').val() == "") {
+                    $('#lblUnitNumber').removeClass("required");
+                    $('#lblUnitTypeID').removeClass("required");
+                    $('#lblStreetNumber').addClass("required");
+                }
+                else {
+                    $('#lblUnitNumber').addClass("required");
+                    $('#lblUnitTypeID').addClass("required");
+                    $('#lblStreetNumber').removeClass("required");
+                }
+            }
+            if(@Model.UserId > 0)
+            {
+                $('.chkisSTC').hide();
+                $('.SERole').show();
+            }
+            else
+            {
+                $('.chkisSTC').show();
+            }
+            var id = '@Model.CompanyABN';
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCompanyABN", "User")',
+                data: { id: id },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+                    if (data == 0) {
+                        $('#CompanyName').empty();
+                        $('#fromDate').val("");
+                        $('#toDate').val("");
+                        $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                    }
+                    else {
+                        if ($('#CompanyName option').length > 1) {
+                            $('#CompanyName').empty();
+                            $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        else {
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        initialize(data);
+                        var str ='@Model.CompanyName';
+                        if(str.indexOf('&#39') != -1)
+                        {
+                            var str =str.replace(/&#39;/g, "'");
+                        }
+                        else if(str.indexOf('&amp') != -1)
+                        {
+                            var str =str.replace(/&amp;/g, '&');
+                        }
+                        else if(str.indexOf('&quot') != -1)
+                        {
+                            var str =str.replace(/&quot;/g, '"');
+                        }
+                        else if(str.indexOf('&lt') != -1)
+                        {
+                            var str =str.replace(/&lt;/g, '<');
+                        }
+                        else if(str.indexOf('&gt') != -1)
+                        {
+                            var str =str.replace(/&gt;/g, '>');
+                        }
+                        $("#CompanyName").val(str);
+                        return data;
+                    }
+                }
+            });
+        });
+
+        function validateForm() {
+            $("#loading-image").css("display", "");
+            $("#RAMId").val($("#hdnRAMID").val());
+            addressValidation();
+            $.validator.unobtrusive.parse("#UserDetails");
+
+            if ($("#UserDetails").valid() && CheckShowMessages() && addRules()) {
+                $("#loading-image").css("display", "none");
+                return true;
+            }
+            else {
+                addRules();
+                $("#loading-image").css("display", "none");
+                return false;
+            }
+        }
+
+        $('#chkSCA').change(function () {
+            if ($(this).is(":checked")) {
+                $('.chkSCASignUp').show();
+                $('.SERole').show();
+            }
+            else {
+                $('.chkSCASignUp').hide();
+            }
+        });
+
+        $("#CompanyABN").change(function () {
+            var id = $('#CompanyABN').val();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCompanyABN", "User")',
+                data: { id: id },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+                    if (data == 0) {
+                        $('#CompanyName').empty();
+                        $('#fromDate').val("");
+                        $('#toDate').val("");
+                        $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                        $(".alert").hide();
+                        $("#errorMsgRegion").html(closeButton + "Invalide Company ABN.");
+                        $("#errorMsgRegion").show();
+
+                        return false;
+                    }
+                    else {
+                        if ($('#CompanyName option').length > 1) {
+                            $('#CompanyName').empty();
+                            $("#CompanyName").append($("<option></option>").val("").html("Select"));
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        else {
+                            $.each(data, function (key, value) {
+                                $("#CompanyName").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        initialize(data);
+                        return data;
+                    }
+                }
+            });
+        });
+
+        function initialize(data) {
+            $("#CompanyName").change(function () {
+                $.each(data, function (key, value) {
+                    var Cname = value.CompanyName;
+                    var drpVal = $('select#CompanyName option:selected').val();
+                    if (Cname == drpVal) {
+                        $('#fromDate').val(value.strFromDate);
+                        $('#toDate').val(value.strToDate);
+                    }
+                });
+            });
+        }
+
+        $(document).ready(function () {
+            $('#txtTown').autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest","User")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    $('#txtState').val(ui.item.state);
+                    $('#txtPostCode').val(ui.item.postcode);
+                }
+            });
+
+            $('#txtPostCode').autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest","User")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    $('#txtState').val(ui.item.state);
+                    $('#txtTown').val(ui.item.location);
+                }
+            });
+        });
+
+        //File browse get FileName
+        function getNameFromPath(strFilepath) {
+            var objRE = new RegExp(/([^\/\\]+)$/);
+            var strName = objRE.exec(strFilepath);
+
+            if (strName == null) {
+                return null;
+            }
+            else {
+                return strName[0];
+            }
+        }
+
+        $('#imgSignature').click(function ()
+        {
+            $("#loading-image").css("display","");
+            $('#imgSign').attr('src', SRCSign).load(function()
+            {
+                logoWidth=this.width;
+                logoHeight=this.height;
+                $('#popupbox').modal({ backdrop: 'static', keyboard: false });
+
+                if($(window).height() <= logoHeight)
+                {
+                    $("#imgSign").closest('div').height($(window).height() - 150);
+                    $("#imgSign").closest('div').css('overflow-y', 'scroll');
+                    $("#imgSign").height(logoHeight);
+                    //$("#imgSign").height($(window).height() - 205);
+                }
+                else
+                {
+                    $("#imgSign").height(logoHeight);
+                    $("#imgSign").closest('div').removeAttr('style');
+                }
+
+                if(screen.width <= logoWidth || logoWidth >= screen.width - 250)
+                {
+                    //$("#imgSign").width(screen.width - 10);
+                    //$('#popupbox').find(".modal-dialog").width(screen.width - 10);
+                    $('#popupbox').find(".modal-dialog").width(screen.width - 250);
+                    $("#imgSign").width(logoWidth);
+                }
+                else
+                {
+                    $("#imgSign").width(logoWidth);
+                    $('#popupbox').find(".modal-dialog").width(logoWidth);
+                }
+                $("#loading-image").css("display","none");
+            });
+            $("#imgSign").unbind("error");
+            $('#imgSign').attr('src', SRCSign).error(function()
+            {
+                alert('Image does not exist.');
+                $("#loading-image").css("display","none");
+            });
+
+        });
+
+        $('.resp-tabs-list li').click(function (e, c) {
+            var $this = $(this);
+            isValid = $("#UserDetails").valid();
+        });
+
+        //$("#AddressID").change(function () {
+        //    $(".POID").find('input[type=text]').each(function () {
+        //        $(this).val('');
+        //        $(this).attr('class', 'form-control valid');
+        //    });
+        //    $(".POID").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+        //    if ($(this).val() == 1) {
+        //        $('.DPA').show();
+        //        $('.PDA').hide();
+        //        $('#PostalAddressID').val('');
+        //        $('#PostalDeliveryNumber').val('');
+        //        $('#PostalAddressID').attr('class', 'form-control valid');
+        //        $('#PostalDeliveryNumber').attr('class', 'form-control valid');
+        //    }
+        //    else {
+        //        $('.DPA').hide();
+        //        $('.PDA').show();
+        //        $('#UnitTypeId').val('');
+        //        $('#UnitNumber').val('');
+        //        $('#StreetNumber').val('');
+        //        $('#StreetName').val('');
+        //        $('#StreetTypeId').val('');
+        //        $('#UnitTypeId').attr('class', 'form-control valid');
+        //        $('#UnitNumber').attr('class', 'form-control valid');
+        //        $('#StreetNumber').attr('class', 'form-control valid');
+        //        $('#StreetTypeId').attr('class', 'form-control valid');
+        //        $('#UnitTypeId').attr('class', 'form-control valid');
+        //    }
+        //});
+
+        $('#btnCancelLast').click(function () {
+            window.location = "@Model.ResellerUrl";
+        });
+
+        function getDropDownValue() {
+            if (validateForm()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
+
+        function addRules() {
+            $("#CECAccreditationNumber").rules("add", {
+                required: true,
+                messages: {
+                    required: "CEC Accreditation Number is required."
+                }
+            });
+            //if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() != null && $("#UnitNumber").val() != "") {
+            //    $("#StreetNumber").rules("add", {
+            //        required: false,
+            //    });
+            //}
+            //else {
+            //    $("#StreetNumber").rules("add", {
+            //        required: true,
+            //        messages: {
+            //            required: "Street Number is required."
+            //        }
+            //    });
+            //    if ($("#StreetNumber").val() != null && $("#StreetNumber").val() != "") {
+            //        $("#UnitTypeId").rules("add", {
+            //            required: false,
+            //        });
+            //        $("#UnitNumber").rules("add", {
+            //            required: false,
+            //        });
+            //    }
+            //    else {
+            //        $("#UnitTypeId").rules("add", {
+            //            required: true,
+            //        });
+            //        $("#UnitNumber").rules("add", {
+            //            required: true,
+            //        });
+            //    }
+            //}
+            if ($("#chkSCA").is(':checked') == true) {
+                if ($('#tblDocuments1 tr').length == 0) {
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html(closeButton + "Please upload atleast one proof of identity document.");
+                    $("#errorMsgRegion").show();
+
+                    return false;
+                }
+
+                else {
+                    return true;
+                }
+            }
+            else {
+                return true;
+            }
+        }
+        function addressValidation() {
+            $("#UnitTypeId").rules("add", {
+                required: false,
+            });
+            $("#UnitNumber").rules("add", {
+                required: false,
+            });
+            if ($("#UnitTypeId").val() == "" && $("#UnitNumber").val() == "") {
+                $('#lblUnitNumber').removeClass("required");
+                $('#lblUnitTypeID').removeClass("required");
+                $("#UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UnitTypeId").rules("add", {
+                    required: false,
+                });
+                $("#UnitNumber").next("span").attr('class', 'field-validation-valid');
+                $('#lblStreetNumber').addClass("required");
+                $("#StreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+
+            if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() != "") {
+                $('#lblStreetNumber').removeClass("required");
+                $("#StreetNumber").rules("add", {
+                    required: false,
+                });
+                $('#lblUnitNumber').removeClass("required");
+                $('#lblUnitTypeID').removeClass("required");
+                $("#UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UnitTypeId").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() == "") {
+                $("#UnitNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Unit Number is required."
+                    }
+                });
+                $('#lblUnitNumber').addClass("required");
+                $('#lblStreetNumber').removeClass("required");
+                $("#StreetNumber").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UnitTypeId").val() == "" && $("#UnitNumber").val() != "") {
+                $('#lblUnitNumber').removeClass("required");
+                $('#lblUnitTypeID').removeClass("required");
+                $("#UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UnitTypeId").rules("add", {
+                    required: false,
+                });
+                $('#lblStreetNumber').addClass("required");
+                $("#StreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+        }
+        function POAddress(addressID){
+            $(".POID").find('input[type=text]').each(function () {
+                //$(this).attr('class', 'form-control valid');
+            });
+            $(".POID").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+            if (addressID == 1) {
+                $('.DPA').show();
+                $('.PDA').hide();
+                //$('#PostalAddressID').val('');
+                //$('#PostalDeliveryNumber').val('');
+                $('#PostalAddressID').attr('class', 'form-control valid');
+                $('#PostalDeliveryNumber').attr('class', 'form-control valid');
+            }
+            else {
+                $('.DPA').hide();
+                $('.PDA').show();
+                //$('#UnitTypeId').val('');
+                //$('#UnitNumber').val('');
+                //$('#StreetNumber').val('');
+                //$('#StreetName').val('');
+                //$('#StreetTypeId').val('');
+                $('#UnitTypeId').attr('class', 'form-control valid');
+                $('#UnitNumber').attr('class', 'form-control valid');
+                $('#StreetNumber').attr('class', 'form-control valid');
+                $('#StreetTypeId').attr('class', 'form-control valid');
+                $('#StreetName').attr('class', 'form-control valid');
+            }
+        }
+
+        $("#AddressID").change(function () {
+            var addressID = $('#AddressID option:selected').val();
+            POAddress(addressID);
+        });
+
+        $('#chkSCA').change(function () {
+            if ($(this).is(":checked")) {
+                $('.chkSCASignUp').show();
+            }
+            else {
+                $('.chkSCASignUp').hide();
+            }
+        });
+        if(@Model.UserId > 0)
+        {
+            function DeleteDocumentFolderOnCancel() {
+                var guid = USERID;
+                var Name = [];
+                Name = document.getElementsByName("FileNamesCreate");
+                var Sign = document.getElementsByName("Signature");
+                var SignName = Sign[0].id;
+                if (Name.length > 0) {
+                    for (var i = 0; i < Name.length; i++) {
+                        var docname = Name[i].id;
+                        DeleteFileFromUserOnCancel(docname, guid);
+                    }
+                }
+                //if (SignName != null && SignName != "") {
+                //    DeleteFileFromUserOnCancel(SignName, guid);
+                //}
+
+            }
+        }
+        else{
+            function DeleteDocumentFolderOnCancel() {
+                var guid = '@Model.Guid';
+                $.ajax(
+             {
+                 url: '@Url.Action("DeleteDocumentFolderOnCancel", "User")',
+                 data: { Guid: guid },
+                 contentType: 'application/json',
+                 method: 'get',
+                 success: function (data) {
+                 },
+             });
+            }
+        }
+        $("#btnSubmit").click(function () {
+
+            isValid = $("#UserDetails").valid();
+            var lstFileName = [];
+            for (var i = 0; i < $("[name='FileNamesCreate']").length; i++) {
+                lstFileName.push({ Name: $("[name='FileNamesCreate']")[i].id });
+            }
+
+            $("#FileNamesCreate").val(JSON.stringify(lstFileName));
+
+            var data = JSON.stringify($('#UserDetails').serializeToJson());
+            data = JSON.parse(data);
+            data.FileNamesCreate = JSON.stringify(lstFileName);
+            if (isValid) {
+                if ($("#chkSCA").is(':checked') == true) {
+                    if ($('#tblDocuments1 tr').length == 0) {
+                        $(".alert").hide();
+                        $("#errorMsgRegion").html(closeButton + "Please upload atleast one proof of identity document.");
+                        $("#errorMsgRegion").show();
+
+                        return false;
+                    }
+                }
+                $.ajax({
+                    url: '@Url.Action("ResellerSignUp", "User")',
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify(data),
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (result) {
+                        if(result == "true")
+                        {
+                            $("#successMsgRegion").addClass("alert-success");
+                            $("#successMsgRegion").removeClass("alert-danger");
+                            $("#successMsgRegion").html(closeButton + "User has been signup successfully.");
+                            $("#successMsgRegion").show();
+
+                            window.location.href = '@Model.ResellerUrl';
+                        }
+                        else
+                        {
+                            $("#errorMsgRegion").removeClass("alert-success");
+                            $("#errorMsgRegion").addClass("alert-danger");
+                            $("#errorMsgRegion").html(closeButton + result);
+                            $("#errorMsgRegion").show();
+
+                        }
+                    }
+                });
+                return false;
+            }
+            else{
+                return false;
+            }
+        });
+
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+    </script>
+}
+

@@ -1,0 +1,514 @@
+﻿@model FormBot.Email.ComposeEmail
+@{
+    if (string.IsNullOrEmpty(Model.From))
+    {
+        Model.From = "&nbsp;";
+    }
+
+    if (string.IsNullOrEmpty(Model.FullDate))
+    {
+        Model.FullDate = "&nbsp;";
+    }
+
+    if (string.IsNullOrEmpty(Model.To))
+    {
+        Model.To = "&nbsp;";
+    }
+
+    if (string.IsNullOrEmpty(Model.Subject))
+    {
+        Model.Subject = "&nbsp;";
+    }
+}
+
+<style>
+    .mail-box.attachment {
+        padding-bottom: 12px;
+    }
+
+    .emailblock{
+        border:2px solid lightgray;
+    }
+</style>
+<div class="panel-body">
+    <div class="mail-text">
+        <div class="mail-top-hed">
+            <ul class="id-block">
+                <li><strong>From : </strong> <a href="#" title="">@Html.Raw(Model.From)</a></li>
+                <li><strong>Sent : </strong> @Html.Raw(Model.FullDate)</li>
+                <li class="id-block-li-marginRight"><strong>To : </strong><a href="#">@Html.Raw(Model.To)</a></li>
+                <li><strong>Subject :</strong>@Html.Raw(Model.Subject)</li>
+            </ul>
+            <div class="btn-block reply-btn-block">
+                <div class="btn-group">
+                    <a id="ReplyInEmailTab" href="javascript:void(0)" class=" btn default reply-ic btn_rp">Reply</a>
+                    <button type="button" class="btn default dropdown-toggle" style="padding-left:8px !important" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li id="ReplyToAllEmailTab"><a href="#">Reply to All</a></li>
+                    </ul>
+                </div>
+                <button id="ForwardInEmailTab" class="btn default forward-ic" type="button">Forward</button>
+            </div>
+            <ul class="attachment-ber">
+                <li class="attachment-title"><strong>Attachment :</strong></li>
+                @if (!string.IsNullOrEmpty(Model.Attachment))
+                {
+                    @Html.Raw(Model.Attachment)
+                }
+                else
+                {
+                    <li>&nbsp;</li>
+                }
+                @*<li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">document (15kb)</a></li>
+                <li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">pdf (20kb)</a></li>
+                <li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">Exl (65kb)</a></li>
+                <li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">New design layout (34kb)</a></li>
+                <li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">pdf (26kb)</a></li>
+                <li><a href="#"><img src="images/attach_document.png" alt="" class="mCS_img_loaded">Exl (18kb)</a></li>*@
+            </ul>
+        </div>
+        <p>
+            @if (Model.Body != null && !string.IsNullOrEmpty(Model.Body.body))
+            {
+                @Html.Raw(Model.Body.body.ToString());
+            }
+        </p>
+    </div>
+
+</div>
+
+@*<div class="emailblock col-sm-12 col-md-12" style="background-color: #f9f9f9;">
+    @if (ViewBag.isDisplayReplyForward == true)
+    {
+        <ul class="mail-nav">
+            <li class="btn-group hideReplyForward">
+                <a title="Reply" href="javascript:void(0)" id="ReplyInEmailTab">
+                    <img alt="Reply" src="@Url.Content("~/images/ic-reply.png")" class="icon">Reply
+                </a>
+                <button aria-expanded="false" aria-haspopup="true" data-toggle="dropdown" class="btn dropdown-toggle" type="button">
+                    <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a title="Reply to All" href="javascript:void(0)" id="ReplyToAllEmailTab" data-toggle="modal" data-target="#emailbox">Reply to All</a></li>
+                </ul>
+            </li>
+            <li id="ForwardInEmailTab" data-toggle="modal" data-target="#emailbox" class="hideReplyForward"><a href="javascript:void(0)" title="Forward"><img class="icon" src="@Url.Content("~/images/ic-forward.png")" alt="Forward">Forward</a></li>
+        </ul>
+    }
+
+    <div class="clear"></div>
+    <div class="mail-box attachment">
+        <div style="" class="content-box  _mCS_2">
+            <div class="" id="mCSB_2" tabindex="0">
+                <div dir="ltr" style="position: relative; top: 0px; left: 0px;" class="mCSB_container" id="mCSB_2_container">
+                    <div class="mail-text">
+                        <div class="mail-top-hed">
+                            <ul class="id-block">
+                                <li><strong>From : </strong> <a title="" href="#">@Html.Raw(Model.From)</a></li>
+                                <li><strong>Sent : </strong>@Html.Raw(Model.FullDate)</li>
+                                <li><strong>To : </strong><a href="#">@Html.Raw(Model.To)</a></li>
+                                @if (!string.IsNullOrEmpty(Model.Cc))
+                                {
+                                    <li><strong>Cc : </strong><a href="#">@Html.Raw(Model.Cc)</a></li>
+                                }
+                                <li><strong>Subject :</strong>@Html.Raw(Model.Subject)</li>
+                            </ul>
+
+                            <ul class="attachment-ber">
+                                <li class='attachment-title'><strong>Attachment :</strong></li>
+                                @if (!string.IsNullOrEmpty(Model.Attachment))
+                                {
+                                    @Html.Raw(Model.Attachment)
+                                }
+                                else
+                                {
+                                    <li>&nbsp;</li>
+                                }
+                            </ul>
+                        </div>
+
+                        <div id="mailText">
+                            @if (Model.Body != null && !string.IsNullOrEmpty(Model.Body.body))
+                            {
+                                @Html.Raw(Model.Body.body.ToString());
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>*@
+
+<div class="modal fade newemail-modal" id="emailboxForEmailTab" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button title="Close" class="close CloseEmailSendPopup" type="button" style="margin-right:3px;margin-top:1px;">
+                    <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                </button>
+                <div class="email-hed"> <a href=" #" class="admin-id"> <img alt="" src="@Url.Content("~/images/admin-id-icon.png")" class="mail-icon"><span id="emailBoxEmailId">@ViewBag.UserEmailProp</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <li class="active" id="SendMailEmailTab"><a href="javascript:void(0)" title="Send"> <img class="icon" src="@Url.Content("~/images/send-icon.png")" alt="Send">Send</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <!-- menu End -->
+                <div class="mail-box-input">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">To</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="ToMailEmailTab">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Cc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="CcMailEmailTab">
+                                <!--<div class="text-right"><a class="show-bcc" href="#" title="">Show BCc</a></div>-->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Bcc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="BccMailEmailTab">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Subject</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="SubjectMailEmailTab" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Body</label>
+                            <div class="col-sm-11">
+                                <div id="editorEmailTab">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Selected Files :</label>
+                            <div class="col-sm-11">
+                                <table class="table table-bordered" id="tblSelectedFileEmailTab">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Attach File :</label>
+                            <div class="col-sm-11">
+                                <table class="uf">
+                                    <tr>
+                                        <td><input id="uploadFileEmailTab" placeholder="Choose File" class="form-control" disabled="disabled" /></td>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary">
+                                                <span>Upload</span>
+                                                <input id="uploadBtnEmailTab" type="file" class="upload" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <script type="text/javascript">
+                                    document.getElementById("uploadBtnEmailTab").onchange = function () {
+                                        //document.getElementById("uploadFile").value = this.value;
+                                        $("#uploadFileEmailTab").val("");
+                                    };
+                                </script>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    CKEDITOR.replace('editorEmailTab');
+    CKEDITOR.add
+    $(document).ready(function () {
+        $(".CloseEmailSendPopup").click(function () {
+            $("#tblSelectedFileEmailTab tr").remove();
+            $('#ToMailEmailTab').val("");
+            $('#CcMailEmailTab').val("");
+            $('#BccMailEmailTab').val("");
+            $('#SubjectMailEmailTab').val("");
+            $('#emailboxForEmailTab').modal("hide");
+        });
+
+        $("#ReplyInEmailTab").click(function () {
+            $('#emailboxForEmailTab').modal({ backdrop: 'static', keyboard: false, show: true });
+            CKEDITOR.instances['editorEmailTab'].setData("");
+            var messageId = $("#SelectedMessageIdInEmailTab").val();
+            var id_acct = $("#ClickedLiEmailTab" + messageId).data("idacct");
+            var folderName = $("#ClickedLiEmailTab" + messageId).data("foldername");
+            var sendorreceivefromemail = $("#ClickedLiEmailTab" + messageId).data("sendorreceivefromemail");
+            var data = JSON.stringify({ id_msg: messageId, id_acct: id_acct, "folderName": folderName, "sendOrReceiveFromEmail": sendorreceivefromemail });
+            $.ajax({
+                url: '@Url.Action("PrepareReplyForJobEmailTab", "JobEmailThread", new { area = "" })',
+                type: "POST",
+                dataType: "json",
+                data: data,
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.From != null && Data.Result.From != "") {
+                            $("#ToMailEmailTab").val(Data.Result.From.replace(/&lt;/g, '').replace(/&gt;/g, ''));
+                        }
+
+                        if (Data.Result.Subject != null && Data.Result.Subject != "") {
+                            $("#SubjectMailEmailTab").val('Re: ' + Data.Result.Subject);
+                        }
+
+                        if (Data.Result.Body != null && Data.Result.Body != "") {
+                            CKEDITOR.instances['editorEmailTab'].setData(Data.Result.Body.body);
+                        }
+                    }
+                }
+            });
+        });
+
+        $("#ForwardInEmailTab").click(function () {
+            $('#emailboxForEmailTab').modal({ backdrop: 'static', keyboard: false, show: true });
+            CKEDITOR.instances['editorEmailTab'].setData("");
+            var messageId = $("#SelectedMessageIdInEmailTab").val();
+            var id_acct = $("#ClickedLiEmailTab" + messageId).data("idacct");
+            var folderName = $("#ClickedLiEmailTab" + messageId).data("foldername");
+            var sendorreceivefromemail = $("#ClickedLiEmailTab" + messageId).data("sendorreceivefromemail");
+            var data = JSON.stringify({ id_msg: messageId, id_acct: id_acct, "folderName": folderName, "sendOrReceiveFromEmail": sendorreceivefromemail });
+            $.ajax({
+                url: '@Url.Action("PrepareReplyForJobEmailTab", "JobEmailThread", new { area = "" })',
+                type: "POST",
+                dataType: "json",
+                data: data,
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.Subject != null) {
+                            $("#SubjectMailEmailTab").val('Fw: ' + Data.Result.Subject);
+                        }
+
+                        if (Data.Result.Body != null) {
+                            CKEDITOR.instances['editorEmailTab'].setData(Data.Result.Body.body);
+                        }
+
+                        if (Data.Result.Attachments != null) {
+                            var attachedFilename = Data.Result.Attachments;
+                            for (var i = 0; i < attachedFilename.length; i++) {
+                                var fName = attachedFilename[i].FileName;
+                                var GName = attachedFilename[i].GeneratedName;
+                                var result = "<tr class='success' data-tmpname='" + GName + "' data-filename='" + fName + "'><td>" + fName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFileEmailTab").append(result);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+
+        $("#ReplyToAllEmailTab").click(function () {
+            $('#emailboxForEmailTab').modal({ backdrop: 'static', keyboard: false, show: true });
+            CKEDITOR.instances['editorEmailTab'].setData("");
+            var messageId = $("#SelectedMessageIdInEmailTab").val();
+            var id_acct = $("#ClickedLiEmailTab" + messageId).data("idacct");
+            var folderName = $("#ClickedLiEmailTab" + messageId).data("foldername");
+            var sendorreceivefromemail = $("#ClickedLiEmailTab" + messageId).data("sendorreceivefromemail");
+            var data = JSON.stringify({ id_msg: messageId, id_acct: id_acct, "folderName": folderName, "sendOrReceiveFromEmail": sendorreceivefromemail });
+            $.ajax({
+                url: '@Url.Action("PrepareReplyForJobEmailTab", "JobEmailThread", new { area = "" })',
+                type: "POST",
+                dataType: "json",
+                data: data,
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.From != null && Data.Result.From != "") {
+                            $("#ToMailEmailTab").val(Data.Result.To.replace(/&lt;/g, '').replace(/&gt;/g, ''));
+                        }
+
+                        if (Data.Result.Cc != null) {
+                            $("#CcMailEmailTab").val(Data.Result.Cc.replace(/&lt;/g, '').replace(/&gt;/g, '').replace(/\,/g, ';'));
+                        }
+
+                        if (Data.Result.Subject != null && Data.Result.Subject != "") {
+                            $("#SubjectMailEmailTab").val('Re: ' + Data.Result.Subject);
+                        }
+
+                        if (Data.Result.Body != null && Data.Result.Body != "") {
+                            CKEDITOR.instances['editorEmailTab'].setData(Data.Result.Body.body);
+                        }
+
+                        if (Data.Result.Attachments != null) {
+                            var attachedFilename = Data.Result.Attachments;
+                            for (var i = 0; i < attachedFilename.length; i++) {
+                                var fName = attachedFilename[i].FileName;
+                                var GName = attachedFilename[i].GeneratedName;
+                                var result = "<tr class='success' data-tmpname='" + GName + "' data-filename='" + fName + "'><td>" + fName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFileEmailTab").append(result);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        function CreateCommaSeparetedArrayEmailTab(element) {
+            var x = element;
+            x = x.replace(/,/g, ";");
+            var emailList = x.trim().replace(/(^;)|(;$)/g, "").split(";");
+            emailList = cleanArrayPreApproval(emailList);
+            return emailList;
+        }
+        function cleanArrayPreApproval(actual) {
+            var newArray = new Array();
+            for (var i = 0; i < actual.length; i++) {
+                if (actual[i]) {
+                    newArray.push(actual[i]);
+                }
+            }
+            return newArray;
+        }
+
+        function validateFormForEmailTab(emailList, message, lengthExceedMessage) {
+            var flag = true;
+            var testing;
+            emailList.forEach(function (i, j) {
+                var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+                testing = i.trim();
+                if (filter.test(testing)) {
+                }
+                else {
+                    flag = false;
+                }
+            });
+
+            if (emailList.length == 0) {
+                flag = false;
+            }
+
+            if (flag == false) {
+                alert(message);
+            } else {
+                if (emailList.length > 25) {
+                    alert(lengthExceedMessage);
+                    flag = false;
+                }
+            }
+
+            return flag;
+        }
+
+        $("#ToMailEmailTab,#CcMailEmailTab,#BccMailEmailTab").keypress(function (event) {
+            if (event.which == 44) {
+                event.preventDefault();
+                $(this).val($(this).val() + ";");
+            }
+
+            if (event.which == 9) {
+                $(this).val($(this).val().replace(",", ";"));
+            }
+        });
+
+        $("#ToMailEmailTab,#CcMailEmailTab,#BccMailEmailTab").blur(function (event) {
+            $(this).val($(this).val().replace(/,/g, ";"));
+        });
+
+        $("#SendMailEmailTab").click(function () {
+            var flag = true;
+            var toEmailArray, ccEmailArray, bccEmailArray;
+            if ($("#ToMailEmailTab").val() == '') {
+                alert('You cannot leave "To" field blank');
+                flag = false;
+            } else {
+                toEmailArray = CreateCommaSeparetedArrayEmailTab($("#ToMailEmailTab").val());
+                flag = validateFormForEmailTab(toEmailArray, 'The specified email address for "To" is invalid.', 'Maximum 25 emails are allowed in "To" field.');
+            }
+
+            if ($("#CcMailEmailTab").val() != "" && flag == true) {
+                ccEmailArray = CreateCommaSeparetedArrayEmailTab($("#CcMailEmailTab").val());
+                flag = validateFormForEmailTab(ccEmailArray, 'The specified email address for "Cc" is invalid.', 'Maximum 25 emails are allowed in "Cc" field.');
+            }
+
+            if ($("#BccMailEmailTab").val() != "" && flag == true) {
+                bccEmailArray = CreateCommaSeparetedArrayEmailTab($("#BccMailEmailTab").val());
+                flag = validateFormForEmailTab(bccEmailArray, 'The specified email address for "Bcc" is invalid.', 'Maximum 25 emails are allowed in "Bcc" field.');
+            }
+
+            if (flag == true && $("#SubjectMailEmailTab").val() == "") {
+                var flag = confirm("The subject field is empty. Do you wish to continue?");
+            }
+
+            if (flag) {
+                var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                var attachmentObject = [];
+                var selectedFiles = $("#tblSelectedFileEmailTab tr");
+
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({ GeneratedName: tmp_name, FileName: filename });
+                }
+
+                var toEmailString = toEmailArray.length > 0 ? toEmailArray.join(";") : "";
+                var ccEmailString = ccEmailArray != undefined ? ccEmailArray.join(";") : "";
+                var bccMailEmailString = bccEmailArray != undefined ? bccEmailArray.join(";") : "";
+
+                var data = JSON.stringify({ "From": "", "To": toEmailString, "Cc": ccEmailString, "Bcc": bccMailEmailString, "Subject": $("#SubjectMailEmailTab").val(), "Body": { "body": CKEDITOR.instances['editorEmailTab'].getData() }, "Attachment": "", "IsSave": "false", "Attachments": attachmentObject, SaveMailFolderId: 1, eventType: 'send' });
+                $.ajax({
+                    url: getUrl,
+                    type: "POST",
+                    dataType: "json",
+                    data: data,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        $(".CloseEmailSendPopup").click();
+                    }
+                });
+            }
+        });
+
+        $("#uploadBtnEmailTab").change(function () {
+            var fileInput = document.getElementById('uploadBtnEmailTab');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var tmp_name = JSON.parse(xhr.response);
+                    tmp_name = tmp_name.tmp_name;
+                    var result = "<tr class='success' data-tmpname='" + tmp_name + "' data-filename='" + fileInput.files[0].name + "'><td>" + fileInput.files[0].name + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                    $("#tblSelectedFileEmailTab").append(result);
+                }
+            }
+            return false;
+        });
+    });
+</script>

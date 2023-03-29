@@ -1,0 +1,680 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+
+@{
+    ////Todo
+    bool isPhotos = false;
+    bool isDocManager = false;
+    bool isCECform = false;
+    bool isSTCform = false;
+    bool isJobDocumentManagerUpload = false;
+    bool isJobDocumentManagerDelete = false;
+    bool isJobDocumentManagerGenerate = false;
+    bool isJobDocumentManagerView = false;
+    bool isJobDocumentManagerSave = false;
+    bool isJobDocumentManagerSignatureMail = true;
+    bool isSaveDocAfterTradeJob = false;
+
+    var serializer = new JavaScriptSerializer();
+    var documentsJson = serializer.Serialize(Model.DocumentJson);
+    var temp = serializer.Deserialize<JsonResult>(documentsJson);
+    bool isSerialNumber = false;
+    bool isAddNotificationOfAnotherSCASerialNum = false;
+
+    var serializerData = new JavaScriptSerializer();
+    var serialNumWithPhotosJson = serializerData.Serialize(Model.SerialNumberwithPhotosAvaibilityList);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.DocumentManager.GetHashCode()) { isDocManager = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.DocumentManager.GetHashCode()) { isDocManager = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+
+            });
+        }
+    }
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+
+}
+
+<style>
+    .upload_Photo {
+        background-position: 6px -288px;
+        padding: 0 10px 0 28px !important;
+    }
+
+    .panel {
+        border: 0px !important;
+    }
+
+    #LeftPanelSection {
+        /*position: absolute;*/
+        left: auto;
+        /*width: 100px;*/
+        height: 120px;
+        border-right: 1px solid #e4e4e4;
+        height: 100%;
+    }
+
+    .arrow_doc_down {
+        background-position: -212px -34px !important;
+    }
+
+    .arrow_doc_up {
+        background-position: -212px -88px !important;
+    }
+
+    .arrow_doc_down_cr {
+        background-position: -212px -34px !important;
+    }
+
+    .arrow_doc_up_cr {
+        background-position: -212px -88px !important;
+    }
+
+    .create_ces {
+        background-position: -50px -125px !important;
+    }
+
+    .Photo-Highlight {
+        background-color: #ebdb9f;
+    }
+</style>
+
+@if ((ProjectSession.UserTypeId != 8 || isSTCform) || (ProjectSession.UserTypeId != 8 || isPhotos) || (ProjectSession.UserTypeId != 8 || isCECform) || (ProjectSession.UserTypeId != 8 || isDocManager))
+{
+    <div class="row">
+        <div id="LeftPanelSection" class="col-md-1">
+            @*<ul class="outside">
+                    <li id="liDocs" class="sub-title" onclick="fnLoadDocuments()">DOCUMENTS<label id="lblCountDocs"></label></li>
+                    <li id="liPhotos" class="sub-title" onclick="fnLoadPhotos()">PHOTOS<label id="lblCountPhotos"></label></li>
+                    <li id="liSerials" class="sub-title" onclick="fnLoadSerials()">SERIALS<label id="lblCountSerials"></label></li>
+                    <li id="liSummary" class="sub-title" onclick="fnLoadJobSummary()">JOB SUMMARY</li>
+                </ul>*@
+            <ul><li role="button" id="liDocs" class="sub-title" onclick="fnLoadDocuments()">DOCUMENTS (<span class="color-text">@Model.DocumentsAndPhotosCount.DocumentsCount</span>)<label id="lblCountDocs"></label></li></ul>
+            <ul><li role="button" id="liPhotos" class="sub-title" onclick="fnLoadPhotos()">PHOTOS (<span class="color-text">@Model.DocumentsAndPhotosCount.PhotosCount/@Model.DocumentsAndPhotosCount.PhotosTotalCount</span>)<label id="lblCountPhotos"></label></li></ul>
+            <ul><li role="button" id="liSerials" class="sub-title" onclick="fnLoadSerials()">SERIALS (<span class="color-text">@Model.DocumentsAndPhotosCount.SerialNumberCount/@Model.DocumentsAndPhotosCount.SerialNumberTotalCount</span>)<label id="lblCountSerials"></label></li></ul>
+            <ul><li role="button" id="liSummary" class="sub-title" onclick="fnLoadJobSummary()">JOB SUMMARY</li></ul>
+        </div>
+        <div class="col-sm-5" id="SerialSectiononDocumentandPhotos" style="display:none;">
+
+        </div>
+        <div class="col-sm-5" id="JobSummarySectiononDocumentandPhotos" style="display:none;">
+
+        </div>
+        <div id="BindUiSectionDocument" style="display:none;">
+        </div>
+        <div id="BindUiSectionPhotos" style="display:none;">
+        </div>
+        <div class="col-md-6" id="Docviewermaindiv" style="display:none;">
+
+            <div id="onpageViewerDoc">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionDocViewer" style="display: none">
+                    @*<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>*@File is not available.
+                </div>
+                <div class="sub-title doc-title document-viewer-modal">
+                    <div class="row">
+                        <h4 style="display:inline; font-family: 'OpenSansSemibold'; font-size: 16px !important; color: black; text-transform: uppercase;">Document Viewer<label id="lblOpenDocumentName" style="display:none;"></label><select class="form-control" id="ddlviewdocumentsName" style="border: 0px solid; margin-left: 2%; background-color: #eef0f9; font-family: 'OpenSansRegular'; border-radius: 2px; width: auto; display: inline;min-width:30%;"><option value="0">Select</option></select> </h4>
+                        <div style="display: inline !important; padding-left:1%!important; background: transparent;">
+                            <a href="javascript:void(0);" id="forward-icon-doc"><img src="~/Images/icons8-forward-32.png" height="20" width="20" /></a>
+                            <a href="javascript:void(0);" id="backwards-icon-doc"><img src="~/Images/icons8-backwards-32.png" height="20" width="20" /></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="docActionSection" style="visibility: hidden; background-color: #f0f0f0; padding-top: 2%; padding-left: 2%;">
+                    <select id="zoom-dropdown-DocPhoto" style="height:25px;font-size:14px; margin-right:5px;">
+                        <option value="25">25%</option>
+                        <option value="50">50%</option>
+                        <option value="75">75%</option>
+                        <option value="100" selected>100%</option>
+                        <option value="125">125%</option>
+                        <option value="150">150%</option>
+                    </select>
+                    <a href="javascript:void(0);" id="zoom-in-icon-DocPhoto"><img src="~/Images/Document/zoom-in.svg" height="20" width="20" /></a>
+                    <a href="javascript:void(0);" id="zoom-out-icon-DocPhoto"><img src="~/Images/Document/zoom-out.svg" height="20" width="20" /></a>
+                    @*<div class="pageing-block" style="display: inline !important; position: relative !important; background: transparent;">
+                            <a href="javascript:void(0);" id="forward-icon"><img src="~/Images/icons8-forward-32.png" height="20" width="20" /></a>
+                            <a href="javascript:void(0);" id="backwards-icon"><img src="~/Images/icons8-backwards-32.png" height="20" width="20" /></a>
+                        </div>*@
+                </div>
+
+                <div id="onpagedivViewer" class="document-viewer-outer clearfix" style="position: relative !important; width: 100% !important; padding-right: 0px !important; display:none; min-height:auto">
+                    @*<div class="row" id="showphotoOnPage">
+                            <img class="img-responsive" id="imgonPageview" alt="" src="">
+                        </div>*@
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-6" id="Photosviewermaindiv" style="display:none;">
+            @*<div class="col-sm-6">*@
+
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionPhotoViewer" style="display: none">
+                @*<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>*@Photo Does Not Exist!
+            </div>
+
+            <div id="onpageViewerDoc">
+                <div class="sub-title doc-title document-viewer-modal">
+                    <div class="row">
+                        <h4 style="display: inline; padding-left: 2%; font-family: 'OpenSansSemibold'; font-size: 16px !important; color: black; text-transform: uppercase;">Photo Viewer<label id="lblOpenDocumentName" style="display:none;"></label><select class="form-control" id="ddlviewphotosName" style="display: inline; border: 0px solid; margin-left: 2%; background-color: #eef0f9; font-family: 'OpenSansRegular'; border-radius: 2px; width: auto; display: inline; min-width: 30%;"><option value="0">Select</option></select> </h4>
+                        <div style="display: inline !important; padding-left:1%!important; background: transparent;">
+                            <a href="javascript:void(0);" id="forward-icon"><img src="~/Images/icons8-forward-32.png" height="20" width="20" /></a>
+                            <a href="javascript:void(0);" id="backwards-icon"><img src="~/Images/icons8-backwards-32.png" height="20" width="20" /></a>
+                        </div>
+                    </div>
+
+                    <div class="row" id="ShowlocationandDate" style="padding:2%">
+
+
+                    </div>
+                </div>
+
+                <div id="onPageImgViewerdiv">
+                    <div id="photosActionSection" style="visibility:hidden;background-color: #f0f0f0;">
+                        <select id="zoom-dropdown-Photo" style="height:25px;font-size:14px; margin-right:5px;">
+                            <option value="25">25%</option>
+                            <option value="50">50%</option>
+                            <option value="75">75%</option>
+                            <option value="100" selected>100%</option>
+                            <option value="125">125%</option>
+                            <option value="150">150%</option>
+                        </select>
+                        <a href="javascript:void(0);" id="zoom-in-icon-Photo"><img src="~/Images/Document/zoom-in.svg" height="20" width="20" /></a>
+                        <a href="javascript:void(0);" id="zoom-out-icon-Photo"><img src="~/Images/Document/zoom-out.svg" height="20" width="20" /></a>
+                        @*<div class="pageing-block" style="display: inline !important; position: relative !important; background: transparent;">
+                                <a href="javascript:void(0);" id="forward-icon"><img src="~/Images/icons8-forward-32.png" height="20" width="20" /></a>
+                                <a href="javascript:void(0);" id="backwards-icon"><img src="~/Images/icons8-backwards-32.png" height="20" width="20" /></a>
+                            </div>*@
+                    </div>
+
+                    <div id="onpagephotodivViewer" class="document-viewer-outer clearfix" style="background-color: #f0f0f0; visibility: hidden; position: relative !important; max-width: 100% !important; padding-right: 0px !important; min-height:auto; overflow: hidden; outline: none; padding-top: 10px; ">
+                        <div class="row" id="showphotoonPage">
+                            <img class="img-responsive" id="imgonPageview" alt="" src="">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+<div class="modal fade popupCustomField" tabindex="-1" role="dialog" id="popupCustomField">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title">Custom Field</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="customFieldForm"></form>
+                </div>
+            </div> @*/.modal-content*@
+        </div> @*/.modal-dialog*@
+    </div>
+</div>
+<div class="modal fade" id="mdlChecklistItmes">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" id="mdlcloseclitems" aria-label="Close"><img src="/images/close-btn.png" alt=""></button>
+                <h4 class="modal-title"> Deleted Checklist items </h4>
+            </div>
+            <div class="modal-body" id="mdlChecklistItmesdata">
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="popuponuploadphoto" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <input type="hidden" id="hdnUploadPhoto" value="true" />
+                    @*<button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxUploadPhoto"></button>*@
+                    <h4 class="modal-title" id="myModalLabel">WARNING</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <p>This solar job is considered a part of CER's Solar Panel Validation.</p>
+                        <br />
+                        <p>By adding photos that are not captured using the Greenbot Installers APP you are forfeiting your right to be considered as part of this validation.</p>
+                        <br />
+                        <p>Do you wish to continue?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary btnYes" id="btnYes"><span></span>YES</button>
+                    <button type="button" class="btn default" id="btnClosepopupboxUploadPhoto"><span></span>CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="restoreChecklistItmes">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title"> Restore Checklist items </h4>
+            </div>
+            <div class="modal-body" id="restoreChecklistItmesdata">
+
+
+            </div>
+            <div class="modal-footer" style="padding:15px;margin-top:0px">
+                <input class="btn primary icon-btn" type="button" id="restorebtn" value="Restore" style="float:none;padding-left:15px">
+
+                <input type="button" class="btn default cancel_ic" id="cancelbtn" value="Cancel">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .visit-list .panel-body li a {
+        margin-left: 20px;
+        margin-right: 10px;
+    }
+
+    .tabular_view .visit-list .panel-body li {
+        width: auto !important;
+    }
+
+    .serial-number-tab {
+        position: relative
+    }
+
+        .serial-number-tab li {
+            display: inline-block;
+            padding: 0px;
+            border: 1px solid #e4e4e4;
+            border-radius: 3px;
+        }
+
+            .serial-number-tab li a {
+                color: #575757;
+                padding: 5px 10px;
+                border-radius: 3px;
+                display: block;
+                font-size: 14px
+            }
+
+            .serial-number-tab li.active a {
+                background-color: #40ab6b;
+                color: #fff
+            }
+
+            .serial-number-tab li ul li {
+                display: block
+            }
+
+                .serial-number-tab li ul li a:hover {
+                    background-color: #e8e8e8;
+                    color: #333
+                }
+
+            .serial-number-tab li.assign {
+                float: right;
+                position: absolute;
+                right: 0;
+                top: -8px;
+                width: 700px
+            }
+
+                .serial-number-tab li.assign label {
+                    float: left;
+                    padding-top: 10px;
+                    margin-right: 10px
+                }
+
+                .serial-number-tab li.assign select {
+                    padding: 5px;
+                    width: 164px;
+                    float: left
+                }
+
+    #loadCommonInverterSerialNumber {
+        margin-top: 15px;
+    }
+</style>
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<script>
+    var JobId = '@Model.BasicDetails.JobID';
+    var isDocumentTabLoaded = false;
+    var isPhotoTabLoaded = false;
+    var isPhotoViewerLoaded = false;
+    var isDocViewerLoaded = false;
+    var urlGetDocumentsddlListAll = '@Url.Action("GetDocumentsListAll", "Job")';
+    var urlLoadAllPhotosddl = '@Url.Action("LoadAllPhotosListddl", "Job")';
+    function fnLoadDocuments() {
+        ClearHighLight('liDocs');
+        $("#liDocs").css({ 'font-weight': 'bold' });
+        $("#liDocs > span").css({ 'font-weight': 'bold' });
+        if (!isDocumentTabLoaded) {
+            isDocumentTabLoaded = true;
+            //isPhotoTabLoaded = false;
+            $.ajax({
+                url: '/Job/BindDocumentSectionTabular',
+                data: { JobID: JobId, DATAOPMODE: 8 },
+                type: "post",
+                contenttype: 'application/json; charset=utf-8',
+                async: true,
+                success: function (data) {
+                    isPhotoViewerLoaded = false;
+                    isDocViewerLoaded = true;
+                    $("#SerialSectiononDocumentandPhotos").hide();
+                    $("#JobSummarySectiononDocumentandPhotos").hide();
+                    $("#Photosviewermaindiv").hide();
+                    $("#Docviewermaindiv").show();
+                    $("#BindUiSectionDocument").show();
+                    $("#BindUiSectionPhotos").hide();
+                    $("#BindUiSectionDocument").html(data);
+                    $("#onpagedivViewer").hide();
+                    $("#ddlviewdocumentsName").empty();
+                    $("#ddlviewdocumentsName").append($("<option></option>").val('0').html('Select'));
+                    CallddlListOnTabLoad();
+                },
+                error: function (xhr) {
+                    alert('error');
+                }
+            });
+        }
+        else {
+            isPhotoViewerLoaded = false;
+            isDocViewerLoaded = true;
+            $("#SerialSectiononDocumentandPhotos").hide();
+            $("#JobSummarySectiononDocumentandPhotos").hide();
+            $("#Photosviewermaindiv").hide();
+            $("#Docviewermaindiv").show();
+            $("#BindUiSectionDocument").show();
+            $("#BindUiSectionPhotos").hide();
+        }
+    }
+
+    function fnLoadddlListPhotos() {
+
+            $.ajax({
+                type: "GET",
+                url: urlLoadAllPhotosddl,
+                data: { jobId: JobId },
+                dataType: "json",
+                contentType: "application/json",
+                success: function (result) {
+                    isPhotoListLoaded = true;
+                    $("#ddlviewphotosName").empty();
+                    $("#ddlviewphotosName").append($("<option></option>").val('0').html('Select'));
+                    $.each(result, function (data, value) {
+                        var photos = value.Path.split('\\');
+                        var photoName = photos[photos.length - 1];
+                        var attachmentID = value.VisitCheckListPhotoId;
+                        $("#ddlviewphotosName").append($("<option></option>").val(value.Path).attr('data-vclid', attachmentID).html(photoName));
+
+                    })
+
+                }
+
+            });
+
+
+    }
+
+    function fnLoadPhotos() {
+        ClearHighLight('liPhotos');
+        $("#liPhotos").css({ 'font-weight': 'bold' });
+        $("#liPhotos > span").css({ 'font-weight': 'bold' });
+        if (!isPhotoTabLoaded) {
+
+            isPhotoTabLoaded = true;
+            //isDocumentTabLoaded = false;
+            $.ajax({
+                url: '/Job/BindPhotosSectionTabular',
+                data: { jobId: JobId },
+                type: "post",
+                contenttype: 'application/json; charset=utf-8',
+                async: true,
+                success: function (data) {
+                    isPhotoViewerLoaded = true;
+                    isDocViewerLoaded = false;
+                    $("#SerialSectiononDocumentandPhotos").hide();
+                    $("#JobSummarySectiononDocumentandPhotos").hide();
+                    $("#Photosviewermaindiv").show();
+                    $("#Docviewermaindiv").hide();
+                    $("#BindUiSectionDocument").hide();
+                    $("#BindUiSectionPhotos").show();
+                    $("#BindUiSectionPhotos").html(data);
+                    $("#onPageImgViewerdiv").hide();
+                    $("#ddlviewphotosName").empty();
+                    $("#ddlviewphotosName").append($("<option></option>").val('0').html('Select'));
+                    fnLoadddlListPhotos();
+                },
+                error: function (xhr) {
+                    alert('error');
+                }
+            });
+        }
+        else {
+            isPhotoViewerLoaded = true;
+            isDocViewerLoaded = false;
+            $("#SerialSectiononDocumentandPhotos").hide();
+            $("#JobSummarySectiononDocumentandPhotos").hide();
+            $("#Photosviewermaindiv").show();
+            $("#Docviewermaindiv").hide();
+            $("#BindUiSectionDocument").hide();
+            $("#BindUiSectionPhotos").show();
+        }
+    }
+
+    function fnLoadSerials() {
+        ClearHighLight('liSerials');
+        $("#liSerials").css({ 'font-weight': 'bold' });
+        $("#liSerials > span").css({ 'font-weight': 'bold' });
+
+        $.ajax({
+            url: '/Job/BindSerialNumbersTabular',
+            data: {},
+            type: "post",
+            contenttype: 'application/json; charset=utf-8',
+            async: true,
+            success: function (data) {
+                $("#SerialSectiononDocumentandPhotos").show();
+                $("#JobSummarySectiononDocumentandPhotos").hide();
+                if (isPhotoTabLoaded && isPhotoViewerLoaded) {
+                    $("#Photosviewermaindiv").show();
+                    $("#Docviewermaindiv").hide();
+                }
+                else if (isDocumentTabLoaded && isDocViewerLoaded) {
+                    $("#Docviewermaindiv").show();
+                    $("#Photosviewermaindiv").hide();
+                }
+
+                $("#BindUiSectionDocument").hide();
+                $("#BindUiSectionPhotos").hide();
+                $("#SerialSectiononDocumentandPhotos").html(data);
+            },
+            error: function (xhr) {
+                alert('error');
+            }
+        });
+    }
+
+    function fnLoadJobSummary() {
+        ClearHighLight('liSummary');
+        $("#liSummary").css({ 'font-weight': 'bold' });
+        $.ajax({
+            url: '/Job/BindJobSummaryTabular',
+            data: { JobID: JobId, DATAOPMODE: 1},
+            type: "post",
+            contenttype: 'application/json; charset=utf-8',
+            async: true,
+            success: function (data) {
+                $("#SerialSectiononDocumentandPhotos").hide();
+                $("#JobSummarySectiononDocumentandPhotos").show();
+                if (isPhotoTabLoaded && isPhotoViewerLoaded) {
+                    $("#Photosviewermaindiv").show();
+                    $("#Docviewermaindiv").hide();
+                }
+                else if (isDocumentTabLoaded && isDocViewerLoaded) {
+                    $("#Docviewermaindiv").show();
+                    $("#Photosviewermaindiv").hide();
+                }
+
+                $("#BindUiSectionDocument").hide();
+                $("#BindUiSectionPhotos").hide();
+                $("#JobSummarySectiononDocumentandPhotos").html(data);
+            },
+            error: function (xhr) {
+                alert('error');
+            }
+        });
+    }
+
+    function ClearHighLight(Currentelement) {
+        if (Currentelement == "liDocs") {
+            $("#liPhotos").css({ 'font-weight': '' });
+            $("#liPhotos > span").css({ 'font-weight': '' });
+            $("#liSerials").css({ 'font-weight': '' });
+            $("#liSerials > span").css({ 'font-weight': '' });
+            $("#liSummary").css({ 'font-weight': '' });
+        }
+        else if (Currentelement == "liPhotos") {
+            $("#liDocs").css({ 'font-weight': '' });
+            $("#liDocs > span").css({ 'font-weight': '' });
+            $("#liSerials").css({ 'font-weight': '' });
+            $("#liSerials > span").css({ 'font-weight': '' });
+            $("#liSummary").css({ 'font-weight': '' });
+        }
+        else if (Currentelement == "liSerials") {
+            $("#liDocs").css({ 'font-weight': '' });
+            $("#liDocs > span").css({ 'font-weight': '' });
+            $("#liPhotos").css({ 'font-weight': '' });
+            $("#liPhotos > span").css({ 'font-weight': '' });
+            $("#liSummary").css({ 'font-weight': '' });
+        }
+        else if (Currentelement == "liSummary") {
+            $("#liDocs").css({ 'font-weight': '' });
+            $("#liDocs > span").css({ 'font-weight': '' });
+            $("#liPhotos").css({ 'font-weight': '' });
+            $("#liPhotos > span").css({ 'font-weight': '' });
+            $("#liSerials").css({ 'font-weight': '' });
+            $("#liSerials > span").css({ 'font-weight': '' });
+        }
+    }
+
+
+        setTimeout(function () {
+            debugger;
+            $("#onpagedivViewer").niceScroll({
+                cursorcolor: "#c1c1c1",
+                background: "#f2f2f2",
+                cursorwidth: 8,
+                cursorborder: "none",
+                cursorborderradius: 0,
+                autohidemode: false,
+                bouncescroll: false,
+                horizrailenabled: true,
+                railvalign: "bottom"
+            });
+            $("#zoom-in-icon-DocPhoto").click(function () {
+                debugger;
+                var zoom = $("#zoom-dropdown-DocPhoto").val().trim('%');
+                var newZoom = (parseInt(zoom) + 25) / 100;
+                $("#showphotoOnPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoOnPage").css("transform-origin", "top left");
+                $("#zoom-dropdown-DocPhoto").val(newZoom * 100);
+                if ((newZoom * 100) == 150) {
+                    $("#zoom-in-icon-DocPhoto").addClass("disabled");
+                    $("#zoom-out-icon-DocPhoto").removeClass("disabled");
+                } else {
+                    $("#zoom-in-icon-DocPhoto").removeClass("disabled");
+                    $("#zoom-out-icon-DocPhoto").removeClass("disabled");
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#zoom-out-icon-DocPhoto").click(function () {
+                debugger;
+                var zoom = $("#zoom-dropdown-DocPhoto").val().trim('%');
+                var newZoom = (parseInt(zoom) - 25) / 100;
+                $("#showphotoOnPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoOnPage").css("transform-origin", "top left");
+                $("#zoom-dropdown-DocPhoto").val(newZoom * 100);
+                if ((newZoom * 100) == 25) {
+                    $("#zoom-out-icon-DocPhoto").addClass("disabled");
+                    $("#zoom-in-icon-DocPhoto").removeClass("disabled");
+                } else {
+                    $("#zoom-out-icon-DocPhoto").removeClass("disabled");
+                    $("#zoom-in-icon-DocPhoto").removeClass("disabled");
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#zoom-dropdown-DocPhoto").change(function () {
+                debugger;
+                var zoom = $("#zoom-dropdown-DocPhoto").val().trim('%');
+                var newZoom = parseInt(zoom) / 100;
+                $("#showphotoOnPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoOnPage").css("transform-origin", "top left");
+                if ((zoom) == 150) {
+                    $("#zoom-in-icon-DocPhoto").addClass("disabled")
+                } else {
+                    $("#zoom-in-icon-DocPhoto").removeClass("disabled")
+                }
+                if (zoom == 25) {
+                    $("#zoom-out-icon-DocPhoto").addClass("disabled")
+                } else {
+                    $("#zoom-out-icon-DocPhoto").removeClass("disabled")
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#onpagedivViewer").onPositionChanged(function () {
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+        }, 500);
+
+
+</script>
+

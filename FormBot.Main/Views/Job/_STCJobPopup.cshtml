@@ -1,0 +1,54 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+
+@{
+    int settlementTerm = 0;
+    int statusId = 0;
+    if (Model.stcBasicDetails != null)
+    {
+        if (Model.stcBasicDetails.STCSettlementTerm != null && Model.stcBasicDetails.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.stcBasicDetails.STCSettlementTerm.Value;
+        }
+
+        statusId = Model.stcBasicDetails.STCStatusId;
+    }
+}
+<div class="title">
+    <h1>
+        STC Submission @if (Model.stcBasicDetails.Header != null && Model.stcBasicDetails.Header != "")
+        {<span>@Model.stcBasicDetails.Header</span>}
+    </h1>
+</div>
+<!-- Modal Header End-->
+<div class="modal-body">
+   
+    <div class="row">
+        <div class="col-sm-5 current-status settlement-title">
+            <h2><span>Current Status:</span> <span class="@Model.stcBasicDetails.Color">@Model.stcBasicDetails.Status </span> </h2>
+            <p class="audited-text"><span class="@Model.stcBasicDetails.Color">@Model.stcBasicDetails.STCHeading</span></p>
+
+          
+            <p><strong style="color:#333;">Last Updated:</strong><span id="lblLastUpdatedDate"></span></p>
+            <p><span class="label">Installation Details:</span> @Model.stcBasicDetails.InstallationDetails </p>
+            <div class="description-box">
+                <span class="label">Description:</span>
+                <p id="lblDescription"></p>
+               
+
+            </div>
+        </div>
+        <div class="col-sm-7" id="SettleMentBlock">
+            @Html.Partial("_SettlementBlock", Model.pricingManager)
+        </div>
+    </div>
+  
+    <div class="job-history">
+        <h5 class="title">STC Job History</h5>
+        <div id="STCJobHistory">
+            @Html.Partial("_StcJobHistory", Model.stcJobHistory)
+        </div>
+    </div>
+
+</div>
+
+

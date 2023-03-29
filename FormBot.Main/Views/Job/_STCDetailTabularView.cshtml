@@ -1,0 +1,842 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    bool isStcStatus = false;
+    bool isHistory = false;
+    int settlementTerm = 0;
+    int statusId = 0;
+    string term = string.Empty;
+    bool isHistoryView = false;
+
+    bool isChangeSCA = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.STCStatus.GetHashCode()) { isStcStatus = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.History.GetHashCode()) { isHistory = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.ChangeSCA.GetHashCode()) { isChangeSCA = true; }
+        });
+    }
+    else
+    {
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.STCStatus.GetHashCode()) { isStcStatus = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.History.GetHashCode()) { isHistory = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+
+
+                if (d.MenuId == (int)SystemEnums.MenuId.ChangeSCA.GetHashCode()) { isChangeSCA = true; }
+
+            });
+        }
+
+    }
+    if (Model.STCDetailsModel.stcBasicDetails != null)
+    {
+        if (Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm != null && Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm.Value;
+
+            Enum value = (FormBot.Helper.SystemEnums.STCSettlementTerm)(Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm);
+            System.Reflection.FieldInfo fi = value.GetType().GetField(value.ToString());
+
+            System.ComponentModel.DescriptionAttribute[] attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0)
+            {
+                term = attributes[0].Description;
+            }
+            else
+            {
+                term = value.ToString();
+            }
+        }
+        else
+        {
+            term = "24 Hour";
+        }
+        statusId = Model.STCDetailsModel.stcBasicDetails.STCStatusId;
+    }
+}
+@{
+    int currentJobStatus = 0;
+    currentJobStatus = Model.STCDetailsModel.stcBasicDetails.STCStatusId;
+}
+
+<style type="text/css">
+    .default {
+        line-height: 0px !important;
+    }
+</style>
+
+<script>
+    var urlUpdateJobInstallationPropertyType = '@Url.Action("UpdateJobInstallationPropertyType","Job")',
+        modelSTCCertificateCreated = "@Model.JobSTCDetails.CertificateCreated",
+        modelSTCDeemingPeriod = '@Model.JobSTCDetails.DeemingPeriod',
+        deemingperiod = modelSTCDeemingPeriod ? modelSTCDeemingPeriod : 0,
+        finalYear = '',
+        modelIsGSTSetByAdminUser = '@Model.BasicDetails.IsGSTSetByAdminUser',
+        tempIsRegisteredWithGST = modelIsGSTSetByAdminUser,
+        modelBasicJobType = '@Model.BasicDetails.JobType',
+        modelInstallationExistingSystem = '@Model.JobInstallationDetails.ExistingSystem',
+        modelSTCMultipleSGUAddress = '@Model.JobSTCDetails.MultipleSGUAddress',
+        jobId = '@Model.BasicDetails.JobID',
+        BasicDetails_JobID = '@Model.BasicDetails.JobID',
+        USERType = parseInt('@Model.UserType'),
+        oldaddress = '',
+        JOBType = '@Model.BasicDetails.JobType',
+        IsUnderSSC = '@ProjectSession.IsSubContractor',
+        IsLockedSerialNumber = '@Model.BasicDetails.IsLockedSerialNumber.ToString().ToLower()',
+        batteryXml = [],
+        PanelXml = [],
+        InverterXml = [],
+        OldPanelXml = [],
+        OldInverterXml = [];
+        var urlGetSTCSettlementDate = '@Url.Action("GetSTCSettlementDate", "Job", new { area = "" })';
+        var modelIsRegisteredWithGST = '@Model.BasicDetails.IsRegisteredWithGST.ToString().ToLower()';
+        var urlChangeSCA = '@Url.Action("ChangeSCA", "Job")';
+        var resellerID = '@Model.BasicDetails.ResellerId';
+        var SCAName = '@Model.BasicDetails.CompanyName';
+        var SolarCompanyId = '@Model.BasicDetails.SolarCompanyId', JobInstallationYear;
+        var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+    var jobownerdetails_ownertypestc = '';
+    var modelGuid = '@Model.Guid';
+    var jobidforgst = jobId;
+    var actionUploadInvoice = '@Url.Action("UploadInvoice", "Job")';
+    var actionDeleteGSTFile = '@Url.Action("DeleteGSTFile", "Job")';
+    var modelUploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var actionDownloadGSTDocument = '@Url.Action("DownloadGSTDocument", "Job")';
+        if ($("#jobownerdetails_ownertype").val() != '' && $('#jobownerdetails_ownertype').val() != undefined) {
+            jobownerdetails_ownertypestc = $('#jobownerdetails_ownertype').val().tolowercase();
+        }
+        else {
+            jobownerdetails_ownertypestc = '@Model.JobOwnerDetails.OwnerType'
+            if (jobownerdetails_ownertypestc != '') {
+                jobownerdetails_ownertypestc = jobownerdetails_ownertypestc.toLowerCase();
+
+            }
+        }
+
+    var emailOwner = '';
+    if ($("#JobOwnerDetails_Email").val() != '' && $('#JobOwnerDetails_Email').val() != undefined) {
+        emailOwner = $("#JobOwnerDetails_Email").val();
+    }
+    else {
+        emailOwner = '@Model.JobOwnerDetails.Email';
+    }
+    batterySystemPartOfAnAggregatedControl_Glbl = '@Model.JobSTCDetails.batterySystemPartOfAnAggregatedControl';
+    changedSettingOfBatteryStorageSystem_Glbl = '@Model.JobSTCDetails.changedSettingOfBatteryStorageSystem';
+
+    if ('@Model.BasicDetails.InstallationDate' == '') {
+        JobInstallationYear = null;
+    }
+    else {
+        JobInstallationYear = '@(Model.BasicDetails.InstallationDate.HasValue ? Model.BasicDetails.InstallationDate.Value.Year : 0)';
+    }
+</script>
+
+@Scripts.Render("~/bundles/JobModularSubViews?v=" + ProjectConfiguration.ScriptVersion)
+
+@*<script src="~/Scripts/View/Job/PricingSettlementTerm.min.js"></script>*@
+@*<script src="~/Scripts/View/Job/_STCDetailTabularView.dev.js"></script>*@
+<script src="~/Scripts/View/Job/_STCDetailTabularView.min.js"></script>
+<script>
+    $(document).ready(function () {
+        
+        $("#pricing-stc-title").hide();
+        $("#paymentscheduleinfo").hide();
+        $("#JobInstallationDetails_JobID").val('@Model.BasicDetails.JobID');
+
+        $("#selectedSettlementTerm").html('@term' + " Settlement Selected");
+        showhideFailedCode($("#JobSTCDetails_CertificateCreated").val());
+        if ('@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate' == null || '@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate' == '') {
+            $("#setSettlementDate").html(" ");
+        }
+        else {
+            $("#setSettlementDate").html(moment('@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()));
+        }
+
+
+        if('@Model.STCDetailsModel.stcBasicDetails.SubmittedDate' != null && '@Model.STCDetailsModel.stcBasicDetails.SubmittedDate' != "")
+        {
+            $("#submittedDate").html(moment('@Model.STCDetailsModel.stcBasicDetails.STCSubmittedDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()) + " AEST");
+        }
+
+        if('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode() || ('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.ReadyToCreate.GetHashCode()))
+        {
+            $("#subDate").hide();
+            $("#subBy").hide();
+        }
+        else
+        {
+            $("#subDate").show();
+            $("#subBy").show();
+        }
+
+
+        if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()' || '@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('RESUBMIT STCs');
+        }
+        else if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.NewSubmission.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('STCS TRADED');
+        }
+        else if ('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.Resubmission.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').hide();
+        }
+        else
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('TRADE STCs');
+        }
+
+        if((@currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()
+            ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode()))
+        {
+            $("#settlementDateText").html('Tentative Settlement Date:');
+        }
+        else
+        {
+            $("#settlementDateText").html('Scheduled Settlement Date:');
+        }
+
+        $("#stcValueForJob").html('@Model.STCDetailsModel.pricingManager.STCAmount');
+        $('#pricingTerm').html('@Model.STCDetailsModel.stcBasicDetails.STCPrice');
+        $('#spanSTCStatus').text('@Model.STCDetailsModel.stcBasicDetails.Status');        
+        var installationDate = $("#BasicDetails_strInstallationDate").val();
+        //var installationDate = new Date(installationDate1).format('yyyy');
+        if (installationDate != null && installationDate != undefined && installationDate != '') {
+            finalYear = moment(installationDate).format('yyyy'.toUpperCase());
+        }
+        if (finalYear == null || finalYear == undefined || finalYear == '' || finalYear == 'Invalid date') {
+            finalYear = installationDate.slice(-4);
+        }
+        dropDownData.push({ id: 'JobSTCDetails_DeemingPeriod', key: "DeemingPeriod", value: deemingperiod, hasSelect: true, callback: deemingPeriodCallBack, defaultText: null, proc: '', param: [{ jobYear: finalYear }], bText: 'Text', bValue: 'Value' });
+        dropDownData.bindDropdown();
+
+
+        $("#JobSTCDetails_CertificateCreated").change(function (e) {
+            showhideFailedCode($(this).val());
+        });
+
+        $("#JobSTCDetails_MultipleSGUAddress").change(function (e) {
+            if (modelBasicJobType == 1) {
+                if ($("#JobSTCDetails_MultipleSGUAddress").val() != "No" && $("#JobSTCDetails_MultipleSGUAddress").val() != "") {
+                    $("#STCLocation").show();
+                } else {
+                    $("#STCLocation").hide();
+                    //$("#JobSTCDetaiEmaillModelipleSGUAddress").val('');
+                }
+                showhideAdditionalLocationInformation();
+            }
+            if (modelBasicJobType == 2) {
+                if ($("#JobSTCDetails_MultipleSGUAddress").val() == "Yes" || (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 3)) {
+                    $("#additionalInfo").show();
+                } else {
+                    $("#additionalInfo").hide();
+                }
+            }
+
+        });
+
+        ShowHideGSTSection($('#JobInstallationDetails_PropertyType').val().toLowerCase(), jobownerdetails_ownertypestc);
+
+        if (modelBasicJobType == 1) {
+            if (modelSTCMultipleSGUAddress == 'Yes') {
+                $("#STCLocation").show();
+                $("#STCAdditionalLocation").show();
+            } else {
+                $("#STCLocation").hide();
+                $("#STCAdditionalLocation").hide();
+                $("#JobSTCDetails_AdditionalLocationInformation").val('');
+                $("#JobSTCDetails_Location").val('');
+            }
+        }
+        if (modelBasicJobType == 2) {
+            if (modelSTCMultipleSGUAddress == 'Yes' || (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 3)) {
+                $("#additionalInfo").show();
+            } else {
+                $("#additionalInfo").hide();
+            }
+        }
+
+        $("#JobSTCDetails_Location").change(function (e) {
+            if ($("#JobSTCDetails_Location").val() != "") {
+                $("#JobSTCDetails_AdditionalLocationInformation").show();
+            }
+            else {
+                $("#JobSTCDetails_AdditionalLocationInformation").hide();
+            }
+            showhideAdditionalLocationInformation();
+        });
+
+        $('#BasicDetails_IsGst').change(function () {            
+            $("#tblDocuments").find('tr').each(function () {
+                $(this).remove();
+            });
+            if ($(this).is(":checked")) {
+                $("#jobGST").show();
+            } else {
+                $("#jobGST").hide();
+            }
+        });
+        function jobGSTLoad() {
+            if ($('#BasicDetails_IsGst').is(":checked")) {
+                $("#jobGST").show();
+            } else {
+                $("#jobGST").hide();
+            }
+        }
+
+        GSTFileUpload();
+        function GSTFileUpload() {            
+            var Guid = modelGuid;
+            //var jobId = $("#BasicDetails_JobID").val();
+            var jobId = Guid;
+            var url = actionUploadInvoice;
+            $('#uploadGSTFile').fileupload({
+
+                url: url,
+                dataType: 'json',
+                done: function (e, data) {
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    var UploadFailedFilesName = [];
+                    UploadFailedFilesName.length = 0;
+
+                    var UploadFailedFilesType = [];
+                    UploadFailedFilesType.length = 0;
+                    //formbot start
+                    for (var i = 0; i < data.result.length; i++) {
+
+                        if (data.result[i].Status == true) {
+
+                            if ($("#BasicDetails_GSTDocument").val() != '' && $("#BasicDetails_GSTDocument").val() != undefined && $("#BasicDetails_GSTDocument").val() != null)
+                                $("#BasicDetails_GSTDocument").attr('OldFileName', $("#BasicDetails_GSTDocument").val());
+                            else
+                                $("#BasicDetails_GSTDocument").attr('OldFileName', '');
+
+
+                            var Sign = document.getElementsByName("BasicDetails.GSTDocument");
+                            var OldFileName = $("#BasicDetails_GSTDocument").attr('OldFileName');
+                            if (Sign.length > 0) {
+                                var signName = Sign[0].defaultValue;
+                                if (signName != null && signName != "" && (OldFileName == '' || OldFileName == null || OldFileName == undefined)) {
+                                    DeleteGSTFile(signName, jobId);
+                                }
+                                $("#tblDocuments").find('tr').each(function () {
+                                    $(this).remove();
+                                });
+                            }
+                            var documentType = data.result[i].MimeType.split("/");
+                            var mimeType = documentType[0];
+                            var content = "<tr style='margin-top:30px' id= " + data.result[i].FileName.replace("%", "$") + " >"
+                            content += '<td class="col-sm-10" style="color:#494949;border-bottom:0px !important">' + data.result[i].FileName.replace("%", "$") + ' </td>';
+                            if (mimeType == "image") {
+                                content += '<td  class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;"><a id="' + data.result[i].FileName.replace("%", "$") + '" style="cursor: pointer" class="' + data.result[i].FileName.replace("%", "$") + ' sprite-img view" title="Preview" onclick="OpenGSTDocument(this)"></a></td>';                            }
+                            else {
+                                content += '<td  class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;"><a style="cursor: pointer" id="' + data.result[i].FileName.replace("%", "$") + '" title="Download" onclick="DownloadGSTDocument(this)" class="' + data.result[i].FileName.replace("%", "$") + ' sprite-img download"></a></td>';
+                            }
+                            content += '<td class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;"><a style="cursor: pointer" id="' + data.result[i].FileName.replace("%", "$") + '" title="Delete" onclick="DeleteGSTDocument(this)" class="sprite-img delete GSTDocumentDelete"></a></td>';
+                            content += "</tr>"
+
+                            $('#tblDocuments').append(content);
+                            $('#BasicDetails_GSTDocument').val(data.result[i].FileName.replace("%", "$"));
+                        }
+                        else if (data.result[i].Status == false && data.result[i].Message == "File Type Not Allowed.") {
+                            UploadFailedFilesType.push(data.result[i].FileName);
+                        }
+                        else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                            UploadFailedFilesName.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                        else {
+                            UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+
+                        }
+                    }
+                    if (UploadFailedFiles.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + UploadFailedFiles.length + " " + "File has not been uploaded.");
+                        $("#errorMsgRegion").show();
+                    }
+                    if (UploadFailedFilesType.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + UploadFailedFilesType.length + " " + "Uploaded file type is not supported.");
+                        $("#errorMsgRegion").show();
+                    }
+                    if (UploadFailedFilesName.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+                        $("#errorMsgRegion").show();
+                    }
+                    if (UploadFailedFilesName.length == 0 && UploadFailedFilesType.length == 0 && UploadFailedFiles.length == 0) {
+                        $(".alert").hide();
+                        $("#errorMsgRegion").hide();
+                        $("#successMsgRegion").html(closeButton + "File has been uploaded successfully.");
+                        $("#successMsgRegion").show();
+                    }
+                    ReloadSTCJobScreen(jobId);
+                },
+
+                progressall: function (e, data) {
+
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+                    if (data.files.length == 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].name.length > 500) {
+                                $(".alert").hide();
+                                $("#successMsgRegion").hide();
+                                $("#errorMsgRegion").html(closeButton + "Please upload small filename.");
+                                $("#errorMsgRegion").show();
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                                return false;
+                            }
+                        }
+                    }
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt(MaxImageSize)) {
+                                $(".alert").hide();
+                                $("#successMsgRegion").hide();
+                                $("#errorMsgRegion").html(closeButton + " " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB");
+                                $("#errorMsgRegion").show();
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt(MaxImageSize)) {
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB");
+                            $("#errorMsgRegion").show();
+
+                            return false;
+                        }
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("");
+                    $("#errorMsgRegion").hide();
+                    $('<input type="hidden">').attr({
+                        name: 'Guid',
+                        value: USERID,
+                        id: USERID,
+                    }).appendTo('form');
+                    return true;
+                },
+                //formData: { userId: USERID },
+                formData: { guid: Guid, jobId: jobId, isGSTDocument: 1 },
+                change: function (e, data) {
+                    $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+                }
+            }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+        }
+
+        function DeleteGSTFile(fileNames, guid, OldInvoiceFile) {
+            $.ajax(
+                {
+                    url: actionDeleteGSTFile,
+                    data: { fileName: fileNames, FolderName: guid, OldInvoiceFile: OldInvoiceFile },
+                    contentType: 'application/json',
+                    method: 'get',
+                    async: false,
+                    success: function (data) {
+                        return false;
+                    },
+                });
+        }
+
+        jobGSTLoad();
+        if ($("#JobInstallationDetails_InstallingNewPanel").val() != "New" && $("#JobInstallationDetails_InstallingNewPanel").val() != "") {
+            $("#additionalCapacityNotes").show();
+        }
+        else {
+            $("#JobSTCDetails_AdditionalCapacityNotes").text('');
+            $("#additionalCapacityNotes").hide();
+        }
+
+    });
+
+    function OpenGSTDocument(obj) {        
+        var JobId = modelGuid;
+        var UploadedDocumentPath = modelUploadedDocumentPath;
+        //var fileName = $(obj).attr('filename');
+        var fileName = $(obj).attr('id');
+        var imagePath = UploadedDocumentPath + "/" + "JobDocuments" + "/" + JobId + "/" + "GST" + "/" + fileName;
+        $("#loading-image").css("display", "");
+        $('#imgViewImage').attr("src", imagePath).load(function () {
+            logoWidthGST = this.width;
+            logoHeightGST = this.height;
+            $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+
+            if ($(window).height() <= logoHeightGST) {
+                $("#imgViewImage").closest('div').height($(window).height() - 205);
+                $("#imgViewImage").closest('div').css('overflow-y', 'scroll');
+                $("#imgViewImage").height(logoHeightGST);
+            }
+            else {
+                $("#imgViewImage").height(logoHeightGST);
+                $("#imgViewImage").closest('div').removeAttr('style');
+            }
+
+            if (screen.width <= logoWidthGST || logoWidthGST >= screen.width - 250) {
+                $('#popupProof').find(".modal-dialog").width(screen.width - 250);
+                $("#imgViewImage").width(logoWidthGST);
+            }
+            else {
+                $("#imgViewImage").width(logoWidthGST);
+                $("#popupProof").find(".modal-dialog").width(logoWidthGST);
+            }
+            $("#loading-image").css("display", "none");
+        });
+        $("#imgViewImage").unbind("error");
+        $('#imgViewImage').attr("src", imagePath).error(function () {
+            alert('Image does not exist.');
+            $("#loading-image").css("display", "none");
+        });
+    }
+    function DownloadGSTDocument(obj) {
+        var JobId = modelGuid;
+        var fileName = $(obj).attr('id');
+        window.location.href = actionDownloadGSTDocument + '?FileName=' + escape(fileName) + '&FolderName=' + JobId;
+    }
+    function DeleteGSTDocument(obj, isFromDeleteIcon) {        
+        //var fileName = $(obj).attr('filename');
+        var fileName = $(obj).attr('id');
+        var FolderName = modelGuid;
+        var OldFileName = $(obj).attr('oldFileName');
+
+        var result = false;
+        if (!isFromDeleteIcon) {
+            result = true;
+        }
+        else {
+            result = confirm('Are you sure you want to delete this file ?');
+        }
+
+        if (result) {
+            $.ajax(
+                {
+                    url: actionDeleteGSTFile,
+                    data: { fileName: fileName, FolderName: FolderName, OldInvoiceFile: OldFileName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        $("#tblDocuments").find('tr').each(function () {
+                            $(this).remove();
+                        });
+
+                        $("#BasicDetails_GSTDocument").val('');
+                        ReloadSTCJobScreen(modelGuid);
+                        return false;
+                    }
+                });
+        }
+    }
+</script>
+
+<form id="frmStcDetail">
+    <div class="sub-title">
+        <h4>STC Details</h4>
+    </div>
+    @Html.HiddenFor(m => m.BasicDetails.GB_SCACode, new { @id = "GB_SCACode" })
+    @*<div class="form-group pull-right">
+            @if ((Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "not yet submitted" || Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "submit to trade") && isChangeSCA)
+            {
+                <input type="button" class="btn primary" value="Change SCA" onclick="changeSCAModal()" />
+            }
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div style="position:absolute;right:290px;">
+                    <label class="control-label" style="margin-right: 80px;margin-top: 10px;">Generate REC zip</label>
+                    <div class="onoffswitch" style="top:5%;right:5%;">
+                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchGenerateRecZip" ison="0">
+                        <label class="onoffswitch-label" for="onOffSwitchGenerateRecZip">
+                            <span class="onoffswitch-inner"></span>
+                            <span class="onoffswitch-switch"></span>
+                        </label>
+                    </div>
+                </div>
+            }
+        </div>*@
+
+    @Html.HiddenFor(m => m.JobInstallationDetails.JobID)
+    <div class="row">
+        <div class="col-md-5">
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobInstallationDetails.PropertyType, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.PropertyType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Residential", Value = "Residential" }, new SelectListItem() { Text = "School", Value = "School" }, new SelectListItem() { Text = "Commercial", Value = "Commercial" } }, new { @class = "form-control", @tabindex = 46 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobInstallationDetails.SingleMultipleStory, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.SingleMultipleStory, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Single story", Value = "Single story" }, new SelectListItem() { Text = "Multi story", Value = "Multi story" } }, new { @class = "form-control", @tabindex = 47 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.TypeOfConnection, new { @class = "control-label", id = "TypeOfConnection" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.TypeOfConnection, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Connected to an electricity grid without battery storage", Value = "Connected to an electricity grid without battery storage" }, new SelectListItem() { Text = "Connected to an electricity grid with battery storage", Value = "Connected to an electricity grid with battery storage" }, new SelectListItem() { Text = "Stand-alone (not connected to an electricity grid)", Value = "Stand-alone (not connected to an electricity grid)" } }, new { @class = "form-control", @tabindex = 50 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.SystemMountingType, new { @class = "control-label", id = "SystemMountingType" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.SystemMountingType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Building or structure", Value = "Building or structure" }, new SelectListItem() { Text = "Ground mounted or free standing", Value = "Ground mounted or free standing" } }, new { @class = "form-control", @tabindex = 51 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.DeemingPeriod, new { @class = "control-label", id = "DeemingPeriod" })
+                @if (Model.UserType == 1 || Model.UserType == 3)
+                {
+                    @Html.DropDownListFor(m => m.JobSTCDetails.DeemingPeriod, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 52 })
+                }
+                else
+                {
+                    @Html.DropDownListFor(m => m.JobSTCDetails.DeemingPeriod, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 52, @disabled = "disabled" })
+                }
+            </div>
+            @if (Model.UserType == 1 || Model.UserType == 3)
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.CertificateCreated, new { @class = "control-label", id = "CertificateCreated" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.CertificateCreated, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 53 })
+                </div>
+            }
+            <div class="form-group failedReasonDiv">
+                @Html.LabelFor(m => m.JobSTCDetails.FailedReason, new { @class = "control-label", id = "FailedReason" })
+                @Html.TextAreaFor(m => m.JobSTCDetails.FailedReason, new { @class = "form-control" })
+            </div>
+            <div class="form-group DivFailedAccreditationCode">
+                @Html.LabelFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "control-label", id = "FailedAccreditationCode" })
+                @Html.TextBoxFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "form-control", @maxlength = 255, @tabindex = 54 })
+                <span id="spanFailedAccreditationCode" style="display: none; color:#b94a48">Failed accreditation code is required.</span>
+            </div>
+
+
+            @*}*@
+            @*@if (Model.BasicDetails.JobType == 1)
+                {
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 66 })
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 67 })
+                    </div>
+                }*@
+            @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                {*@
+
+        </div>
+        <div class="col-md-2">
+
+        </div>
+        <div class="col-md-5">
+            <div class="form-group" id="divVolumetricCapacity" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.VolumetricCapacity, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.VolumetricCapacity, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 58 })
+            </div>
+            <div class="form-group" id="divStatutoryDeclarations" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.StatutoryDeclarations, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.StatutoryDeclarations, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 59 })
+                <span id="spanStatutoryDeclarations" class="" style="color: #b94a48;display:none">This Field is Required</span>
+            </div>
+            <div class="form-group" id="divSecondhandWaterHeater" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.SecondhandWaterHeater, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.SecondhandWaterHeater, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 60 })
+            </div>
+            @if (Model.BasicDetails.JobType == 2)
+            {
+                <div class="form-group">
+                    <label class="control-label">Installation type:</label>
+                    @Html.DropDownListFor(m => m.JobSystemDetails.InstallationType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New building", Value = "New building" }, new SelectListItem() { Text = "Replaced electric heater", Value = "Replaced electric heater" }, new SelectListItem() { Text = "Replaced solar water heater", Value = "Replaced solar water heater" }, new SelectListItem() { Text = "First solar water heater at existing building", Value = "First solar water heater at existing building" }, new SelectListItem() { Text = "Replaced gas water heater", Value = "Replaced gas water heater" }, new SelectListItem() { Text = "Other", Value = "Other" } }, new { @class = "form-control", @tabindex = 61 })
+                </div>
+            }
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobInstallationDetails.InstallingNewPanel, new { @class = "control-label", @id = "InstallingNewPanel" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.InstallingNewPanel, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New system [the first system installed at the address]", Value = "New" }, new SelectListItem() { Text = "Replacement system [all previous system components removed/decommissioned]", Value = "Replacing" }, new SelectListItem() { Text = "Additional system [new separate system at the same address]", Value = "Adding" }, new SelectListItem() { Text = "Extension system [components added to existing system]", Value = "Extension" } }, new { @class = "form-control", @tabindex = 48 })
+            </div>
+            @*<div class="form-group" id="installationLocation" style="display:none;">
+                    @Html.LabelFor(m => m.JobInstallationDetails.Location, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 49 })
+                    <span id="spanInstallationLocation" style="display: none; color:#b94a48">This Field is Required.</span>
+                </div>*@
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+            {
+                <div class="form-group" id="additionalCapacityNotes" style="display:none;">
+                    @Html.LabelFor(m => m.JobSTCDetails.AdditionalCapacityNotes, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalCapacityNotes, new { @class = "form-control", rows = "7" })
+                </div>
+            }
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.MultipleSGUAddress, new { @class = "control-label", id = "MultipleSGUAddress" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.MultipleSGUAddress, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 55 })
+            </div>
+            @*<div class="form-group" id="STCLocation" style="display:none;">
+                    @Html.LabelFor(m => m.JobSTCDetails.Location, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 56 })
+                    <span id="spanSTCLocation" style="display: none; color:#b94a48">This Field is required.</span>
+                </div>*@
+            @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                {*@
+            <div class="form-group" id="STCAdditionalLocation" style="display:none;">
+                @Html.LabelFor(m => m.JobSTCDetails.AdditionalLocationInformation, new { @class = "control-label" })
+                @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalLocationInformation, new { @class = "form-control", rows = "5" })
+            </div>
+            <div class="form-group">
+                <label class="control-label">Additional Information:</label>
+                <div class="">
+                    @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalSystemInformation, new { @class = "form-control txtField", @maxlength = 1000, @rows = 4, @tabindex = 19, style = "resize:none" })
+                </div>
+            </div>
+            @*}*@
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Latitude</label>
+                        @Html.TextBoxFor(m => m.JobSTCDetails.Latitude, new { @class = "form-control", @tabindex = 20 })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Longitude</label>
+                        @Html.TextBoxFor(m => m.JobSTCDetails.Longitude, new { @class = "form-control", @tabindex = 21 })
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*<div class="col-md-8">
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSTCStatus" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                </div>
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTCStatus" style="display: none;padding:15px;">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                @if (ProjectSession.UserTypeId != 8 || isStcStatus)
+                {
+                    <div class="assign-an-installer clearfix" id="reloadSTCJobScreen" style="margin: 0px">
+                        @Html.Partial("_STCJobTabularView", Model.STCDetailsModel)
+                    </div>
+                }
+            </div>*@
+    </div>
+    <br />
+    <div class="sub-title isGSTRegistered">
+        <h4>Payment Details</h4>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div id="divPaymentDetails">
+                @*<input type="hidden" oldfilename id="BasicDetails_GSTDocument" name="BasicDetails.GSTDocument" />*@
+                @Html.HiddenFor(m => m.BasicDetails.GSTDocument, new { @OldFileName = Model.BasicDetails.GSTDocument })
+                <div class="isGSTRegistered">
+                    <div class="form-group">
+                        <label class="control-label" style="font-family:Open Sans Semibold; width:100%">
+                            GST can only be claimed on Commercial jobs. If you are claiming GST on a commercial job please provide an invoice below.
+                        </label>
+                        @Html.LabelFor(m => m.BasicDetails.IsGst, new { @class = "control-label BasicDetails_IsGst", @style = "display:inline;" })
+                        @Html.CheckBoxFor(m => m.BasicDetails.IsGst, new { @class = "BasicDetails_IsGst", @tabindex = 500 })
+                    </div>
+                    <div id="jobGST" style="display:none;">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BasicDetails.GSTDocument, new { @class = "control-label" })
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="180" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic">
+                                            <span>Upload GST Invoice</span>
+                                            <input id="uploadGSTFile" type="file" class="upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="bxcont col-sm-10" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblDocuments">
+                                                    @if (Model.BasicDetails.GSTDocument != null && Model.BasicDetails.GSTDocument != "")
+                                                    {
+                                                        if (System.IO.File.Exists(Path.Combine(ProjectSession.ProofDocumentsURL + "\\" + "JobDocuments" + "\\" + Model.BasicDetails.JobID + "\\" + "GST", Model.BasicDetails.GSTDocument)))
+                                                        {
+                                                            <tr style='margin-top:30px'>
+                                                                <td class="col-sm-10" style="color:#494949;border-bottom:0px !important">@Model.BasicDetails.GSTDocument</td>
+                                                                @if (Model.BasicDetails.MimeType == "image")
+                                                                {
+                                                                    <td class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;">
+                                                                        <a style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument sprite-img view" title="Preview" onclick="OpenGSTDocument(this)"></a>
+                                                                    </td>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <td class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;">
+                                                                        <a style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument sprite-img download" title="Download" onclick="DownloadGSTDocument(this)"></a>
+                                                                    </td>
+                                                                }
+                                                                <td class="col-sm-2 action" style="color:blue;border-bottom:0px !important; padding:0px;">
+                                                                    <a id="GSTDocumentDelete" title="Delete" class="sprite-img delete" style="cursor: pointer" onclick="DeleteGSTDocument(this)"></a>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal" id="btnClosepopupProof">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">View File</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            <img src="" id="imgViewImage" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

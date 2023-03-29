@@ -1,0 +1,189 @@
+﻿@model FormBot.Entity.VEECPricingManager
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "VEECPricingManager";
+}
+
+<div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4">VEEC Pricing Manager</h1>
+            <div class="col-md-8">
+                <div class="form-inline title-selectbox pull-right">
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+                    {
+                        <div class="form-group">
+                            <label>Reseller:</label>
+                            @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                        </div>
+                    }
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+                        <div class="form-group">
+                            <label>Account Manager:</label>
+                            @Html.DropDownListFor(model => model.RAMID, new List<SelectListItem>(), "Select", new { id = "RamId", @class = "form-control" })
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="form-inline pricing-form row">
+                <div class="form-group col-sm-12 col-md-6">
+                    <label class="control-label">Search Type :</label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optionsRadios" id="rbSolarCompany" value="1" checked>
+                        Solar Company
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optionsRadios" id="rbVEEC" value="2">
+                        VEEC
+                    </label>
+                </div>
+
+                @*<div class="form-group col-sm-12 col-md-6" id="dvSystemSize">
+                    <label class="col-md-4 control-label reseller">Search System Size:</label>
+                    <div class="col-md-8 pad-r-0 pad-l-0">
+                        @Html.DropDownList("SystemSize", new List<SelectListItem>
+                                                                                    {
+                                                                                       new SelectListItem{ Text="Search System < 60kW", Value = "1" },
+                                                                                       new SelectListItem{ Text="Search System > 60kW", Value = "2" }
+                                                                                    }, new { id = "drpSystemSize", @class = "form-control" })
+                    </div>
+                </div>*@
+
+            </div>
+
+            <div id="box1" class="form-block">
+                @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+                {
+                    <div class="form-group col-sm-6">
+                        <label class="control-label">Solar Company :</label>
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+                }
+
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Name:</label>
+                    <input id="txtName" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+
+                <div class="form-group col-sm-6 searchTypeMode2">
+                    <label class="control-label">Installation Address:</label>
+                    <input id="txtInstallationAddress" type="text" class="form-control" onkeyup="SearchRecords();">
+                </div>
+
+                <div class="form-group col-sm-6 searchTypeMode2">
+                    <label class="control-label">Reference Number :</label>
+                    <input id="txtVeecRef" type="text" class="form-control" onkeyup="SearchRecords();">
+                </div>
+                
+                <div class="form-group col-sm-12">
+                    <input id="btnSearch" type="button" value="Search" class="primary search_ic" onclick="SearchRecords();">
+                    <input id=" btnreset" type="button" value="Reset" class="default reset_ic" onclick="ResetSearchFilters();">
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 processing-block">
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3)
+            {
+                <div id="dvVEECglobalprice" class="action ">
+                    <a href="javascript:void(0);" title="Set Global Price" class="edit sprite-img price-edit" onclick="ManageVEECGlobalPrice();"></a>
+                </div>
+            }
+            <ul class="Processing-time" id="PricingBlock">
+                <li id="liOptiPay" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.OptiPay.GetHashCode()">
+                    <span class="time">Opti-Pay</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.OptiPay), "")</span>
+                    <span id="VEECoptiPaySpan" class="price">$@Model.OptiPay</span>
+                </li>
+            </ul>
+
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+            {
+                <p class="set-global-text"><a href="javascript:void(0);" title="" onclick="ManageVEECCustomPrice();">+Set custom pricing for all solar company(s) or VEEC(s) based on search</a></p>
+            }
+
+        </div>
+    </div>
+
+    <div class="grid_topbar">
+        <p class="veec_result" id="numRecords"></p>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><span>@Html.DisplayName("SolarCompany")</span></th>
+                            <th><span>@Html.DisplayName("Name ")</span></th>
+                            <th><span>@Html.DisplayName("Owner Name")</span></th>
+                            <th><span>@Html.DisplayName("Installation Address")</span></th>
+                            <th><span>@Html.DisplayName("Account Manager")</span></th>                          
+                            <th><span>@Html.DisplayName("SolarCompany")</span></th>
+                            <th><span><p style="color:red;display:inline-block"><b>@Html.DisplayName("Last traded price")</b></p></span></th>
+                            <th><span>@Html.DisplayName("OptiPay")</span></th>
+                            <th><span>@Html.DisplayName("Offer Expiry")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+    {
+        <div class="modal fade" id="popupManageVEECPrice" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Manage Veec Price</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-border" id="dvVeecPriceManager">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script src="~/Scripts/View/VEEC/VEECPricingManager.dev.js"></script>
+<script>
+    var urlGetResellerForPricingManager = "@Url.Action("GetResellerForPricingManager", "Reseller")?IsWholeSaler=false";
+    urlGetRAMForReseller = '@Url.Action("GetRAMForReseller", "Reseller")';
+    urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+    urlGetSolarCompanyByRAMID = '@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")';
+    url_ManagePrice = '@Url.Action("_ManageVEECPrice", "VEECPricingManager")';
+    urlGetSolarCompanyForPricingManager = '@Url.Action("GetSolarCompanyForVEECPricingManager", "VEECPricingManager")';
+    urlGetVEECsForPricingManager = '@Url.Action("GetVEECsForVEECPricingManager", "VEECPricingManager")';
+    ProjectConfiguration_GetPageSize = @ProjectConfiguration.GetPageSize;
+    searchTypeMode = 1;
+    ProjectConfiguration_GetDateFormatToUpper = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    ProjectConfiguration_GetDateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    ajaxurl = searchTypeMode==1 ? urlGetSolarCompanyForPricingManager : urlGetVEECsForPricingManager;
+    pricingType = 1;
+    urlSaveVEECPriceForSolarCompany = '@Url.Action("SaveVEECPriceForSolarCompany", "VEECPricingManager")';
+    urlSaveVEECPriceForVEEC = '@Url.Action("SaveVEECPriceForVEEC", "VEECPricingManager")';
+    priceOptipay = '@Model.OptiPay';
+    urlGetVEECGlobalPriceForReseller = '@Url.Action("GetVEECGlobalPriceForReseller", "VEECPricingManager")';
+
+</script>
+

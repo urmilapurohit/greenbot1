@@ -1,0 +1,156 @@
+﻿@model List<FormBot.Entity.Job.JobHistory>
+    <style>
+       
+        .history-box {
+            border-width: 0 0 1px 0;
+            border-style: solid;
+            border-color: #eaeaea;
+            /*padding: 15px 30px;*/
+            padding: 25px 30px 25px 40px;
+            position: relative
+        }
+
+            .history-box:hover .border-icon {
+                -webkit-animation-duration: 1.2s;
+                animation-duration: 1.2s;
+                -webkit-animation-fill-mode: both;
+                animation-fill-mode: both
+            }
+
+            .history-box:hover .border-icon {
+                -webkit-animation-name: bounceInDown;
+                animation-name: bounceInDown
+            }
+
+            .history-box p {
+                margin-bottom: 5px
+            }
+
+            .history-box label {
+                font-size: 13px;
+                font-weight: 400;
+                color: #474747;
+                line-height: 16px;
+                font-family: OpenSansSemibold
+            }
+
+            .history-box a {
+                color: #1b94da;
+                font-size: 13px;
+                line-height: 16px;
+                /*pointer-events: none;*/
+            }
+
+
+            .history-box .list li {
+                display: inline;
+                font-size: 13px;
+                margin-right: 5px;
+                margin-bottom: 10px
+            }
+
+                .history-box .list li > span {
+                    color: #474747
+                }
+
+            .history-box .attachment-ber {
+                padding: 0
+            }
+
+            .history-box ol {
+                list-style: decimal !important;
+                padding: 0 40px !important;
+                margin: 13px 0 !important;
+            }
+
+            .history-box ul {
+                list-style: disc !important;
+                padding: 0 40px !important;
+                margin: 13px 0 !important;
+            }
+
+            .history-box ol li {
+                list-style-type: decimal !important;
+            }
+
+            .history-box ul li {
+                list-style-type: disc !important;
+            }
+
+            .history-box em {
+                font-style: italic !important;
+            }
+
+            .history-box blockquote {
+                font-style: italic;
+                font-family: Georgia, Times, "Times New Roman", serif;
+                border-style: solid;
+                border-color: #ccc;
+                border-left-width: 5px;
+                padding-left: 20px;
+                padding-right: 8px;
+            }
+            .history-box .created-date {
+                float: right;
+            }
+        input#FilterIsImportantNote {
+            line-height: inherit;
+        }
+
+        .tagged-users {
+            color: #4493d0;
+            text-decoration: underline;
+        }
+
+
+        #divCustom .history-block {
+            margin: 0px !important;
+        }
+
+        .newHistoryView {
+            color: #777;
+        }
+
+            .newHistoryView .border-icon {
+                vertical-align: middle;
+                width: 30px;
+                height: 30px;
+                position: absolute;
+                left: -6px;
+                top: auto !important;
+                border-radius: 25%;
+                background-repeat: no-repeat;
+                background-position: center center;
+                outline: 1px solid transparent
+            }
+
+        span.notesfunction {
+            display: inline-block;
+        }
+    </style>
+<div class="col-sm-12">
+    <div id="divCustom">
+       <span id="cntWarningNotes" hidden>@Model.Count</span>
+        @if (Model.Count() > 0)
+        {
+            foreach (var item in Model)
+            {
+                <li class="history-box history-box notes-status Warning">
+                    <span class="border-icon fas fa-regular fa-note-sticky" title="@item.HistoryCategory" style="font-size:30px;margin-left:15px;margin-top:-5px"></span>
+
+                    <p>
+                        @*<a href="@Url.Action("Index", "Job")?id=@item.JobIdEncoded" class="blue-title"><b>@item.RefNumber&nbsp;-&nbsp;</b></a>*@
+                        @if (item.CategoryID != 18 && item.CategoryID != 69 && item.CategoryID != 70)
+                        {
+                            <b class="blue-title" title="@item.Modifier">@item.Modifier </b>
+                        }
+                        <span class="created-date" style="margin-left:10px">@item.CreateDate</span>
+                        @Html.Raw(item.HistoryMessage)
+                    </p>
+                </li>
+            }
+        }
+    </div>
+</div>
+ 
+

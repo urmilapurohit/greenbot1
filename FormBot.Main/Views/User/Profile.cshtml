@@ -1,0 +1,113 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    bool isRECLogin = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.RECLogin.GetHashCode()) { isRECLogin = true; }
+        });
+    }
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+@section Scripts
+    {
+
+
+    <script type="text/javascript">
+        var pageType = 'profile';
+        var resellerID=@FormBot.Helper.ProjectSession.ResellerId;
+        var userID =@FormBot.Helper.ProjectSession.LoggedInUserId;
+        var USERID =@Model.UserId;
+        var oldLogo ='@Model.Logo';
+
+        var logoWidthSign = 0, logoHeightSign = 0, logoWidthLG = 0, logoHeightLG = 0, SRCSign, SRCLG;
+        var USERIDInstallerDesigner =@Model.UserId;
+        var isRECLogin = '@isRECLogin';
+
+    var sessionUserTypeId = '@ProjectSession.UserTypeId';
+    var sessionLogo = '@ProjectSession.Logo';
+    var sessionTheme = '@ProjectSession.Theme';
+    var sessionSiteUrlBase = '@ProjectSession.SiteUrlBase';
+    var sessionUploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var ConfigurationPassword = '@Model.EmailSignup.ConfigurationPassword';
+
+
+    var viewBagSignature = '@ViewBag.Signature';
+    var vSign = @Html.Raw(Json.Encode(ViewBag.Signature));
+    var viewBagRECEmailSign = '@ViewBag.RecEmailSignature';
+    var vRecEmailSign =  @Html.Raw(Json.Encode(ViewBag.RecEmailSignature));
+
+    var wholesalerCompanyABN = '@Model.WholesalerCompanyABN';
+    var wholesalerCompanyName = '@Model.WholesalerCompanyName';
+    var modelUserTypeId = '@Model.UserTypeID';
+    var wholesalerIsPostalAddress = @Model.WholesalerIsPostalAddress;
+    var InvoicerIsPostalAddress = @Model.InvoicerAddressID;
+    var modelSign = '@Model.Signature';
+    var modelTheme = @Model.Theme;
+    var tempDataFlag = '@TempData["Flag"]';
+    var isPVDUser = '@Model.IsPVDUser';
+    var isSWHUser = '@Model.IsSWHUser';
+
+    </script>
+
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+    @Scripts.Render("~/bundles/UserProfile")
+    @*<script src="~/Scripts/User/Profile.dev.js"></script>*@
+    <script>
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+    </script>
+    @*<script type="text/javascript" src="~/Scripts/User/Profile.min.js"></script>*@
+}
+
+@using (Html.BeginForm("Profile", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary(true)
+    <div class="container-fluid">
+        <h1 class="title">My Profile</h1>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @Html.HiddenFor(m => m.AspNetUserId)
+        @Html.HiddenFor(m => m.RoleID)
+        @Html.HiddenFor(m => m.SolarCompanyId)
+        @Html.HiddenFor(m => m.ResellerID)
+        @Html.HiddenFor(m => m.hiddenTheme)
+        @Html.HiddenFor(m => m.Signature)
+        @Html.Hidden("EmailSignature", Model.EmailSignup.EmailSignature)
+        @Html.HiddenFor(m => m.Logo)
+        @Html.HiddenFor(m => m.Theme)
+        @Html.HiddenFor(m => m.UserTypeID)
+
+        @if (@FormBot.Helper.ProjectSession.UserTypeId == 7)
+        {
+            @Html.HiddenFor(m => m.FromDate)
+            @Html.HiddenFor(m => m.ToDate)
+            @Html.HiddenFor(m => m.CompanyName, new { id = "hdnCompanyName" })
+            @Html.HiddenFor(m => m.AddressID, new { id = "hdnAddressID" })
+            @Html.HiddenFor(m => m.UnitTypeID, new { id = "hdnUnitTypeID" })
+            @Html.HiddenFor(m => m.StreetTypeID, new { id = "hdnStreetTypeID" })
+            @Html.HiddenFor(m => m.PostalAddressID, new { id = "hdnPostalAddressID" })
+            @Html.HiddenFor(m => m.SESelfie)
+            @Html.HiddenFor(m => m.Flag)
+        }
+        @Html.Partial("_Details", Model)
+    </div>
+}
+@*@Scripts.Render("~/bundles/UserProfile")*@

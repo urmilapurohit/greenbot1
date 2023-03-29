@@ -1,0 +1,239 @@
+﻿@model FormBot.Entity.BulkSendRequest
+@using FormBot.Helper;
+@{
+    bool isAllScaJobView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+}
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true)
+
+<div id="msgSection">
+    @Html.Raw(Html.RenderMessages())
+</div>
+
+<div class="container-fluid">
+    <h1 class="title">Import SendRequest Files</h1>
+    @using (Html.BeginForm("BulkSendRequest", "User", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="form-group">
+                @Html.ValidationSummary()
+            </div>
+        </div>
+    </div>
+
+    @Html.HiddenFor(model => model.SolarCompanyId)
+    @Html.HiddenFor(model => model.UserTypeID)
+
+    <div class="row">
+
+        @if (Model.UserTypeID == 1)
+            {
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerID", @class = "form-control" })
+                </div>
+            </div>
+            }
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+            {
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label">Solar Company:</label>
+                    @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })*@
+                    <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                </div>
+            </div>
+            }
+
+        <div class="col-sm-4">
+            <div class="form-group">
+                <label class="control-label">Status:</label>
+                @Html.DropDownList("ElectricianStatusId", null, "Select", new { id = "ElectricianStatusId", @class = "form-control" })
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="form-group">
+                @Html.Label("Select File :", new { @class = "control-label required" })
+                <input type="file" name="FileUpload" class="control-label" />
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="form-group box-border">
+                <label class="control-label" style="color:forestgreen">Sample excel file format should as below only :</label>
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr style="background-color:lightgray">
+                            <th>AccreditationNumber</th>
+                            <th>FirstName</th>
+                            <th>LastName</th>
+                            <th>Installer</th>
+                            <th>Designer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>XXX</td>
+                            <td>TestFn1</td>
+                            <td>TestLn1</td>
+                            <td>1</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>YYY</td>
+                            <td>TestFn2</td>
+                            <td>TestLn2</td>
+                            <td>1</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td>ZZZ</td>
+                            <td>TestFn3</td>
+                            <td>TestLn3</td>
+                            <td>0</td>
+                            <td>1</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br />
+                <label class="control-label" style="color:forestgreen">Here,</label><br />
+                <label class="control-label" style="color:forestgreen">When Installer = 1 and Designer = 1 means SE Role will be Design & Install.</label>
+                <label class="control-label" style="color:forestgreen">When Installer = 1 and Designer = 0 means SE Role will be Install.</label>
+                <label class="control-label" style="color:forestgreen">When Installer = 0 and Designer = 1 means SE Role will be Design.</label>
+
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="form-group">
+                <input type="submit" name="submit" value="Upload" class="primary" />
+            </div>
+        </div>
+    </div>
+    }
+</div>
+
+<script type="text/javascript">
+
+    var UserTypeID = @Model.UserTypeID,
+        ProjectSession_LoggedInUserId = '@FormBot.Helper.ProjectSession.LoggedInUserId',
+        ProjectSession_ResellerId = '@FormBot.Helper.ProjectSession.ResellerId',
+        urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")',
+        urlGetSolarCompanyByRamId = '@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")';
+    var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+
+    $(document).ready(function () {
+
+        FillDropDown('ResellerID', '@Url.Action("GetReseller", "Reseller")', 0, true, null);
+
+        $("#ResellerID").change(function () {
+            BindSolarCompany(document.getElementById("ResellerID").value,0);
+            $('#searchSolarCompany').focus();
+        })
+
+        if(UserTypeID == 2) {
+
+            BindSolarCompany(ProjectSession_ResellerId,0);
+            $('#searchSolarCompany').focus();
+        }
+
+        if(UserTypeID == 5) {
+            if(isAllScaJobView == "true"){
+                BindSolarCompany(ProjectSession_ResellerId,0);
+            }
+            else{
+                BindSolarCompany(0,ProjectSession_LoggedInUserId);
+            }
+            $('#searchSolarCompany').focus();
+        }
+
+        $('#ElectricianStatusId').val(2);
+
+        $('#searchSolarCompany').autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var data = [];
+                $.each(solarCompanyList, function (key, value) {
+                    if (value.text.toLowerCase().indexOf($("#searchSolarCompany").val().toLowerCase()) > -1) {
+                        data.push({ Title: value.text, id: value.value });
+                    }
+                });
+
+                response($.map(data, function (item) {
+                    return { label: item.Title, value: item.Title, id: item.id };
+                }))
+            },
+            select: function (event, ui) {
+                $("#SolarCompanyId").val(ui.item.id); // save selected id to hidden input
+            }
+        }).on('focus', function () { $(this).keydown(); });
+
+        $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+            var re = new RegExp($.trim(this.term.toLowerCase()));
+            var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                "</span>");
+            return $("<li style='font-size:14px;'></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + t + "</a>")
+                .appendTo(ul);
+        };
+    });
+
+    function BindSolarCompany(rId, ramId) {
+
+        var IsCompanyExist = false;
+        $("#searchSolarCompany").val("");
+        var scurl = '';
+        var searchid = '';
+        if (ramId == 0) {
+            scurl = urlGetSolarCompanyByResellerId
+            searchid = rId
+        }
+        else {
+            scurl = urlGetSolarCompanyByRamId;
+            searchid = ramId
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: scurl,
+            dataType: 'json',
+            async: false,
+            data: { id: searchid },
+            success: function (solarcompany) {
+                solarCompanyList = [];
+                $.each(solarcompany, function (i, company) {
+                    solarCompanyList.push({ value: company.Value, text: company.Text });
+                });
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Solar Companies.' + ex);
+            }
+        });
+        return false;
+    }
+
+</script>

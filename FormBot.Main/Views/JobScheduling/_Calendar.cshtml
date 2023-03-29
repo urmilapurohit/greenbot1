@@ -1,0 +1,751 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+@{
+    bool isAddEditJobScheduling = false;
+    bool isDeleteJobScheduling = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteJobScheduling = true; }
+        });
+    }
+}
+
+<style type="text/css">
+    .dvDest {
+        min-height: 40px;
+        max-height: 500px;
+    }
+
+    .dropped {
+        position: static !important;
+    }
+
+    /*.bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }*/
+
+    #dp {
+        width: 35px;
+        height: 27px;
+        background-image: url(../Images/Calendar/ic-cal.png);
+        background-repeat: no-repeat;
+        background-size: 35px 35px;
+        background-position: 0px -5px;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        text-indent: -99999px;
+    }
+
+        #dp:focus {
+            outline: none !important;
+        }
+
+    &:focus {
+        outline: none;
+    }
+
+    a.primary img {
+        padding: 0px !important;
+    }
+
+    a.primary {
+        padding: 0 12px 1px 12px !important;
+    }
+
+    .primary, .default {
+        margin: 0px !important;
+    }
+
+    .modal-footer {
+        margin-right: 15px !important;
+    }
+
+    .popover-title {
+        color: black;
+        word-wrap: break-word;
+        text-wrap: normal;
+        line-height: 20px;
+        background-color: white;
+        font-weight: normal;
+        font-family: 'OpenSansBold', arial;
+        font-style: normal;
+    }
+
+        .popover-title span {
+            color: #3599d4;
+        }
+
+    .popover-content {
+        color: black;
+        /*font-size: 10px;*/
+        word-wrap: break-word;
+        text-wrap: normal;
+        font-weight: normal;
+        font-family: 'OpenSansBold', arial;
+        font-style: normal;
+    }
+
+        .popover-content span {
+            color: #3599d4;
+        }
+
+    .mCSB_container {
+        height: 200px !important;
+    }
+    /*.view-job-detail .weekShiftTime {font-size:14px;}*/
+    /*.view-job-detail a {width:18px; height:18px;}*/
+    .view-job-detail a svg {width:100%; height:100%;}
+    .view-job-detail a:hover svg path {fill:#32b952;} 
+
+</style>
+
+
+
+<script type="text/javascript">
+    var message;
+    var electricianArray = [];
+    var jobSchedulingArray = [];
+    var jobArray = [];
+    var electricianJson = [];
+    var jobSchedulingJson = [];
+    var jobJson = [];
+    var viewType = "W";
+    var isOnlyView;
+    var isDroppable = false;
+    $(document).on("click", function () {
+        $(".pop-viewmore").hide();
+    });
+
+    $(document).on('click', ".pop-viewmore", function (event) {
+        event.stopPropagation();
+    });
+
+    $(document).ready(function () {
+
+        $(window).resize(function () {
+            refreshView();
+        });
+
+        $("#dp").datepicker({
+            buttonImage: '../Images/Calendar/ic-cal.png',
+            buttonImageOnly: true,
+            showOn: 'both',
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).change(dateChanged)
+   .on('changeDate', dateChanged);
+
+        $("#btnJobAccept").click(function () {
+            var value = '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Approved)';
+            AcceptRejectJobSchedule(value, 1);
+        });
+
+        $("#btnJobReject").click(function () {
+            var value = '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Rejected)';
+            AcceptRejectJobSchedule(value, 0);
+        });
+
+        $('#btnNext').click(function (e) {
+            refreshViewOnNextPrevious("Next", e);
+        });
+
+        $(".pop-close").click(function () {
+            $(".pop-viewmore").hide();
+            //$("#footer").css("position", "absolute");
+        });
+
+        $('#btnPrev').click(function (e) {
+            refreshViewOnNextPrevious("Prev", e)
+        });
+
+        $("#btnJobDelete").click(function (e) {
+            DeleteJobSchedulingDetail(null,null);
+        });
+        @{ 
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+            serializer.MaxJsonLength = Int32.MaxValue;
+            var jobSchedulingData = serializer.Serialize(Model.jobSchedulingData);
+            var jobData = serializer.Serialize(Model.job);
+            var solarElectricianData = serializer.Serialize(Model.solarElectrician);
+        }
+        setTimeShiftArray('@Html.Raw(solarElectricianData)', @Html.Raw(jobSchedulingData), '@Html.Raw(jobData)');
+
+        @*@{
+            var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+            serializer.MaxJsonLength = Int32.MaxValue;
+            var jobSchedulingData = serializer.Serialize(Model.jobSchedulingData);
+            var jobData = serializer.Serialize(Model.job);
+            var solarElectricianData = serializer.Serialize(Model.solarElectrician);
+        }
+        setTimeShiftArray('@Html.Raw(solarElectricianData)', @Html.Raw(jobSchedulingData), '@Html.Raw(jobData)');*@
+        @*setTimeShiftArray('@Html.Raw(Json.Encode(Model.solarElectrician))', @Html.Raw(Json.Encode(Model.jobSchedulingData)), '@Html.Raw(Json.Encode(Model.job))');*@
+
+        $('.weekJobs').each(function() {
+            var $this = $(this);
+            $this.popover({
+                trigger: 'hover',
+                placement: 'top auto',
+                html: true,
+                content: $this.attr('title'),
+                container: 'body'
+            });
+        });
+
+        $('.monthJobs').each(function() {
+            var $this = $(this);
+            $this.popover({
+                trigger: 'hover',
+                placement: 'top  auto',
+                html: true,
+                content: $this.attr('title'),
+                container: 'body'
+            });
+        });
+    });
+
+    function ResponseDelete(responseID) {
+        if (responseID && responseID > 0) {
+            //Email configuration not required
+            if ('@ProjectSession.IsUserEmailAccountConfigured' == 'False') {
+                message = "Job schedule has been deleted successfully. (Can not send mail because email account is not configured)"
+            }
+            else
+                message = "Job schedule has been deleted successfully."
+            showSuccessMessage(message);
+
+            jobSchedulingArray = $.grep(jobSchedulingArray, function (ele) {
+                return !(ele.id && parseInt(ele.id) == parseInt(responseID))
+            });
+
+            refreshView();
+        }
+        else {
+            message = "Job schedule has not been deleted."
+            showErrorMessage(message);
+        }
+    }
+
+    function dateChanged(ev) {
+        var tickStartDate = ConvertDateToTick($(this).val(), '@ProjectConfiguration.GetDateFormat');
+        var date = moment(tickStartDate).format("YYYY-MM-DD");
+        //var date = new Date($(this).val().split("/").reverse().join("-"));
+        dDate = new Date(date);
+        $("#SelectedDate").val(dDate);
+        refreshDates();
+        refreshView();
+    }
+
+
+    function setTimeShiftArray(solarElectrician, jobScheduling, job) {
+        try {
+            var electricianData = solarElectrician;
+            //electricianJson = [];
+            electricianJson = JSON.parse(electricianData);
+
+            $.each(electricianJson, function (i, e) {
+                electricianArray.push({ id: e.UserId, name: e.Name, usertypeid: e.UserTypeID, IsPVDUser: e.IsPVDUser, IsSWHUser: e.IsSWHUser });
+            });
+        } catch (e) {
+
+        }
+
+        try {
+            var jobSchedulingData = jobScheduling;
+            //jobSchedulingJson = [];
+            jobSchedulingJson = JSON.parse(jobSchedulingData);
+            $.each(jobSchedulingJson, function (i, e) {
+                var label = e.Label;
+                //if (e.Label != null)
+                //    label = e.Label.length > 20 ? e.Label.substring(0, 5) + '...' : e.Label;
+                jobSchedulingArray.push({ id: e.JobSchedulingID, jobID: e.JobID, refNum: e.RefNumber, priority: e.Priority, jobLocation: e.Location, client: e.Client, jobStage: e.JobStage, status: e.Status, jobTitle: e.JobTitle, fullLabel: e.Label, userID: e.UserId, SESCName: e.SESCName, startDate: e.strVisitStartDate, startTime: e.strVisitStartTime, endDate: e.strVisitEndDate, endTime: e.strVisitEndTime, label: label, detail: e.Detail, jobType: e.JobType, IsClassic: e.IsClassic, userTypeID: e.UserTypeID, IsPVDUser: e.IsPVDUser, IsSWHUser: e.IsSWHUser ,ID : e.ID});
+            });
+        } catch (e) {
+
+        }
+
+        try {
+            var jobData = job;
+            //jobJson = [];
+            jobJson = JSON.parse(jobData);
+
+            $.each(jobJson, function (i, e) {
+                jobArray.push({ id: e.JobID, title: e.Title });
+            });
+        } catch (e) {
+
+        }
+
+        refreshView();
+    }
+
+    function refreshView() {
+        //$("#footer").css("position", "absolute");
+        objDate.fullDate = dDate;
+        SetDragDropRights();
+        $('#divSchedular').createSchedular({ ShiftData: jobSchedulingArray, StaffData: electricianArray, Type: viewType, currDate: dDate, isOnlyView: isOnlyView });
+    }
+
+    function SetDragDropRights() {
+
+        if ('@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+                '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+                '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+                '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+
+                '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+             '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin)' == '@FormBot.Helper.ProjectSession.UserTypeId' ||
+             '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager)' == '@FormBot.Helper.ProjectSession.UserTypeId'
+
+            ) {
+
+            isOnlyView = false;
+        }
+        else {
+            isOnlyView = true;
+        }
+    }
+
+    function refreshViewOnNextPrevious(prevNextType, e) {
+        e.preventDefault();
+        changeEventFired = false;
+        if (viewType == "W") {
+            if (prevNextType == "Next")
+                dDate = dDate.addDays(7);
+            else
+                dDate = dDate.addDays(-7);
+        }
+        else {
+            var temp;
+            if (prevNextType == "Next")
+                temp = moment(dDate).add('month', 1);
+            else
+                temp = moment(dDate).subtract('month', 1);
+
+            dDate.setDate(temp.date());
+            dDate.setMonth(temp.month());
+            dDate.setYear(temp.year());
+
+            objDate.fullDate = dDate;
+        }
+
+        $("#SelectedDate").val(dDate);
+        refreshDates();
+        refreshView();
+    }
+
+    function DroppableJobScheduleChangeTimeElectrician(schedulingId, startDate, endDate, userId, startTime, jobId, status,jobTitle, jobType, userTypeID,isClassic) {
+        if (schedulingId && parseInt(schedulingId) > 0) {
+            var response = SaveScheduleOnDropAndInsertEdit(startDate, startTime, endDate, "", "", "", userId, jobId, schedulingId, false, 1, true,"","",jobTitle,isClassic);
+            //if (!response) {
+            //    $("#notification").modal();
+            //}
+            return response;
+        }
+        else {
+           
+            var GetSolarElectricianForJobTypeURL= '@Url.Action("GetSolarElectricianForJobType", "JobScheduling")?JobType=' +jobType + "&SolarCompanyId=" + $("#hdnsolarCompanyid").val();
+            FillDropDown('UserId',GetSolarElectricianForJobTypeURL,userId,true,null);
+            var GetJobsForJobTypeURL= '@Url.Action("GetJobsForJobType", "JobScheduling")?JobType=' +jobType + "&SolarCompanyId=" + $("#hdnsolarCompanyid").val();
+            FillDropDown('JobID',GetJobsForJobTypeURL,jobId,true,null);
+
+            $("#popUpJobDetail").modal({ backdrop: 'static', keyboard: false });
+            $("#popUpJobDetail").find('input[type=text]').each(function () {
+                $(this).val('');
+                $(this).attr('class', 'form-control valid');
+            });
+            $("#popUpJobDetail").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+            $("#popUpJobDetail").find('Select').each(function () {
+                $(this).find('option:first').attr('selected', 'selected');
+                $(this).attr('class', 'form-control valid');
+            });
+
+            $("#popUpJobDetail").find('textarea').each(function () {
+                $(this).val('');
+            });
+
+            //TODO
+            startDate = moment(new Date(moment(startDate).year(), moment(startDate).month(), moment(startDate).date())).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+            endDate = moment(new Date(moment(endDate).year(), moment(endDate).month(), moment(endDate).date())).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+            $("#visitStartDate").val(startDate);
+            $("#visitStartTime").val("00:00");
+            $("#visitEndDate").val(endDate);
+            $("#visitEndTime").val("23:30");
+            $("#UserId").val(userId);
+            $("#JobID").val(jobId);
+            $("#JobSchedulingID").val(0);
+            $("#RefNumber").val(jobTitle);
+            var tickStartDateSelect = ConvertDateToTick($('#visitStartDate').val(), '@ProjectConfiguration.GetDateFormat');
+            $('#visitEndDate').data('datepicker').setStartDate(new Date(tickStartDateSelect));
+            $("#IsClassic").val(isClassic);
+            $("#Detail").val(jobTitle);
+            $("#btnJobDelete").css("display", "none");
+
+            if (isClassic.toString().toLowerCase() == 'false') {
+                $("#loading-image").show();
+
+                //ajax call Defalut template
+                $.ajax(
+                     {
+                         url: '@Url.Action("GetDefaultCheckListTemplateId", "CheckListItem")?JobType=' + jobType+ "&SolarCompanyId=" + $("#hdnsolarCompanyid").val(),
+                         contentType: 'application/json',
+                         method: 'get',
+                         success: function (response) {
+                             TempCheckListTemplateItemAdd(response.DefaultCheckListTemplateId,true,$("#JobID").val(),jobType);
+                             
+                         }
+                     });
+            }
+            else {
+                $("#checkListTemplateForm").empty();
+            }
+            $("#popUpJobDetail").modal();
+            return true;
+        }
+    }
+
+
+
+    function ResponseSaveScheduleOnDropAndInsertEdit(response, responseID, responseData, isDrop) {
+        var ret = false;
+
+        if (responseID > 0) {
+            message = "Job schedule has been saved successfully."
+            showSuccessMessage(message);
+            $("#notification").modal('hide');
+
+            if (responseData && responseData != null && responseData != '') {
+                // update jobSchedulingArray after saved data
+                var jobSchedulingData = responseData;
+                var jobSchedulingJson = [];
+                jobSchedulingArray = [];
+                jobSchedulingJson = JSON.parse(jobSchedulingData);
+
+                $.each(jobSchedulingJson, function (i, e) {
+                    var label = e.Label;
+                    //if (e.Label != null)
+                    //    label = e.Label.length > 20 ? e.Label.substring(0, 5) + '...' : e.Label;
+                    jobSchedulingArray.push({
+                        id: e.JobSchedulingID, jobID: e.JobID, refNum : e.RefNumber, priority:e.Priority,jobLocation:e.Location,client:e.Client,fullLabel: e.Label,jobStage:e.JobStage, jobTitle: e.JobTitle, userID: e.UserId,
+                        SESCName: e.SESCName, startDate: e.strVisitStartDate, startTime: e.strVisitStartTime, endDate: e.strVisitEndDate,
+                        endTime: e.strVisitEndTime, label: label, detail: e.Detail, status: e.Status, jobType: e.JobType, IsClassic: e.IsClassic, userTypeID: e.UserTypeID, IsPVDUser: e.IsPVDUser, IsSWHUser: e.IsSWHUser,ID : e.ID
+                    });
+                });
+
+                refreshView();
+
+                if (!isDrop) {
+                    SearchJobsForScheduling(1, pageSize);
+                }
+            }
+            visitCheckListItemIds = [];
+            ret = true;
+        }
+        else if (parseInt(response) == -1) {
+            if (!isDrop) {
+                $("#notification").modal();
+            }
+            ret = false;
+        }
+        else if (parseInt(responseID) == 0) {
+            message = responseData;
+            showErrorMessage(message);
+            $("#notification").modal('hide');
+        }
+        else {
+            message = "Job Schedule has not been saved."
+            showErrorMessage(message);
+            $("#notification").modal('hide');
+        }
+
+
+
+        return ret;
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+
+        $("#popUpJobDetail").modal('hide');
+    }
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForPopUp").html(closeButton + message);
+        $("#errorMsgRegionForPopUp").show();
+
+    }
+
+    function showErrorMessageCalendar(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionOpenPopUp").html(closeButton + message);
+        $("#errorMsgRegionOpenPopUp").show();
+
+    }
+
+    function AcceptRejectJobSchedule(status, isAccept,jobSchedulingIdDashboard) {
+        var jobSchedulingID;
+        if(jobSchedulingIdDashboard)
+            jobSchedulingID = jobSchedulingIdDashboard;
+        else
+            jobSchedulingID = $("#JobSchedulingID").val();
+
+        $.ajax(
+          {
+              url: '@Url.Action("AcceptRejectJobSchedule", "JobScheduling")?status=' + status + '&jobSchedulingID=' + jobSchedulingID,
+              contentType: 'application/json',
+              method: 'post',
+              success: function (response) {
+                  if (response && response > 0) {
+
+                      var strEmailConfigureMsg='';
+                      //Email configuration not required
+                      if('@ProjectSession.IsUserEmailAccountConfigured'=='False'){
+                          strEmailConfigureMsg='(Can not send mail because email account is not configured)';
+                      }
+
+                      if (isAccept) {
+                          message = "Job schedule has been accepted successfully. "+strEmailConfigureMsg;
+                      }
+                      else {
+                          message = "Job schedule has been rejected successfully."+strEmailConfigureMsg;
+                      }
+                      showSuccessMessage(message);
+
+                      $.each(jobSchedulingArray, function (i, e) {
+                          if( parseInt(e.id) == parseInt(jobSchedulingID))
+                          {
+                              if(isAccept)
+                                  e.status = 2;
+                              else
+                                  e.status = 3;
+                          }
+                      });
+
+                      if (!isAccept) {
+                          jobSchedulingArray = $.grep(jobSchedulingArray, function (ele) {
+                              return !(ele.id && parseInt(ele.id) == parseInt(jobSchedulingID))
+                          });
+                      }
+
+                      refreshView();
+                      if('@Model.IsDashboard' == 'False')
+                          SearchJobsForScheduling(1, pageSize);
+                      else
+                      {
+                          $("#divCurrentJobs").load('@Url.Action("_Currentjobs", "Dashboard")');
+                      }
+                  }
+                  else {
+                      if (isAccept)
+                          message = "Job schedule has not been accepted."
+                      else
+                          message = "Job schedule has not been rejected."
+                      showErrorMessage(message);
+                  }
+              },
+              error: function () {
+                  if (isAccept)
+                      message = "Job schedule has not been accepted."
+                  else
+                      message = "Job schedule has not been rejected."
+                  showErrorMessage(message);
+              }
+          });
+    }
+
+    function ResponseShowJobSchedulingDetail(response) {
+        if (('@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarElectricians)' == '@Convert.ToInt32(FormBot.Helper.ProjectSession.UserTypeId)' ||
+            '@Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarContractor)' == '@Convert.ToInt32(FormBot.Helper.ProjectSession.UserTypeId)')) {
+
+            var status = response.Status;
+            if (status == '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Pending)') {
+                $("#btnJobAccept").show();
+                $("#btnJobReject").show();
+            }
+            else if (status == '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Approved)') {
+                $("#btnJobAccept").hide();
+                $("#btnJobReject").show();
+            }
+            else {
+                $("#btnJobAccept").hide();
+                $("#btnJobReject").hide();
+            }
+        }
+        else {
+            $("#btnJobAccept").hide();
+            $("#btnJobReject").hide();
+        }
+    }
+
+    function showJobSchedulingDetail(jobSchedulingID,jobTitle) {
+        FillJobSchedulingDetail(jobSchedulingID,jobTitle);
+        visitCheckListItemIds = [];
+        isVisitCheckListTemplateChange = false;
+    }
+
+    function changeCalendarView(type) {
+        if (type == "W") {
+            $("#monthView").removeClass('primary');
+            $("#weekView").addClass('primary');
+        }
+        else {
+            $("#weekView").removeClass('primary');
+            $("#monthView").addClass('primary');
+        }
+
+        viewType = type;
+        refreshView();
+    }
+
+    @*$("#btnJobAcceptDashboard").click(function () {
+        var value = '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Approved)';
+        var jobSchedulingID = $(this).attr("jobSchedulingId");
+        AcceptRejectJobSchedule(value, 1, jobSchedulingID);
+    });
+
+    $("#btnJobRejectDashboard").click(function () {
+        var value = '@Convert.ToInt32(FormBot.Helper.SystemEnums.JobSchedulingStatus.Rejected)';
+        AcceptRejectJobSchedule(value, 0, jobSchedulingID);
+    });*@
+
+</script>
+
+<div class="job_calendar">
+    <div class="schedule_top">
+        <div class="row">
+            <div class="col-xs-4" id="">
+                <div class="positionrelative">
+                    <div class="dp" style="display:none">
+                        <input type="text" class="datepicker cus_datepicker" id="SelectedDate" name="SelectedDate">
+                    </div>
+                </div>
+                <div style="position:relative; z-index:10;">
+                    <a href="javascript:void(0)" class="btn primary" id="btnPrev"><img src="~/Images/Calendar/ar_left.png" alt=""></a>
+                    <input type="text" id="dp" />
+                    <a href="javascript:void(0)" id="btnNext" class="btn primary"><img src="~/Images/Calendar/ar_right.png" alt=""></a>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <h2 class="title" id="divDateTime"></h2>
+            </div>
+            <div class="col-xs-4 schedule_btn">
+                <a href="javascript:void(0)" class="btn default primary scheduleOption" data-value="W" onclick="changeCalendarView('W')" id="weekView">Week</a>&nbsp;
+                <a href="javascript:void(0)" class="btn default scheduleOption" data-value="M" onclick="changeCalendarView('M')" id="monthView">Month</a>
+            </div>
+        </div>
+    </div>
+
+    @*<div  class="sidebar-menu">
+            <div class="mCustomScrollbar">
+            </div>
+        </div>*@
+
+    <div class="pop-viewmore">
+        <span class="pop-close">&nbsp;</span>
+    </div>
+
+    @*<div id="myscrl" class="pop-viewmore">
+            <div class="mCustomScrollbar">
+                <span class="pop-close">&nbsp;</span>
+            </div>
+        </div>*@
+
+    <div class="table-responsive tbfix scheduleTable" id="divSchedular">
+    </div>
+    <br>
+    <div id='calendar' style="float:left;"></div>
+</div>
+
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+@Html.HiddenFor(m => m.JobSchedulingID)
+@Html.HiddenFor(m => m.Status)
+@Html.HiddenFor(m => m.JobTitle)
+@Html.HiddenFor(m => m.JobType)
+<div class="modal fade add-visits" tabindex="-1" id="popUpJobDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="overflow: auto; max-height: 880px;">
+                <form id="jobScheduling">
+
+                    @*@Html.Partial("_SchedulePopup", Model)*@
+
+                    @Html.Partial("~/Views/JobScheduling/_SchedulePopup.cshtml", Model)
+                    <div id="checkListTemplateForm" style="padding:15px"></div>
+                    <div class="modal-footer">
+                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarElectricians) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarContractor) == FormBot.Helper.ProjectSession.UserTypeId))
+                        {
+                            <button type="button" class="btn primary accept_ic" id="btnJobAccept" onclick="">Accept</button>
+                            <button type="button" class="btn default reject_ic" id="btnJobReject">Reject</button>
+                        }
+                        else if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                        
+                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                        {
+                            if (isAddEditJobScheduling)
+                            {
+                                <button type="button" class="btn primary icon-btn" id="saveJobSchedule"><span class="sprite-img save_ic"></span> Save</button>
+                            }
+                            if (isDeleteJobScheduling)
+                            {
+                                <button type="button" class="btn primary delete_ic" id="btnJobDelete" style="display:none">Delete</button>
+                            }
+                            <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                        }
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="notification">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Notification</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <h5 class="notification">Already assign maximum job to this same electrician.Are you sure you want to continue?</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesNotification" isAutoScheduleVisit="false">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noNotification">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@Html.Partial("~/views/JobScheduling/_CommonCheckListForVisit.cshtml", Model)
+@Html.Partial("~/Views/CheckListItem/_CommonCheckListMethod.cshtml")
+
+@*<link href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+<script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+<script src="~/Scripts/ddaccordion.js"></script>

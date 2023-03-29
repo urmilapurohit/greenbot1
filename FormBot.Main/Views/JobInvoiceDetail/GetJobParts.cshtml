@@ -1,0 +1,142 @@
+﻿@model FormBot.Entity.Job.JobParts
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "GetJobParts";
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+
+    <div class="title">
+        <h1>Job Parts</h1>
+
+
+        @*<a href="@Url.Action("Connect", "JobInvoiceDetail")" class="primary pull-right add_ic" title="Sync Job Parts">Sync Job Parts</a>*@
+        <a href="#" onclick="SyncJobParts();" class="primary pull-right ic_plus" title="Sync Job Parts">Sync Job Parts</a>
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegionSyncPart" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSyncPart" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    @*@Html.HiddenFor(m => m.SyncValue)*@
+    <div id="jobPartsDiv">
+        @Html.Partial("_JobParts", Model)
+    </div>
+</div>
+
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>*@
+
+    @*@Scripts.Render("~/bundles/bootstrap")*@
+    @*@Scripts.Render("~/datatableJs")*@
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        $(document).ready(function () {
+            $("#appendClass").addClass('col-lg-6');
+            $('#datatable tbody').find('td').find('a')
+        });
+
+        @*function SyncJobParts() {
+        $.ajax(
+            {
+                url: '@Url.Action("SetCallBackURL", "XeroConnect")',
+                data: { callBackURL: "JobInvoiceDetail/GetJobParts" },
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                success: function (response) {
+                    if (response && response.status == true) {
+                        $.ajax(
+                              {
+                                  url: '@Url.Action("SyncParts", "JobInvoiceDetail")',
+                                  dataType: 'json',
+                                  contentType: 'application/json; charset=utf-8',
+                                  type: 'get',
+                                  async: false,
+                                  success: function (response) {
+                                      if (response && response.status == false) {
+                                          if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'exception of type "xero.api.example.applications.public.renewtokenexception" was thrown.') {
+                                              window.location.href ='@Url.Action("Connect", "XeroConnect")';
+                                          }
+                                      }
+                                      else {
+                                          window.location.reload();
+                                          showSuccessMessage("Job parts has been sync successfully.");
+                                      }
+                                  },
+                                  error: function (response) {
+                                      showErrorMessage("Job parts has not been sync.");
+                                  }
+                              });
+                    }
+                },
+                error: function (response) {
+                    showErrorMessage("Job parts has not been sync.");
+                }
+            });
+    }*@
+
+
+        function SyncJobParts() {
+            $.ajax(
+           {
+
+               url: '@Url.Action("SyncParts", "JobInvoiceDetail")',
+               dataType: 'json',
+               contentType: 'application/json; charset=utf-8',
+               type: 'get',
+               //async: false,
+               success: function (response) {
+                   if (response && response.status == false) {
+                       if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'invalid_grant') {
+                           window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                       }
+                       else if (response.error.toLowerCase() == 'sessiontimeout' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant')
+                           window.location.href = '@Url.Action("Logout", "Account")';
+                       else if (response.error)
+                           showErrorMessage(response.error);
+                       else
+                           showErrorMessage("Job parts has not been synced.");
+                   }
+                   else {
+                       $("#jobPartsDiv").load('@Url.Action("GetJobPartsPartialView", "JobInvoiceDetail")?isAllParts=false');
+                       showSuccessMessage("Job parts has been synced successfully.");
+                   }
+               },
+               error: function (response) {
+                   showErrorMessage("Job parts has not been synced.");
+               }
+           });
+        }
+
+        function showErrorMessage(message) {
+            $(".alert").hide();
+            $("#errorMsgRegionSyncPart").html(closeButton + message);
+            $("#errorMsgRegionSyncPart").show();
+
+        }
+
+
+        function showSuccessMessage(message) {
+            $(".alert").hide();
+            $("#successMsgRegionSyncPart").html(closeButton + message);
+            $("#successMsgRegionSyncPart").show();
+
+        }
+
+
+    </script>
+}

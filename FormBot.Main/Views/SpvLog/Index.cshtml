@@ -1,0 +1,156 @@
+﻿@model FormBot.Entity.JobList
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "SPV PANELS LOGS";
+    ViewBag.IsKendo = true;
+
+}
+<link href="~/Content/sumoselect.css" rel="stylesheet" />
+<link href="~/Content/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+<div class="container-fluid spv-log-listing">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px; font-weight: 400; line-height: 20px ">SPV PANELS LOGS</h1>
+        </div>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="joblisting_search">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">VSP service:</label>
+                    <select class="report-search-box" id="txtVpsService" style="display:none;" multiple="multiple" placeholder="All VSP service"></select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    <select class="form-control" id="drpReseller" name="Reseller"></select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Solar Company:</label>
+                    <input type="hidden" id="hdnsolarCompanyid" />
+                    <input id="txtSolarCompany" name="SolarCompany" class="form-control " />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Job reference / Job ID:</label>
+                    <input type="text" id="txtReferenceNumberOrJobId" name="ReferenceNumberOrJobId" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">PVD/SWH code:</label>
+                    <input type="text" id="txtPvdOrSwhCode" name="PvdOrSwhCode" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">SPV Method:</label>
+                    <select class="form-control" id="drpSpvMethod" name="SpvMethod">
+                        <option value="-1">All</option>
+                        <option value="1">Product Verification</option>
+                        <option value="2">Installation Verification</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">SPV Request Status:</label>
+                    <select class="form-control" id="drpSpvRequestStatus" name="SpvRequestStatus">
+                        <option value="-1">All</option>
+                        <option value="1">Success</option>
+                        <option value="2">Fail</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Response Code:</label>
+                    <input type="text" id="txtResponseCode" name="ResponseCode" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Serial Number:</label>
+                    <input type="text" id="txtSerialNumber" name="SerialNumber" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Manufacturer:</label>
+                    <input type="text" id="txtManufacturer" name="Manufacturer" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Model number:</label>
+                    <input type="text" id="txtModelNumber" name="ModelNumber" class="form-control" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Requested Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtFromDateOrTime" placeholder="From">
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtToDateOrTime" placeholder="To">
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group" style="margin-top: 10px;">
+        <input type="button" id="btnSearch" class="primary search_ic" value="Search">
+        <div class="default btn icon-btn">
+            <span class="sprite-img reset_ic"></span>
+            <input type="button" id="btnClear" class="" value="Clear">
+        </div>
+    </div>
+   
+    <div class="clearfix">
+        @*<input type="button" id="btnCsvGenerate" class="primary search_ic" value="Export CSV">*@
+        <button class="btn default export-ic" type="button" id="btnCsvGenerate"  style="float:right;margin-left:10px;">Export.csv - All Download</button>
+        <button class="btn default export-ic" type="button" id="btnCsvGenerateWithOutSCA"  style="float:right;margin-left:10px;">Export.csv - Without SCA</button>
+        <button class="default btn pull-right m-b-15 marg-r-0" id="collapse">Collapse All</button>
+    </div>
+    <!-- Grid start -->
+    <div class="toggle-table-row kendo-grid">
+        <div id="dtSpvLogs"></div>
+    </div>
+</div>
+@section scripts{
+    <script src="~/Scripts/jquery.nicescroll.min.js"></script>
+    <script src="~/Scripts/View/Spv/spv.logs.js"></script>
+    <script src="~/Scripts/jquery.sumoselect.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script>
+        //Url Declaration
+        var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")',
+            urlGetAllReseller = '@Url.Action("GetReseller","Reseller")',
+            urlGetEndPoints = '@Url.Action("GetEndPointList","SpvLog")',
+            urlGetSpvLogs = '@Url.Action("GetSpvLogs","SpvLog")',
+            urlGetSpvLogDetails = '@Url.Action("GetSpvLogDetailsBySpvLogId","SpvLog")',
+            dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            urlExportCSVForSPVLogs = '@Url.Action("ExportCSVForSPVLog", "SpvLog")'
+            ;
+    </script>
+}

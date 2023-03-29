@@ -1,0 +1,274 @@
+﻿@model IEnumerable<FormBot.Entity.Documents.DocumentSteps>
+@{
+    int i = 0;
+}
+<div class="modal-header">
+    <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="~/images/close-btn.png"></button>
+    <div class="email-hed">
+        <div class="title">
+            @*<h1 id="headerForPreaprOrConne">Preapprovals <span>S2141 Harry Lim, 2 Heathcliff Ave, Deer Park VIC 3023 </span></h1>*@
+            <h1 id="headerForPreaprOrConne"></h1>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="modal-body">
+        <!-- Requirements Menu -->
+        <div class="Requirements-menu">
+            <ul class="navbar-nav">
+                <li class="active"><a class="cursorDefault" href="javascript:void(0)" title="Send" style="font-size:100%;"> 
+                    <img class="icon" src='@Url.Content("~/Images/requirements-icon.png")' alt="Send">Requirements</a></li>
+            </ul>
+        </div>
+        <div class="row">
+            <ol class="col-md-9 accusantium-list">
+                @if (Model != null && Model.Count() > 0)
+                {
+                    foreach (var item in Model)
+                    {
+                        <li>@item.StepName </li>
+                    }
+                }
+                else
+                {
+                    <li> Approval is not required. </li>
+                }
+            </ol>
+            <div class="col-md-3">
+                <div class="distributer-box">
+                    <p>
+                        <label>Distributor :</label>
+                        @{string distributor = "";}
+                        @if (Model != null && Model.Count() > 0)
+                        {
+                            distributor = Model.FirstOrDefault().Distributors;
+                        }
+                        else
+                        {
+                            distributor = "&nbsp";
+                        }
+                        @Html.Raw(distributor)
+                    </p>
+                    <p>
+                        <label>NMI :</label>
+                        <span id="SpanNMI"></span>
+                    </p>
+                    <p>
+                        <label>Meter No :</label>
+                        <span id="SpanMeterNo"></span>
+                    </p>
+                    <p>
+                        <label>Address :</label>
+                        <span id="SpanAddress">
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="hdnDistributor" value="@distributor" />
+        @foreach (var item in Model)
+        {
+            i = i + 1;
+            <div class="panel-group Preapprovals-collapse">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <span class="subject">@i. @item.StepName <span id="spanComment@(@item.DocumentStepId)" class="subtext"> @(string.IsNullOrEmpty(item.Comment) ? "" : " - " + @item.Comment) </span> </span>
+                        @Html.Hidden("hdnComment" + item.DocumentStepId, item.Comment)
+                        <div class="message-date-and-time" id="divApplySection@(item.DocumentStepId)">
+                            @if (item.IsApplied)
+                            {
+                                <span>Submited : <em>@item.CommentDate</em><em></em></span>
+                                <a class="collapsed sm-btn btn-applied" data-type="@item.Type" data-documentstepid="@item.DocumentStepId">Applied</a>
+                                <a class="cursorPointer sm-btn btn-transparent DocumentStep" data-type="@item.Type" data-documentstepid="@item.DocumentStepId" data-sendresent="resend" style="cursor:pointer" data-email="@item.ToEmailid" data-link="@item.OnlineLink">Resend</a>
+                            }
+                            else
+                            {
+                                <a class="sm-btn btn-applied DocumentStep" data-type="@item.Type" data-documentstepid="@item.DocumentStepId" data-sendresent="apply" style="cursor:pointer" data-email="@item.ToEmailid" data-link="@item.OnlineLink">Apply Now</a>
+                            }
+                        </div>
+                    </div>
+                    <div id="collapseOne">
+                        <div class="panel-body pnlEmailModule" id="pnlEmailModule@(item.DocumentStepId)">
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @*<div class="panel-group Preapprovals-collapse">
+                <div class="panel panel-default">
+                    <div class="panel-heading" id="headingtow">
+                        <span class="subject">2. Accusantium neque libero adipisci aliquam </span>
+                        <div class="message-date-and-time"> <span>Submited : <em>18/05/2016</em><em>10:00 PM</em></span> <a class="collapsed sm-btn btn-applied DocumentStep" style="cursor: pointer">Applied</a> <a type="button" class="sm-btn btn-transparent">Resend</a> </div>
+                    </div>
+                    <div id="collapsetow">
+                        <div class="panel-body pnlEmailModule" id="pnlEmailModule2">
+
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+        <div class="col-sm-12 Status-send">
+            @using (Html.BeginForm("Foo1", "Bar1", FormMethod.Post, new { id = "frmAddStatus", @class = "form-horizontal" }))
+            {
+                @*<form class="form-horizontal">*@
+                <div class="form-group">
+                    <label class="col-sm-2 col-md-1 control-label required">Status:</label>
+                    <div class="col-sm-10 col-md-3">
+                        @Html.DropDownList("JobStatusForPreAndConn", (IEnumerable<SelectListItem>)ViewBag.listJobStatus, "Select", new { @class = "form-control", @required = "required" })
+                        @*<select class="form-control">
+                                <option>Super Admin</option>
+                                <option>FCO</option>
+                                <option>Reseller</option>
+                                <option>Account Manager</option>
+                            </select>*@
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 col-md-1 control-label">Comment:</label>
+                    <div class="col-sm-10 col-md-11">
+                        <textarea name="" rows="4" class="form-control" id="txtPreOrConnComment" maxlength="500"></textarea>
+                        <div class="btn primary icon-btn pull-right">
+                            <span class="sprite-img save_ic"></span>
+                            <input id="btnSavePreOrConneStatus" type="submit" value="Save" style="margin-top:3px;">
+                        </div>
+                    </div>
+                </div>
+                @*</form>*@
+            }
+        </div>
+    </div>
+</div>
+
+@Html.Hidden("DocumentStepId")
+@Html.Hidden("hdnSendOrResendClick")
+<script type="text/javascript">
+    $(document).ready(function () {
+        if ($('#JobInstallationDetails_NMI').val() == '') {
+            $("#SpanNMI").html("&nbsp;");
+        } else {
+            $("#SpanNMI").text($('#JobInstallationDetails_NMI').val());
+        }
+
+        if ($("#JobInstallationDetails_MeterNumber").val() == '') {
+            $("#SpanMeterNo").html("&nbsp;");
+        } else {
+            $("#SpanMeterNo").text($("#JobInstallationDetails_MeterNumber").val());
+        }
+
+        if ($("#txtAddress").val() == '') {
+            $("#SpanAddress").html("&nbsp;");
+        } else {
+            $("#SpanAddress").text($("#txtAddress").val());
+        }
+
+        if ($("#PreApprovalConnOrStcClicked").val() == 1) {
+            if (modelHeading != null && modelHeading != "") {
+                $("#headerForPreaprOrConne").html("Preapprovals <span> " + modelHeading + " </span>");
+            } else {
+                $("#headerForPreaprOrConne").html("Preapprovals ");
+            }
+        } else if ($("#PreApprovalConnOrStcClicked").val() == 2) {
+            if (modelHeading != null && modelHeading != "") {
+                $("#headerForPreaprOrConne").html("Connection <span> " + modelHeading + " </span>");
+            } else {
+                $("#headerForPreaprOrConne").html("Connection ");
+            }
+        }
+
+        if ('@ViewBag.SelectedJobStatus' != '') {
+            $("#JobStatusForPreAndConn").val('@ViewBag.SelectedJobStatus');
+        }
+        $("#txtPreOrConnComment").val('@Html.Raw(HttpUtility.JavaScriptStringEncode(ViewBag.SelectedJobComment))');
+
+        //$(".DocumentStep").unbind("click").click(function () {
+        $("div.panel-group").on("click", ".DocumentStep", function () {
+            var type = $(this).data("type");
+            $("#hdnSendOrResendClick").val($(this).data("sendresent"));
+            var DocumentStepId = $(this).data("documentstepid");
+            $("#DocumentStepId").val(DocumentStepId);
+            var toemail = $(this).data("email");
+            var onlineLink = $(this).data("link");
+
+            if ($(this).hasClass("opened") == false) {
+                $(".DocumentStep").removeClass("opened");
+                $(this).addClass("opened");
+                $.ajax({
+                    url: '@Url.Action("GetEmailSendViewForPreApprovalAndConnection", "JobEmailThread", new { area = "" })',
+                    type: "GET",
+                    data: { "JobId": $("#BasicDetails_JobID").val(), Type: type },
+                    cache: false,
+                    async: true,
+                    success: function (Data) {
+                        $(".pnlEmailModule").empty();
+                        $("#pnlEmailModule" + DocumentStepId).html(Data);
+                        if (type == 1) {
+                            $("#preApproTo").val(toemail.replace(/,/g, ";"));
+                        }
+
+                        if (type == 2) {
+                            $("#onlineLink").attr('href', onlineLink);
+                            $("#txtCommentOnReference").val($("#hdnComment" + DocumentStepId).val());
+                        }
+
+                        if (type == 3) {
+                            $("#DrpAlreadyApplied").val($("#hdnComment" + DocumentStepId).val());
+                        }
+
+                        $(this).removeClass("collapsed");
+                    }
+                });
+            } else {
+                $("#pnlEmailModule" + DocumentStepId).empty();
+                $(".DocumentStep").removeClass("opened");
+            }
+        });
+
+        $("#btnSavePreOrConneStatus").click(function () {
+            if ($("#frmAddStatus").valid()) {
+                var jsonData = JSON.stringify({
+                    JobId: $("#BasicDetails_JobID").val(),
+                    JobStatusId: $("#JobStatusForPreAndConn").val(),
+                    PreApprovalAndConnectionId: $("#PreApprovalConnOrStcClicked").val(),
+                    "Comment": $("#txtPreOrConnComment").val(),
+                    ModifiedBy: '@FormBot.Helper.ProjectSession.LoggedInUserId',
+                    Status: $("#JobStatusForPreAndConn option:selected").text()
+                });
+                $.ajax({
+                    url: '@Url.Action("AddUpdateJobCommentForPreApprAndConn", "JobEmailThread", new { area = "" })',
+                    type: "POST",
+                    dataType: "json",
+                    data: jsonData,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if ($("#PreApprovalConnOrStcClicked").val() == 1) {
+                            $("#spanPreapprovalStatus").text($("#JobStatusForPreAndConn option:selected").text());
+                            $("#preApprovalComment").text($("#txtPreOrConnComment").val());
+                            $("#preapprovalsAndConnectionmodal").modal("hide");
+
+                            $("#successMsgRegion").html(closeButton + "Preapproval status saved successfully.");
+                            $("#successMsgRegion").show();
+
+                        } else {
+                            $("#spanConnectionStatus").text($("#JobStatusForPreAndConn option:selected").text());
+                            $("#connectionComment").text($("#txtPreOrConnComment").val());
+                            $("#preapprovalsAndConnectionmodal").modal("hide");
+
+                            $("#successMsgRegion").html(closeButton + "Connection status saved successfully.");
+                            $("#successMsgRegion").show();
+
+                        }
+                    }
+                });
+            }
+
+            return false;
+        });
+    });
+</script>

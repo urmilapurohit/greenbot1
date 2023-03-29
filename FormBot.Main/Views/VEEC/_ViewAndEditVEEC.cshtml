@@ -1,0 +1,401 @@
+﻿@model FormBot.Entity.CreateVEEC
+    @using FormBot.Helper;
+
+<style type="text/css">
+    .autocompleteChangeUser {
+        z-index: 1000000000 !important;
+    }
+
+    .ui-autocomplete {
+        z-index: 10000 !important;
+    }
+
+    /*.title-border {
+        border-bottom: 1px solid #e4e4e4;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }*/
+
+    /*.job-com-box .sub-title .calc-subheading{
+        color: #4a9dd0;
+        font-family: OpenSansSemibold;
+    }*/
+    .pac-container {
+        background-color: #FFF;
+        z-index: 10000;
+    }
+    .calc-subheading {
+        /*color: #4a9dd0;*/
+        color: #222;
+        font-family: opensanssemibold;
+    }
+
+    .areaDropdown select.form-control {
+        border: none;
+        margin-left: -90px;
+        margin-top: -3px;
+        font-size: 16px;
+    }
+
+    .areaDropdown .form-control:focus {
+        box-shadow: none;
+    }
+
+    .popupAddBaseLineEquipment {
+        overflow-y: auto;
+        height: 750px;
+    }
+</style>
+
+
+
+@using (Html.BeginForm("Index", "VEEC", FormMethod.Post, new { id = "frmVEEC", enctype = "multipart/form-data" }))
+{
+    @Scripts.Render("~/bundles/jqueryval")
+
+    @Html.ValidationSummary(true)
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.VEECDetail.VEECId)
+    @Html.HiddenFor(m => m.VEECDetail.ScoIDVEEC)
+    @Html.HiddenFor(m => m.VEECDetail.SolarCompanyId)
+    @Html.HiddenFor(m => m.VEECDetail.VEECInstallerId);
+    <div class="job-com-box">
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="sub-title">
+                            <h4>Basic Details</h4>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.ScheduleActivityType, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.VEECDetail.ScheduleActivityType, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 1 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.ScheduleActivityType)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.RefNumber, new { @class = "control-label required" })
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    @Html.TextBoxFor(m => m.VEECDetail.RefNumber_Prefix, new { @class = "form-control", @maxlength = "255", @tabindex = 2, @readonly = "true" })
+                                </div>
+                                <div class="col-sm-10">
+                                    @Html.TextBoxFor(m => m.VEECDetail.RefNumber_Suffix, new { @class = "form-control", @maxlength = "255", @tabindex = 2 })
+                                    @Html.ValidationMessageFor(m => m.VEECDetail.RefNumber_Suffix)
+                                </div>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.VEECDetail.RefNumber)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.Title, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.VEECDetail.Title, new { @class = "form-control", @maxlength = "255", @tabindex = 3 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.Title)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.ScheduledActivityPremises, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.VEECDetail.ScheduledActivityPremises, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 4, disabled = "disabled" })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.ScheduledActivityPremises)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.Description, new { @class = "control-label required" })
+                            @Html.TextAreaFor(m => m.VEECDetail.Description, new { @class = "form-control", @maxlength = "4000", @tabindex = 5 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.Description)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.CommencementDate, new { @class = "control-label required" })
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.VEECDetail.CommencementDate, new { @class = "form-control date-pick", @readonly = "true", @tabindex = 6 })
+                                @*<span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>*@
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.VEECDetail.CommencementDate)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.ActivityDate, new { @class = "control-label required" })
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.VEECDetail.ActivityDate, new { @class = "form-control date-pick", @readonly = "true", @tabindex = 7 })
+                                @*<span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>*@
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.VEECDetail.ActivityDate)
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="clearfix">
+                            <div class="sub-title">
+                                <h4>Owner/Signatory Details</h4>
+                                <span class="title-btn">
+                                    <a href="#" title="" class="icon-link pull-right" id="btnVEECOwnerDetails"><img alt="" src='@Url.Content("~/images/edit-icon.png")' title="Edit"></a>
+                                </span>
+                            </div>
+                            <div class="details-block">
+                                <p id="VEECOwnerAdd"></p>
+                                <p><strong>Contact Details:</strong></p>
+                                <p class="email"><a class="VEECOwnerEmail"></a></p>
+                                <p class="contact-no">
+                                    <span><strong>P: </strong><span id="VEECOwnerPhone"></span></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="clearfix">
+                            <div class="sub-title">
+                                <h4>Installation Details</h4>
+                                <span class="title-btn">
+                                    <a href="#" title="" class="icon-link pull-right" id="btnVEECInstallationDetails"><img alt="" src='@Url.Content("~/images/edit-icon.png")' title="Edit"></a>
+                                </span>
+                            </div>
+                            <div class="details-block installation-details">
+                                <a href="#" title="" style="float: right; margin-top: 7px; margin-right: 5px;" id="btnVEECInstallationAddress"><img alt="" src='@Url.Content("~/images/add-btn.png")'></a>
+                                <a href="#" title="" class="icon-link" id="btnMapVEEC"><img alt="" src='@Url.Content("~/images/map-icon.png")'></a>
+                                <p id="VEECInstallationAdd">
+                                </p>
+
+                                <input type="hidden" id="txtVEECInstallationAdd" />
+
+                                <div class="details-mag-0">
+                                    <p><strong>Industry Business Type : </strong><span id="lblIndBusType"></span></p>
+                                    <p class="lblPVD"><strong>Number of levels : </strong><span id="lblNoOfLevels"></span></p>
+                                    <p class="lblPVD"><strong>Floor Space(m2) : </strong><span id="lblFloorSpace"></span></p>
+                                    <p class="lblPVD"><strong>Floor Space Upgraded Area(m2) : </strong><span id="lblFloorSpaceArea"></span></p>
+                                    @*<p class="lblPVD"><strong>Certificate of Electrical Compliance Number : </strong><span id="lblCertificateElectricalComplianceNumber"></span></p>*@
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="sub-title">
+                            <h4>Upgrade Manager Details</h4>
+                            <div class="col-md-5" style="position:relative">
+                                <a href="#" title="Add Upgrade Manager" class="icon-btn pull-right add-btn-icon sprite-img" id="btnAddUpgradeManager"></a>
+                                <p><strong style="left: 7px;position: absolute;top: 8px;">Add Upgrade Manager</strong></p>
+                            </div>
+                        </div>
+                        <div class="col-lg-9 signature-block">
+                            <div class="details-block">
+                                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionVEECUpgradeManager" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionVEECUpgradeManager" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="form-group">
+                                    <div>
+                                        <label class="control-label">Upgrade Manager : </label>
+                                    </div>
+                                    <div>
+                                        <div class="edit-block">
+                                            <input type="hidden" id="VEECUpgradeManager_Id" name="VEECUpgradeManager" />
+                                            <input type="text" id="txtVEECUpgradeManager_Id" name="txtVEECUpgradeManager_Id" class="form-control" maxlength="50" onchange="RemoveUpgradeManager($('#txtVEECUpgradeManager_Id'),$('#VEECUpgradeManager_Id'))" />
+                                            <a href="#" title="Edit Upgrade Manager" class="icon-link sprite-img edit-icon" id="btnEditVEECUpgradeManager"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="details-block">
+                                    <p><strong>Company Name:  </strong><strong id="VEECUpgradeManagerCompanyName"></strong></p><br /><br />
+                                    <p><strong>Contact Details :   </strong><strong id="VEECUpgradeManagerName"></strong></p><br />
+                                    <p class="contact-no">
+                                        <span><strong>Phone :  </strong><span id="VEECUpgradeManagerPhone"></span></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <div class="sub-title">
+                            <h4 style="border-right: 1px solid #e7e7e7; width:28%">Installer Details</h4>
+                            <div class="col-md-3" style="position:relative">
+                                <a href="#" title="Find Installer" class="icon-btn pull-right add-btn-icon sprite-img" id="btnFindVEECInstaller"></a>
+                                <p><strong style="left: 7px;position: absolute;top: 8px;">Find Installer</strong></p>
+                            </div>
+                        </div>
+                        <div class="col-lg-8 signature-block">
+                            <div class="details-block">
+                                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionVEECInstaller" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionVEECInstaller" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="form-group">
+                                    <div>
+                                        <label class="control-label">Installer: </label>
+                                    </div>
+                                    <div>
+                                        <div class="edit-block">
+                                            <input type="hidden" id="VEECInstallerDetail_VEECInstallerId" />
+                                            <input type="text" id="txtVEECInstaller_VEECInstallerId" name="txtVEECInstaller_VEECInstallerId" class="form-control" maxlength="50" onchange="RemoveVEECInstaller($('#txtVEECInstaller_VEECInstallerId'),$('#VEECInstaller_VEECInstallerId'))" />
+                                            <a href="#" title="Edit Installer" class="icon-link sprite-img edit-icon" id="btnEditVEECInstaller"></a>
+                                        </div>
+                                    </div>
+                                    @*<div>
+                                            <button class="btn-link" type="button" id="btnInstaller_SystemUser">
+                                                <img src="" id="imgInstaller_SystemUser" />
+                                            </button>
+                                            <button class="btn-link" type="button" id="btnInstallerQuickVisit" onclick="">
+                                                <img src="" id="schdeuledInstallerVisit" />
+                                            </button>
+                                            <a href="#" title="Add Custom SWHInstaller" class="icon-btn pull-right add-btn-icon sprite-img" id="btnAddCustomSWHInstaller" style="margin-top: -30px;"></a>
+                                        </div>*@
+                                </div>
+                                <div class="details-block">
+                                    <p><strong>Company Name:  </strong><strong id="VEECInstallerCompanyName"></strong></p><br /><br />
+                                    <p><strong>Contact Details :   </strong><strong id="VEECInstallerName"></strong></p><br />
+                                    <p><strong>Electrician License Number :   </strong><strong id="VEECInstallerElectricianLicenseNumber"></strong></p><br />
+                                    <p><strong>Electrical Compliance Number :   </strong><strong id="VEECInstallerNameElectricalComplianceNumber"></strong></p><br />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="veec-details">
+                <div class="sub-title">
+                    <h4>VEECs Details : </h4>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VEECDetail.LightingDesignMethodId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.VEECDetail.LightingDesignMethodId, new List<SelectListItem>(),new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.VEECDetail.LightingDesignMethodId)
+                </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.VEECDetail.QualificationsOfLightingDesignerId, new { @class = "control-label",@id = "lblQualificationsOfLightingDesigner" })
+                        @Html.DropDownListFor(m => m.VEECDetail.QualificationsOfLightingDesignerId, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 1 })
+                        @Html.ValidationMessageFor(m => m.VEECDetail.QualificationsOfLightingDesignerId)
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.VEECDetail.DesignerQualificationDetails, new { @class = "control-label" ,@id = "lblDesignerQualificationDetails" })
+                        @Html.TextBoxFor(m => m.VEECDetail.DesignerQualificationDetails, new { @class = "form-control", @tabindex = 1 })
+                        @Html.ValidationMessageFor(m => m.VEECDetail.DesignerQualificationDetails)
+                    </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VEECDetail.LightLevelVerificationId, new { @class = "control-label required"})
+                    @Html.DropDownListFor(m => m.VEECDetail.LightLevelVerificationId, new List<SelectListItem>(),  new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.VEECDetail.LightLevelVerificationId)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VEECDetail.QualificationOfLightLevelVerifierId, new { @class = "control-label" ,@id = "lblQualificationOfLightLevelVerifier" })
+                    @Html.DropDownListFor(m => m.VEECDetail.QualificationOfLightLevelVerifierId, new List<SelectListItem>(),  new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.VEECDetail.QualificationOfLightLevelVerifierId)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VEECDetail.VerifierQualificationDetails, new { @class = "control-label" ,@id = "lblVerifierQualificationDetail" })
+                    @Html.TextBoxFor(m => m.VEECDetail.VerifierQualificationDetails,  new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.VEECDetail.VerifierQualificationDetails)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VEECDetail.ContractualArrangementId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.VEECDetail.ContractualArrangementId, new List<SelectListItem>(),  new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.VEECDetail.ContractualArrangementId)
+                </div>
+                <div class="form-group otherContractualArrangements" style="display:none;">
+                    @*@Html.LabelFor(m => m.VEECDetail.ContractualArrangement1680Name, new { @class = "control-label required" })*@
+                    @Html.TextBoxFor(m => m.VEECDetail.ContractualDetails, new { @class = "form-control", @tabindex = 1})
+                    @Html.ValidationMessageFor(m => m.VEECDetail.ContractualDetails)
+                </div>
+                <div style="text-align:center" ;>
+                    <h4><b>VEECs Amount : </b> <span id="amountVEEC"></span></h4><br />
+                    <h4><b>Settlement Term: </b> <span id="settlementTermVEEC"></span></h4><br />
+                    <h4><b>Amount Due : </b> <span id="amountDueVEEC"></span></h4><br />
+                </div>
+                <div id="tradeButton">
+                    <div class="text-center clearfix term">
+                        <input id="btnApplyTradeVEEC" type="button" value="TRADE VEECs" class="primary trade-btn center-box">
+                    </div>
+                    <br />
+                </div>
+                <div style="text-align:center" ;>
+                    <h4><b>Amount Due : </b> <span id="amountDueVEEC"></span></h4><br />
+                    <h4><b>Settlement Date: </b> <span id="settlementDateVEEC"></span></h4><br />
+                </div>
+            </div>
+                @if (ProjectSession.UserTypeId == 1)
+                {
+                    <div class="complience-detail">
+                        <div class="sub-title">
+                            <h4 style="color: red;">Compliance Details : </h4>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.UnrecognisedAddressJustification, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.VEECDetail.UnrecognisedAddressJustification, new { @class = "form-control", @tabindex = 1 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.UnrecognisedAddressJustification)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.InternalDuplicateJustification, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.VEECDetail.InternalDuplicateJustification, new { @class = "form-control", @tabindex = 1 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.InternalDuplicateJustification)
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.VEECDetail.ExternalDuplicationJustification, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.VEECDetail.ExternalDuplicationJustification, new { @class = "form-control", @tabindex = 1 })
+                            @Html.ValidationMessageFor(m => m.VEECDetail.ExternalDuplicationJustification)
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+}
+<style>
+    table.dataTable thead th {
+        color: #383838 !important;
+    }
+</style>
+
+<script>
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+        actionProcessRequest = '@Url.Action("ProcessRequest","User")',
+        urlCreateVEEC = '@Url.Action("Create", "VEEC")',
+        urlUpload = '@Url.Action("UploadVEEC", "VEEC")',
+        urlGetUnitType = '@Url.Action("GetUnitType", "UnitType")',
+        urlGetStreetType = '@Url.Action("GetStreetType", "StreetType")',
+        urlGetPostalAddress = '@Url.Action("GetPostalAddress", "User")',
+        CheckUserExistURL = '@Url.Action("CheckUserExist", "User")';
+    @*Upload_UserSignature '@Url.Action("Upload","User")';*@
+
+    var modelVEECOwnerPostalAddressID = '@Model.VEECOwnerDetail.PostalAddressID',
+        modelVEECOwnerUnitTypeID = '@Model.VEECOwnerDetail.UnitTypeID',
+        modelVEECOwnerStreetTypeID = '@Model.VEECOwnerDetail.StreetTypeID',
+        modelVEECOwnerIsPostalAddress = '@Model.VEECOwnerDetail.IsPostalAddress';
+
+    var modelVEECInstallationDetailPostalAddressID = '@Model.VEECInstallationDetail.PostalAddressID',
+        modelVEECInstallationDetailUnitTypeID = '@Model.VEECInstallationDetail.UnitTypeID',
+        modelVEECInstallationDetailStreetTypeID = '@Model.VEECInstallationDetail.StreetTypeID',
+        modelVEECInstallationDetailIsPostalAddress = '@Model.VEECInstallationDetail.IsPostalAddress',
+        modelVEECInstallationDetailIndustryBusinessType = '@Model.VEECInstallationDetail.IndustryBusinessType';
+
+    var modelVEECInstallerPostalAddressID = '@Model.VEECInstaller.PostalAddressID',
+        modelVEECInstallerUnitTypeID = '@Model.VEECInstaller.UnitTypeID',
+        modelVEECInstallerStreetTypeID = '@Model.VEECInstaller.StreetTypeID',
+        modelVEECInstallerIsPostalAddress = '@Model.VEECInstaller.IsPostalAddress';
+
+    var model1680LightigDesignMethod = '@Model.VEECDetail.LightingDesignMethodId',
+        modelContractualArrangement1680 = '@Model.VEECDetail.ContractualArrangementId',
+        model1680LightLevelVerification = '@Model.VEECDetail.LightLevelVerificationId',
+        model1680QualificationOfLightLevelVerifier = '@Model.VEECDetail.QualificationOfLightLevelVerifierId',
+        model1680QualificationsOfLightingDesigner = '@Model.VEECDetail.QualificationsOfLightingDesignerId';
+
+
+    var VEECID = @Model.VEECDetail.VEECId;
+    var veecinstallerId = @Model.VEECInstaller.VEECInstallerId;
+    var VEECUpgradeManagerId = @Model.VEECUpgradeManagerDetail.VEECUpgradeManagerDetailId;
+    var VEECUpradeManagerSystemUser = '@Model.VEECUpgradeManagerDetail.IsSysUser';
+    var VEECInstallerDetails = JSON.parse('@Html.Raw(Json.Encode(Model.VEECInstaller))');
+    var GetCompanyNameFromABNUrl = '@Url.Action("GetCompanyABN", "User")';
+
+    var modelVEECDetailScheduleActivityType = '@Model.VEECDetail.ScheduleActivityType',
+        mddelVEECOwnerType = '@Model.VEECOwnerDetail.OwnerType';
+
+    $('.date-pick, .date-pick1, .date-pick').datepicker({
+        format: dateFormat,
+        autoclose: true
+    }).on('changeDate', function () {
+        $(this).datepicker('hide');
+    });
+</script>
+

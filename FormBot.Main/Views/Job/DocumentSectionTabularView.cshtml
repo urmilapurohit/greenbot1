@@ -1,0 +1,343 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+
+@{
+    ////Todo
+    bool isPhotos = false;
+    bool isDocManager = false;
+    bool isCECform = false;
+    bool isSTCform = false;
+    bool isJobDocumentManagerUpload = false;
+    bool isJobDocumentManagerDelete = false;
+    bool isJobDocumentManagerGenerate = false;
+    bool isJobDocumentManagerView = false;
+    bool isJobDocumentManagerSave = false;
+    bool isJobDocumentManagerSignatureMail = true;
+    bool isSaveDocAfterTradeJob = false;
+
+    var serializer = new JavaScriptSerializer();
+    var documentsJson = serializer.Serialize(Model.DocumentJson);
+    var temp = serializer.Deserialize<JsonResult>(documentsJson);
+    bool isSerialNumber = false;
+    bool isAddNotificationOfAnotherSCASerialNum = false;
+
+    var serializerData = new JavaScriptSerializer();
+    var serialNumWithPhotosJson = serializerData.Serialize(Model.SerialNumberwithPhotosAvaibilityList);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.PanelSerialNubers.GetHashCode()) { isSerialNumber = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.PanelSerialNubers.GetHashCode()) { isSerialNumber = true; }
+            });
+        }
+    }
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.DocumentManager.GetHashCode()) { isDocManager = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.DocumentManager.GetHashCode()) { isDocManager = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+
+            });
+        }
+    }
+}
+<div class="col-sm-5" id="SerialSectiononDocumentandPhotos" style="display:none;">
+
+</div>
+<div class="col-sm-5" id="JobSummarySectiononDocumentandPhotos" style="display:none;">
+
+</div>
+<div class="col-md-5" id="DocumentListSection">
+    <div class="sub-title" style="padding-bottom: 18px;">
+        <h4>Documents</h4>
+    </div>
+    <div>
+        <div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionCES" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionCES" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTC" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSTC" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOther" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionOther" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+        </div>
+        <div style="margin-left : 3%;">
+            <div class="title-btn">
+                <div class="btn-group" style="display:block" role="group">
+                    <button id="btnGroupDrop1" type="button" class="btn primary icon-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="float: left !important; margin-bottom: 2%;">
+                        <span class="ic_plus"></span>Create
+                        @*<span class="sprite-img arrow_doc_up_cr" style="left:80%; "></span><span class="sprite-img arrow_doc_down_cr" style="left:80%; "></span>*@
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop1" style="margin: 35px 0 0; min-width: auto;">
+                        <ul>
+                            <li>
+                                <a class="btn" id="btnddlCreateCESDocument" href="#">CES/COS</a>
+                            </li>
+                            <li>
+                                <a class="btn" id="btnddlCreateSTCDocument" href="#">STC</a>
+                            </li>
+                            <li>
+                                <a class="btn" id="btnddlCreateOtherDocument" href="#">Other</a>
+                            </li>
+                        </ul>
+                        <input id="uploadOthreBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt,.zip,.heic" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="title-btn">
+                <div class="btn-group" style="display:block" role="group">
+                    <button id="btnGroupDrop2" type="button" class="btn primary icon-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="float: left !important; margin-bottom: 2%; margin-left: 1%;">
+                        <span class="sprite-img upload_Photo"></span>Upload
+                        @*<span class="sprite-img arrow_doc_up" style="left:80%; "></span><span class="sprite-img arrow_doc_down" style="left:80%; "></span>*@
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop2" style="margin: 35px 0 0 92px; min-width: auto;">
+                        <ul>
+                            <li>
+                                <a class="btn" id="btnddlUploadCESDocument" href="#">CES/COS</a>
+                            </li>
+                            <li>
+                                <a class="btn" id="btnddlUploadSTCDocument" href="#">STC</a>
+                            </li>
+                            <li>
+                                <a class="btn" id="btnddlUploadOtherDocument" href="#">Other</a>
+                            </li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+            <div class="title-btn btn-group" style="display:block" role="group">
+                <button type="button" data-type="other" id="btnDownloadAllOther" class="btn primary icon-btn" style="float: left; margin-left: 1%;">
+                    <span class="sprite-img download_ic"></span>Download All
+                </button>
+            </div>
+            <div class="title-btn btn-group" style="display:block" role="group">
+                <button type="button" data-type="other" id="btnCreateCESPdf" class="btn primary icon-btn" style="float: left; margin-left: 1%;">
+                    <span class="sprite-img create_ces"></span>Convert CES PDF
+                </button>
+            </div>
+            @*<input class="btn border-btn" value="Create" id="btnCreateSTCDocument" type="button">
+                <input class="btn border-btn" value="Upload" id="btnSTCDocument" type="button">*@
+        </div>
+        @if ((ProjectSession.UserTypeId != 8 || isCECform) || (ProjectSession.UserTypeId != 8 || isSTCform))
+        {
+            @Html.Partial("_JobDocumentsNewTabular", Model.STCDetailsModel)
+        }
+
+        <div class="col-md-12">
+            @if ((ProjectSession.UserTypeId != 8 || isCECform) || (ProjectSession.UserTypeId != 8 || isSTCform) || (ProjectSession.UserTypeId != 8 || isDocManager))
+            {
+                @Html.Partial("_DocumentManager", new Tuple<FormBot.Entity.CreateJob, FormBot.Entity.Job.CaptureUserSign>(Model, new FormBot.Entity.Job.CaptureUserSign()))
+                @Html.Partial("_DocumentManagerSectionTabular")
+            }
+        </div>
+        <div class="row">
+            @if ((ProjectSession.UserTypeId == 8 && !isCECform) && (ProjectSession.UserTypeId == 8 && !isSTCform) && (ProjectSession.UserTypeId == 8 && !isDocManager))
+            {
+                @Html.Partial("_JobDocumentsNew", Model.STCDetailsModel)
+                @Html.Partial("_DocumentManager", new Tuple<FormBot.Entity.CreateJob, FormBot.Entity.Job.CaptureUserSign>(Model, new FormBot.Entity.Job.CaptureUserSign()))
+            }
+        </div>
+
+    </div>
+</div>
+
+<div class="col-sm-6">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion11" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion11" style="display: none">
+        <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+        Document has been saved successfully.
+    </div>
+</div>
+<div class="modal fade" id="popupDocumentCreateConfirmTabular" tabindex="-1" role="dialog" aria-labelledby="lblDocumentCreateConfirm">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content" id="mdlcreateDocsConfirm">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnPopupDocumentCreateConfirmtabular"></button>
+                    <h4 class="modal-title" id="lblDocumentCreateConfirm">Document Template Tabulr</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-7 col-md-7 col-lg-7">
+                        <div class="form-group">
+                            <label class="control-label">Choose the document template you would like to create :</label>
+                            <select class="form-control" id="docTemplateIdTabular" name="docTemplateId">
+                                <option value="1">New Document Template</option>
+                                <option value="2">Existing</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary icon-btn" id="nextDocumentTemplateTabular"><span class="sprite-img save_ic"></span>Next</button>
+                </div>
+            </div>
+            <div class="modal-content" style="display:none;" id="mdlcreateDocs">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">CREATE A DOCUMENT</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-inline">
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label class="control-label" style="margin-top:8px; float:left;">Select Category</label>
+                            <div class="col-md-6">
+                                <select id="ddlCatCreateDoc" class="form-control"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                            <ul class="list-group checked-list-box" id="tbodyItemsCreateDoc" style="margin-bottom:0px;"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-inline">
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label class="control-label" style="margin-top:8px; float:left;">Populate Documents with Job Data?</label>
+                            <div class="col-md-3">
+                                <select id="ddlFillData" class="form-control">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix">
+                        <button type="button" id="btnAddDocTabular" class="btn primary ic_plus dropdown-toggle">Add Document</button>
+                        <button type="button" class="btn default icon-btn" id="btnClear"> <span class="sprite-img reset_ic"></span> Clear</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-content" style="display:none;" id="mdlcreateDocsExist">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btndocumentTampleClose"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">USE EXISTING DOCUMENT</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                            <ul class="list-group checked-list-box" id="tbodyDocItemsForJobTabular" style="margin-bottom:0px;"></ul>
+                        </div>
+                    </div>
+                    <div class="clearfix">
+                        <button type="button" class="btn default icon-btn" id="btnClearExistingDoc"><span class="sprite-img reset_ic"></span>Clear</button>
+                        <button type="button" id="btnAddExistingDocTabular" class="btn primary icon-btn dropdown-toggle"><span class="sprite-img add_ic"></span>Add Document</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<script>
+    var JobId = '@Model.BasicDetails.JobID';
+    var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+    var urlDocumentCES = BaseURL + 'UploadDocumentCES/Job';
+    var showhistoryUrl = '@Url.Action("ShowFilteredJobHistory","Job")';
+    var BasicDetails_JobID = '@Model.BasicDetails.JobID';
+    var urlGetSTCJobForTabular = '@Url.Action("GetSTCJobForTabular", "job")?jobId=';
+    var documentsJson = '@temp.Data';
+    var urlGPSLogFilesExists = '@Url.Action("GPSLogFilesExists", "Job")';
+    var urlDownloadGPSLogs = '@Url.Action("DownloadGPSLogFiles","Job")';
+    var isJobDocumentManagerSave = '@isJobDocumentManagerSave';
+    var isJobDocumentManagerSignatureMail = '@isJobDocumentManagerSignatureMail';
+    var isJobDocumentManagerGenerate = '@isJobDocumentManagerGenerate';
+    var isJobDocumentManagerView = '@isJobDocumentManagerView';
+    var isJobDocumentManagerDelete = '@isJobDocumentManagerDelete';
+    var isSaveDocAfterTradeJob = '@isSaveDocAfterTradeJob';
+    var isUploadCESDocument = false;
+    var isUploadSTCDocument = false;
+    var isUploadOtherDocument = false;
+    var uploadbtndoc = false;
+        var createbtndoc = false;
+        var uploadPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath'
+
+</script>
+<script>
+    $(document).ready(function () {
+        $('.arrow_doc_up').show();
+        $('.arrow_doc_down').hide();
+        $('.arrow_doc_up_cr').show();
+        $('.arrow_doc_down_cr').hide();
+    });
+
+
+        $('#btnSave').show();
+    </script>
+
+    @*<script src="~/Scripts/View/Job/_DocumentsAndPhotosTabular.js"></script>*@
+    @*<script src="~/Scripts/View/Job/_DocumentManagerTabular.dev.js"></script>*@
+    <script src="~/Scripts/View/Job/_DocumentManagerTabular.min.js"></script>

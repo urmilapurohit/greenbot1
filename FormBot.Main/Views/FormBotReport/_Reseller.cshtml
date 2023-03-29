@@ -1,0 +1,242 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="ResellerBit" value="10" id="ResellerBit" />
+<input type="hidden" name="minReseller" value="1" id="minReseller" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstReseller, new MultiSelectList(Model.LstResellerUsers, "Value", "Text"), new { id = "LstReseller", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_Reseller" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_Reseller" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.FormBotResellerAssignedUser, new MultiSelectList(Model.LstResellerAssignedUser, "Value", "Text"), new { id = "LstResellerAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnFormBotResellerAssignedUser, new { id = "hdnResellers" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnResellerSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnResellerCancel" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_Reseller", function () {
+        if (parseInt($('#ResellerBit').val()) == 0) {
+            $('#LstReseller option:selected').each(function () {
+                $(this).remove().appendTo("#LstResellerAssignedUser");
+            });
+            $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstReseller option:selected').length + $('#LstResellerAssignedUser option').length) <= parseInt($('#ResellerBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstResellerAssignedUser option').length < parseInt($('#ResellerBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstReseller option:selected').each(function () {
+                        $(this).remove().appendTo("#LstResellerAssignedUser");
+                    });
+                    var max = $('#ResellerBit').val();
+                    $('#ResellerUsers').html($('#LstResellerAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstResellerAssignedUser option').length == parseInt($('#ResellerBit').val()))) {
+                    $('#btnLtoR_Reseller').css('opacity', '0.5');
+                    $('#btnLtoR_Reseller').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_Reseller').css('opacity', '1');
+                    $('#btnLtoR_Reseller').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_Reseller", function () {
+        $('#LstResellerAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+        var max = $('#ResellerBit').val();
+        if (max > 0) {
+            $('#ResellerUsers').html($('#LstResellerAssignedUser option').length + '/' + max);
+        } else {
+            $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstResellerAssignedUser option').length < parseInt($('#ResellerBit').val()))) {
+                $('#btnLtoR_Reseller').css('opacity', '1');
+                $('#btnLtoR_Reseller').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_Reseller').css('opacity', '0.5');
+                $('#btnLtoR_Reseller').css('cursor', 'auto');
+            }
+        }
+    });
+
+    //$(document).on("click", "#closeResellers", function () {
+    //    $('#popupReseller').modal('hide');
+    //    $('#cntResellers').html($('#LstResellerAssignedUser option').length);
+    //    disableSC();
+    //});
+
+    $(document).on("click", "#btnResellerSave", function () {
+        //if (resellerId != undefined  && (resellerId == 0 || resellerId != $('#LstResellerAssignedUser option').val())) {
+
+        if ($("#resellerValue") != undefined && ($("#resellerValue").val() == 0 || $("#resellerValue").val() != $('#LstResellerAssignedUser option').val())) {
+            $('#cntRAM').html('0');
+        }
+
+        if ($('#LstResellerAssignedUser option').length > 0)
+        {
+            if (typeof (EnableRAM) == "function")
+                EnableRAM();
+        }
+        else
+        {
+            if (typeof (disableRAM) == "function")
+                disableRAM();
+        }
+
+        var strAssignedAttendeeList = [];
+        $('#LstResellerAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minReseller').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minReseller').val() > 0 && $('#LstResellerAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        if (($('#LstResellerAssignedUser option').length <= parseInt($('#ResellerBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minReseller').val() == 1 && $('#LstResellerAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnResellers").val(strAssignedAttendeeList);
+        $('#cntResellers').html($('#LstResellerAssignedUser option').length);
+        $('#popupReseller').modal('hide');
+
+        //On Reseller Change clear Solar companies
+        $('#cntUsers').html('0');        
+        $("#hdnUsers").val('');
+
+        //disableSC();
+        if ($("#ReportID").val() == 12)
+            disableRAM();
+
+       
+    });
+    $(document).on("click", "#btnCancel", function () {
+        //disableSC();
+        if ($("#ReportID").val() == 12) {
+            if (typeof (disableRAM) == "function") {
+                disableRAM();
+            }
+        }
+    });
+
+    $(document).on("click", "#btnResellerCancel", function () {
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+
+        //disableSC();
+        $("#hdnResellers").val('');
+
+        var max = $('#ResellerBit').val();
+        if (max > 0) {
+            $('#ResellerUsers').html($('#LstResellerAssignedUser option').length + '/' + max);
+        } else {
+            $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstResellerAssignedUser option').length < parseInt($('#ResellerBit').val()))) {
+                $('#btnLtoR_Reseller').css('opacity', '1');
+                $('#btnLtoR_Reseller').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_Reseller').css('opacity', '0.5');
+                $('#btnLtoR_Reseller').css('cursor', 'auto');
+            }
+        }
+        if ($("#ReportID").val() == 12) {
+            if (typeof (disableRAM) == "function") {
+                disableRAM();
+            }
+        }
+
+        //On Reseller Change clear Solar companies
+        $('#cntUsers').html('0');
+        $("#hdnUsers").val('');
+    });
+
+
+    $(document).on("click", "#closeResellers", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstResellerAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minReseller').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minReseller').val() > 0 && $('#LstResellerAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        if (($('#LstResellerAssignedUser option').length <= parseInt($('#ResellerBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minReseller').val() == 1 && $('#LstResellerAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnResellers").val(strAssignedAttendeeList);
+        $('#cntResellers').html($('#LstResellerAssignedUser option').length);
+        $('#popupReseller').modal('hide');
+
+        //disableSC();
+        if ($("#ReportID").val() == 12) {
+            if (typeof (disableRAM) == "function") {
+                disableRAM();
+            }
+        }
+    });
+
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

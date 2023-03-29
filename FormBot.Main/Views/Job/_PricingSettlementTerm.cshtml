@@ -1,0 +1,347 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper;
+
+@{
+    bool isWholesalerSCASettlementTermView = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.WholesalerSCASettlementTermView.GetHashCode()) { isWholesalerSCASettlementTermView = true; }
+        });
+    }
+}
+
+@{
+    int settlementTerm = 0;
+    int currentJobStatus = 0;
+    int statusId = 0;
+    string term = string.Empty;
+    bool IsForDashboardPricingWholesaler = false;
+    if (Model != null)
+    {
+        if (Model.STCSettlementTerm != null && Model.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.STCSettlementTerm;
+            Enum value = (FormBot.Helper.SystemEnums.STCSettlementTerm)(Model.STCSettlementTerm);
+            System.Reflection.FieldInfo fi = value.GetType().GetField(value.ToString());
+            System.ComponentModel.DescriptionAttribute[] attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+            if (attributes != null && attributes.Length > 0)
+            {
+                term = attributes[0].Description;
+            }
+            else
+            {
+                term = value.ToString();
+            }
+        }
+        else
+        {
+            term = "24 Hour";
+        }
+        statusId = Model.STCStatus;
+        currentJobStatus = Model.STCStatus;
+        IsForDashboardPricingWholesaler = Model.IsForDashboardPricingWholesaler;
+    }
+}
+
+<div class="stc-amount-block" id="pricing-Block">
+    @Html.HiddenFor(m => m.IsApproachingExpiryDate)
+    <h4 class="stc-title" id="pricing-stc-title">STC Value: <b id="stcAmountHeader">@Model.ModifiedSTCAmount</b></h4>
+    <div class="table-responsive">
+        <ul class="SettlementTerms Processing-time" id="PricingBlock">
+            @if (!Model.IsSAASUser)
+            {
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.Hour24)) && Model.IsPriceDay1)
+                {
+                    <li class="LiSettlement" id="24Hour" data-interval="1" data-price="@Model.Hour24" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Hour24.GetHashCode()" data-isPriceUp="@Model.IsPriceDay1Up">
+                        <span class="time">24 Hour</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Hour24), "")</span>
+                        <span class="price">$@Model.Hour24</span>
+                    </li>
+                }
+
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.Days3)) && Model.IsPriceDay3)
+                {
+                    <li class="LiSettlement" id="3Days" data-interval="3" data-price="@Model.Days3" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Days3.GetHashCode()" data-isPriceUp="@Model.IsPriceDay3Up">
+                        <span class="time">3 Days</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Days3), "")</span>
+                        <span class="price">$@Model.Days3</span>
+                    </li>
+                }
+
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.Days7)) && Model.IsPriceDay7)
+                {
+                    <li class="LiSettlement" id="7Days" data-interval="7" data-price="@Model.Days7" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Days7.GetHashCode()" data-isPriceUp="@Model.IsPriceDay7Up">
+                        <span class="time">7 Days</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Days7), "")</span>
+                        <span class="price">$@Model.Days7</span>
+                    </li>
+                }
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.PartialPayment)) && Model.IsPricePartialPayment)
+                {
+                    <li class="LiSettlement" id="PartialPayment" data-interval="0" data-price="@Model.PartialPayment" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.PartialPayments.GetHashCode()">
+                        <span class="time">Partial Payment</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.PartialPayments), "")</span>
+                        <span class="price">$@Model.PartialPayment</span>
+                    </li>
+                }
+
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.UpFront)) && Model.IsPriceDay1)
+                {
+                    <li class="LiSettlement" id="UpFront" data-interval="0" data-price="@Model.UpFront" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.UpFront.GetHashCode()">
+                        <span class="time">UpFront</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.UpFront), "")</span>
+                        <span class="price">$@Model.UpFront</span>
+                    </li>
+                }
+
+
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.RapidPay)) && Model.IsPriceRapidPay)
+                {
+                    <li class="LiSettlement" id="RapidPay" data-interval="0" data-price="@Model.RapidPay" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.RapidPay.GetHashCode()" data-isPriceUp="@Model.IsPriceRapidPayUp">
+                        <span class="time">RapidPay</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.RapidPay), "")</span>
+                        <span class="price">$@Model.RapidPay</span>
+                    </li>
+                }
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.OptiPay)) && Model.IsPriceOptiPay)
+                {
+                    <li class="LiSettlement" id="OptiPay" data-interval="0" data-price="@Model.OptiPay" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.OptiPay.GetHashCode()" data-isPriceUp="@Model.IsPriceOptiPayUp">
+                        <span class="time">OptiPay</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.OptiPay), "")</span>
+                        <span class="price">$@Model.OptiPay</span>
+
+                        @Html.HiddenFor(m => m.UnderKW)
+                        @Html.HiddenFor(m => m.KWValue)
+                        @Html.HiddenFor(m => m.CommercialJob)
+                        @Html.HiddenFor(m => m.NonCommercialJob)
+
+                    </li>
+                }
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.Commercial)) && Model.IsPriceCommercial)
+                {
+                    <li class="LiSettlement" id="Commercial" data-interval="0" data-price="@Model.Commercial" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Commercial.GetHashCode()" data-isPriceUp="@Model.IsPriceCommercialUp">
+                        <span class="time">Commercial</span>
+                        <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Commercial), "")</span>
+                        <span class="price">$@Model.Commercial</span>
+                    </li>
+                }
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.Custom)) && Model.IsPriceCustom)
+                {
+                    <li class="LiSettlement" id="Custom" data-interval="0" data-price="@Model.Custom" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Custom.GetHashCode()" data-isPriceUp="@Model.IsPriceCustomUp">
+                        <span class="time">@Model.CustomTermText</span>
+                        @if (Model.CustomSettlementTerm == 12 && Model.IsCustomFee == false)
+                        {
+                            <span class="processing-text" id="Customsettlement"></span>
+                        }
+                        else
+                        {
+                            <span class="processing-text" id="Customsettlement">@Model.CustomSubDescription</span>
+                        }
+                        @if (Model.CustomSettlementTerm == 12 && Model.CustomPeakPayStcPrice == 1)
+                        {
+                            <span class="price">"Pricing On Trade"</span>
+                        }
+                        else
+                        {
+                            <span class="price">$@Model.Custom</span>
+                        }
+                        @Html.HiddenFor(m => m.CustomSettlementTerm)
+                        @Html.HiddenFor(m => m.IsCustomUnderKW)
+                        @Html.HiddenFor(m => m.CustomKWValue)
+                        @Html.HiddenFor(m => m.IsCustomCommercialJob)
+                        @Html.HiddenFor(m => m.IsCustomNonCommercialJob)
+                        @Html.HiddenFor(m => m.IsCustomPeakPayCommercialJob)
+                        @Html.HiddenFor(m => m.IsCustomPeakPayNonCommercialJob)
+                    </li>
+                }
+
+                if (!string.IsNullOrEmpty(Convert.ToString(Model.PeakPay)) && Model.IsPricePeakPay)
+                {
+                    <li class="LiSettlement" id="Peakpay" data-interval="0" data-price="@Model.PeakPay" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.PeakPay.GetHashCode()">
+                        <span class="time">Peak Pay</span>
+                        @if (Model.IsFee == true)
+                        {
+                            <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.PeakPay), "")</span>
+                        }
+                        @if (Model.PeakPayStcPrice == 1)
+                        {
+                            <span class="price" style="font-size:14px;">"Pricing On Trade"</span>
+                        }
+                        else
+                        {
+                            <span class="price">$@Model.PeakPay</span>
+                        }
+
+                        @Html.HiddenFor(m => m.IsTimePeriod)
+                        @Html.HiddenFor(m => m.TimePeriod)
+                        @Html.HiddenFor(m => m.IsFee)
+                        @Html.HiddenFor(m => m.Fee)
+                        @Html.HiddenFor(m => m.IsPeakPayCommercialJob)
+                        @Html.HiddenFor(m => m.IsPeakPayNonCommercialJob)
+                    </li>
+                }
+            }
+            else
+            {
+                foreach (var saasPricing in Model.PricingManagerSAAS.Where(pm => pm.IsEnable))
+                {
+                    //if (saasPricing.SettlementTerms.Equals("STCAmount"))
+                    if (saasPricing.SettlementTerms.Equals("PerSTC-S"))
+                    {
+                        <li class="LiSettlement" id="stcAmount" data-interval="1" data-price="@saasPricing.Price" data-settlementterm="@FormBot.Helper.SystemEnums.SAASSettlementTerm.STCAmount.GetHashCode()" data-SettlementTermId="@saasPricing.SettlementTermId">
+                            <span class="time">STC Amount</span>
+                            <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.SAASSettlementTerm.STCAmount), "")</span>
+                            <span class="price">$@saasPricing.Price</span>
+                        </li>
+                    }
+                    //else if (saasPricing.SettlementTerms.Equals("JobAmount"))
+                    else if (saasPricing.SettlementTerms.Equals("PerJob-S"))
+                    {
+                        <li class="LiSettlement" id="jobAmount" data-interval="1" data-price="@saasPricing.Price" data-settlementterm="@FormBot.Helper.SystemEnums.SAASSettlementTerm.JobAmount.GetHashCode()" data-SettlementTermId="@saasPricing.SettlementTermId">
+                            <span class="time">Job Amount</span>
+                            <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.SAASSettlementTerm.JobAmount), "")</span>
+                            <span class="price">$@saasPricing.Price</span>
+                        </li>
+                    }
+                    //else if (saasPricing.SettlementTerms.Equals("Feature 1"))
+                    else if (saasPricing.SettlementTerms.Equals("PerUser-S"))
+                    {
+                        <li class="LiSettlement" id="feature1" data-interval="1" data-price="@saasPricing.Price" data-settlementterm="@FormBot.Helper.SystemEnums.SAASSettlementTerm.Feature1.GetHashCode()" data-SettlementTermId="@saasPricing.SettlementTermId">
+                            <span class="time">Feature 1</span>
+                            <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.SAASSettlementTerm.Feature1), "")</span>
+                            <span class="price">$@saasPricing.Price</span>
+                        </li>
+                    }
+                }
+            }
+            @Html.HiddenFor(m => m.PropertyType)
+            @Html.HiddenFor(m => m.OwnerType)
+
+        </ul>
+    </div>
+    <div style="text-align:center" id="paymentscheduleinfo">
+        <a href="#" id="mdlSettlement">Payment schedule information</a>
+    </div>
+
+    @if (Model.IsGridView)
+    {
+        <div class="row">
+            <div id="grid" class="col-xs-12 popupgrid">
+                <div class="table-responsive" style="max-height:350px; overflow-y:scroll;">
+                    <table id="datatable1" class="table table-hover" style="width:100% !important;">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col" style="background-image: none !important;"><input type="checkbox" id="chkAll1" name="select_all" checked></th>
+                                <th><span>@Html.DisplayName("Ref No-OwnerName")</span></th>
+                                <th><span>@Html.DisplayName("Installation Date")</span></th>
+                                <th><span>@Html.DisplayName("STC")</span></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="total-amount-block">
+                    <div class="total-amount"><lable>Jobs Selected : <b id="lbljobsSelected"></b></lable></div>
+                    <div class="total-amount"><lable>No. Of STCs Selected : <b id="lblTotalSTCSelected">0</b></lable></div>
+                    <div class="total-amount stc-amount"><lable>Total STC Value : <b style="margin-left:0px;">$</b><b id="lblTotalSTCValue"></b></lable></div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+<div class="modal fade" id="popupstcRemark" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">STC Remark</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="control-label" id="JobSystemDetailsSystemModel">Reason For Trade:</label>
+                    <input type="text" id="txtstcremark" name="searchSystemModel" class="form-control" maxlength="50" />
+                    <span id="errormsgtxtstcremark" style="color: #b94a48;display:none">Reason for trade is required.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn primary icon-btn" onclick="TradeSTCCheckRemarkandProceed()" tabindex="713">
+                    <span class="sprite-img save_ic"></span> Save
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+@{
+    bool showbtn = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.IsTradableJob.GetHashCode()) { showbtn = true; }
+        });
+    }
+}
+</script>
+<script type="text/javascript">
+    var pricingManager_STCAmount = @Model.STCAmount;
+    var isAllowKW = $("#UnderKW").length ? $("#UnderKW").val().toLowerCase() : "";
+    var jobSizeForOptiPay = $("#KWValue").length ? $("#KWValue").val() : "";
+    var isCommercialJob = $("#CommercialJob").length ? $("#CommercialJob").val().toLowerCase() : "";
+    var isNonCommercialJob = $("#NonCommercialJob").length ? $("#NonCommercialJob").val().toLowerCase() : "";
+    var isPeakPayCommercialJob = $("#IsPeakPayCommercialJob").length ? $("#IsPeakPayCommercialJob").val().toLowerCase() : "";
+    var isPeakPayNonCommercialJob = $("#IsPeakPayNonCommercialJob").length ? $("#IsPeakPayNonCommercialJob").val().toLowerCase() : "";
+    var isCustomAllowKW = $("#IsCustomUnderKW").length ? $("#IsCustomUnderKW").val().toLowerCase() : "";
+    var jobCustomSizeForOptiPay = $("#CustomKWValue").length ? $("#CustomKWValue").val() : "";
+    var isCustomCommercialJob = $("#IsCustomCommercialJob").length ? $("#IsCustomCommercialJob").val().toLowerCase() : "";
+    var isCustomNonCommercialJob = $("#IsCustomNonCommercialJob").length ? $("#IsCustomNonCommercialJob").val().toLowerCase() : "";
+    var isCustomPeakPayCommercialJob = $("#IsCustomPeakPayCommercialJob").length ? $("#IsCustomPeakPayCommercialJob").val().toLowerCase() : "";
+    var isCustomPeakPayNonCommercialJob = $("#IsCustomPeakPayNonCommercialJob").length ? $("#IsCustomPeakPayNonCommercialJob").val().toLowerCase() : "";
+    var modelIsGSTSetByAdminUser = '@Model.IsGstSetByAdminUser';
+    var isGst = '@Model.IsGst';
+    var gstDocument = '@Model.GSTDocument';
+    var propType = $("#PropertyType").length ? $("#PropertyType").val().toLowerCase() : "";
+    var sysSize = ((typeof($('#BasicDetails_JobType').val()) != "undefined" && $('#BasicDetails_JobType').val() == 2)||typeof ($("#JobSystemDetails_SystemSize").val()) == 'undefined') ? 60 : $("#JobSystemDetails_SystemSize").val();//'@Model.SystemSize';
+    var ownerType = $("#OwnerType").length ? $("#OwnerType").val().toLowerCase() : "";
+    var customSettlementTerm = '@Model.CustomSettlementTerm';
+    var BasicDetails_IsWholeSaler = '@Model.IsWholeSaler';
+    var peakPayTimePeriod = '@Model.TimePeriod'
+    var peakPayCustomTimePeriod = '@Model.CustomTimePeriod';
+    var CustomPeakPayGst = '@Model.CustomPeakPayGst';
+    var PeakPayGst = '@Model.PeakPayGst';
+    var CustomPeakPayFee = '@Model.CustomFee';
+    var PeakPayFee = '@Model.Fee';
+    var peakPayTimePeriodValue = 0;
+    var peakPayGstRate = 0;
+    var peakPayFeeValue = 0;
+    var priceLastUpdatedDate = '@Model.LastUpdatedDate';
+    var isWholesalerSCAPricingSettlementTermView = typeof(isDashboardWS_SCASettlementTermView) != "undefined"?isDashboardWS_SCASettlementTermView:(typeof(isIndexWS_SCASettlementTermView) != "undefined"?isIndexWS_SCASettlementTermView:'@isWholesalerSCASettlementTermView.ToString().ToLower()');
+    var IsForDashboardPricingWholesaler = '@Model.IsForDashboardPricingWholesaler';
+    var IsShowInDashboard = '@Model.IsShowInDashboard';
+    var IsTradedFromJobIndex = '@Model.IsTradedFromJobIndex';
+    var currentJobStatus = '@currentJobStatus';
+    var IsSubmissionScreen = '@Model.IsSubmissionScreen';
+    var session_UserTypeId = '@ProjectSession.UserTypeId';
+    var showbtn = '@showbtn';
+    var model_STCStatus = '@Model.STCStatus';
+    var statucId = '@statusId';
+    var model_IsDashboardPricing = '@Model.IsDashboardPricing.ToString().ToLower()';
+    var settlementTerm = '@settlementTerm';
+    var model_IsGridView = '@Model.IsGridView.ToString().ToLower()';
+    var Description = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(ViewData["Description"]).Replace("\"", "").Replace(" ", "&nbsp;").Replace("\r\n","<br>").Replace("\n", "<br>").Replace("\r", "<br>")))';
+    var lastUpdatedDate = '@Html.Raw(ViewData.ContainsKey("lastupdateddate") ? HttpUtility.HtmlDecode(Convert.ToString(ViewData["lastupdateddate"])) : "")';
+    var urlApplyTradeSTC = '@Url.Action("ApplyTradeStc", "Job", new {area="" })';
+    var model_IsGST = '@Model.IsGst';
+    var stcAmount = '@Model.STCAmount';
+    var model_JobId = '@Model.JobID';
+    $(document).ready(function () {
+        
+    });
+
+</script>
+@*<script src="~/Scripts/View/Job/PricingSettlementTerm.dev.js"></script>*@
+<script src="~/Scripts/View/Job/PricingSettlementTerm.dev.js"></script>

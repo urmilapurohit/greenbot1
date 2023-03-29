@@ -1,0 +1,951 @@
+﻿@using FormBot.Main
+@using FormBot.Helper
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>GreenBot</title>
+    <link rel="shortcut icon" href="@Url.Content("~/Images/favicon.ico")" />
+
+    @Styles.Render("~/Content/css")
+    @Styles.Render("~/datatableCSS")
+    @Scripts.Render("~/bundles/CommonJS")
+
+    @Scripts.Render("~/bundles/LayoutDetail")
+
+    @*<script src="~/Scripts/View/Shared/_Layout.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>*@
+    @*<script src="~/Scripts/GeneralFunction.js?v=@ProjectConfiguration.ScriptVersion"></script>
+        <script src="~/Scripts/View/Job/js-snackbar.js?v=@ProjectConfiguration.ScriptVersion"></script>
+        <script async src="~/Scripts/Layout/googleTagManager.js"></script>*@
+    @*<link href="~/Content/js-snackbar.css" rel="stylesheet" />*@
+
+    @*<script src="~/Scripts/View/VEEC/form2js.js"></script>*@
+    <script src="~/Scripts/View/Job/select2.min.js"></script>
+    <link href="~/Content/select/select2.min.css" rel="stylesheet" />
+    <style type="text/css">
+
+        #SearchIcon:hover, #SearchIcon.active {
+            background-color: #3a7d49;
+        }
+
+        .SearchDropdownAutoComplete li:nth-child(even) {
+            background-color: #eee;
+        }
+
+        .SearchDropdownAutoComplete li {
+            color: #4493d0;
+            font-size: 14px !important;
+        }
+
+        .SearchDropdownAutoComplete {
+            padding-right: 0px;
+            width: 250px;
+        }
+
+        .hd-top .logo {
+            /*max-width: 200px;*/
+            max-width: 100%;
+            height: 60px;
+            overflow: hidden;
+        }
+
+            .hd-top .logo img {
+                margin-top: 5px;
+                /*margin-left: 15px;*/
+                /*height: 60px;*/
+            }
+
+        .disableMenu ul {
+            pointer-events: none;
+        }
+
+        .ui-helper-hidden-accessible {
+            border: 0;
+            clip: rect(0 0 0 0);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            width: 1px;
+        }
+
+        .autocompleteChangeUser {
+            z-index: 10000 !important;
+        }
+
+        .notification-div {
+            position: absolute;
+            top: 26px;
+            right: 490px;
+            cursor: pointer;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            left: 15px;
+            color: white;
+            z-index: 1000;
+            background-color: red;
+            border-radius: 50%;
+            height: 12px;
+            min-width: 12px;
+            font-size: 10px;
+            text-align: center;
+            line-height: 12px;
+        }
+    </style>
+
+    @if (ViewBag.IsKendo == true)
+    {
+        @Styles.Render("~/kendoCSS")
+    }
+</head>
+@{
+    bool isProfile = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.IsProfile.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.IsProfile.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.profile.GetHashCode()) { isProfile = true; }
+
+        });
+    }
+}
+<!-- wrapper start -->
+<div id="wrapper">
+    <header id="header">
+        <!-- header start -->
+        <div class="hd-top">
+            <div class="container-fluid">
+                <div class="logo">
+                    <a href="#" title="Greenbot">
+                        @if (ProjectSession.Logo == "Images/logo.png")
+                        {
+                            <img src="@Url.Content("~/Images/logo.png")" alt="Greenbot" id="imgLogo" style="height:40px !important;" /> }
+                        else
+                        {
+                            <img src='@Url.Content(FormBot.Helper.ProjectSession.UploadedDocumentPath +"UserDocuments" + "/"+FormBot.Helper.ProjectSession.Logo)' style="height:60px;margin-top:0px;" alt="Greenbot" id="imgLogo" />}
+                    </a>
+                </div>
+                <div class="userlinks col-sm-6">
+                    <div class="dropdown pull-right">
+                        <a class="dropdown-toggle username" href="#" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            <p>@FormBot.Helper.ProjectSession.LoggedInName</p>
+                            <span class="caret sprite-img"></span>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                            @if (isProfile)
+                            {
+                                <li>
+                                    <a href="@Url.Action("Profile", "User", new {area="" })" title="Profile">
+                                        <i class="profile-icon sprite-img"></i>Profile
+                                    </a>
+                                </li>
+}
+                            <li><a href="@Url.Action("Logout", "Account", new { area=""})" class="logout" title="Logout"><i class="icon logout-icon sprite-img"></i>Logout</a></li>
+                        </ul>
+                    </div>
+
+
+                </div>
+
+                <div class="notification-div" id="notificationDiv">
+                    <div style="position: relative">
+
+                        <span class="notification-count" id="notificationCount">0</span>
+                        <img src="~/Images/notification-icon.png" style="position: absolute;"/>
+                    </div>
+                </div>
+
+                <label role="button" id="lblhelp" title="Help" class="user-select form-inline" style="color:white;top:25px;" ; onclick="RedirectToFormBotHelpPage();">Help</label>
+                <img role="button" src="@Url.Content("~/Images/information-ic.png")" alt="GreenbotInformation" title="Help" id="btnHelpFormBot" style="top:20px;position: absolute;height:32px !important; width:35px;border-radius:50%; padding: 5px;" ; onclick="RedirectToFormBotHelpPage();" />
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                {@*<img src="@Url.Content("~/Images/search-ic.png")" alt="Greenbot" id="SearchIcon" style="top:22px;right:380px;position: absolute;height:32px !important; width:35px;border-radius:50%; padding: 5px;" ; onclick="ShowHideHeaderSearchBar();" />*@
+                <span class="user-select form-inline sprite-img search_ic" id="SearchIcon" style="border-radius:50%;float: right;right: 360px;top: 17px;" onclick="ShowHideHeaderSearchBar();"></span>
+                <div role="search" method="get" class="search-form searchbar" style="top: 60px;right: 370px;position:absolute;z-index: 9999; display:none; width:250px" id="Searchdiv">
+                    <input type="search" class="form-control" placeholder="Search" value="" id="searchresult" title="Search" onkeyup="SearchMultipleFilter();" style="border-radius:4px; ">
+                    @*<input type="submit" class="search-submit" value="">*@
+                </div>}
+
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.IsUserFSA == true)
+                {@*<input id="livesearchtags" name="livesearchtags" placeholder="Search" autocomplete="off" style="top:24px;right:380px;position:absolute;" onkeyup="SearchMultipleFilter(); /">
+            <div id="result" class="tag-results">
+
+                </div>*@
+
+
+
+
+                <a class="user-select form-inline" id="lblchangeuser" href="javascript:void(0);" title="Change User" style="color:white;top:24px;right:270px;" onclick="ChangeUserLink();">Change User</a> } @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.IsUserFSA == true)
+    {
+        <div class="user-select form-inline">
+            <div class="form-group">
+                <label class="control-label">User Type :</label>
+                <select class="form-control input-sm selectpicker" id="UserTypeIdFSA" name="UserType"></select>
+            </div>
+            <div class="form-group userDropdown">
+                <label class="control-label">User :</label>
+                <select class="form-control input-sm selectpicker" id="UserFSA" name="Users"></select>
+            </div>
+        </div>
+    }*@
+            </div>
+        </div>
+        <nav id="navigation" class="disableMenu">
+            <a class="menu-toggle" href="#">
+                <i class="menu-icon">
+                    <span class="line1"></span>
+                    <span class="line2"></span>
+                    <span class="line3"></span>
+                </i>
+            </a>
+            @*<div id="dialog" style="display: none"></div>*@
+            <div class="modal fade" id="dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="modal-dialog  modal-lg" role="document">
+                    <div class="modal-content" style="margin:50px;">
+                        <div class="modal-header ">
+                            <button type="button" class="close sprite-img" id="closeErrorPopup"></button>
+                            <h4 class="modal-title" id="myModalLabel">Error:</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="col-sm-12" style="text-align:center">
+                                &nbsp;
+                            </div>
+                            <div class="form-border">
+                                Error details here
+                                @*@Html.Action("_RAMView", "FormBotReport", new { id = "5" })*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @*@Html.DynamicMenuBinding()*@
+            @if (ProjectSession.DynamicMenuBinding != null)
+            {
+                @Html.Raw(ProjectSession.DynamicMenuBinding)
+            }
+            else
+            {
+                @Html.DynamicMenuBinding()
+            }
+        </nav>
+        <!-- header End -->
+    </header>
+    <!-- End Header -->
+    <!-- Start Content -->
+    <section id="content">
+        <div id="loading-image" class="loadingOverlay loading-image" style="display: none;"><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>
+        <div id="loading-image1" class="loadingOverlay loading-image" style="display: none;"><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>
+        @RenderBody()
+        <div class="modal fade" id="popupboxChangeUser" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="vertical-alignment-helper">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxChangeUser"></button>
+                            <h4 class="modal-title" id="myModalLabel">Change User</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="col-sm-6 col-md-4 col-lg-3">
+                                <div class="form-group">
+                                    <label class="control-label">User Type :</label>
+                                    <select class="form-control" id="UserTypeIdFSA" name="UserType"></select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 resellerDropdown" style="display:none">
+                                <div class="form-group">
+                                    <label class="control-label">Reseller :</label>
+                                    <input type="hidden" id="hdnResellerId" />
+                                    <input type="text" id="searchReseller" name="searchReseller" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 solarCompanyDropdown" style="display:none">
+                                <div class="form-group">
+                                    <label class="control-label">Soalr Company :</label>
+                                    <input type="hidden" id="hdnSolarCompanyIdFSA" />
+                                    <input type="text" id="searchSolarCompanyFSA" name="searchSolarCompanyFSA" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 userDropdown">
+                                <div class="form-group">
+                                    <label class="control-label">User :</label>
+                                    <input type="hidden" id="hdnUserId" />
+                                    <input type="text" id="searchUser" name="searchUser" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            @*<div class="col-sm-4 userDropdown">
+                                <label>User :</label>
+                                <div class="dropdown pull-right">
+                                    <select class="form-control" id="UserFSA" name="Users"></select>
+                                </div>
+                            </div>*@
+                            @*<div class="user-select form-inline">
+                                <div class="form-group">
+                                    <label class="control-label">User Type :</label>
+                                    <select class="form-control input-sm selectpicker" id="UserTypeIdFSA" name="UserType"></select>
+                                </div>
+                                <div class="form-group userDropdown">
+                                    <label class="control-label">User :</label>
+                                    <select class="form-control input-sm selectpicker" id="UserFSA" name="Users"></select>
+                                </div>
+                            </div>*@
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn primary icon-btn" id="saveChangeUser"><span class="sprite-img save_ic"></span>Save</button>
+                            <button type="button" class="btn default icon-btn" id="resetChangeUser"><span class="sprite-img reset_ic"></span>Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="popupboxCreateJobTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="vertical-alignment-helper">
+                <div class="modal-dialog modal-lg" style="width:90%;" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxCreateJobTemplate"></button>
+                            <h4 class="modal-title" id="myModalLabel">Job Template</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="form-group">
+                                    <label class="control-label">Choose the job template you would like to create :</label>
+                                    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5 || ProjectSession.UserTypeId == 4)
+                                    {
+                                        <select class="form-control" id="jobTemplateId" name="jobTemplateId">
+                                            <option value="1">New Job Screen</option>
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <select class="form-control" id="jobTemplateId" name="jobTemplateId">
+                                            <option value="1">New Job Screen</option>
+                                            <option value="2">Classic</option>
+                                        </select>
+                                    }
+                                </div>
+                                <div class="form-group">
+                                    <b style="color:red;">Description:</b><br />
+                                    <div id="divDescriptionNew" class="newJob">
+                                        <b>New Job Screen</b> has new improved layouts and tools to make your data
+                                        gathering for your STC trading easier.
+                                    </div>
+                                    <div id="divDescriptionOld" class="oldJob" style="display:none;">
+                                        <b>Classic Job Screen</b> is the first release of Greenbot Jobs for PV and SWH.
+                                    </div>
+                                    <br />
+                                    <ul id="ulDescription" class="newJob">
+                                        <li>-Switch between the modular and tabular view at any time.</li>
+                                        <li>-Send for signatures to your to your installer or home owner via SMS or Email for free.</li>
+                                        <li>-Build custom document templates.</li>
+                                        <li>-Improved scheduling and App tools for checklist items.</li>
+                                        <li>-Add your own custom fields.</li>
+                                        <li>-Improved Job History capturing.</li>
+                                        <li>-and more</li>
+                                    </ul>
+                                    <ul id="ulDescriptionOld" class="oldJob" style="display:none;">
+                                        <li>-Preapprovals and Connections.</li>
+                                        <li>-Sidebar accordion UI.</li>
+                                        <li>-Scheduling.</li>
+                                        <li>-Documents and Photos.</li>
+                                    </ul>
+
+                                </div>
+                            </div>
+                            <div class="col-sm-8 col-md-8 col-lg-8">
+                                <div class="form-group">
+                                    @*<img src="~/Images/new_job.png" id="imgJobNew" class="newJob img-responsive" />
+                                    <img src="~/Images/old_job.png" id="imgJobOld" class="oldJob img-responsive" style="display:none" />*@
+                                    <img src="//:0" id="imgJobNew" class="newJob img-responsive" />
+                                    <img src="//:0" id="imgJobOld" class="oldJob img-responsive" style="display:none" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn primary icon-btn" id="nextJobTemplate"><span class="sprite-img save_ic"></span> Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" tabindex="-1" id="popupboxCreateJobPopup">
+            <div class="vertical-alignment-helper">
+                <div class="modal-dialog vertical-align-center">
+                    <div class="modal-content">
+                        <form id="createJobNewPopup">
+                            @*@Html.Partial("~/Views/Job/_CreateJobPopup.cshtml", new FormBot.Entity.CreateJob())*@
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+                        <button type="button" class="close sprite-img" id="closeErrorPopup"></button>
+                        <h4 class="modal-title" id="myModalLabel">Error:</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-sm-12" style="text-align:center">
+                            &nbsp;
+                        </div>
+                        <div class="form-border">
+                            Error details here
+                            @*@Html.Action("_RAMView", "FormBotReport", new { id = "5" })*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="popupboxSuccessJobCreatePopup">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-md-12" style="text-align:center">
+                                    <label id="successJobCreateMessage" style="font-size:20px;"></label>
+                                </div>
+                                <div class="col-md-12" style="text-align:center;margin-bottom:10px;">
+                                    <label style="font-size:15px;">Do you want to view the job now?</label>
+                                </div>
+                                <div class="col-md-12" style="text-align:center">
+                                    <button type="button" class="btn primary save_ic" id="viewCreatedJob">YES</button>
+                                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                                </div>
+                                <div class="col-md-12" style="text-align:center;margin-top:15px">
+                                    <button type="button" class="btn primary save_ic" id="createAnotherJob">Create another job</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="settlements" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title">Payment Schedule Information</h4>
+                    </div>
+                    <div class="modal-body" style="min-height:500px;">
+                        <div class="settlements-block">
+                            <div class="panel-group message-collapse load-email" id="accordion02" role="tablist02" aria-multiselectable="false">
+                                <!-- panel-1======================= -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <a data-toggle="collapse" data-parent="#accordion02" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                            <h4>3 Day settlements</h4>
+                                            <div class="message-date-and-time">
+                                                <span>Cut of time<em>@ProjectConfiguration.SettlementCutOffTime</em></span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapseOne" class="panel-collapse collapse in" role="tablist02" aria-labelledby="headingOne">
+                                        <div class="panel-body settlements-block">
+                                            <div class="mCustomScrollbar" style="max-height:350px">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <tbody>
+                                                            <tr class="bg-color">
+                                                                <td>Monday before cut of time </td>
+                                                                <td>Wednesday Payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Monday after cut of time</td>
+                                                                <td>Thursday payment</td>
+                                                                <td>+3 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday before cut of time</td>
+                                                                <td>Thursday Payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday after cut of time</td>
+                                                                <td>Friday payment</td>
+                                                                <td>+3 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday before cut of time</td>
+                                                                <td>Friday Payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday after cut of time</td>
+                                                                <td>Monday payment</td>
+                                                                <td>+3 business days (+5 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday before cut of time</td>
+                                                                <td>Monday Payment</td>
+                                                                <td>+2 business days (+4 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday after cut of time</td>
+                                                                <td>Tuesday payment</td>
+                                                                <td>+3 business days (+5 Days)</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday before cut of time</td>
+                                                                <td>Tuesday Payment</td>
+                                                                <td>+2 business days (+4 Days)</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday after cut of time</td>
+                                                                <td>Wednesday Payment</td>
+                                                                <td>+3 business days (+5 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Saturday ALL DAY</td>
+                                                                <td>Wednesday Payment</td>
+                                                                <td>+2 business days (+4 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Sunday ALL DAY</td>
+                                                                <td>Wednesday payment</td>
+                                                                <td>+2 business days (+3 Days)</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- panel-2======================= -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingtow">
+                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion02" href="#collapsetow" aria-expanded="false" aria-controls="collapsetow">
+                                            <h4>7 Day settlements</h4>
+                                            <div class="message-date-and-time">
+                                                <span>Cut of time<em>@ProjectConfiguration.SettlementCutOffTime</em></span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapsetow" class="panel-collapse collapse" role="tablist02" aria-labelledby="headingtow">
+                                        <div class="panel-body settlements-block">
+                                            <div class="mCustomScrollbar" style="max-height:350px">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <tbody>
+                                                            <tr class="bg-color">
+                                                                <td>Monday before cut of time </td>
+                                                                <td>Monday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Monday after cut of time</td>
+                                                                <td>Monday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday before cut of time</td>
+                                                                <td>Tuesday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday after cut of time</td>
+                                                                <td>Tuesday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday before cut of time</td>
+                                                                <td>Wednesday Payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday after cut of time</td>
+                                                                <td>Wednesday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday before cut of time</td>
+                                                                <td>Thursday Payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday after cut of time</td>
+                                                                <td>Thursday payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday before cut of time</td>
+                                                                <td>Friday Payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday after cut of time</td>
+                                                                <td>Friday Payment</td>
+                                                                <td>+7 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Saturday ALL DAY</td>
+                                                                <td>Monday Payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Sunday ALL DAY</td>
+                                                                <td>Monday payment</td>
+                                                                <td>+1 business days</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- panel-3======================= -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingthree">
+                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion02" href="#collapsethree" aria-expanded="false" aria-controls="collapsethree">
+                                            <h4>24 Hour settlements</h4>
+                                            <div class="message-date-and-time">
+                                                <span>Cut of time<em>@ProjectConfiguration.SettlementCutOffTime</em></span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapsethree" class="panel-collapse collapse" role="tablist02" aria-labelledby="headingthreew">
+                                        <div class="panel-body settlements-block">
+                                            <div class="mCustomScrollbar" style="max-height:350px">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <tbody>
+                                                            <tr class="bg-color">
+                                                                <td>Monday before cut of time </td>
+                                                                <td>Tuesday Payment</td>
+                                                                <td>+1 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Monday after cut of time</td>
+                                                                <td>Wednesday payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday before cut of time</td>
+                                                                <td>Wednesday Payment</td>
+                                                                <td>+1 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Tuesday after cut of time</td>
+                                                                <td>Thursday payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday before cut of time</td>
+                                                                <td>Thursday Payment</td>
+                                                                <td>+1 business days</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Wednesday after cut of time</td>
+                                                                <td>Friday payment</td>
+                                                                <td>+2 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday before cut of time</td>
+                                                                <td>Friday Payment</td>
+                                                                <td>+1 business days</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Thursday after cut of time</td>
+                                                                <td>Monday payment</td>
+                                                                <td>+2 business days (+4 Days)</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday before cut of time</td>
+                                                                <td>Monday Payment</td>
+                                                                <td>+1 business days (+3 Days)</td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Friday after cut of time</td>
+                                                                <td>Tuesday Payment</td>
+                                                                <td>+2 business days (+4 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Saturday ALL DAY</td>
+                                                                <td>Tuesday Payment</td>
+                                                                <td>+1 business days (+3 Days)</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Sunday ALL DAY</td>
+                                                                <td>Tuesday payment</td>
+                                                                <td>+1 business days (+2 Days)</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- panel-2======================= -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingtow">
+                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion02" href="#collapsefour" aria-expanded="false" aria-controls="collapsefour">
+                                            <h4>On approval</h4>
+                                            <div class="message-date-and-time">
+                                                <span>Cut of time<em>@ProjectConfiguration.OnApprovalSettlementCutOffTime</em></span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div id="collapsefour" class="panel-collapse collapse" role="tablist02" aria-labelledby="headingfour">
+                                        <div class="panel-body settlements-block">
+                                            <div class="mCustomScrollbar" style="max-height:350px">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover">
+                                                        <tbody>
+                                                            <tr class="bg-color">
+                                                                <td>Traded before cut of time </td>
+                                                                <td>same day payment</td>
+                                                                <td></td>
+                                                            </tr>
+                                                            <tr class="bg-color">
+                                                                <td>Traded after cut of time</td>
+                                                                <td>next day payment</td>
+                                                                <td></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div>
+
+        <div class="modal fade" id="popupboxNotification" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="vertical-alignment-helper">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxNotification"></button>
+                            <h4 class="modal-title" id="myModalLabel">Notifications</h4>
+                        </div>
+                        <div class="modal-body" id="notificationData"></div>
+
+                        <div class="modal-footer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*<div class="modal modal-center fade" tabindex="-1" id="popupboxCreateVEECPopup">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <form id="createVEECPopup">
+                            @Html.Partial("~/Views/VEEC/_CreateVEECPopup.cshtml", new FormBot.Entity.VEEC.CreateVEECPopup())
+                        </form>
+                    </div>
+                </div>
+        </div>*@
+        @*<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="popupboxSuccessVeecCreatePopup">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-md-12" style="text-align:center">
+                                    <label id="successVeecCreateMessage" style="font-size:20px;"></label>
+                                </div>
+                                <div class="col-md-12" style="text-align:center;margin-bottom:10px;">
+                                    <label style="font-size:15px;">Do you want to view the veec now?</label>
+                                </div>
+                                <div class="col-md-12" style="text-align:center">
+                                    <button type="button" class="btn primary save_ic" id="viewCreatedVeec">YES</button>
+                                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                                </div>
+                                <div class="col-md-12" style="text-align:center;margin-top:15px">
+                                    <button type="button" class="btn primary save_ic" id="createAnotherVeec">Create another veec</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+        <!-- /.modal -->
+    </section>
+    <!-- wrapper end -->
+
+</div>
+<footer id="footer">
+    <div class="content-wrapper">
+        <p class="copyright">Copyright &copy; 2019 Emerging Energy</p>
+        @*<a href="../JobDocuments/terms/Terms.and.Conditions.Updated.7.09.17.pdf" target="_blank">Terms and conditions</a>*@
+        @if (ProjectSession.UserTypeId == 4)
+        {
+            @*<a href="@Url.Action("SCA", "TermsAndConditions")" target="_blank">Terms and conditions</a>*@
+            <a href="../TermsAndConditions/SCA" target="_blank">Terms and conditions</a>
+        }
+    </div>
+</footer>
+<!-- End Content -->
+@if (ViewBag.IsKendo == true)
+{
+    <script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+}
+@RenderSection("scripts", required: false)
+<script type="text/javascript">
+
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize';
+        var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+        var MaxLogoSize = '@FormBot.Helper.ProjectSession.MaxLogoSize';
+        var userList;
+        var resellerList;
+        var solarCompanyList;
+
+    var urlCreateJobPopup = '@Url.Action("CreateJobPopup", "job")',
+        urlIndexJob = '@Url.Action("Index", "Job", new { id = UrlParameter.Optional })',
+        Sessiontimeout = @ProjectConfiguration.Sessiontimeout,
+        ProjectSession_Logo = '@ProjectSession.Logo',
+        ProjectSession_Theme = '@ProjectSession.Theme',
+        ProjectSession_UserTypeId = '@ProjectSession.UserTypeId',
+        ProjectSession_IsUserFSA = '@ProjectSession.IsUserFSA',
+        ProjectSession_SiteUrlBase = '@ProjectSession.SiteUrlBase',
+        ProjectSession_ResellerId = '@ProjectSession.ResellerId',
+        ProjectSession_SolarCompanyId = '@ProjectSession.SolarCompanyId',
+        ProjectSession_LoggedInUserId = '@ProjectSession.LoggedInUserId',
+
+        URLJobData = '@ProjectSession.LoginLink' + "Job/GetData",
+        urllivesearch = '@Url.Action("SearchMultipleFilter", "Job")';
+        urlCreateVEECPopup = '@Url.Action("CreateVEECPopup", "VEEC")',
+        urlIndexVEEC = '@Url.Action("Index", "VEEC", new { id = UrlParameter.Optional })';
+        var ProjectSession_SystemUserType = '@ProjectSession.SystemUserType',
+            ProjectSession_SystemUsersOfUserType= '@ProjectSession.SystemUsersOfUserType'
+        ProjectSession_SystemReseller= '@ProjectSession.SystemReseller',
+            ProjectSession_SystemSolarCompanyByReseller = '@ProjectSession.SystemSolarCompanyByReseller';
+    var urlGetResetFlag = '@Url.Action("GetResetPwdFlag", "Account")';
+    var getNotificationURL = '@Url.Action("GetNotifications","JobSetting",new { area = ""})?dt=';
+    var sessionIsResetPwd = '@ProjectSession.IsresetPwd';
+    var logOutURL = '@Url.Action("Logout","Account")';
+    var forgotPasswordURL = '@Url.Action("ForgotPassword", "Account")';
+    var setSnackbarSessionURL = '@Url.Action("SetsnackbarSession", "JobSetting")?SnackbarId=';
+    var urlFormBotHeplPage = '@System.Configuration.ConfigurationManager.AppSettings["FormBotInformationPageUrl"]';
+    var urlGetNotificationCount = '@Url.Action("GetNotificationCount", "User")';
+    var urlGetNotificationList = '@Url.Action("GetNotificationList", "User")';
+    var urlRemoveNotification = '@Url.Action("RemoveNotification", "User")'
+    @*function SearchMultipleFilter() {
+        var search = $('#livesearchtags').val();
+
+        $.ajax({
+            type: "GET",
+            // You can use the absolute url eg www.site.com/MyControllerName/LiveTagSearch or the relative path live below
+            url: '@Url.Action("Job","SearchMultipleFilter")',
+            // Attach the value to a parameter called search
+            data: { search: search },
+            datatype: "html",
+            success: function (data) {
+                // Insert the returned search results html into the result element
+                $('#result').html(data);
+            }
+        });
+    }*@
+
+</script>
+
+@*<script async src="https://www.googletagmanager.com/gtag/js?id=UA-114902803-1"></script>*@
+
+<!-- Start of greenbot Zendesk Widget script -->
+<script id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=87bd5933-c932-4104-be87-182de1da2068"></script>
+<!-- End of greenbot Zendesk Widget script -->
+</body>
+
+</html>
+<script>
+    var LoggedInNameLength = '@FormBot.Helper.ProjectSession.LoggedInName.Length';
+    var usertypeId = '@ProjectSession.UserTypeId';
+    var IsUserFSA= '@ProjectSession.IsUserFSA';
+    $(document).ready(function () {
+        debugger;
+        if (LoggedInNameLength > 27)
+            LoggedInNameLength = 27;
+        $('#lblchangeuser').css('right', ((LoggedInNameLength * 5) + 115) + 'px');
+        $('#SearchIcon').css('right', ((LoggedInNameLength * 5) + 205) + 'px');
+        $('#Searchdiv').css('right', ((LoggedInNameLength * 5) + 215) + 'px');
+        if (usertypeId == 1 || usertypeId == 3) {
+            $('#lblhelp').css('right', ((LoggedInNameLength * 5) + 255) + 'px');
+            $('#btnHelpFormBot').css('right', ((LoggedInNameLength * 5) + 285) + 'px');
+        }
+        else if (IsUserFSA !='False') {
+            $('#lblhelp').css('right', ((LoggedInNameLength * 5) + 225) + 'px');
+            $('#btnHelpFormBot').css('right', ((LoggedInNameLength * 5) + 255) + 'px');
+        }
+        else {
+            $('#lblhelp').css('right', ((LoggedInNameLength * 5) + 115) + 'px');
+            $('#btnHelpFormBot').css('right', ((LoggedInNameLength * 5) + 145) + 'px');
+        }
+    });
+
+    function updateNotificationCount() {
+
+        $.ajax({
+            url: urlGetNotificationCount,
+            type: "GET",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                $("#notificationCount").html(data);
+            }
+        });
+    }
+
+    $("#notificationDiv").click(function () {
+
+        $.ajax({
+            url: urlGetNotificationList,
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+                $('#popupboxNotification').modal("show");
+                $("#notificationData").html(data);
+            },
+            error: function () {
+                alert("Error Getting Notification.");
+            }
+        });
+    });
+
+    $("#btnClosepopupboxNotification").click(function () {
+        $('#popupboxNotification').modal("hide");
+
+        var notificationIds = [];
+
+        $("#notesNotication li").each(function () {
+            notificationIds.push($(this).attr("notification-id"));
+        });
+
+        $.ajax({
+            url: urlRemoveNotification,
+            type: "GET",
+            datatype: "json",
+            data: {notificationIds: notificationIds.toString()},
+            success: function (data) {
+                $("#notificationCount").html("0");
+            },
+            error: function (error) {
+                alert("Somethign wrong in clearing notification")
+            }
+        });
+    });
+
+    updateNotificationCount();
+    setInterval(updateNotificationCount, 60000);
+</script>

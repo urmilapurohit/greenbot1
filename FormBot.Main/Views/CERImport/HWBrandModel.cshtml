@@ -1,0 +1,465 @@
+﻿@model FormBot.Entity.HWBrandModel
+@using FormBot.Helper;
+
+@*@Html.AntiForgeryToken()*@
+@Html.ValidationSummary(true)
+
+<div class="container-fluid">
+    <h1 class="title">SWH List</h1>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-success" id="successMessage" style="display:none;">
+                File has been imported successfully.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="failureMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("HWBrandModel", "CERImport", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-block", @style = "margin-bottom:8px;" }))
+    {
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Item:</label>
+                @Html.TextBoxFor(model => model.Item, new { @class = "form-control", @maxlength = "20" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Brand:</label>
+                @Html.TextBoxFor(model => model.Brand, new { @class = "form-control", @maxlength = "50" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Model:</label>
+                @Html.TextBoxFor(model => model.Model, new { @class = "form-control", @maxlength = "50" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Eligible From:</label>
+                @Html.TextBoxFor(model => model.EligibleFrom, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Eligible To:</label>
+                @Html.TextBoxFor(model => model.EligibleTo, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSendRequest" value="Search" class="primary search_ic">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    }
+
+    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+    {
+        <div class="row">
+            <div class="col-sm-8 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;" id="LastUpdatedAirSource">
+                    @ViewBag.AirSource
+                </div>
+            </div>
+            <div class="col-sm-3 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;">
+                    Air source heat pump models
+                </div>
+            </div>
+            <div class="col-sm-1 fco">
+                <div class="form-group">
+                    <div class="fileUpload primary upload_ic">
+                        <span>Upload</span>
+                        <input type="file" id="fileUploadAirSource" class="upload" value="Upload" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+    {
+        <div class="row">
+            <div class="col-sm-8 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;" id="Less700">
+                    @ViewBag.SolarWaterLess700L
+                </div>
+            </div>
+            <div class="col-sm-3 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;">
+                    Solar Water heater models with a capacity of less than 700L
+                </div>
+            </div>
+            <div class="col-sm-1 fco">
+                <div class="form-group">
+                    <div class="fileUpload primary upload_ic">
+                        <span>Upload</span>
+                        <input type="file" id="fileUploadLessThan" class="upload" value="Upload" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+    {
+        <div class="row">
+            <div class="col-sm-2">
+                <div class="grid_topbar">
+                    <p class="job_result" id="numRecords"></p>
+                </div>
+            </div>
+            <div class="col-sm-6 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;" id="More700">
+                    @ViewBag.SolarWaterMore700L
+                </div>
+            </div>
+            <div class="col-sm-3 fco">
+                <div class="control-label" style="text-align:right;line-height:35px;">
+                    Solar Water heater models with a capacity of more than 700L
+                </div>
+            </div>
+            <div class="col-sm-1 fco">
+                <div class="form-group">
+                    <div class="fileUpload primary upload_ic">
+                        <span>Upload</span>
+                        <input type="file" id="fileUploadMoreThen" class="upload" value="Upload" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%"><span>@Html.DisplayName("Item") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Brand")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Model") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Eligible From")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Eligible To")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Zone1 Certificates")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Zone2 Certificates")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Zone3 Certificates")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Zone4 Certificates")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Zone5 Certificates")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@Styles.Render("~/datatableCSS")
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        $(document).ready(function () {
+
+            if (@ProjectSession.UserTypeId==3) {
+                $('.fco').hide();
+            }
+
+            $('#date-pick, #date-pick1, .date-pick').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('change', function () {
+                $(this).valid();
+                $(this).removeClass('input-validation-error');
+                $(this).datepicker('hide');
+            });
+
+            $("#fileUploadAirSource").change(function () {
+                $("#successMessage").hide();
+                $("#failureMessage").hide();
+
+                var fileUpload = $("#fileUploadAirSource").get(0);
+                var files = fileUpload.files;
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    var fileData = new FormData();
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("HWBrandModelFile", "CERImport")?subType=0',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if (result[0] == "success") {
+                                $("#LastUpdatedAirSource").html(result[1]);
+                                $("#Less700").html(result[2]);
+                                $("#More700").html(result[3]);
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                Searching('', '', '', '', '');
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                        }
+                    });
+                }
+                else {
+                    $("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#successMessage").hide();
+                }
+                this.value = null;
+            });
+
+            $("#fileUploadLessThan").change(function () {
+                var fileUpload = $("#fileUploadLessThan").get(0);
+                var files = fileUpload.files;
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    var fileData = new FormData();
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("HWBrandModelFile", "CERImport")?subType=1',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if (result[0] == "success") {
+                                $("#LastUpdatedAirSource").html(result[1]);
+                                $("#Less700").html(result[2]);
+                                $("#More700").html(result[3]);
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                Searching('', '', '', '', '');
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                        }
+                    });
+                }
+                else {
+                    $("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#successMessage").hide();
+                }
+                this.value = null;
+            });
+
+            $("#fileUploadMoreThen").change(function () {
+                var fileUpload = $("#fileUploadMoreThen").get(0);
+                var files = fileUpload.files;
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    var fileData = new FormData();
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("HWBrandModelFile", "CERImport")?subType=2',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if (result[0] == "success") {
+                                $("#LastUpdatedAirSource").html(result[1]);
+                                $("#Less700").html(result[2]);
+                                $("#More700").html(result[3]);
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                Searching('', '', '', '', '');
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                        }
+                    });
+                }
+                else {
+                    $("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#successMessage").hide();
+                }
+                this.value = null;
+            });
+
+            $('#btnSendRequest').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchBrandModel();
+            });
+
+
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'Item', "orderable": true },
+                        { 'data': 'Brand' },
+                        { 'data': 'Model' },
+                        {
+                            'data': 'EligibleFrom',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                        {
+                            'data': 'EligibleTo',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                        { 'data': 'Zone1Certificates' },
+                        { 'data': 'Zone2Certificates' },
+                        { 'data': 'Zone3Certificates' },
+                        { 'data': 'Zone4Certificates' },
+                        { 'data': 'Zone5Certificates' },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetHWBrandModelList", "CERImport")',
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  HW Brand Model(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  HW Brand Model(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                }
+            });
+
+
+            $("#EligibleFrom,#EligibleTo").keydown(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                    return true;
+                }
+                else if (e.which == 46 || e.which == 8 || e.which == 9) {
+                    return true;
+                }
+                return false;
+            });
+
+            $("#Item,#Brand,#Model").keypress(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                }
+            });
+
+            $("#Item").focus();
+        });
+
+        function ResetSearchFilters() {
+            $("#Item").val('');
+            $("#Brand").val('');
+            $("#Model").val('');
+            $("#EligibleFrom").val('');
+            $("#EligibleTo").val('');
+            Searching('', '', '', '', '');
+            $("#Item").focus();
+        }
+
+        function Searching(item, brand, model, eligibleFrom, eligibleTo) {
+            var item = item;
+            var brand = brand;
+            var model = model;
+            var eligibleFrom = eligibleFrom;
+            var eligibleTo = eligibleTo;
+            var dTable = $("#datatable").dataTable();
+            var dSettings = dTable.fnSettings();
+            dSettings.sAjaxSource = '@Url.Action("GetHWBrandModelList", "CERImport")' + '?item=' + item + "&brand=" + brand + "&model=" + model + "&eligibleFrom=" + eligibleFrom + "&eligibleTo=" + eligibleTo;
+            $('#datatable').DataTable().ajax.reload();
+        }
+
+        function searchBrandModel() {
+            var item = $("#Item").val();
+            var brand = $("#Brand").val();
+            var model = $("#Model").val();
+            var eligibleFrom = $("#EligibleFrom").val();
+            var eligibleTo = $("#EligibleTo").val();
+
+            if (eligibleFrom  !='' && eligibleFrom !=undefined && eligibleFrom !=null) {
+                var tickeligibleFrom  = ConvertDateToTick(eligibleFrom , '@ProjectConfiguration.GetDateFormat');
+                eligibleFrom = moment(tickeligibleFrom).format("YYYY-MM-DD");
+            }
+
+            if (eligibleTo !='' && eligibleTo  !=undefined && eligibleTo  !=null) {
+                var tickeligibleTo  = ConvertDateToTick(eligibleTo , '@ProjectConfiguration.GetDateFormat');
+                eligibleTo = moment(tickeligibleTo).format("YYYY-MM-DD");
+            }
+
+            Searching(item, brand, model, eligibleFrom, eligibleTo);
+        }
+
+    </script>
+}

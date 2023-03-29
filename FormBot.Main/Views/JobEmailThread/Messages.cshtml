@@ -1,0 +1,754 @@
+﻿@model IEnumerable<FormBot.Entity.Email.EmailThread>
+@using System.Collections.Generic
+@using FormBot.Helper
+@using System.Linq
+@using FormBot.Email
+@{
+    string loggedUserEmail = string.Empty;
+    if (ViewBag.LoggedUserEmail != null)
+    {
+        loggedUserEmail = ViewBag.LoggedUserEmail;
+    }
+
+    int jobId = 0;
+    jobId = ViewBag.JobId;
+    string fullDate = "";
+    Account acct = Session[Constants.sessionAccount] as Account;
+    CheckMail checkMail = new CheckMail();
+    fullDate = checkMail.DateFormattingGetDateWithoughtTimeZone(DateTime.Now);
+   }
+<style>
+#accordion{
+    /*max-height:550px;*/
+    overflow-y:auto;
+}
+
+.mCustomScrollbarDiv{
+        max-height:450px;
+    overflow-y:auto;
+}
+
+.textarea-box textarea {
+        max-height: 75px;
+    }
+    #ViewArchieved:hover {
+        text-decoration: underline;
+        text-decoration-color: #2994CC;
+    }
+    </style>
+
+
+@*@section Scripts {
+    <link href="@Url.Content("~/Content/reset.css")" rel="stylesheet" type="text/css">
+    <link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css">
+    <link type="text/css" href="@Url.Content("~/Content/jquery.mCustomScrollbar.css")" rel="stylesheet" media="all" />
+    <link href="@Url.Content("~/Content/datepicker.css")" rel="stylesheet" type="text/css">
+    <link type="text/css" rel="stylesheet" href="@Url.Content("~/Content/easy-responsive-tabs.css")" />
+    <link href="@Url.Content("~/Content/style.css")" rel="stylesheet" type="text/css">
+        }*@
+
+
+
+
+
+
+@Html.Hidden("jobId",jobId)
+@Html.Hidden("isArchived", false)
+@Html.Hidden("SubjectGroup")
+
+<div class="container-fluid message-page">
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionThread" style="display: none;margin-top:15px;margin-bottom:0px;">
+        Message moved to archived successfully.
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div> 
+    <div class="message-box">
+        <div class="col-xs-12">
+                <button id="SendnewMessage" class="primary send-message-ic pull-left" type="button" title="Send New Message">Send New Message</button>
+            <div class="input-group jobsearch">
+                <input id="Subjecttitle" type="text" placeholder="Search by title" class="form-control" maxlength="250" autofocus="true">
+                <span class="input-group-btn input-group-icon-btn">
+                    <button id="SearchMessages" class="primary search_ic" type="button" title="Search"></button>
+                </span>
+            </div>
+        </div>
+        <div class="col-xs-12 advance-search">
+            <p class="alignright">
+                <span id="AdvanceSearch" class="searchlink"><a href="javascript:void(0)" title="Advance Search">Advance Search</a> |</span><a href="javascript:void(0)" id="ViewArchieved" title="View Archive Thread">View Archive Thread</a>
+            </p>
+            <div class="row checkboxgroup" style="display:none;">
+                <div class="col-sm-1 pull-right">
+                    <div class="form-group">
+                        <input id="btnReset" value="Clear" class="default ic_reset" type="button">
+                    </div>
+                </div>
+                <div class="col-sm-4 pull-right">
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <div class="input-group">
+                                    <input type="text" placeholder="From" id="fromDate" class="form-control">
+                                    <span class="input-group-addon sprite-img date-picker"></span>
+                                </div>
+                            </div>
+                            <div class="col-xs-6 nopad">
+                                <div class="input-group">
+                                    <input type="text" placeholder="To" id="toDate" class="form-control">
+                                    <span class="input-group-addon sprite-img date-picker"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2 pull-right">
+                    <div class="form-group">
+                        @Html.DropDownList("ThreadMembers", (IEnumerable<SelectListItem>)ViewBag.ThreadMembers, "Select", new { @class = "form-control" })
+                        @*<select class="form-control">
+                            <option>Super Admin</option>
+                            <option>FCO</option>
+                            <option>Reseller</option>
+                            <option>Account Manager</option>
+                        </select>*@
+                    </div>
+                </div>
+                
+                
+            </div>
+        </div>
+
+        <div class="col-xs-12">
+            <div class="panel-group message-collapse" id="accordion" role="tablist" aria-multiselectable="true">
+                @Html.Partial("~/Views/JobEmailThread/_EmailThread.cshtml", Model)
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+
+
+
+@*<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap.min.js"></script>*@
+
+@*<link type="text/css" href="@Url.Content("~/Content/jquery.mCustomScrollbar.css")" rel="stylesheet" media="all" />*@
+@*<script type="text/javascript" src="@Url.Content("~/Scripts/jquery.mCustomScrollbar.concat.min.js")"></script>*@
+@*<script src="@Url.Content("~/Scripts/ddaccordion.js")"></script>*@
+@*<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>*@
+
+<script type="text/javascript">
+    //ddaccordion.init({
+    //    headerclass: "panel-heading",
+    //    contentclass: "collapse",
+    //    revealtype: "click",
+    //    collapseprev: true,
+    //    defaultexpanded: [],
+    //    onemustopen: true,
+    //    animatedefault: false,
+    //    persiststate: false,
+    //    toggleclass: ["", "openheader"],
+    //    togglehtml: ["prefix", "", ""],
+    //    animatespeed: "normal",
+    //    oninit: function (headers, expandedindices) {
+    //    },
+    //    onopenclose: function (header, index, state, isuseractivated) {
+    //    }
+    //});
+</script>
+<script>
+    var selectedMessageThreadId = 0;
+    var pageIndexInThread = 1;
+    //initSample();
+    $(document).ready(function () {
+        $.fn.modal.Constructor.prototype.enforceFocus = function () {//This will resolve image issue in ckeditor
+            modal_this = this
+            $(document).on('focusin.modal', function (e) {
+                if (modal_this.$element[0] !== e.target && !modal_this.$element.has(e.target).length
+                && !$(e.target.parentNode).hasClass('cke_dialog_ui_input_select')
+                && !$(e.target.parentNode).hasClass('cke_dialog_ui_input_text')) {
+                    modal_this.$element.focus()
+                }
+            })
+        };
+        var isSendMessageRights = '';
+        if (isSendMessageRights == 'false') {
+            $("#SendnewMessage").hide();
+            $(".archiveEmail").hide()
+
+            $(".send-msg-btn").hide();
+            $(".manage-attachment-btn").hide();
+            $(".upload").hide();
+        }
+        
+
+        //pageIndexInThread = 2;
+        $('#fromDate, #toDate').datepicker({
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        });
+
+        var loggedUserEmail = '@loggedUserEmail';
+        $("#emailBoxEmailId").html(loggedUserEmail);
+
+
+        function createNewElement(eleName) {
+            return $(document.createElement(eleName));
+        }
+
+        
+        $(document).on("click", "#btnReset", function () {            
+            //$("#ThreadMembers").val("");
+            $("#fromDate,#toDate,#Subjecttitle,#ThreadMembers").val("");
+            ResetPageIndex();
+            SearchMessageBasedOnCriteria();
+        });
+       
+        $(document).on("click", ".send-msg-btn", function () {
+            //$(".send-msg-btn").click(function () {
+            var messageBody = $("#txtMessageBody" + selectedMessageThreadId).val();
+            if (messageBody != '') {
+                messageBody = messageBody.replace(/\n/g, "<br />");
+                var selectedThread = $("#heading" + selectedMessageThreadId);
+                var senderEmail = selectedThread.attr("senderemail");
+                var receiverEmail = selectedThread.attr("receiveremail");
+                var senderName = selectedThread.attr("senderName");
+                var receiverName = selectedThread.attr("receiverName");
+                var subject = selectedThread.find("a span.subject").text();
+                var attachmentObject = [];
+                var toEmail = "";
+                var collapseDiv = "#collapse" + selectedMessageThreadId;
+                var selectedFiles = $(collapseDiv + " .footerChatBoxClass ul.attachment-ber li.attachmentList .remove_attach");
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({ GeneratedName: tmp_name, FileName: filename });
+                }
+
+                if (senderEmail == loggedUserEmail || receiverEmail == loggedUserEmail) {
+                    if (senderEmail == loggedUserEmail) {
+                        toEmail = receiverEmail;
+                    } else {
+                        toEmail = senderEmail;
+                    }
+
+                    $("#loading-image").show();
+
+                    var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                    var data = JSON.stringify({ "From": "", "To": toEmail, "Cc": "", "Bcc": "", "Subject": subject, "Body": { "body": messageBody }, "Attachment": "", "IsSave": "false", "Attachments": attachmentObject, SaveMailFolderId: 1, eventType: 'send' });
+                    $.ajax({
+                        url: getUrl,
+                        type: "POST",
+                        dataType: "json",
+                        data: data,
+                        async: false,
+                        processData: false,
+                        cache: false,
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (Data) {
+                            if (Data.isSuccess == false) {
+                                alert(Data.errorMessage);
+                                $("#loading-image").hide();
+                                return false;
+                            }                            
+                            var resultt;
+                            if (attachmentObject.length > 0) {
+                                $(".attachmentList").find(".remove_attach").remove();
+                                var $newUlElement = createNewElement("ul");
+                                $($newUlElement).addClass("attachment-ber");
+                                $($newUlElement).append($newUlElement.innerHTML = "<li class='attachment-title'><strong>Attachment :</strong></li>");
+                                //var $newLiElement = createNewElement("li").addClass("attachment-title");
+                                //$newLiElement.innerHTML = "<strong>Attachment :</strong>";
+                                //$newUlElement.append($newLiElement);
+                                //resultt = "<ul class='attachment-ber'><li class='attachment-title'><strong>Attachment :</strong></li>";
+
+                                //var allAttachment = $("#collapse" + selectedMessageThreadId).find(".attachment-ber .attachmentList");
+                                var allAttachment = $("#collapse" + selectedMessageThreadId).find(".footerChatBoxClass ul.attachment-ber li.attachmentList");
+
+                                for (var i = 0; i < allAttachment.length; i++) {
+                                    $($newUlElement).append(allAttachment[i].outerHTML);
+                                    //$newUlElement.append(allAttachment[i].outerHTML);
+                                    //resultt += allAttachment[i].outerHTML;
+                                }
+
+                                resultt = $newUlElement[0].outerHTML;
+                            }
+
+                            var prepareContent = "";
+                            if (senderEmail != loggedUserEmail) {
+                                prepareContent = "<li class='left-msg attachment'><h5 class='username'>" + receiverName + " Said...</h5><p>" + messageBody + "</p><p class='chat-date-time'>" + '@fullDate' + "</p>";
+                                if (attachmentObject.length > 0) {
+                                    prepareContent += resultt;
+                                }
+                            }
+                            else {
+                                prepareContent = "<li class='right-msg attachment'><h5 class='username'>" + senderName + " Said...</h5><p>" + messageBody + "</p><p class='chat-date-time'>" + '@fullDate' + "</p>";
+                                if (attachmentObject.length > 0) {
+                                    prepareContent += resultt;
+                                }
+                            }
+
+                            prepareContent += "</li>";
+                            var selectedElement = $(".EmailThreadId" + selectedMessageThreadId);
+                            $(selectedElement.find("ul.chat-block")).append(prepareContent);
+
+                            $(".chat-text-box .attachmentList").remove();
+                            $("#txtMessageBody" + selectedMessageThreadId).val("");
+                            //if ($('.mCustomScrollbarDiv'))
+                            //    $('.mCustomScrollbarDiv').mCustomScrollbar();
+                        }
+                    });
+                    $("#loading-image").hide();
+                    return true;
+                }
+            } else {
+                alert('Please enter your message.');
+            }
+        });
+
+            $(document).on("click", ".manage-attachment-btn", function () {
+            $(".uploadFile").click();
+        });
+
+            $(document).on("change", ".uploadFile", function () {
+
+            $("#loading-image").show();
+            //$("#uploadBtn").change(function () {
+            var fileInput = document.getElementsByClassName('uploadFile')[0];
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+
+            var uploadedFileName = fileInput.files[0].name;
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })', true);
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var uploadedResult = JSON.parse(xhr.response);
+                    var tmp_name = uploadedResult.tmp_name;
+                    var uploadedFullPath = uploadedResult.filenameWithFullPath;
+                    var result = "<li class='attachmentList'><a href='@(Url.Action("DownloadFileFromTheServer", "Email", new { area = "Email" }))?fileFullPath=" + uploadedFullPath + "&file_name=" + tmp_name + "'><img class='mCS_img_loaded' src='@(FormBot.Helper.ProjectConfiguration.ProjectImagePath)Images/attach_document.png' alt=''>" + uploadedFileName + "</a><a class='remove_attach' href='javascript:void(0)' data-tmpname='" + tmp_name + "' data-filename='" + uploadedFileName + "'></a>";
+                    var collapseDiv = "#collapse" + selectedMessageThreadId;
+                    $(collapseDiv + " .footerChatBoxClass ul.attachment-ber").append(result);
+                }
+                $("#loading-image").hide();
+                return true;
+            }
+            return false;
+        });
+
+        $("#uploadFileFromSendNewMessage").unbind("change").change(function (e) {
+            //e.stopImmediatePropagation();            
+            var fileInput = document.getElementById('uploadFileFromSendNewMessage');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var tmp_name = JSON.parse(xhr.response);
+                    tmp_name = tmp_name.tmp_name;
+                    var result = "<tr class='success' data-tmpname='" + tmp_name + "' data-filename='" + fileInput.files[0].name + "'><td>" + fileInput.files[0].name + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                    $("#tblSelectedFile").append(result);
+                }
+            }
+            return false;
+        });
+
+        $(document).on("click", "#uplDoc", function () {
+            alert("Clicked")
+            return false;
+            //emailDocumentPopup
+        })
+
+        $(document).on("click", ".attachmentclose", function () {
+            $(this).parent().parent().remove();
+        });
+
+        $(document).on("click", ".remove_attach", function () {
+            $(this).parent("li").remove();
+        });
+
+        //$("#AdvanceSearch a").click(function () {
+        //    $(".checkboxgroup").slideToggle();
+        //});
+
+        $("#SearchMessages").click(function () {
+            ResetPageIndex();
+            SearchMessageBasedOnCriteria();
+            if ($("#accordion").find("div.panel").length == 0) {
+
+            }
+        });
+
+        function ResetPageIndex() {
+            //pageIndexInThread = 1;
+            $("#accordion").empty();
+            $("#accordion").scroll(0, 0);
+        }
+
+        $(document).on("click", "#ViewArchieved", function () {
+        //$("#ViewArchieved").click(function () {
+            ResetPageIndex();
+            if ($("#isArchived").val().toLowerCase() == 'false') {
+                $("#isArchived").val(true);
+                $("#ViewArchieved").text("View UnArchived Thread");
+            } else {
+                $("#isArchived").val(false);
+                $("#ViewArchieved").text("View Archived Thread");
+            }
+
+            SearchMessageBasedOnCriteria();
+        });
+
+        $(document).on("click", ".message-close", function (event) {
+            event.stopPropagation();
+            var emailThreadId = $(this).attr("Emailthreadid");
+            var getUrl = '@Url.Action("ArchiveMessage", "JobEmailThread", new { area = "" })';
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                data: { "emailThreadId": emailThreadId },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    if (Data.IsArchived) {
+                        $(".panelForSection" + emailThreadId).remove();
+                        SearchMessageBasedOnCriteria();
+                        //alert("Message moved to archived successfully.");
+                        $(".alert").hide();
+                        $("#successMsgRegionThread").show();
+                      
+                    }
+                }
+            });
+
+        });
+
+        $('#Subjecttitle').keypress(function (e) {
+            if (e.which == 13) {//Enter key pressed
+                ResetPageIndex();
+                SearchMessageBasedOnCriteria();
+            }
+        });
+
+        $("#SendMail").click(function () {            
+            var flag = true;
+            var toEmailArray, ccEmailArray, bccEmailArray;
+
+            if ($("#JobWiseUsers").val() == "") {
+                alert('"Send To" field is required.');
+                return false;
+
+            }
+
+            if ($("#ToMail").val() == '') {
+                alert('You cannot leave "To" field blank.');
+                flag = false;
+            } else {
+                toEmailArray = CreateCommaSeparetedArray($("#ToMail").val());
+                flag = validateForm(toEmailArray, 'The specified email address for "To" is invalid.');
+            }
+
+            if (flag == true && $("#SubjectMail").val() == "") {
+                flag = false;
+                alert("Subject is required.");
+            }
+            var toMail = $("#ToMail").val();
+            if (flag) {
+                var Subject = $("#SubjectMail").val();
+                var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                var attachmentObject = [];
+                var selectedFiles = $("#tblSelectedFile tr");
+
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({ GeneratedName: tmp_name, FileName: filename });
+                }
+                $("#SendMail").hide();
+                //$("#loading-image").show();
+                var data = JSON.stringify({ "From": "", "To": toMail, "Cc": "", "Bcc": "", "Subject": Subject, "Body": { "body": CKEDITOR.instances['editor'].getData() }, "Attachment": "", "IsSave": "false", "Attachments": attachmentObject, SaveMailFolderId: 1, eventType: 'send'});
+                $.ajax({
+                    url: getUrl,
+                    type: "POST",
+                    dataType: "json",
+                    data: data,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data.isSuccess == false) {
+                            $("#SendMail").show();
+                            //$("#loading-image").hide();
+                            alert(Data.errorMessage);
+                            return false;
+                        }
+
+                        var JobId = $("#jobId").val();
+                        var SubjectGroup = $("#SubjectGroup").val();
+                        var receivername;
+                        if ($("#JobWiseUsers").val() != 'other' && $("#JobWiseUsers").val() != '') {
+                            receivername = $("#JobWiseUsers option:selected").text();
+                        } else {
+                            receivername = toMail;
+                        }
+                        
+                        var getUrl = '@Url.Action("CreateJobEmailThread", "JobEmailThread", new { area = "" })';
+                        $.ajax({
+                            url: getUrl,
+                            type: "GET",
+                            data: { "JobId": JobId, "Receiver": receivername, "ReceiverEmail": toMail, "SubjectGroup": SubjectGroup, "Subject": Subject },
+                            cache: false,
+                            async: true,
+                            success: function (Data) {
+                                //$("#accordion").prepend(Data);
+                                //if ($('.mCustomScrollbarDiv'))
+                                //    $('.mCustomScrollbarDiv').mCustomScrollbar();
+                                //$("#loading-image").hide();
+                                $("#ToMail").val("");
+                                $("#SubjectMail").val("");
+                                CKEDITOR.instances['editor'].setData("");
+
+                                $(".newEmailCloseThread").click();
+                                $("#SearchMessages").click();
+                            }
+                        });
+
+                        
+                        //$(".newEmailCloseThread").click();
+                    }
+                });
+            }
+        });
+
+        $(document).on("click", ".newEmailCloseThread", function () {
+            //$(".newEmailClose").click(function () {
+            $("#tblSelectedFile tr").remove();
+            $("#ToMail").val("");
+            CKEDITOR.instances['editor'].setData("");
+            $("#JobWiseUsers").val("");
+            $("#FormGroupToMail").hide();
+            $('#emailboxThread').modal("hide");
+            //$("#SendMail").show();
+            //$("#SendMail").removeClass("ui-state-disabled");
+        });
+
+        function CreateCommaSeparetedArray(element) {
+            var x = element;
+            x = x.replace(/,/g, ";");
+            var emailList = x.trim().replace(/(^;)|(;$)/g, "").split(";");
+            emailList = cleanArray(emailList);
+            return emailList;
+        }
+
+        function cleanArray(actual) {
+            var newArray = new Array();
+            for (var i = 0; i < actual.length; i++) {
+                if (actual[i]) {
+                    newArray.push(actual[i]);
+                }
+            }
+            return newArray;
+        }
+
+        function validateForm(emailList, message) {
+            var flag = true;
+            var testing;
+            emailList.forEach(function (i, j) {
+                var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+                testing = i.trim();
+                if (filter.test(testing)) {
+                }
+                else {
+                    flag = false;
+                }
+            });
+
+            if (flag == false) {
+                alert(message);
+            }
+
+            if (emailList.length > 1) {
+                alert('Only one email address is allowed.');
+                flag = false;
+            }
+
+            return flag;
+        }
+
+        $(document).on("click", ".clsEmailDoc", function () {            
+            if($(this).prop("checked") == true)
+            {
+                var fullpath = $(this).attr("data-path");
+                var fileName = $(this).attr("data-name");
+                if (fullpath != "" && fullpath != null && fullpath != undefined) {
+                    var getUrl = '@Url.Action("SaveJobDocumentInTempFolder", "Job", new { area = "" })';
+                    $.ajax({
+                        url: getUrl,
+                        type: "GET",
+                        dataType: "json",
+                        data: { fileFullPath: fullpath },
+                        async: false,
+                        cache: false,
+                        success: function (Data) {
+                            if (Data.TempFileName != '' && Data.TempFileName != null && Data.TempFileName != undefined && Data.TempFileName.length > 0) {
+                                var result = "<tr class='success' data-tmpname='" + Data.TempFileName + "' data-filename='" + fileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFile").append(result);
+                            }
+                            else {
+                                alert("File not found from specific path");
+                            }
+                            $(".clsEmailDoc").attr('checked', false);
+                        }
+                    });
+                }
+                else {
+                    alert("File not found from specific path");
+                    return false;
+                }
+               
+            }
+        });
+
+        @*$(document).on("click", ".check_header", function () {
+            if ($(this).prop("checked") == true) {
+                var fullpath = $(this).attr("data-path");
+                var fileName = $(this).attr("data-name");
+                var getUrl = '@Url.Action("SaveJobDocumentInTempFolder", "Job", new { area = "" })';
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    data: { fileFullPath: fullpath },
+                    async: false,
+                    cache: false,
+                    success: function (Data) {
+                        var result = "<tr class='success' data-tmpname='" + Data.TempFileName + "' data-filename='" + fileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                        $("#tblSelectedFile").append(result);
+                    }
+                });
+
+
+            }
+        });*@
+
+        
+        $("#SendnewMessage").click(function () {
+            var randomString = 'FB'+$("#jobId").val()+"_" + makeid().toUpperCase() + new Date().getUTCMilliseconds().toString().toUpperCase();
+            $("#SubjectGroup").val(randomString);
+            $("#SubjectMail").val("[" + randomString + "] ");
+            $("#SendMail").show();
+
+            $("#div_EmailDoc").html("");
+            var getUrl = '@Url.Action("GetJobDocumentsForEmailAttachment", "Job", new { area = "" })';
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                dataType: "json",
+                data: {jobId:$("#jobId").val()},
+                async: false,                
+                cache: false,                
+                success: function (Data) {
+                    
+                    if (Data.lstEmailDocuments != null && Data.lstEmailDocuments.length > 0) {
+                        //var tabDoc = '<table class="table table-hover"><thead><tr><th class="checkbox-col"><input type="checkbox" value="" name="" class="check_header"></th><th>Document Name</th></tr></thead><tbody>';
+                        var tabDoc = '<table class="table table-hover"><thead><tr><th class="checkbox-col">&nbsp</th><th>Document Name</th></tr></thead><tbody>';
+                        var row = '';
+                        $.each(Data.lstEmailDocuments, function (i, item) {
+                            row = '<tr>' + '<td class="checkbox-col"><input type="checkbox" value="" name="" class="clsEmailDoc" data-path="' + item.strDocumentPath + '" data-name="' + item.DocumentPath + '"></td>' + '<td>' + item.DocumentPath + '</td>' + '</tr>'
+                            tabDoc += row;
+                        });
+                        tabDoc += '</tbody></table>';
+                        $("#div_EmailDoc").append(tabDoc);
+
+                    }
+                    else {
+                        $("#div_EmailDoc").append("No documents found");
+                    }
+                    $('#emailboxThread').modal({ backdrop: 'static', keyboard: false });
+                }
+            });
+
+            
+        });
+
+        function makeid()
+        {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+            for( var i=0; i < 5; i++ )
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+            return text;
+        }
+
+        $("#ToMail").keypress(function (event) {
+            if (event.which == 44) {
+                event.preventDefault();
+                $(this).val($(this).val() + ";");
+            }
+
+            if (event.which == 9) {
+                $(this).val($(this).val().replace(",", ";"));
+            }
+        });
+
+        $("#ToMail").blur(function (event) {
+            $(this).val($(this).val().replace(/,/g, ";"));
+        });
+
+        $("#JobWiseUsers").change(function () {
+            if ($(this).val() == 'other') {
+                $("#ToMail").val("");
+                $("#FormGroupToMail").show();
+            } else {
+                $("#ToMail").val($(this).val());
+                $("#FormGroupToMail").hide();
+            }
+        });
+
+
+        //$("#accordion").on("scroll", function (e) {
+        //    var $o = $(e.currentTarget);
+
+        //    if ($("#accordion").hasScrollBar()) {
+        //        if ($o[0].scrollHeight - $o.scrollTop() <= $("#accordion").height()) {
+        //            SearchMessageBasedOnCriteria();
+        //        }
+        //    }
+        //});
+
+        //(function ($) {
+        //    $.fn.hasScrollBar = function () {
+        //        return this.get(0).scrollHeight > this.height();
+        //    }
+        //})(jQuery);
+    });
+
+    // search_filter
+    $(".searchlink").click(function () {
+        $(".checkboxgroup").slideToggle();
+        //e.preventDefault();
+    });
+    //jQuery('document').ready(function () {
+    //    jQuery('#accordion').on('show hide', function () {
+    //        jQuery(this).css('height', 'auto');
+    //    });
+    //    jQuery('#accordion').collapse({ parent: true, toggle: true });
+    //});
+</script>

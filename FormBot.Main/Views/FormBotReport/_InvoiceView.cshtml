@@ -1,0 +1,890 @@
+﻿@model FormBot.Entity.FormBotReport
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    Layout = null;
+}
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label class="control-label">Date Range:</label>
+        <div class="btn-group btn-group-justified" role="group" id="DateGroups">
+            <div class="btn-group" role="group">
+                <button onclick="setLBD();" type="button" class="btn btn-default" tabindex="2">LBD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button onclick="setMTD();" type="button" class="btn primary" tabindex="3">MTD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setPM();" tabindex="4">PM</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setCFY();" tabindex="5">CFY</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="set12M();" tabindex="6">12M</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">Start Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">End Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Invoice Type:</label>
+                <div class="input-group">
+                    @Html.DropDownListFor(m => m.InvoiceType, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Job Invoicing", Value = "1" },
+                                        new SelectListItem{ Text="STC Invoicing", Value = "2" },
+                                     }, new { @class = "form-control" }
+                            )
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" id="invoiceModeRow">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Invoice Mode:</label>
+                <div class="input-group">
+                    @Html.DropDownListFor(m => m.InvoiceMode, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Incoming Invoices", Value = "1" },
+                                        new SelectListItem{ Text="Outgoing Invoices", Value = "2" },
+                                        new SelectListItem{ Text="Both", Value = "3" },
+                                     }, new { @class = "form-control" }
+                            )
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5)
+    {
+
+    }
+    else
+    {
+        <div class="row restrictionRow">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Filters:</label>
+                    <div class="rep-list">
+                        <ul>
+                            @if (ProjectSession.UserTypeId != 2 && ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 9 && ProjectSession.UserTypeId != 10)
+                            {
+                                <li><a href="javascript:void(0);" id="ResellerID" onclick="Reseller();">Reseller<span id="cntResellers">0</span></a></li>
+                            }
+                            @if (ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 9 && ProjectSession.UserTypeId != 10)
+                            {
+                                <li class="liSTCInvoice"><a href="javascript:void(0);" id="UserID" onclick="SCAUsers();">Solar Company<span id="cntUsers">0</span></a></li>
+                            }
+                            @if (ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 9 && ProjectSession.UserTypeId != 10)
+                            {
+                                <li class="liSTCInvoice"><a href="javascript:void(0);" id="SSCUser" onclick="SSCUser();">SSC Users<span id="cntSSC">0</span></a></li>
+                            }
+                            @if (ProjectSession.UserTypeId != 9 && ProjectSession.UserTypeId != 10)                            
+                            {
+                                <li class="liSTCInvoice"><a href="javascript:void(0);" id="SEUser" onclick="SEUser();">SE Users<span id="cntSE">0</span></a></li>
+                            }
+                            @if (ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 10)
+                            {
+                                <li class="liSTCInvoice"><a href="javascript:void(0);" id="SCUser" onclick="SCUser();">SC Users<span id="cntSC">0</span></a></li>
+                            }
+                            @if (ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 9)
+                            {
+                                <li class="liSTCInvoice"><a href="javascript:void(0);" id="SWHUser" onclick="SWHUser();">SWH Users<span id="cntSWH">0</span></a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Invoice Status:</label>
+                <div class="rep-list">
+                    <ul>
+                        <li><a href="javascript:void(0);" id="StatusID" onclick="InvoiceStatus();">Status<span id="cntStatus">0</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="creditNoteRow" style="display:none">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Credit Note:</label>
+                <div class="rep-list">
+                    @Html.RadioButtonFor(m => m.IsCreditNote, "True") Included
+                    @Html.RadioButtonFor(m => m.IsCreditNote, "False") Not Included
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rep-btn">
+        <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+        <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+            <span class="sprite-img reset_ic"></span>
+            <input type="button" id="btnReset" value="Reset Filters" class="">
+        </div>
+        </div>
+</div>
+
+
+<div class="modal fade" id="popupReseller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeResellers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Reseller</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="ResellerUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_Reseller", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header">
+                <button type="button" class="close" id="closeUsers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SolarCompany", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSSC">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SSC Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSSC">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SSCView", "FormBotReport", new { id = "6" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSE" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSE">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SE Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSE">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SEView", "FormBotReport", new { id = "7" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSWH" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSWH">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SWH Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSWH">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SWHView", "FormBotReport", new { id = "10" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSC">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SC Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSC">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SCView", "FormBotReport", new { id = "9" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupStatus" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeStatus">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Invoice Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableStatus">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_InvoiceStatus", "FormBotReport", new { id = "9" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function Reseller() {
+        $('#popupReseller').modal({ backdrop: 'static', keyboard: false });
+        $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+    }
+
+    function SCAUsers() {
+        $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+    }
+
+    function SSCUser() {
+        $('#popupSSC').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSSC').html($('#LstSSCAssignedUser option').length);
+    }
+
+    function SEUser() {        
+        $('#popupSE').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSE').html($('#LstSEAssignedUser option').length);
+    }
+
+    function SCUser() {
+        $('#popupSC').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSC').html($('#LstSCAssignedUser option').length);
+    }
+
+    function SWHUser() {
+        $('#popupSWH').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSWH').html($('#LstSWHAssignedUser option').length);
+    }
+
+    function InvoiceStatus() {
+        $('#popupStatus').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableStatus').html($('#LstStatusAssignedUser option').length);
+
+    }
+    var columnsArray = [];
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    $(document).ready(function () {
+
+
+
+        $('#txtFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtToDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtToDate').data('datepicker')) {
+                $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtToDate').change(function () {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+            var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+            if (fromDate > toDate) {
+                $("#errorMsgRegion").removeClass("alert-success");
+                $("#errorMsgRegion").addClass("alert-danger");
+                $("#errorMsgRegion").html(closeButton + "Start date must be before end date.");
+                $("#errorMsgRegion").show();
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                $('#btnJobStatusBarReport').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }
+        });
+
+        $('#SCABit').val('0');
+        $('#ResellerBit').val('0');
+        $('#SEBit').val('0');
+        $('#SWHBit').val('0');
+        $('#SCBit').val('0');
+        $('#SSCBit').val('0');
+
+        $('#btnResellerSave,#btnUserSave,#btnSSCSave,#btnSESave,#btnSWHSave,#btnSCSave').mouseup(function (e) {
+            setTimeout(function () {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }, 500);
+        });
+
+        setMTD();
+
+        $("select[name='InvoiceType']").on('change', function () {
+            if (this.value == 2) {
+                $(".liSTCInvoice").hide();
+                $("#invoiceModeRow").hide();
+                $("#creditNoteRow").show();
+            }
+            else {
+                $(".liSTCInvoice").show();
+                $("#invoiceModeRow").show();
+                $("#creditNoteRow").hide();
+            }
+        });
+
+        $('#cntSE').html($('#LstSEAssignedUser option').length);
+        $('#cntSC').html($('#LstSCAssignedUser option').length);
+        $('#cntSWH').html($('#LstSWHAssignedUser option').length);
+    });
+    $("#DateGroups").on("click", "button", function () {
+        $('#DateGroups').each(function () {
+            $(this).find('button').each(function () {
+                $(this).removeClass("primary");
+                $(this).addClass("btn-default");
+            });
+        });
+
+        $(this).addClass("primary");
+        $(this).removeClass("btn-default");
+    });
+
+    function setMTD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - (d.getDate() - 1));
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setPM() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - (d1.getDate()));
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setCFY() {
+        removeStartDate();
+
+        var d2 = new Date();
+        var d = new Date(d2.getFullYear(), d2.getMonth(), "1");
+        d.setDate(1);
+
+        if (d2.getMonth() < 7) {
+            d.setYear(d.getFullYear() - 1);
+            d.setMonth(6);
+        } else {
+            d.setMonth(6);
+        }
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function set12M() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setYear(d.getFullYear() - 1);
+        d.setDate(d.getDate() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function removeStartDate() {
+        var d = new Date();
+        d.setDate(d.getDate() - 730);
+        $('#txtToDate').data('datepicker').setStartDate(d);
+    }
+
+    function setLBD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+
+        $("#txtFromDate").val(fDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").val(fDate);
+        $("#txtToDate").datepicker("update", fDate);
+    }
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetInvoiceReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+
+                if (result != "") {
+                    result = $.parseJSON(result);
+                    $('#divGrid').show();
+                    BindGrid(result);
+                    if (result.length > 0) {
+                        BindChart(result);
+                        $('#chartbox').show();
+                    } else { $('#chartbox').hide(); }
+                } else {
+                    $('#divGrid').show();
+                    BindGrid('');
+                    $("#chartbox").hide();
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result) {
+        if ($('#datatable')) {
+            var table = $('#datatable').DataTable();
+            table.destroy();
+        }
+        var tableHeaders = '';
+        var tableColumns = [];
+        //report 5
+        if ($('#ReportID').val() == 8) {
+            tableColumns.push("Total Invoice");
+            tableColumns.push("Bills Paid");
+            tableColumns.push("Partial Payment");
+            tableColumns.push("Payable Outstanding");
+            tableColumns.push("Total Amount Paid");
+            tableColumns.push("Total Amount Remaining");
+            tableColumns.push("Total Amount");
+        }
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th>" + val + "</th>";
+        });
+        $("#displayTable").empty();
+        $("#displayTable").append('<table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead>');
+
+        getColumn($('#ReportID').val());
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            retrieve: true,
+            columns: columnsArray,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    footer: true
+                }
+            ],
+            order: [[1, "asc"]],
+            footerCallback: function (row, data, start, end, display) {
+                var api = this.api(), data;
+                var intVal = function (i) {
+                    return typeof i === 'string' ?
+                        i * 1 :
+                        typeof i === 'number' ?
+                        i : 0;
+                };
+            }
+        });
+        $('#datatable_length').hide();
+        $('#datatable_info').hide();
+        $('#datatable tr th').attr('class', 'sorting_disabled table-header dt-right');
+        if (result.length > 0) {
+            $('#datatable th:first').attr('style', 'width:20% !important;text-align:left !important;');
+            $('#datatable td:first-child').attr('style', 'width:20% !important;text-align:left !important;');
+            $('#datatable tr td').attr('class', 'dt-right');
+        }
+        $('.buttons-excel').addClass('primary pull-right');
+        $('.buttons-excel').html('<span>Export to Excel</span>');
+    }
+
+
+
+    function getColumn(id) {
+        if (id == 8) {
+            columnsArray = [
+               {
+                   'data': 'TotalInvoice',
+                   "orderable": false
+               },
+                {
+                    'data': 'BillsPaid',
+                    "orderable": false,
+                    'render': function (data, type, full, meta) {
+                        return "<p style='color:green;'>" + full.BillsPaid + '</p>';
+                    },
+                },
+                {
+                    'data': 'PartialPayment',
+                    "orderable": false,
+                    'render': function (data, type, full, meta) {
+                        return "<p style='color:red;'>" + full.PartialPayment + '</p>';
+                    },
+                },
+                {
+                    'data': 'PayableOutstanding',
+                    "orderable": false
+                },
+               {
+                   'data': 'Payment',
+                   "orderable": false,
+                   'render': function (data, type, full, meta) {
+                       return PrintDecimal(full.Payment);
+                   },
+               },
+                {
+                    'data': 'Remaning',
+                    "orderable": false,
+                    'render': function (data, type, full, meta) {
+                        return PrintDecimal(full.Remaning);
+                    },
+                },
+                 {
+                     'data': 'TotalAmount',
+                     "orderable": false,
+                     'render': function (data, type, full, meta) {
+                         return PrintDecimal(full.TotalAmount);
+                     },
+                 }
+            ];
+        }
+    }
+
+    //charts
+    function BindChart(resultData) {
+        var groupedData = {};
+        var xAxis = ['xAxis', 'Invoice Status'];
+        var data1 = ['Paid', resultData[0].PaidInFull];
+        var data2 = ['Partial', resultData[0].TotalPartialPayment];
+        var data3 = ['PartialPaid', resultData[0].PartialPaidPayment];
+        var data4 = ['Outstanding', resultData[0].Outstanding];
+        var dataGroup = ['Partial', 'PartialPaid'];
+        var chartType = $('#drdChartType').val();
+        var result = [];
+        result.push(xAxis);
+        result.push(data1);
+        result.push(data2);
+        result.push(data3);
+        result.push(data4);
+        $('#chartbox').css('display', 'block');
+        chartdiv = c3.generate({
+            data: {
+                columns: result,
+                type: 'bar',
+                x: 'xAxis'
+                , groups: [dataGroup]
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            }
+        });
+    }
+
+    $(document).ready(function (e) {
+        $('#StatusBit').val('4');
+        $('#SCABit').val('0');
+        $('#ResellerBit').val('0');
+        $('#SEBit').val('0');
+        $('#SWHBit').val('0');
+        $('#SCBit').val('0');
+        $('#SSCBit').val('0');
+
+        $('#btnResellerSave,#btnUserSave,#btnSSCSave,#btnSESave,#btnSWHSave,#btnSCSave').mouseup(function (e) {
+            setTimeout(function () {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }, 500);
+        });
+    });
+
+    function ResetSearchFilters() {
+        $('#cntResellers').html('0');
+        $('#hdnResellers').val('');
+        $('#cntUsers').html('0');
+        $('#hdnUsers').val('');
+        $('#cntSSC').html('0');
+        $('#hdnSSC').val('');
+        $('#cntSE').html('0');
+        $('#hdnSE').val('');
+        $('#cntSWH').html('0');
+        $('#hdnSWH').val('');
+        $('#cntSC').html('0');
+        $('#hdnSC').val('');
+        $("#cntStatus").html(0);
+        $('#hdnStatus').val('');
+
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+
+        $('#LstSEAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSE");
+        });
+
+        $('#LstSWHAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSWH");
+        });
+
+        $('#LstSCAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSC");
+        });
+
+        $('#LstSSCAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSSC");
+        });
+
+        $('#LstStatusAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstStatus");
+        });
+
+        document.getElementById('ResellerID').style.pointerEvents = 'auto';
+        $('#ResellerID').css('opacity', '1');
+
+        document.getElementById('UserID').style.pointerEvents = 'auto';
+        $('#UserID').css('opacity', '1');
+
+        document.getElementById('SCUser').style.pointerEvents = 'auto';
+        $('#SCUser').css('opacity', '1');
+
+        document.getElementById('SEUser').style.pointerEvents = 'auto';
+        $('#SEUser').css('opacity', '1');
+
+        document.getElementById('SWHUser').style.pointerEvents = 'auto';
+        $('#SWHUser').css('opacity', '1');
+
+        document.getElementById('SSCUser').style.pointerEvents = 'auto';
+        $('#SSCUser').css('opacity', '1');
+
+        document.getElementById('StatusID').style.pointerEvents = 'auto';
+        $('#StatusID').css('opacity', '1');
+
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+        $("select[name='InvoiceType']").val('1').trigger("change");
+        $("select[name='InvoiceMode']").val('1').trigger("change");
+    }
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 1px solid #ddd !important;
+    }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+</style>

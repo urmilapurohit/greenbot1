@@ -1,0 +1,1112 @@
+﻿@model FormBot.Entity.JobList
+@using FormBot.Helper;
+@{
+    ////Todo
+    bool isSTCAssignToCompliance = false;
+    bool isSTCExportCSV = false;
+    bool isSTCSendToXero = false;
+    bool isSTCCreateInRec = false;
+    bool isAllScaJobView = false;
+    bool isShowOnlyAssignJobsSCO = false;
+    bool isEditColumns = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.SCOViewAssignJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.SCOViewAssignJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.ShowOnlyAssignJobsSCO.GetHashCode()) { isShowOnlyAssignJobsSCO = true; }
+        });
+    }
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>
+    )TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+    {
+        if (d.MenuId == (int)SystemEnums.MenuId.STCAssignToCompliance) { isSTCAssignToCompliance = true; }
+        if (d.MenuId == (int)SystemEnums.MenuId.STCExportCSV) { isSTCExportCSV = true; }
+        if (d.MenuId == (int)SystemEnums.MenuId.STCSendToXero) { isSTCSendToXero = true; }
+        if (d.MenuId == (int)SystemEnums.MenuId.STCCreateInRec) { isSTCCreateInRec = true; }
+        if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        if (d.MenuId == (int)SystemEnums.MenuId.EditColumns.GetHashCode()) { isEditColumns = true; }
+    });
+    }
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+
+    if (ViewBag.Archive == true)
+    {
+        isSTCCreateInRec = false;
+    }
+    string SpvButtonsCss = "";
+
+    //This service will provide you that, solar company is given to allow SPV flag on or off by SolarCompanyIds or JobIds.
+    /*if (ViewBag.GlobalisAllowedSPV == false)
+    {
+        SpvButtonsCss = "display:none;";
+    }*/
+}
+
+@{
+    ViewBag.Title = "STCSubmission";
+    ViewBag.IsKendo = true;
+    ViewBag.Header = ViewBag.Archive == true ? "STC Submission Archive" : "STC Submission";
+}
+
+
+@Styles.Render("~/kendoCSS")
+
+@*<link href="~/Content/style.css" rel="stylesheet" />*@
+<style>
+
+    /*.k-header {
+        padding: 0px 16px !important;
+        vertical-align: middle !important;
+    }*/
+    .k-checkbox-label {
+        padding: 0px !important;
+    }
+
+    td.toggle-btn {
+        width: 40px;
+    }
+
+    #spv-failure-reason .joblisting_search {
+        padding: 0px;
+        margin-bottom: 20px;
+        border: 0px !important;
+    }
+
+    .select2-container--open .select2-dropdown--below {
+        width: 300px !important;
+    }
+
+    #spv-failure-reason .joblisting_search .form-control {
+        height: 50px;
+        /*border: 0px;
+            background-color: transparent;*/
+    }
+
+    #btnSearchSpvFailureReason {
+        height: 50px;
+        background-position: 15px 15px;
+        width: -webkit-fill-available;
+    }
+
+    .archiveInfo {
+        font-weight: bold;
+        font-style: italic;
+        font-size: medium;
+    }
+
+    .display-block-important {
+        display: block !important;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">@ViewBag.Header</h1>
+            <div class="col-md-8">
+                <div class="form-inline pull-right">
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+
+                        if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+                        {
+                            <div class="form-group">
+                                <label for="exampleInputName2">Reseller:</label>
+                                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control wth150 mrr10" })
+                            </div>
+                        }
+                        if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                        {
+                            <div class="form-group">
+                                <label for="exampleInputEmail2">Account Manager:</label>
+                                @Html.DropDownListFor(model => model.RAMID, new List<SelectListItem>(), "Select", new { id = "RamId", @class = "form-control wth150" })
+                            </div>
+                        }
+
+                    }
+                    @*<a href="#" id="aSwitch" title="Switch between kendo grid and datatable" class="icon-btn sprite-img comparer-lg-ic pull-right" style="margin: 0 0 0 15px;"></a>*@
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (ViewBag.Archive == true)
+    {
+        <div class="archiveInfo">This screen will display jobs that have been CER approved and have been invoiced</div>
+    }
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="joblisting_search">
+        <div class="row">
+
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Solar Company :</label>
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+
+                </div>
+            }
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Job ID Number / Ref Number:</label>
+                    <input type="text" id="txtRefJobId" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="255">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Rec Code:</label>
+                    <input type="text" id="txtRecCode" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="255">
+                </div>
+
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Owner Name / Installation address:</label>
+                    <input type="text" id="txtOwnerName" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            @*<div class="col-sm-6 col-md-4 col-lg-3">comment this filter becuase no longer require
+                    <div class="form-group">
+                        <label class="control-label">Panel / Inverter details:</label>
+                        <input type="text" id="txtPanelInverterDetails" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                    </div>
+                </div>*@
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Is SPV Required:</label>
+                    @Html.DropDownList("IsSPVRequired", new List<SelectListItem>
+                                         {
+                                            new SelectListItem{ Text="All", Value = "-1" },
+                                            new SelectListItem{ Text="Yes", Value = "1" },
+                                            new SelectListItem{ Text="No", Value = "0" },
+                                         }, new { @id = "IsSPVRequired", @class = "form-control" }
+                                )
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Installation Verified:</label>
+                    @Html.DropDownList("IsSPVInstallationVerified", new List<SelectListItem>
+                                         {
+                                            new SelectListItem{ Text="All", Value = "-1" },
+                                            new SelectListItem{ Text="Verified", Value = "1" },
+                                            new SelectListItem{ Text="Verify Failed", Value = "0" },
+                                            new SelectListItem{ Text="Not Yet Verified", Value = "-2" },
+                                         }, new { @id = "IsSPVInstallationVerified", @class = "form-control" }
+                                )
+                </div>
+            </div>
+            @if (ViewBag.Archive == true)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Installation Year:</label>
+                        <select id="ddlYear" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                            @for (int i = DateTime.Now.Year; i >= ProjectConfiguration.ArchiveMinYear; i--)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Installation Address:</label>
+                    <input type="text" id="txtInstallationAddress" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>*@
+
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Submission Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSubmissionFromDate" placeholder="From" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSubmissionToDate" placeholder="To" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settlement Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettlementFromDate" placeholder="From" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettlementToDate" placeholder="To" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settlement Term :</label>
+                    @Html.DropDownListFor(model => model.DictSettlementTerm, new SelectList(Model.DictSettlementTerm, "Key", "Value"), "Select", new { id = "SettlementTermId", @class = "form-control" })
+                </div>
+            </div>*@
+
+        @*<div class="col-sm-6">
+                <div class="input-group">
+                    <label class="checkbox-inline" style="margin-right:10px;">
+                        <input type="checkbox" id="chkNotInvoiced" onclick="SetSTCInvoiceStatus()" checked>
+                        Not Yet Invoiced
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" id="chkHasBeenInvoiced" onclick="SetSTCInvoiceStatus()" checked>
+                        Has Been Invoiced
+                    </label>
+                </div>
+            </div>*@
+    </div>
+    <div class="form-group" style="margin-top:10px;">
+
+        <button type="button" id="btnSearch" class="btn primary icon-btn" onclick="SearchJobSTCRecords();">
+            Search
+            <span class="sprite-img search_ic"></span>
+        </button>
+
+
+        @*<div class="default btn icon-btn" onclick="ResetSearchFilters(true);">*@
+        <button type="button" id="btnReset" class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+            Reset <span class="sprite-img reset_ic"></span>
+        </button>
+        @*</div>*@
+
+        @if (ViewBag.Archive != true)
+        {
+            <button class="btn primary info-btn" type="button" onclick="location.href = '@Url.Action("STCSubmission","Job", new { id = "Archive" })'" style="float:right;margin-bottom:20px; @SpvButtonsCss">
+                STC Submission Archive
+            </button>
+        }
+    </div>
+</div>
+
+@*<div class="text-right">
+        @if (Model.UserTypeID == 3)
+        {
+            <button class="btn primary info-btn assign-ic" type="button" data-target="#preapprovals-modal" data-toggle="modal" onclick="AssignSelectedJobsToComplianceOfficer();">
+                Assign To Me
+            </button>
+        }
+        else if (Model.UserTypeID == 1 && isSTCAssignToCompliance)
+        {
+            <button class="btn primary info-btn assign-ic" type="button" data-target="#preapprovals-modal" data-toggle="modal" onclick="AssignSelectedJobsToComplianceOfficer();">
+                Assign To Compliance Officer
+            </button>
+        }
+    </div>*@
+
+<div class="row">
+    <div class="col-sm-8">
+
+        @if (Model.UserTypeID == 3)
+        {
+            <button class="btn primary info-btn icon-btn" type="button" data-target="#preapprovals-modal" data-toggle="modal" onclick="AssignSelectedJobsToComplianceOfficer();" style="margin-bottom:20px;">
+                Assign To Me
+                <span class="sprite-img assign-ic"></span>
+            </button>
+        }
+        else if (Model.UserTypeID == 1 && isSTCAssignToCompliance)
+        {
+            <button class="btn primary info-btn icon-btn" type="button" data-target="#preapprovals-modal" data-toggle="modal" onclick="AssignSelectedJobsToComplianceOfficer();" style="margin-bottom:20px;">
+                Assign To Compliance Officer
+                <span class="sprite-img assign-ic"></span>
+            </button>
+        }
+        @if ((Model.UserTypeID == 1 || Model.UserTypeID == 3))
+        {
+            <button class="btn primary info-btn  icon-btn" type="button" onclick="GetRecFailureReason();" style="margin-bottom:20px;">
+                Get REC Creation Status
+                <span class="sprite-img rec-registry-h-ic"></span>
+
+            </button>
+            <button class="btn primary info-btn" type="button" onclick="ResetSPVInstaller();" style="margin-bottom:20px; @SpvButtonsCss">
+                SPV Remove
+            </button>
+            <button class="btn primary info-btn" type="button" onclick="SPVReset();" style="margin-bottom:20px; @SpvButtonsCss">
+                Re-set SPV
+            </button>
+            <button class="btn primary info-btn" type="button" id="InstallationReVerify" onclick="InstallationVerifyAgain(this);" style="margin-bottom:20px; @SpvButtonsCss">
+                Re-Installation Verify
+            </button>
+
+            <button class="btn primary info-btn" type="button" onclick="GetSPVFailureReason();" style="margin-bottom:20px; @SpvButtonsCss">
+                GET SPV failure reason
+            </button>
+
+        }
+
+
+
+        @*@if (Model.UserTypeID == 1)
+            {
+                <div class="col-sm-4 fco">
+                    <div class="form-group">
+                        <div class="fileUpload primary upload_ic">
+                            <span>Upload</span>
+                            <input type="file" id="fileUpload" class="upload" value="Upload" />
+                        </div>
+                    </div>
+                </div>
+            }*@
+
+        @if (ViewBag.Archive != true && Model.UserTypeID == 1)
+        {
+            <div class="col-sm-4 fco">
+                <div class="form-group">
+                    <div class="fileUpload primary upload_ic">
+                        <span>Import BulkUploadId</span>
+                        <input type="file" id="fileUpload" class="upload" value="Upload" />
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+    <div class="col-sm-4">
+        @if (ViewBag.Archive != true && Model.UserTypeID == 1)
+        {
+
+            <a href="javascript:void(0);" onclick="BulkChangeSTCJobStage();" class="btn primary  pull-right icon-btn" title="Bulk Change STC Job Stage" style="margin:0 0px 0 15px;">
+                Bulk Change STC Job Stage
+                <span class="sprite-img payment-status--h-ic"></span>
+            </a>
+            <div class="form-group pull-right" style="margin-bottom:0px;">
+                @Html.DropDownListFor(model => model.STCJobStageID, new List<SelectListItem>(), new { id = "STCJobStageID", @class = "form-control" })
+            </div>
+
+
+        }
+    </div>
+
+</div>
+
+
+
+@*<div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+    </div>*@
+
+<div class="gridtop_filters">
+    <div class="submission-filters">
+        <span class="stage_title">Filters:</span>
+        <div class="filters-row" style="padding:0;">
+            <ul>
+                @*<li><a id="jobstage_0" href="javascript:void(0);" style="cursor:pointer; background-color: #686868;" onclick="SetStageId('0');">Show All<span>@Model.lstSTCJobStages.Sum(t => t.jobCount)</span></a></li>*@
+                @{
+                    //New Submission AS default first filter
+                    if (Model.lstSTCJobStages.Any(w => w.JobStageId == 21))
+                    {
+                        var stageModel = Model.lstSTCJobStages.Where(w => w.JobStageId == 21).FirstOrDefault();
+                        <li><a id="jobstage_@stageModel.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#686868;" onclick="SetStageId('@stageModel.JobStageId');">@stageModel.StageName<span>@stageModel.jobCount</span></a></li>
+                    }
+                }
+
+                @foreach (var stage in Model.lstSTCJobStages)
+                {
+                    if (stage.JobStageId != 21)
+                    {
+                        <li><a id="jobstage_@stage.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<span>@stage.jobCount</span></a></li>
+                    }
+                }
+                <li><a id="jobstage_0" href="javascript:void(0);" style="cursor:pointer; background-color: #f7f7f7;" onclick="SetStageId('0');">Show All<span>@Model.lstSTCJobStages.Sum(t => t.jobCount)</span></a></li>
+            </ul>
+
+        </div>
+    </div>
+</div>
+
+<!-- Grid start -->
+<div class="toggle-table-row kendo-grid">
+    <div id="datatable">
+
+    </div>
+</div>
+
+
+<div class="export-block clearfix">
+    <div class="info-btn-block">
+        <div class="row">
+            <div class="total-amount-block pull-right">
+                <div class="total-amount">
+                    <lable>No of Jobs Selected : <b id="btotalNoofJobs">0</b></lable>
+                </div>
+                <div class="total-amount">
+                    <lable>Total STC Selected : <b id="btotalTradedSTC">0</b></lable>
+                </div>
+                <div class="total-amount">
+                    <lable>Total $ Selected : <b id="btotalAmount">0</b></lable>
+                </div>
+            </div>
+        </div>
+        @*<div class="totalrow bor-none">
+                <p>No of Jobs Selected :&nbsp;&nbsp;<b><span id="btotalNoofJobs">0</span></b></p>
+                <p>Total STC Selected :&nbsp;&nbsp;<b><span id="btotalTradedSTC">0</span></b></p>
+            </div>*@
+
+        @*@if ((Model.UserTypeID == 2 && isEditColumns) || (Model.UserTypeID == 4 && isEditColumns) || (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 8))
+            {
+                <text>
+                    <button type="button" id="btnEditColumnsStcSubmission" class="btn primary pull-left icon-btn" value="Edit Columns" onclick="EditColumns('@SystemEnums.MenuId.STCSubmissionView.GetHashCode()');">
+                        Edit Columns
+                        <span class="sprite-img right-icon"></span>
+                    </button>
+                </text>
+            }*@
+
+        @if (ViewBag.Archive != true)
+        {
+            if ((Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 4 || Model.UserTypeID == 5) && isSTCExportCSV)
+            {
+                <button class="btn default export-ic" type="button" id="ExportCSVRECData">Export.csv - RECUpload</button>
+            }
+        }
+        @if ((Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 4 || Model.UserTypeID == 6 || Model.UserTypeID == 8 || Model.UserTypeID == 5))
+        {
+            <button class="btn default icon-btn" type="button" id="ExportCSVAll">
+                Export.csv - All Download
+                <span class="sprite-img export-ic"></span>
+            </button>
+        }
+        @if ((Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 4 || Model.UserTypeID == 5) && isSTCExportCSV)
+        {
+            <button class="btn default icon-btn" type="button" id="ExportCSV">
+                Export.csv - Bulk Upload
+                <span class="sprite-img export-ic"></span>
+            </button>
+        }
+        @if ((Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3) && isSTCSendToXero)
+        {
+            <button class="btn default icon-btn" type="button" id="CreditNote" onclick="SendSTCInvoice(0);" title="Send To Xero Credit Note">
+                Send To Xero Credit Note
+                <span class="sprite-img credit-note-ic"></span>
+
+            </button>
+        }
+        @if (ViewBag.Archive != true && (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3))
+        {
+            <button id="btnSendSTCInvoice" onclick="SendSTCInvoice(1);" class="btn default icon-btn" type="button">
+                Send to STC Invoicing
+                <span class="sprite-img invoicing-ic"></span>
+            </button>
+        }
+        @if (ProjectConfiguration.AllowAccessForCreateInRec && (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2) && isSTCCreateInRec)
+        {
+            <button class="btn primary icon-btn" type="button" onclick="return CreateRECEntry();">
+                Create In REC Registry
+                <span class="sprite-img rec-registry-h-ic"></span>
+
+            </button>
+
+        }
+
+        @*<button id="btnImportPVDCode" class="btn primary rec-registry-h-ic" type="button">Import PVDCode</button>*@
+
+    </div>
+</div>
+
+<div class="clearfix" style="padding-top:15px;">
+    @if (ViewBag.Archive != true && ProjectSession.UserTypeId == 1)
+    {
+
+        <div class="option-box pull-right" style="padding:5px 70px 0 15px; margin-top:5px;">
+            Auto CER Update On
+            <div class="onoffswitch">
+                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="UpdateJobStatusFromRECSwitch" onclick="UpdateJobStatusFromREC(true);" checked>
+                <label class="onoffswitch-label" for="UpdateJobStatusFromRECSwitch">
+                    <span class="onoffswitch-inner"></span>
+                    <span class="onoffswitch-switch"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="pull-right">
+            <button class="btn primary info-btn btnUpdateJobStatusFromREC" type="button" data-target="#preapprovals-modal" data-toggle="modal" onclick="UpdateJobStatusFromREC(false);">
+                Update Job Status From REC
+            </button>
+        </div>
+    }
+</div>
+
+<input type="hidden" id="isMultipleRecords" />
+<div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        Update Settlement Date &nbsp;
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @* <img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="form-block">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label required">Settlement Date:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtPopUpSettlementDate" readonly="readonly" tabindex="1">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                                <span class="field-validation-error error-message" data-valmsg-for="FirstName" data-valmsg-replace="true" style="display:none;">Settlement Date is required.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <input type="button" id="btnSaveSettlementDate" name="submit" value="Update" class="primary" style="margin-top:10%" tabindex="2" />
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="hdnJobId" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupbox1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        Update PVD/SWH Code &nbsp;
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @*<img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="form-block">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label required">PVD/SWH Code:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtPopUpPvdSwhCode" maxlength="10" tabindex="1" onkeypress="return ValidateLettersWithSpaceOnly(event);" onblur="return CheckTextContent();">
+                                <span class="field-validation-error error-message" data-valmsg-for="FirstName" data-valmsg-replace="true" style="display:none;">PVD/SWH Code is required.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <input type="button" id="btnSavePvdSwhCode" name="submit" value="Update" class="primary" style="margin-top:10%" tabindex="2" />
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="hdncode" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxaddupdateComplianceNote" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        Update Compliance Notes &nbsp;
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @*<img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="form-block">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label">Compliance Note:</label>
+                            <div class="input-group">
+                                <textarea class="form-control" id="txtareaComplianceNote" maxlength="1000" tabindex="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <input type="button" id="btnSaveComplainceNotes" name="submit" value="Update" class="primary" style="margin-top:10%" tabindex="2" />
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="hdnStcJobDetailsId" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Assignjobpopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        Assign Selected jobs to FCO &nbsp;
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @*<img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="form-block">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label required">Compliance Officer:</label>
+                            <div>
+                                @Html.DropDownListFor(model => model.ComplianceOfficerId, new List<SelectListItem>
+                                        (), "Select", new { id = "AssignComplianceOfficerId", @class = "form-control" })
+                                <span class="field-validation-error error-message" data-valmsg-for="ComplianceOfficerId" data-valmsg-replace="true" style="display:none;">Please select Compliance officer first.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <input type="button" id="btnAssignJobs" name="submit" value="Assign" class="primary" style="margin-top:10%" tabindex="2" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade stc-status newemail-modal" id="StcModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close sprite-img" type="button">
+                    @* <img alt="" src="@Url.Content("~/Images/close-btn.png")">*@
+                </button>
+                @*<div class="title">
+                        <h1>
+                            STC Submission @if (Model != null && Model.Header != null && Model.Header != "")
+                            {<span>@Model.Header</span>}
+                        </h1>
+                    </div>*@
+                <!-- Modal Header End-->
+                @*<div class="modal-body" id="STcBasicDetails">
+
+                    </div>*@
+                <div id="STcBasicDetails">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*Stc-Compliane Popup*@
+<div class="modal fade stc-status newemail-modal" id="popupStcCompliance" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modalContentStcCompliance">
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="rec-failure-reason" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        REC Failure reason
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @* <img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegionRECFailure" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div id="rec-failure-reason-div" class="form-group">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn primary icon-btn" type="button" onclick="RemoveJobFromBatch();">
+                        <span class="sprite-img delete-ic"></span>
+                        Remove From Batch
+                    </button>
+                    <button class="btn default icon-btn" type="button" onclick="DismissAll();">
+                        <span class="sprite-img dismiss_ic"></span>
+                        Dismiss All
+                    </button>
+                </div>
+                <input type="hidden" id="hdnJobId" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeRecUploadId" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        Remove REC Upload Id &nbsp;
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @*<img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="form-block">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label required">REC Upload Id:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtRecUploadId" maxlength="10" tabindex="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <button class="btn primary icon-btn" type="button" onclick="RemoveRecUploadId();">
+                                <span class="sprite-img delete-ic"></span>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="spv-failure-reason" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        SPV Failure reason
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                            @*<img src="../images/close-btn.png" alt="">*@
+                        </button>
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSPVFailure" style="display: none">
+
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="joblisting_search form-group">
+                        <div class="col-md-10" style="padding-left:0px;">
+                            <input type="text" id="txtSpvRefJobId" placeholder="Search by job id " class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="button" id="btnSearchSpvFailureReason" class="primary search_ic" value="Search">
+                        </div>
+                        @*<input type="text" id="txtSpvRefJobId" placeholder="Searfch by job id / ref number" onkeyup="searchSpvFailureReasonByJobIdAndRefNumber()" class="form-control">*@
+
+
+                    </div>
+                    <div id="spv-failure-reason-div" class="form-group">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn default cancel_ic" type="button" data-dismiss="modal">
+                        Cancel
+                    </button>
+
+                </div>
+                <input type="hidden" id="hdnJobId" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rec-Login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="myModalLabel">
+                        REC Login Conformation
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3"></button>
+                    </h3>
+                </div>
+                <div class="modal-body" id="recLoginConfirm">
+                    <div class="form-group">
+                        <label class="control-label" id="defaultCre">Admin Credentials</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><label class="control-label">Rec Company Name:</label></div>
+                        <div class="col-md-8"><label id="defaultCompName"></label></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><label class="control-label">Rec Account Name:</label></div>
+                        <div class="col-md-8"><label id="defaultAccName"></label></div>
+                        <input type="hidden" id="hdnDefaultCERLoginId" />
+                        <input type="hidden" id="hdnDefaultCERPassword" />
+                        <input type="hidden" id="hdnDefaultLoginType" />
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label class="control-label" id="otherCred">Reseller Credentials</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><label class="control-label">Rec Company Name:</label></div>
+                        <div class="col-md-8"><label id="otherCompName"></label></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4"><label class="control-label">Rec Account Name:</label></div>
+                        <div class="col-md-8"><label id="otherAccName"></label></div>
+                        <input type="hidden" id="hdnOtherCERLoginId" />
+                        <input type="hidden" id="hdnOtherCERPassword" />
+                        <input type="hidden" id="hdnOtherLoginType" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary" id="yesWarning" onclick="UseDefault();">Use Admin Credentials</button>
+                    <button type="button" class="btn primary" id="noWarning" onclick="UseOther();">Use Reseller Credentials</button>
+                    <button type="button" class="btn primary" id="Update" onclick="UpdateUser();">Update Credentials</button>
+                </div>
+                <input type="hidden" id="hdnCERLoginId" />
+                <input type="hidden" id="hdnCERPassword" />
+                <input type="hidden" id="hdnRECAccName" />
+                <input type="hidden" id="hdnRECCompanyName" />
+                <input type="hidden" id="hdnLoginType" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<div class="modal fade" id="removeRecUploadId" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog modal-lg vertical-align-center">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            Remove REC Upload Id
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" tabindex="3">
+                                <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegionRECFailure" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div id="removeRecUploadId-div" class="form-group">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn primary delete_ic" type="button" onclick="RemoveRecUploadId();">
+                            Remove
+                        </button>
+                        <button class="btn default cancel_ic" type="button" onclick="DismissAll();">
+                            Clear
+                        </button>
+                    </div>
+                    <input type="hidden" id="hdnJobId" />
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+
+@Html.Partial("_DynamicColumnModel")
+<style>
+    .stc-amount-block ul li.active, .stc-amount-block ul li:hover, .stc-amount-block ul li:focus {
+        background-color: green;
+    }
+
+
+    .k-calendar .k-today .k-link {
+        color: #1b954c;
+        box-shadow: inset 0 0 0 1px #1b954c;
+    }
+
+    .k-calendar > .k-header {
+        border-color: #e6e6e6;
+        color: #fff;
+        background-color: #1b954c;
+        background-image: none;
+    }
+
+        .k-calendar > .k-header .k-link.k-state-hover {
+            background-color: #14773c;
+        }
+
+    .k-calendar td.k-state-selected .k-link {
+        border-color: #1b954c;
+        color: #fff;
+        background-color: #1b954c;
+        background-image: none;
+    }
+</style>
+
+<script>
+    var SelectedStageId = 21;
+    @if(ViewBag.Archive != null & ViewBag.Archive == true)
+        {
+            <text>var isArchiveScreen = true; SelectedStageId = 22; </text>
+        }
+</script>
+
+
+<script src="~/Scripts/View/STCSubmission.min.js?v=@ProjectConfiguration.ScriptVersion"></script>
+<script src="~/Scripts/View/CommonSTCSubmission.min.js?v=@ProjectConfiguration.ScriptVersion"></script>
+
+@Scripts.Render("~/bundles/STCSubmission")
+@section scripts{
+
+
+    <script>
+
+        var chkCount=0;
+        var selectedRows = [];
+
+        var invoiced = 0;
+        var GridConfig = JSON.parse('@Html.Raw(Json.Encode(((List<FormBot.Entity.KendoGrid.UserWiseGridConfiguration>)ProjectSession.UserWiseGridConfiguration).Where(m=>m.ViewPageId == SystemEnums.ViewPageId.STCSubmissionView.GetHashCode())))')
+        var STCSubmission_Status = '@TempData["STCSubmission_Status"]';
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = dateFormatMoment;
+        var UserTypeID = @Model.UserTypeID;
+        var ComplianceIssuesDashboardStatus = '@TempData["ComplianceIssuesDashboardStatus"]';
+        var ResellerId = '@ProjectSession.ResellerId';
+        var STCSubmission_ResellerId = '@TempData["STCSubmission_ResellerId"]';
+        var LoggedInUserId = '@ProjectSession.LoggedInUserId';
+        var PageSize = @ProjectConfiguration.GetPageSize;
+        var STCSubmission_SolarCompanyId = '@TempData["STCSubmission_SolarCompanyId"]';
+        var SolarCompanyId = '@ProjectSession.SolarCompanyId';
+        var urlBulkUpload = '@Url.Action("GetBulkUploadCSV","Job")';
+        var urlBulkUploadSWHCSV = '@Url.Action("GetBulkUploadSWHCSV", "Job")';
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+        var urlUpdateSettlementDate = '@Url.Action("UpdateSettlementDate", "Job")';
+        var urlUpdatePVDSWHCode = '@Url.Action("UpdatePVDSWHCode", "Job")';
+        var urlUpdateComplianceNote = '@Url.Action("UpdateComplianceNote", "Job")';
+        var urlJobIndex = '@Url.Action("Index", "Job")';
+        var urlGetJobSTCSubmissionKendo = '@Url.Action("GetJobSTCSubmissionKendo", "Job")';
+        var urlGetFCOByResellerId = '@Url.Action("GetFCOByResellerId", "User")';
+        var urlGetRAMForReseller = '@Url.Action("GetRAMForReseller", "Reseller")';
+        var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+        var urlGetSolarCompanyByRAMID = '@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")';
+        var url_StatusCompliance = '@Url.Action("_StatusCompliance", "Job")';
+        var url_STCJobPopup =  '@Url.Action("_STCJobPopup", "Job", new { area = "" })';
+        var urlGetSubRecordsForJob = '@Url.Action("GetSubRecordsForJob", "Job")';
+        var urlGetSTCJobStageCount = '@Url.Action("GetSTCJobStageCount", "Job")';
+        var urlAssignJobToFCO = '@Url.Action("AssignJobToFCO", "Job")';
+        var urlGenerateSTCInvoiceForSelectedJobs = '@Url.Action("GenerateSTCInvoiceForSelectedJobs", "STCInvoice")';
+        var urlConnect =  '@Url.Action("Connect", "XeroConnect")';
+        var urlLogout = '@Url.Action("Logout", "Account")';
+        var urlCreateEntryInRECForSelectedJobs = '@Url.Action("CreateEntryInRECForSelectedJobs", "STCInvoice")';
+        var urlCheckResellerRECCredentials = '@Url.Action("CheckResellerRECCredentials", "Reseller")';
+        var urlGetSTCJobStages = '@Url.Action("GetSTCJobStages", "Job")';
+        var urlBulkChangeSTCJobStage = '@Url.Action("BulkChangeSTCJobStage", "Job")';
+        var isWholeSalers = '@ProjectSession.IsWholeSaler.ToString().ToLower()';
+        var urlBulkUploadAll = '@Url.Action("GetBulkUploadCSVAll","Job")';
+        var urlUpdateJobStatusFromREC = '@Url.Action("UpdateJobStatusFromREC", "Job")';
+        var urlGetUpdateJobStatusFromRecByResellerId = '@Url.Action("GetUpdateJobStatusFromRecByResellerId","Job")';
+        var urlGetSolarCompanyForFilter = '@Url.Action("GetSolarCompanyForFilter", "SolarCompany")'
+        var StcStatus = @Html.Raw(Json.Encode(Model.lstSTCJobStages));
+        var urlEditColumnsForJobIndex = '@Url.Action("EditColumnsForJobIndex", "Job")';
+        var listColumns = '@ViewBag.ListColumnName';
+        var listColumnsWidth = '@ViewBag.ListColumnWidth';
+        var UserWiseColumnsData = @Html.Raw(Json.Encode(ViewData["JSUserColumnList"]));
+        var colJobType = @Html.Raw(Json.Encode(ViewData["colJobType"]));
+        var urlResetDefaultColumns = '@Url.Action("ResetDefaultColumns", "Job")';
+        var DefaultPageSize = '@ViewBag.PageSize';
+        var JobView = '@SystemEnums.MenuId.JobView.GetHashCode()';
+        var STCSubmissionView = '@SystemEnums.MenuId.STCSubmissionView.GetHashCode()';
+        var STCInvoiceView = '@SystemEnums.MenuId.STCInvoiceView.GetHashCode()';
+        var urlAddColumns = '@Url.Action("AddColumns", "Job")';
+        var colPriority = @Html.Raw(Json.Encode(ViewData["colPriority"]));
+        var urlGetUserWiseColumnsDetail = '@Url.Action("GetUserWiseColumnsDetail", "Job")';
+        var loggedInUserId = '@ProjectSession.LoggedInUserId';
+        var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+        var isShowOnlyAssignJobsSCO = '@isShowOnlyAssignJobsSCO.ToString().ToLower()';
+        var ViewPageId = '@SystemEnums.ViewPageId.STCSubmissionView.GetHashCode()';
+        var urlGetRecFailureReason = '@Url.Action("GetRecFailureReason", "Reseller")';
+        var urlDeleteRecFailureReason = '@Url.Action("DeleteRecFailureReason", "Reseller")';
+        var urlRemoveJobFromBatch = '@Url.Action("RemoveJobFromBatch","Job")';
+        var urlReleaseForRecreation = '@Url.Action("ReleaseForRecreation", "STCInvoice")';
+        var urlUpdatePvdCodeFromRec = '@Url.Action("UpdatePvdCodeFromRec", "STCInvoice")';
+        var urlResetSPVInstaller = '@Url.Action("ResetSPVInstaller", "Job")';
+        var urlGetSpvFailureReason = '@Url.Action("GetSPVFailureReason", "Reseller")';
+        var urlInstallationVerifyAgain = '@Url.Action("InstallationVerifyAgain", "Job")';
+        var urlSPVReset = '@Url.Action("SPVReset", "Job")';
+        var urlBulkUploadREC_ExportCSV = '@Url.Action("GetBulkUploadCSV_ImportExportRECEntry", "Job")';
+        var urlBulkUploadImportRec = '@Url.Action("ImportBulkUploadIdCSVFromREC", "STCInvoice")';
+        var urlRecFailureReason = '@Url.Action("GetRecFailureReason", "Reseller")';
+        var urlEditUser = '@Url.Action("Edit", "User")';
+        var isKendoView = true;
+        var isDefaultGrid = true;
+        var userid = "";
+        var checkInstallationDateURL = '@Url.Action("CheckInstallationDate", "Job")';
+    </script>
+
+
+    <script>
+        function searchSpvFailureReasonByJobIdAndRefNumber() {
+            var divSearch = "#accordionExample .panel";
+            // Declare variables
+            var input, filter, a, i, panelsLength, spvfailerreasonpanel, result = 0;
+            input = document.getElementById('txtSpvRefJobId');
+            filter = input.value.toUpperCase();
+            panelsLength = $(divSearch).length;
+
+            if (panelsLength > 0) {
+                // Loop through all list items, and hide those who don't match the search query
+                for (i = 0; i < panelsLength; i++) {
+                    spvfailerreasonpanel = $(divSearch + ":eq(" + i + ")");
+                    a = $(spvfailerreasonpanel).find(".spv-search:eq(0)");
+                    spvsearchjobid = a.attr("data-jobid");
+                    spvsearchrefnumber = a.attr("data-refnumber");
+
+                    if (spvsearchjobid.toUpperCase().indexOf(filter) > -1
+                        || spvsearchrefnumber.toUpperCase().indexOf(filter) > -1) {
+                        result = 1;
+                        $(spvfailerreasonpanel).css("display", "");
+                    } else {
+                        $(spvfailerreasonpanel).css("display", "none");
+                    }
+                }
+                if (result == 0) {
+                    $("#accordionExample").hide();
+                    $(".no-record-found").show();
+                }
+                else {
+                    $("#accordionExample").show();
+                    $(".no-record-found").hide();
+                }
+            }
+            else {
+                $("#accordionExample").hide();
+                $(".no-record-found").show();
+            }
+        }
+    </script>
+}

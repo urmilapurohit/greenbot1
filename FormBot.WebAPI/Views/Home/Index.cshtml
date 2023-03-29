@@ -1,0 +1,53 @@
+﻿<div class="jumbotron">
+    <h1>Push Notification</h1>
+</div>
+<div class="row">
+    <div class="col-sm-1">
+        Token :
+    </div>
+    <div class="col-sm-3 form-group">
+        <input type="text" id="iphonetoken" class="form-control" />
+    </div>
+    <div class="col-sm-3 form-group">
+        <input type="text" id="androidtoken" class="form-control" />
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-1">
+
+    </div>
+    <div class="col-sm-3 form-group">
+        <input type="button" id="iphone" value="Iphone Pushnotification" class="btn" />
+    </div>
+    <div class="col-sm-3 form-group">
+        <input type="button" id="android" value="Android Pushnotification" class="btn" />
+    </div>
+</div>
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function (e) {
+        $("#iphone").click(function (e) {
+            sendpush($('#iphonetoken').val(), 'iphone');
+        });
+
+        $("#android").click(function (e) {
+            sendpush($('#androidtoken').val(), 'android');
+        });
+        var postUrl = '@Url.Action("SendPush", "Home")';
+        function sendpush(token, type) {
+            var postUrl = '@Url.Action("SendPush", "Home")?token=' + token + '&type=' + type;
+            $.ajax({
+                url: postUrl,
+                type: "GET",
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8', // Not to set any content header
+                processData: false, // Not to process data
+                cache: false,
+                async: true,
+                success: function (result) {
+                    alert('got it');
+                }
+            });
+        }
+    });
+</script>

@@ -1,0 +1,222 @@
+﻿@model FormBot.Entity.Documents.DocumentCollectionView
+<style>
+    .pdfpage {
+        position: relative;
+        top: 0;
+        left: 0;
+        /*border: solid 1px black;*/
+        /*margin: 10px;*/
+    }
+
+    div.inputHint > [id*="jSignature"], .jSignature {
+        text-align:center;
+        height: 100% !important;
+        background-color : rgb(221,228,255) !important;
+    }
+    #noSigntext {
+        width:100%;
+        height : 100%;
+        display:table-cell;
+        vertical-align:middle;
+    }
+    #jSignature > .jSignature {
+        height: 150px !important;
+        width: 100% !important;
+        background-color : rgb(255,255,255) !important;
+    }
+
+    .pdfpage > canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .pdfpage > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .pdfpage > .inputControl {
+        background-color : rgb(221,228,255) !important;
+    }
+    .inputControl {
+        background: transparent;
+        border: 0px none;
+        position: absolute;
+        margin: auto;
+        font-size: 13px;
+        color: black;
+    }
+
+        .inputControl[type='checkbox'] {
+            margin: 0px;
+            width: 18px;
+            height: 18px;
+        }
+
+    .inputHint {
+        border: 1px solid #d8dadd;
+        /*opacity: 1;*/
+        background: #ffffff;
+        /*opacity: 1;
+        background: #ccc;*/
+        position: absolute;
+    }
+     .pdfpage [type="checkbox"]{
+        display: none;
+    }
+     .pdfpage [type="checkbox"] + label {
+        display: inline-block;
+        border: 1px solid gray;
+        background-color: rgb(221, 228, 255);
+        max-width : 100px !important;
+    }
+    .pdfpage [type="checkbox"]:checked + label:before {
+        content: "\2713";
+        text-align: center;
+    }
+</style>
+<script src="@Url.Content("~/Scripts/pdf/pdf.min.js")"></script>
+<script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>
+
+@using (Html.BeginForm("Viewer", "Job", FormMethod.Post, new { id = "formViewer", enctype = "multipart/form-data" }))
+{
+    @*<div class="title" style="border:none!important;">
+        <input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="primary save_ic pull-right " style="padding-bottom:10px;" >
+        </div>*@
+    <div style="padding-top:10px;">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionViewer" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionViewer" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <input type="hidden" name="Data" id="pdfData" value="@Model.Data" />
+        <input type="hidden" name="PDFURL" id="PDFURL" value="@Model.PDFURL" />
+        <input type="hidden" name="PDFSource" id="PDFSource" value="@Model.PDFSource" />
+        <input type="hidden" name="JobId" id="JobId" value="@Model.JobId" />
+        <input type="hidden" name="DocId" id="DocId" value="@Model.DocId" />
+        <input type="hidden" name="JobDocumentId" id="jobDocId" value="@Model.JobDocId" />
+    </div>
+    <div id="viewer"></div>
+}
+<script>
+    var urlSaveDocument = '@Url.Action("_Viewer", "Job")';
+    var pdfItemsStr = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Data))';
+    var pdfWorkerJsPath = '@Url.Content("~/Scripts/pdf/pdf.worker.min.js")';
+    var texthashCode = '@FormBot.Helper.SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()';
+    var buttonhashCode = '@FormBot.Helper.SystemEnums.InputTypes.BUTTON.GetHashCode()';
+    var radiohashCode = '@FormBot.Helper.SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()';
+    var checkhashCode = '@FormBot.Helper.SystemEnums.InputTypes.CHECK_BOX.GetHashCode()';
+    var getCaptureSignDetail = '@Url.Action("GetCaptureUserSignDetail", "Job")';
+    var signDetail = [];
+</script>
+
+<script src="@Url.Content("~/Scripts/View/Job/CommonDocOldViewer.dev.js")"></script>
+<script>
+    $(function () {
+
+        $('#jSignature').jSignature({ 'lineWidth ': 4 });
+        $("#loading-image").hide();
+        if ('@Html.Raw(Model.PDFURL)' != '') {
+            init('@Html.Raw(Model.PDFURL)?h=@DateTime.Now.Ticks');
+            $('#popupViewerDoc').modal({ backdrop: 'static', keyboard: false });
+        }
+        else {
+            alert('File is not available.');
+            $('#divViewer').html('');
+        }
+        $('#btnSaveSign').unbind().click(function () {
+            if ($('#signatureSend').valid()) {
+                var Firstname = $('[name="Item2.Firstname"]').val();
+                var Lastname = $('[name="Item2.Lastname"]').val();
+                var num = $('[name="Item2.mobileNumber"]').val();
+                var email = $('[name="Item2.Email"]').val();
+                var index = signDetail.findIndex(signature => signature.Fieldname == $('#' + clickSignId).attr('name'))
+                //If Draw Option Selected for Signature
+                if ($('[name="signType"]:checked').val() == 'D') {
+                    var sign = $('#jSignature').jSignature('getData', 'base30')
+                    if (index != -1) {
+                        signDetail[index].Firstname = Firstname;
+                        signDetail[index].Lastname = Lastname;
+                        signDetail[index].mobileNumber = num;
+                        signDetail[index].Fieldname = $('#' + clickSignId).attr('name');
+                        signDetail[index].signString = sign.join(",");
+                        signDetail[index].Email = email;
+                    } else {
+                        var obj = {};
+                        obj.Firstname = Firstname;
+                        obj.Lastname = Lastname;
+                        obj.mobileNumber = num;
+                        obj.Fieldname = $('#' + clickSignId).attr('name');
+                        obj.jobDocId = $('#jobDocId').val();
+                        obj.signString = sign.join(",");
+                        obj.Email = email;
+                        signDetail.push(obj);
+                    }
+                    $('#popupSignature').modal('hide')
+                    var name = $('#' + clickSignId).attr('name');
+                    for (var i = 0; i < $('[name="' + name + '"]').length; i++) {
+                        var id = $('[name="' + name + '"]')[i].id
+                        if (sign[1] == "") {
+                            $('#' + id).jSignature('reset')
+                            document.getElementById(id).children[1].getContext('2d').clearRect(0, 0, 720, 150);
+                        }
+                        else {
+                            $('#' + id).find('#noSigntext').hide();
+                            $('#' + id).find('canvas.jSignature').show();
+                            document.getElementById(id).children[1].getContext('2d').restore();
+                            document.getElementById(id).children[1].getContext('2d').clearRect(0, 0, 720, 150);
+                            if ($('#' + id).attr('scale') == "" || $('#' + id).attr('scale') == undefined) {
+                                var height = $('#' + id).height() / 150;
+                                var width = $('#' + id).width() / 720;
+                                document.getElementById(id).children[1].getContext('2d').scale(width, height);
+                                $('#' + id).attr("scale", height + "," + width);
+                            }
+                            $('#' + id).jSignature('setData', 'data:' + sign.join(","));
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['lineWidth'] = 4;
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['readOnly'] = true;
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['data']);
+                        }
+
+                    }
+                }
+                
+            }
+        })
+
+    });
+    function SendUserSignatureUrl(type) {
+        var Firstname = $('[name="Item2.Firstname"]').val();
+        var Lastname = $('[name="Item2.Lastname"]').val();
+        var num = $('[name="Item2.mobileNumber"]').val();
+        var email = $('[name="Item2.Email"]').val();
+        //If SMS Option Selected for Signature
+        if (Firstname != "" && Lastname != "" && num != "") {
+            var smsLink = loginLink + "Job/_CaptureUserSignature";
+            var smsUrl = '<a href="' + smsLink + '">' + smsLink + '</a>';
+            $.ajax(
+                {
+                    url: '@Url.Action("CaptureUserSignature", "Job")',
+                    data: { SmsUrl: smsUrl, smsLink: smsLink, mobile: num, fieldName: $('#' + clickSignId).attr('name'), jobDocId: $('#jobDocId').val(), Firstname: Firstname, Lastname: Lastname, Type: type, Email: email },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function (data) {
+                        if (data.status == true) {
+                            $(".alert").hide();
+                            var msg = (type == "0" ? "SMS" : "Email") + "has been sent successfully."
+                            $("#successMsgRegionSendSms").html(closeButton + msg);
+                            $("#successMsgRegionSendSms").show();
+                            return true;
+                        }
+                        else {
+                            $(".alert").hide();
+                            $("#errorMsgRegionSendSms").html(closeButton + data.errormsg);
+                            $("#errorMsgRegionSendSms").show();
+                        }
+                    }
+                });
+        }
+    }
+
+</script>

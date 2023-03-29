@@ -1,0 +1,222 @@
+﻿@model FormBot.Entity.CreateVEEC
+@using FormBot.Helper;
+
+<div class="panel-group" role="tablist" aria-multiselectable="true" id="UpgradelineEquipmentDetail">
+    <div class="alert alert-success alert-dismissible" role="alert" id="successmessageforupgradelineequipment" style="display: none"></div>
+   
+            <div class="panel" name="BaselineEquipment" data-panelid="@lstUpgradeline.BaselineEquipmentId">
+                <div class="schedule-heading panel-heading" id="headingOne">
+                    <div class="visit-id">
+                        <label> Calc Zone:</label>
+                        <span class="color-text">@lstUpgradeline.CalcZone</span>
+                    </div>
+                    <div>
+                        <label>Space-Type:</label>
+                        <span class="color-text">@lstUpgradeline.SpaceTypeName</span>
+                    </div>
+                    <div>
+                        <label>Quantity :</label>
+                        <span class="color-text">@lstUpgradeline.Quantity</span>
+                    </div>
+                    <div>
+                        <label>Nominal Lamp Power :</label>
+                        <span class="color-text">@lstUpgradeline.NominalLampPower</span>
+                    </div>
+                    <div>
+                        <a class="expand-btn" data-toggle="collapse" data-parent="#schedule" href="#@lstUpgradeline.BaselineEquipmentId" aria-expanded="true" aria-controls="collapseOne">
+                            <span class="icon expand-view sprite-img">
+
+                            </span>Expand View
+                        </a>
+                    </div>
+                    <div>
+                        @{var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();}
+
+                        <a href="#" title="Edit" onclick="showUpgradelineEquipmentDetail('@serializer.Serialize(lstUpgradeline)',event)">Edit</a>
+                        <a href="#" title="Delete" onclick="deleteUpgradelineEquipmentDetail(@lstUpgradeline.BaselineEquipmentId,event)">Delete</a>
+
+                    </div>
+                </div>
+                <div class="panel-collapse collapse" id="@lstUpgradeline.BaselineEquipmentId" role="tabpanel" aria-labelledby="headingOne">
+
+                    <div class="row schedule-installer">
+                        
+
+                        <div class="col-md-6">
+                            <div>
+                                <label>SpaceType:</label>
+                                <span class="color-text">@lstUpgradeline.SpaceTypeName</span>
+                            </div>
+                            <div>
+                                <label>BCAClassification:</label>
+                                <span class="color-text">@lstUpgradeline.BCAClassificationName</span>
+                            </div>
+                            <div>
+                                <label>Lamp Ballast Combination :</label>
+                                <span class="color-text">@lstUpgradeline.LampBallastCombinationName</span>
+                            </div>
+                            <div>
+                                <label>HVAC A/C :</label>
+                                <span class="color-text">@lstUpgradeline.HVACAC</span>
+                            </div>
+                            <div>
+                                <label>Quantity:</label>
+                                <span class="color-text">@lstUpgradeline.Quantity</span>
+                            </div>
+                            <div>
+                                <label>LampPower:</label>
+                                <span class="color-text">@lstUpgradeline.NominalLampPower</span>
+                            </div>
+
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <label>BaselineAssetLifetimeReference:</label>
+                                <span class="color-text">@lstUpgradeline.BaselineAssetLifetimeReferenceName</span>
+                            </div>
+                            <div>
+                                <label>Definition:</label>
+                                <span class="color-text">@lstUpgradeline.Definition</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+        }
+    }
+</div>
+<script>
+    //$('#baselineupgrade').change(function () {
+    //    if ($('#baselineupgrade option:selected').val() == "Baseline") {
+    //        $('#UpgradeAssetLifetimeReferenceLabel').removeClass("required");
+    //        $('#ProductBrandLabel').removeClass("required");
+    //        $('#ProductModelLabel').removeClass("required");
+    //        $('#FirstControllerLabel').removeClass("required");
+    //        $('#SecondControllerLabel').removeClass("required");
+    //        $('#BaselineAssetLifetimeReferenceLabel').addClass("required");
+    //        $('#LampBallastCombinationLabel').addClass("required");
+    //        $('#NominalLampPowerLabel').addClass("required");
+    //        $("#UpgradeAssetLifetimeReference").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#ProductBrand").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#ProductModel").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#FirstController").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#SecondController").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#BaselineAssetLifetimeReference").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#LampBallastCombination").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#NominalLampPower").rules("add", {
+    //            required: true,
+    //        });
+
+    //        if ($('#spacetype option:selected').val() == "26") {
+    //            $('#spacetypeunlistedlabel').addClass("required");
+    //            $("#spacetypeunlisted").rules("add", {
+    //                required: true,
+    //            });
+    //        }
+    //        else {
+    //            $('#spacetypeunlistedlabel').removeClass("required");
+    //            $("#spacetypeunlisted").rules("add", {
+    //                required: false,
+    //            });
+
+    //        }
+    //    }
+    //    else if ($('#baselineupgrade option:selected').val() == "Upgrade") {
+    //        $('#UpgradeAssetLifetimeReferenceLabel').addClass("required");
+    //        $('#ProductBrandLabel').addClass("required");
+    //        $('#ProductModelLabel').addClass("required");
+    //        $('#FirstControllerLabel').addClass("required");
+    //        $('#SecondControllerLabel').addClass("required");
+    //        $('#BaselineAssetLifetimeReferenceLabel').removeClass("required");
+    //        $('#LampBallastCombinationLabel').removeClass("required");
+    //        $('#NominalLampPowerLabel').removeClass("required");
+    //        $('#spacetypeunlistedlabel').removeClass("required");
+
+    //        $("#UpgradeAssetLifetimeReference").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#ProductBrand").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#ProductModel").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#FirstController").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#SecondController").rules("add", {
+    //            required: true,
+    //        });
+    //        $("#BaselineAssetLifetimeReference").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#LampBallastCombination").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#NominalLampPower").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#spacetypeunlisted").rules("add", {
+    //            required: false,
+    //        });
+    //    }
+    //    else {
+    //        $('#UpgradeAssetLifetimeReferenceLabel').removeClass("required");
+    //        $('#ProductBrandLabel').removeClass("required");
+    //        $('#ProductModelLabel').removeClass("required");
+    //        $('#FirstControllerLabel').removeClass("required");
+    //        $('#SecondControllerLabel').removeClass("required");
+    //        $('#BaselineAssetLifetimeReferenceLabel').removeClass("required");
+    //        $('#LampBallastCombinationLabel').removeClass("required");
+    //        $('#NominalLampPowerLabel').removeClass("required");
+    //        $('#spacetypeunlistedlabel').removeClass("required");
+    //        $("#spacetypeunlisted").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#UpgradeAssetLifetimeReference").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#ProductBrand").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#ProductModel").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#FirstController").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#SecondController").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#BaselineAssetLifetimeReference").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#LampBallastCombination").rules("add", {
+    //            required: false,
+    //        });
+    //        $("#NominalLampPower").rules("add", {
+    //            required: false,
+    //        });
+    //    }
+    //})
+
+</script>

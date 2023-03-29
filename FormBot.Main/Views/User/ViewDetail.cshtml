@@ -1,0 +1,147 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "User Compliance Check";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isActiveDiv = @Model.isActiveDiv;
+}
+@if (!isActiveDiv)
+{
+    <div id="msgSection">
+        @Html.RenderMessages()
+    </div>
+}
+
+@using (Html.BeginForm("ViewDetail", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+    <div class="container-fluid message-page">
+        <div class="title">
+            <h1>
+                User Compliance Check
+            </h1>
+            <span class="subtitle">@Model.FirstName @Model.LastName</span>
+            @if (@Model.UserTypeID == 7 || @Model.UserTypeID == 10)
+            {
+                <a href="@Url.Action("SE", "User" )" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+            }
+            else
+            {
+                <a href="@Url.Action("SCA", "User" )" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+            }
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @if (isActiveDiv)
+        {
+            <div id="ValidationSummary" style="background-color: #f2dede; border-color: #ebccd1;color: #a94442;padding-right: 35px;border: 1px solid transparent;border-radius: 4px;margin-bottom: 20px;padding: 15px;" role="alert">
+                <button type="button" id="ValidationSummaryClose" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <div>
+                    <ul style="list-style:circle">
+                        <li><b>@ViewBag.FieldList</b></li>
+                        <li><b>@ViewBag.FirstName </b>@ViewBag.AccreditedFirstName</li>
+                        <li><b>@ViewBag.LastName </b>@ViewBag.AccreditedLastName </li>
+                        <li><b>@ViewBag.Email </b>@ViewBag.AccreditedEmail </li>
+                        <li><b>@ViewBag.Phone </b>@ViewBag.AccreditedPhone</li>
+                        <li><b>@ViewBag.Mobile </b>@ViewBag.AccreditedMobile</li>
+                        <li><b>@ViewBag.UnitType </b>@ViewBag.AccreditedUnitType</li>
+                        <li><b>@ViewBag.UnitNumber </b>@ViewBag.AccreditedUnitNumber</li>
+                        <li><b>@ViewBag.StreetNumber </b>@ViewBag.AccreditedStreetNumber</li>
+                        <li><b>@ViewBag.StreetName </b>@ViewBag.AccreditedStreetName</li>
+                        <li><b>@ViewBag.StreetType </b>@ViewBag.AccreditedStreetType</li>
+                        <li><b>@ViewBag.PostalDeliveryType </b>@ViewBag.AccreditedPostalDeliveryType</li>
+                        <li><b>@ViewBag.PostalDeliveryNumber </b>@ViewBag.AccreditedPostalDeliveryNumber</li>
+                        <li><b>@ViewBag.Town </b>@ViewBag.AccreditedTown</li>
+                        <li><b>@ViewBag.StateName </b>@ViewBag.AccreditedStateName</li>
+                        <li><b>@ViewBag.PostCode </b>@ViewBag.AccreditedPostCode</li>
+                        <li><b>@ViewBag.CECAccreditationNumber </b>@ViewBag.AccreditedCECAccreditationNumber</li>
+                        <li><b>@ViewBag.CECDesignerNumber </b>@ViewBag.AccreditedCECDesignerNumber</li>
+                        <li><b>@ViewBag.LicensedNumber </b>@ViewBag.AccreditedLicensedNumber</li>
+                        <li><b>@ViewBag.SEDesignRole1 </b>@ViewBag.AccreditedSEDesignRole</li>
+                        <li>@ViewBag.AccreditationNumber</li>
+                    </ul>
+                </div>
+            </div>
+            <div id="msgSection">
+                @Html.RenderMessages()
+            </div>
+        }
+        @Html.Partial("_Details", Model)
+        @*@Html.Partial("_UserNotes", Model)*@
+
+        @Html.Partial("_ComplianceStatus", Model)
+        @*@Html.Partial("_UserHistory", Model)*@
+        @Html.HiddenFor(m => m.AspNetUserId)
+        @Html.HiddenFor(m => m.UserId)
+        @Html.HiddenFor(m => m.UserTypeID)
+        @Html.HiddenFor(m => m.CreatedDate)
+        @Html.HiddenFor(m => m.Signature)
+        @Html.HiddenFor(m => m.SolarCompanyId)
+        @Html.HiddenFor(m => m.ResellerID)
+        @Html.HiddenFor(m => m.RoleID, new { @id = "hdnRoleID" })
+        @Html.HiddenFor(m => m.Theme)
+        @Html.HiddenFor(m => m.Logo)
+        @Html.HiddenFor(m => m.UserName, new { @id = "hdnUserName" })
+        @Html.HiddenFor(m => m.IsActive, new { @id = "hdnIsActive" })
+        @Html.HiddenFor(m => m.IsFirstLogin)
+        @Html.HiddenFor(m => m.SESelfie)
+        @Html.HiddenFor(m => m.Flag)
+        @Html.HiddenFor(m => m.IsSelfieVerified)
+        @Html.HiddenFor(m => m.IsDriverLicVerified)
+        @Html.HiddenFor(m => m.IsOtherDocVerified)
+        @Html.HiddenFor(m => m.IsSignatureVerified)
+    </div>
+}
+@section Scripts
+        {
+    <script type="text/javascript">
+        debugger;
+        var pageType = 'viewdetail';
+        var resellerID='@Model.ResellerID';
+        var userID ='@Model.UserId';
+        var USERID =@Model.UserId;
+        var logoWidth = 0, logoHeight = 0, SRCSign;
+    var isverified = '@Model.IsVerified';
+    var getSCAURL = '@Url.Action("SCA","User")';
+        var getSEURL = '@Url.Action("SE","User")';
+        var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    </script>
+    @Scripts.Render("~/bundles/UserViewDetail")
+    <script>
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+    </script>
+    @*@Scripts.Render("~/Scripts/FormBot.js")*@
+}
+
+<style>
+    .subtitle {
+        border-left: 1px solid #dadada;
+        color: #666666;
+        font-size: 16px;
+        margin-left: 10px;
+        padding: 2px 10px;
+    }
+
+    .compliance-status .control-label {
+        background-color: #dedede;
+        padding: 10px;
+        width: 100%;
+        line-height: 22px;
+    }
+
+        .compliance-status .control-label > b {
+            margin-right: 5px;
+        }
+
+    .status-checkbox {
+        margin-top: 30px;
+    }
+
+        .status-checkbox .checkbox-box {
+            margin-bottom: 0;
+            margin-top: 0;
+        }
+</style>

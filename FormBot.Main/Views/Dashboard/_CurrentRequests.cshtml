@@ -1,0 +1,144 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+
+<div class="row">
+    <div id="grid" class="col-xs-12 popupgrid">
+        <div class="table-responsive" style="max-height:350px; overflow-y:scroll;">
+            <table id="Requestdatatable" class="table table-hover currentJobs" style="width:100% !important;">
+                <thead>
+                    <tr>
+                        <th><span>@Html.DisplayName("Name")</span></th>
+                        <th><span>@Html.DisplayName("UserName ")</span></th>
+                        <th><span>@Html.DisplayName("Email ") </span></th>
+                        <th><span>@Html.DisplayName("Mobile ")</span></th>
+                        <th><span>@Html.DisplayName("Company Name")</span></th>
+                        <th><span>@Html.DisplayName("Address")</span></th>
+                        <th><span>@Html.DisplayName("Status ")</span></th>
+                        <th style="max-width:100px;" class="action actionth">@Html.DisplayName("Action")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#Requestdatatable').DataTable({
+            iDisplayLength: 10,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+            columns: [
+                    { 'data': 'Name' },
+                    { 'data': 'UserName' },
+                    { 'data': 'Email' },
+                    { 'data': 'Mobile' },
+                    { 'data': 'CompanyName' },
+                    { 'data': 'Address' },
+
+                    { 'data': 'Status',
+                        "render": function (data, type, full, meta) {
+                            if(full.Status==1){
+                                return '<p>Request Send</p>'
+                            }
+                            else if(full.Status==2){
+                                return '<p>Request Accepted</p>'
+                            }
+                            else if(full.Status==3){
+                                return '<p>Request Rejected</p>'
+                            }
+                            else{
+                                return '';
+                            }
+                        },
+                    },
+                    {
+                        'data': 'Id',
+                        "render": function (data, type, full, meta) {
+                            var acceptButton = "";
+                            var rejectButton = "";
+
+                            imgaccept = 'background:url(../Images/ic-accept.png) no-repeat center; text-decoration:none;';
+                            imgreject = 'background:url(../Images/ic-reject.png) no-repeat center; text-decoration:none;';
+
+                            if(full.Status==2){
+                                var acceptHref = "javascript:void(0)";
+                                acceptButton = '&nbsp;&nbsp;'+ '<a href="' + acceptHref + '" class="action delete disabled" style="' + imgaccept + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+                            else{
+                                //var acceptHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.Id + "'," + " '" + full.SolarCompanyId + "'" +","+true+ ")";
+                                var acceptHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.SolarCompanyId + "'" +","+true+ ")";
+                                acceptButton = '&nbsp;&nbsp;'+ '<a href="' + acceptHref + '" class="action delete" style="' + imgaccept + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+                            if(full.Status==3){
+                                var rejectHref = "javascript:void(0)";
+                                rejectButton = '&nbsp;&nbsp;'+ '<a href="' + rejectHref + '" class="action delete disabled" style="' + imgreject + '" title="Reject">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+                            else{
+                                //var rejectHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.Id + "'," + " '" + full.SolarCompanyId + "'" +","+false+ ")";
+                                var rejectHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.SolarCompanyId + "'" +","+false+ ")";
+                                rejectButton = '&nbsp;&nbsp;'+ '<a href="' + rejectHref + '" class="action delete" style="' + imgreject + '" title="Reject">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+
+                            return acceptButton + rejectButton;
+                        },
+
+                        "orderable": false
+                    },
+            ],
+
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetRequestingSCAandSSCForSEandSC", "Dashboard")',
+
+            "fnDrawCallback": function () {
+                $("#Requestdatatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+
+            "fnServerParams": function (aoData) {  //These are the extra parameters for our custom filters
+                //aoData.push({ "name": "isCurrent", "value": 1});
+            }
+        });
+
+        $('#Requestdatatable_length').hide();
+        $('#Requestdatatable_info').hide();
+        $('#Requestdatatable_filter').hide();
+        $('.paging').hide();
+        $('.bottom').hide();
+
+    });
+
+    function AcceptRejectSolarCompanyRequest(solarcompanyid,acceptreject){
+        $.ajax({
+            url: '@Url.Action("AcceptRejectSolarCompanyRequest", "User")',
+            type: "POST",
+            async: false,
+            data: JSON.stringify({ solarcompanyId: solarcompanyid,status: acceptreject }),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                if (data.success) {
+                    $(".alert").hide();
+                    $("#successMsgRegion").html(closeButton + "Status changed successfully.");
+                    $("#successMsgRegion").show();
+                    $("#Requestdatatable").dataTable().fnDraw();
+                }
+            },
+        });
+    }
+
+</script>

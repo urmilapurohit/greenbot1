@@ -1,0 +1,1224 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+@if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 3 || FormBot.Helper.ProjectSession.UserTypeId == 4 || FormBot.Helper.ProjectSession.UserTypeId == 6 || FormBot.Helper.ProjectSession.UserTypeId == 7 || FormBot.Helper.ProjectSession.UserTypeId == 8 || FormBot.Helper.ProjectSession.UserTypeId == 9)
+{
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <div class="form-group">
+            <p class="rep-text"><strong>Description: </strong> <span id="Description">This report shows number of jobs/client assignments to specific users. Reports are based on specific user group type selected</span>
+        </div>
+        <label class="control-label">Date Range:</label>
+        <div class="btn-group btn-group-justified" role="group" id="DateGroups">
+            <div class="btn-group" role="group">
+                <button onclick="setLBD();" type="button" class="btn btn-default" tabindex="2">LBD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button onclick="setMTD();" type="button" class="btn primary" tabindex="3" id="btnMTD">MTD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setPM();" tabindex="4">PM</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setCFY();" tabindex="5">CFY</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="set12M();" tabindex="6">12M</button>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="control-label">Start Date:</label>
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="control-label">End Date:</label>
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="form-group">
+                    @*<label class="control-label">Start Date:</label>*@
+                    <div class="input-group">
+                        &nbsp;
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="checkbox" name="name" value="" id="chkCurrentDate" /><label class="control-label" style="padding-top:0 !important;">&nbsp; Current Date</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label">Other Filter:</label>
+            @Html.DropDownListFor(m => m.OtherFilter, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Users Deleted", Value = "1" },
+                                        new SelectListItem{ Text="Users Pending", Value = "2" },
+                                        new SelectListItem{ Text="Users Active", Value = "3" }
+                                     }, new { @id = "drdOtherFilter", @class = "form-control" }
+                            )
+        </div>
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 3)
+        {
+        <label class="control-label">Filters:</label>
+        <div class="rep-list">
+            <ul>
+                <li><a href="javascript:void(0);" id="FCOID" onclick="FCO();">FCO Users<span id="cntFCO">0</span></a></li>
+                <li><a href="javascript:void(0);" id="ResellerID" onclick="Reseller();">Reseller<span id="cntResellers">0</span></a></li>
+                <li><a href="javascript:void(0);" id="RAMID" onclick="RAM();">RAM Users<span id="cntRAM">0</span></a></li>
+                <li><a href="javascript:void(0);" id="UserID" onclick="Users();">Solar Company<span id="cntUsers">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SCOID" onclick="SCO();">SCO Users<span id="cntSCO">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SSCUser" onclick="SSCUser();">SSC Users<span id="cntSSC">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SEUser" onclick="SEUser();">SE Users<span id="cntSE">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SCUser" onclick="SCUser();">SC Users<span id="cntSC">0</span></a></li>
+                <li><a href="javascript:void(0);" id="SWHUser" onclick="SWHUser();">SWH Users<span id="cntSWH">0</span></a></li>
+            </ul>
+        </div>
+        }
+    </div>
+}
+<div class="rep-btn">
+    <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" id="btnReset" value="Reset Filters" class="">
+    </div>
+    </div>
+
+<div class="modal fade" id="popupRAM" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeRAM">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">RAM Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableRAM">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border" id="divRAM">
+                    @*@Html.Action("_RAMView", "FormBotReport")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupReseller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeResellersForActive">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Reseller</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="ResellerUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("ResellerForActive", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupFCO" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeFCO">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">FCO Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableFCO">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_FCOView", "FormBotReport", new { id = "3" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" id="closeUsersForActive">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0</label> Selected
+                    </label>
+                </div>
+                @if (FormBot.Helper.ProjectSession.UserTypeId != 4)
+                {
+                <div class="form-border">
+                    @Html.Action("_SolarCompanyForActive", "FormBotReport")
+                </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSCO" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSCO">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SCO Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSCO">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border" id="divSCO">
+                    @*@Html.Action("_SCOView", "FormBotReport", new { id = "8" })*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSSC">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SSC Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSSC">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SSCView", "FormBotReport", new { id = "6" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSE" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSE">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SE Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSE">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SEView", "FormBotReport", new { id = "7" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSC">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SC Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSC">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SCView", "FormBotReport", new { id = "9" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSWH" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSWH">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">SWH Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableSWH">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_SWHView", "FormBotReport", new { id = "10" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    var userTypeID = '@FormBot.Helper.ProjectSession.UserTypeId';
+    $(document).ready(function () {
+        if (userTypeID == 5) {
+            document.getElementById("btnJobStatusBarReport").style.pointerEvents = "auto";
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        if (userTypeID == 1 || userTypeID == 3 || userTypeID == 4 || userTypeID == 6 || userTypeID == 7 || userTypeID == 8 || userTypeID == 9 ) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+            $('#txtFromDate').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                if ($("#txtToDate").val() != '') {
+                    var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                    var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                    if (fromDate > toDate) {
+                        $("#txtToDate").val('');
+                        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                        $('#btnJobStatusBarReport').css('opacity', '0.5');
+                    }
+                }
+
+                var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                if ($('#txtToDate').data('datepicker')) {
+                    $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+                }
+            });
+            $("#txtToDate").datepicker({
+                format: dateFormat,
+                autoclose: true
+            });
+            setMTD();
+            if ($("#txtToDate").val() != '') {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }
+        }
+    });
+
+    $("#txtToDate").change(function () {
+        if ($("#txtToDate").val() != '') {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+    });
+
+    function setMTD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - (d.getDate() - 1));
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setPM() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - (d1.getDate()));
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setCFY() {
+        removeStartDate();
+
+        var d2 = new Date();
+        var d = new Date(d2.getFullYear(), d2.getMonth(), "1");
+        d.setDate(1);
+
+        if (d2.getMonth() < 7) {
+            d.setYear(d.getFullYear() - 1);
+            d.setMonth(6);
+        } else {
+            d.setMonth(6);
+        }
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function set12M() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setYear(d.getFullYear() - 1);
+        d.setDate(d.getDate() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function removeStartDate() {
+        var d = new Date();
+        d.setDate(d.getDate() - 730);
+        $('#txtToDate').data('datepicker').setStartDate(d);
+    }
+
+    function setLBD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+
+        $("#txtFromDate").val(fDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").val(fDate);
+        $("#txtToDate").datepicker("update", fDate);
+    }
+
+    function setCurrentDate() {
+        var d1 = new Date();
+        d1.setDate(d1.getDate());
+
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtToDate").val(tDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function Reseller() {
+        $('#popupReseller').modal({ backdrop: 'static', keyboard: false });
+        $('#ResellerBit').val('0');
+        $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+    }
+
+    function RAM() {
+        //$('#popupRAM').modal({ backdrop: 'static', keyboard: false });
+        //$('#AvailableRAM').html($('#LstRAMAssignedUser option').length);
+        //$('#RAMBit').val('0');
+
+        var url = '@Url.Action("_RAMView", "FormBotReport")';
+        url += '?hdnResellers=' + $("#hdnResellers").val();
+        var assignedRAM = $("#hdnRAM").val();
+
+        $.ajaxSetup({ cache: false });
+        $('#divRAM').load(url, function () {
+            $('#popupRAM').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableRAM').html($('#LstRAMAssignedUser option').length);
+            $('#RAMBit').val('0');
+            SetSelectedRAM(assignedRAM);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });
+    }
+
+    function SetSelectedRAM(assignedRAM) {
+        if (assignedRAM != "" && assignedRAM != null) {
+            var array = assignedRAM.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstRAM option[value=' + array[i] + ']').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_RAM").click();
+        }
+    }
+
+
+
+    function Users() {
+        $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        //$('#SCABit').val('0');
+        $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        $('#SCABit').val('0');
+    }
+
+    function FCO() {
+        $('#popupFCO').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableFCO').html($('#LstFCOAssignedUser option').length);
+        $('#FCOBit').val('0');
+
+    }
+
+    function SCO() {
+        //$('#popupSCO').modal({ backdrop: 'static', keyboard: false });
+        //$('#AvailableSCO').html($('#LstSCOAssignedUser option').length);
+        //$('#SCOBit').val('0');
+
+        var url = '@Url.Action("_SCOView", "FormBotReport")';
+        url += '?id=8&&hdnSolarCompanies=' + $("#hdnUsers").val();
+        var assignedSCO = $("#hdnSCO").val();        
+        $.ajaxSetup({ cache: false });
+        $('#divSCO').load(url, function () {
+            $('#popupSCO').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableSCO').html($('#LstSCOAssignedUser option').length);
+            $('#SCOBit').val('0');
+            SetSelectedSCO(assignedSCO);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });
+    }
+
+    function SetSelectedSCO(assignedSCO) {        
+        if (assignedSCO != "" && assignedSCO != null) {
+            var array = assignedSCO.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstSCO option[value=' + array[i] + ']').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_SCO").click();
+        }
+    }
+
+    function SSCUser() {
+        $('#popupSSC').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSSC').html($('#LstSSCAssignedUser option').length);
+        $('#SSCBit').val('0');
+    }
+
+    function SEUser() {
+        $('#popupSE').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSE').html($('#LstSEAssignedUser option').length);
+        $('#SEBit').val('0');
+    }
+
+    function SCUser() {
+        $('#popupSC').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSC').html($('#LstSCAssignedUser option').length);
+        $('#SCBit').val('0');
+    }
+
+    function SWHUser() {
+        $('#popupSWH').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableSWH').html($('#LstSWHAssignedUser option').length);
+        $('#SWHBit').val('0');
+    }
+
+    function disableFCO() {
+        //disable solar company button
+        if ($('#FCOID').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('FCOID').style.pointerEvents = 'none';
+                $('#FCOID').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('FCOID').style.pointerEvents = 'auto';
+                $('#FCOID').css('opacity', '1');
+            }
+        }
+    }
+
+    function disableUsers() {
+
+        //disable solar company button
+        if ($('#UserID').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('UserID').style.pointerEvents = 'none';
+                $('#UserID').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('UserID').style.pointerEvents = 'auto';
+                $('#UserID').css('opacity', '1');
+            }
+        }
+    }
+
+    function disableSCO() {
+        //disable solar company button
+        if ($('#SCOID').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('SCOID').style.pointerEvents = 'none';
+                $('#SCOID').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('SCOID').style.pointerEvents = 'auto';
+                $('#SCOID').css('opacity', '1');
+            }
+        }
+    }
+
+    function disableSSC() {
+        //disable solar company button
+        if ($('#SSCUser').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('SSCUser').style.pointerEvents = 'none';
+                $('#SSCUser').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('SSCUser').style.pointerEvents = 'auto';
+                $('#SSCUser').css('opacity', '1');
+            }
+        }
+    }
+
+    function disableSE() {
+        //disable solar company button
+        if ($('#SEUser').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('SEUser').style.pointerEvents = 'none';
+                $('#SEUser').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('SEUser').style.pointerEvents = 'auto';
+                $('#SEUser').css('opacity', '1');
+            }
+        }
+    }
+
+
+    function disableSWH() {
+        //disable solar company button
+        if ($('#SWHUser').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('SWHUser').style.pointerEvents = 'none';
+                $('#SWHUser').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('SWHUser').style.pointerEvents = 'auto';
+                $('#SWHUser').css('opacity', '1');
+            }
+        }
+    }
+
+    function disableSC() {
+        //disable solar company button
+        if ($('#SCUser').length > 0) {
+            if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+                document.getElementById('SCUser').style.pointerEvents = 'none';
+                $('#SCUser').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('SCUser').style.pointerEvents = 'auto';
+                $('#SCUser').css('opacity', '1');
+            }
+        }
+    }
+
+    function ResetSearchFilters() {
+        setMTD();
+
+        $('#DateGroups').each(function () {
+            $(this).find('button').each(function () {
+                $(this).removeClass("primary");
+                $(this).addClass("btn-default");
+            });
+        });
+
+        $('#btnMTD').addClass("primary");
+        $('#btnMTD').removeClass("btn-default");
+
+        $('#cntFCO').html('0');
+        $("#hdnFCO").val('');
+
+        $('#cntRAM').html('0');
+        $("#hdnRAM").val('');
+
+        $('#cntResellers').html('0');
+        $("#hdnResellers").val('');
+
+        $('#cntUsers').html('0');
+        $("#hdnUsers").val('');
+
+        $('#cntSCO').html('0');
+        $("#hdnSCO").val('');
+
+        $('#cntSSC').html('0');
+        $("#hdnSSC").val('');
+
+        $('#cntSE').html('0');
+        $("#hdnSE").val('');
+
+        $('#cntSWH').html('0');
+        $("#hdnSWH").val('');
+
+        $('#cntSC').html('0');
+        $("#hdnSC").val('');
+
+        $('#LstFCOAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstFCO");
+        });
+        $('#LstRAMAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstRAM");
+        });
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers1");
+        });
+        $('#LstSCOAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSCO");
+        });
+        $('#LstSSCAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSSC");
+        });
+        $('#LstSEAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSE");
+        });
+        $('#LstSWHAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSWH");
+        });
+        $('#LstSCOAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSCO");
+        });
+        //document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //$('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+
+    $("#DateGroups").on("click", "button", function () {
+        $('#DateGroups').each(function () {
+            $(this).find('button').each(function () {
+                $(this).removeClass("primary");
+                $(this).addClass("btn-default");
+            });
+        });
+
+        $(this).addClass("primary");
+        $(this).removeClass("btn-default");
+    });
+
+    $("#chkCurrentDate").click(function () {
+        if ($(this).prop('checked') == true)
+            setCurrentDate();
+    })
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetAllocationReportList", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                $('#divGrid').show();
+                BindGrid(result.lstTotalJobRecord);
+                BindChart(result.lstAllocationReportChart)
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindChart(resultData) {
+        var chartType = 'bar';//$('#drdChartType').val();
+        var groupedData = {};
+        var xAxis = ['xAxis'];
+        var data1 = ['counts'];
+        var result = [];
+        var dataGroup = ['Name'];
+        var chartData = {};        
+        for (var i = 0; i < resultData.length; i++) {
+            var item = resultData[i];
+            xAxis.push(item.Name);
+            data1.push(item.counts);
+        }
+        if (chartType == 'pie') {
+            xAxis.shift();
+            data1.shift();
+            result.push(xAxis);
+            result.push(data1);
+            chartData = {
+                rows: result,
+                type: chartType
+            }
+        }
+        else {
+            result.push(xAxis);
+            result.push(data1);
+            chartData = {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+            }
+        }
+        $('#chartbox').css('display', 'block');
+
+        chartdiv = c3.generate({
+            //data: {
+            //    columns: result,
+            //    type: chartType,
+            //    x: 'xAxis'
+            //    //, groups: [dataGroup]
+            //},
+            data: chartData,
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if (chartType == 'pie') {
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    function BindGrid(result) {
+        $('#chartbox').hide();
+        if ($('#datatable')) {
+            var table = $('#datatable').DataTable();
+            table.destroy();
+        }
+        var tableHeaders = '';
+        var tableColumns = [];
+
+        @*if ($('#ReportID').val() == 6 && (@FormBot.Helper.ProjectSession.UserTypeId == 4 || @FormBot.Helper.ProjectSession.UserTypeId == 8 || @FormBot.Helper.ProjectSession.UserTypeId == 1 || @FormBot.Helper.ProjectSession.UserTypeId == 3)) {
+            tableColumns.push("Total Job");
+        }
+        else if($('#ReportID').val() == 6 && (@FormBot.Helper.ProjectSession.UserTypeId == 2 || @FormBot.Helper.ProjectSession.UserTypeId == 5))
+        {
+            tableColumns.push("Total Solar Company");
+        }
+        else{
+            tableColumns.push("Solar Company Name");
+            tableColumns.push("Total Job");
+        }*@
+
+        tableColumns.push("Reseller");
+        if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+            //tableColumns.push("Reseller");
+            tableColumns.push("Account Manager");
+            tableColumns.push("Solar Company Name");
+            tableColumns.push("Solar Company Creation Date");
+            tableColumns.push("Status");
+        }
+        else {
+            tableColumns.push("User Full Name");
+            tableColumns.push("User type");
+            tableColumns.push("Solar Company Name");
+            tableColumns.push("Job Reference No");
+            tableColumns.push("Job Stage");
+            tableColumns.push("Allocation Date");
+            tableColumns.push("Status");
+        }
+
+
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th><span>" + val + "</span></th>";
+        });
+        $("#displayTable").empty();
+        $("#displayTable").append('<table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead></table>');
+
+        getColumn($('#ReportID').val());
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            retrieve: true,
+            columns: columnsArray,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    footer: true
+                }
+            ],
+            order: [[0, "asc"]]
+        });
+        $('#datatable_length').hide();
+        $('#datatable_info').hide();
+        //$('#datatable tr th').attr('class', 'sorting_disabled table-header');
+        //$('#datatable tbody tr td:nth-child(2)').attr('style', 'text-align:right;');
+        if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+            $('#datatable thead tr th:nth-child(4)').attr('style', 'text-align:center;');
+            $('#datatable tbody tr td:nth-child(4)').attr('style', 'text-align:center;');
+        }
+        //$('#datatable th:first').attr('style', 'width:80% !important;');
+        $('.buttons-excel').addClass('primary pull-right');
+        $('.buttons-excel').html('<span>Export to Excel</span>');
+    }
+
+    function getColumn(id) {
+        @*if (id == 6 && (@FormBot.Helper.ProjectSession.UserTypeId == 4 || @FormBot.Helper.ProjectSession.UserTypeId == 8 || @FormBot.Helper.ProjectSession.UserTypeId == 1 || @FormBot.Helper.ProjectSession.UserTypeId == 3 ||  @FormBot.Helper.ProjectSession.UserTypeId == 5 ||@FormBot.Helper.ProjectSession.UserTypeId == 2))
+        {
+            columnsArray = [
+               {
+                   'data': 'TotalJob',
+                   "orderable": true
+               },
+            ];
+        }
+        else
+        {
+            columnsArray = [
+               {
+                   'data': 'SolarCompanyName',
+                   "orderable": true
+               },
+               {
+                   'data': 'TotalJob',
+                   "orderable": true
+               },
+            ];
+        }*@
+        if ($('#LstRAMAssignedUser option').length > 0 || $('#LstResellerAssignedUser option').length > 0) {
+            columnsArray = [
+                    {
+                        'data': 'ResellerName',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'Account_Manager',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'CompanyName',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'SolarCompanyCreationDate',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'SolarCompanyStatus',
+                        "orderable": true
+                    },
+
+            ];
+        }
+        else {
+            columnsArray = [
+                    {
+                        'data': 'ResellerName',
+                        "orderable": true,
+                        visible: '@FormBot.Helper.ProjectSession.UserTypeId' == "1" ? true : false,
+                    },
+                    {
+                        'data': 'UserName',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'UserTypeName',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'SolarCompanyName',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'RefNumber',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'JobStage',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'AllocationDate',
+                        "orderable": true
+                    },
+                    {
+                        'data': 'UserStatus',
+                        "orderable": true
+                    },
+            ];
+        }
+
+    }
+
+    function BindGrid1(result) {
+        if ($('#datatable1')) {
+            var table = $('#datatable1').DataTable();
+            table.destroy();
+        }
+        var tableHeaders = '';
+        var tableColumns = [];
+
+        if ($('#ReportID').val() == 6) {
+            tableColumns.push("Ref Number");
+            tableColumns.push("Solar Company Name");
+            tableColumns.push("Stage Name");
+            tableColumns.push("Creator");
+            tableColumns.push("Start Date");
+            tableColumns.push("End Date");
+        }
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th><span>" + val + "</span></th>";
+        });
+        $("#displayTable1").empty();
+        $("#displayTable1").append('<table id="datatable1" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead></table>');
+
+        getColumn1($('#ReportID').val());
+
+        $('#datatable1').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            retrieve: true,
+            info: false,
+            columns: columnsArray,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    footer: true
+                }
+            ],
+            order: [[0, "asc"]]
+        });
+        $('#datatable_length').hide();
+        $('#datatable_info').hide();
+        // $('#datatable1 tr th').attr('class', 'sorting_disabled table-header');
+        $('#datatable1 th:first').attr('style', 'width:13% !important;');
+        $('.buttons-excel').addClass('primary pull-right');
+        $('.buttons-excel').html('<span>Export to Excel</span>');
+    }
+
+    function getColumn1(id) {
+        if (id == 6) {
+            columnsArray = [
+               {
+                   'data': 'RefNumber',
+                   "orderable": true
+               },
+               {
+                   'data': 'CompanyName',
+                   "orderable": true
+               },
+               {
+                   'data': 'StageName',
+                   "orderable": true
+               },
+               {
+                   'data': 'Creator',
+                   "orderable": true
+               },
+                {
+                    'data': 'StartDate',
+                    "render": function (result, type, full, meta) {
+                        return ConvertToDate(result);
+                    },
+                    "orderable": true
+                },
+               {
+                   'data': 'EndDate',
+                   "render": function (result, type, full, meta) {
+                       return ConvertToDate(result);
+                   },
+                   "orderable": true
+               },
+            ];
+        }
+    }
+
+
+    function ConvertToDate(data) {
+        if (data != null) {
+            var date = new Date(parseInt(data.replace('/Date(', '')));
+            return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+        }
+        else {
+            return '';
+        }
+    }
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+
+    #datatable1 {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable1 thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+    #datatable1 {
+        width: 100% !important;
+    }
+
+        #datatable1 th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    table.dataTable1 {
+        width: 100%;
+        margin: 0 auto;
+        clear: both;
+        /* border-collapse: separate; */
+        border-spacing: 0;
+    }
+</style>

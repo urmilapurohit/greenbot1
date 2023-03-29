@@ -1,0 +1,2546 @@
+﻿@model FormBot.Entity.STCInvoice
+@using FormBot.Helper;
+@{
+    ////Todo
+    bool isInvoiceMarkUnMark = false;
+    bool isInvoiceRemoveSelected = false;
+    bool isInvoiceBulkChange = false;
+    bool isInvoiceSendToXero = false;
+    bool isInvoiceSyncWithXero = false;
+    bool isInvoiceBulkUploadRemittances = false;
+    bool isInvoiceImportCSV = false;
+    bool isInvoiceExportCSV = false;
+    bool isAllScaJobView = false;
+    //bool isInvoiceEdit = false;
+
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceMarkUnMark) { isInvoiceMarkUnMark = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceRemoveSelected) { isInvoiceRemoveSelected = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceBulkChange) { isInvoiceBulkChange = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceSendToXero) { isInvoiceSendToXero = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceSyncWithXero) { isInvoiceSyncWithXero = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceBulkUploadRemittances) { isInvoiceBulkUploadRemittances = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceImportCSV) { isInvoiceImportCSV = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceExportCSV) { isInvoiceExportCSV = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+    //if (d.MenuId == (int)SystemEnums.MenuId.InvoiceEdit) { isInvoiceEdit = true; }
+});
+        TempData.Keep();
+    }
+}
+@{
+    ViewBag.Title = "STCInvoice";
+}
+<style type="text/css">
+
+    #grid .table-responsive td {
+        width: 1px;
+    }
+
+    #listOfLog {
+        width: 90%;
+        margin: auto;
+    }
+
+        #listOfLog li {
+            margin-top: 10px;
+            list-style: circle;
+        }
+
+    .select2-container--open .select2-dropdown--below {
+        width: 300px !important;
+    }
+</style>
+<input id="IsWholeSaler" type="hidden" name="IsWholeSaler">
+<input id="UserId_WholeSaler" type="hidden" name="UserId_WholeSaler">
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">STC Invoice</h1>
+            <div class="col-md-8">
+                <div class="form-inline pull-right">
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+                        if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+                        {
+                            <div class="form-group">
+                                <label for="exampleInputName2">Reseller:</label>
+                                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control wth150 mrr10" })
+                            </div>
+                        }
+                        if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                        {
+                            <div class="form-group">
+                                <label for="exampleInputEmail2">Account Manager:</label>
+                                @Html.DropDownListFor(model => model.RAMID, new List<SelectListItem>(), "Select", new { id = "RamId", @class = "form-control wth150" })
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="joblisting_search">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Invoice Number:</label>
+                    <input type="text" id="txtInvoiceNumber" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Solar Company :</label>
+                        @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), "Select", new { id = "SolarCompanyId", @class = "form-control" })*@
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+                </div>
+            }
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Reference Number/job ID Number:</label>
+                    <input type="text" id="txtRefJobId" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="255">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Owner name:</label>
+                    <input type="text" id="txtOwnerName" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Installation Address:</label>
+                    <input type="text" id="txtInstallationAddress" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Submission date range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSubmissionFromDate" placeholder="From" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSubmissionToDate" placeholder="To" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settlement date range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettlementFromDate" placeholder="From" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettlementToDate" placeholder="To" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settlement Term :</label>
+                    @Html.DropDownListFor(model => model.DictSettlementTerm, new SelectList(Model.DictSettlementTerm, "Key", "Value"), "Select", new { id = "SettlementTermId", @class = "form-control" })
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="input-group">
+                    <label class="checkbox-inline" style="margin-right:10px;"><input type="checkbox" id="chkSTCInvoice" checked />STC Invoice</label>
+                    <label class="checkbox-inline"><input type="checkbox" id="chkCreditNotes" checked>Credit Notes</label>
+                    <label class="checkbox-inline"><input type="checkbox" id="chkSentInvoice" checked>Sent Invoice</label>
+                    <label class="checkbox-inline"><input type="checkbox" id="chkUnsentInvoice" checked>Unsent Invoice</label>
+                </div>
+            </div>
+            <div class="col-sm-12" style="margin-top:10px;">
+                <div class="form-group">
+                    <input type="button" id="btnSearch" class="primary search_ic" value="Search" onclick="SearchSTCInvoiceRecords();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" class="" value="Reset">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid_topbar mag-top-20">
+        <div class="row">
+            @if (isInvoiceBulkChange)
+            {
+                <div class="col-sm-6" style="display:inline-block">
+                    <div class="form-group col-md-4" style="padding-left:0;">
+                        @Html.DropDownListFor(model => model.PaymentStatusID, new List<SelectListItem>(), new { id = "PaymentStatusID", @class = "form-control" })
+                    </div>
+                    <a href="javascript:void(0);" onclick="BulkChangePaymentStatus();" style="margin-right:20px;" class="primary payment-status--h-ic" title="Bulk Change Payment Status">Bulk Change Payment Status</a>
+                    @*<a href="javascript:void(0);" onclick="SyncwithXeroLog();" style="margin-right:20px;" class="primary " title="Log of Sync with Xero">Sync with Xero Logs </a>*@
+
+                </div>
+            }
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+            {
+                <div class="col-sm-6 rigth-btn">
+                    <button id="btnRegenerate" class="btn default icon-btn reGenerate-ic btn-sm" type="button" title="Re-Generate STC Inoice" onclick="RegenerateSTCInvoice();"></button>
+                    @if (isInvoiceMarkUnMark)
+                    {
+                        <button id="btnmark" class="btn default icon-btn mark-ic btn-sm" type="button" title="Mark" onclick="MarkUnMarkSelectedAsSentForPayment(1);"></button>
+                        <button id="btnUnmark" class="btn default unmark-ic icon-btn btn-sm" type="button" title="UnMark" onclick="MarkUnMarkSelectedAsSentForPayment(0);"></button>
+                    }
+                    @if (isInvoiceRemoveSelected)
+                    {
+                        <button id="btnRemoveSelectedSTCInvoice" class="btn default icon-btn btn-sm remove-ic" type="button" title="Remove" onclick="RemoveSelectedSTCInvoice();"></button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords" style="padding-top:0px;"></p>
+    </div>
+    <div class="gridtop_filters">
+        <div class="submission-filters">
+            <span class="stage_title">Filters:</span>
+            <div class="filters-row" style="padding:0;">
+                <ul>
+                    @*<li><a id="invoicestage_0" href="javascript:void(0);" style="cursor:pointer; background-color: #686868;" onclick="SetStageId('0');">Show All<span>@Model.lstSTCInvoiceStages.Sum(t => t.jobCount)</span></a></li>*@
+                    @{
+                        //Outstanding as default first filter
+                        var stageModel = Model.lstSTCInvoiceStages.Where(w => w.JobStageId == 4).FirstOrDefault();
+                        <li><a id="invoicestage_@stageModel.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#686868;" onclick="SetStageId('@stageModel.JobStageId');">@stageModel.StageName<span>@stageModel.jobCount</span></a></li>
+                    }
+                    @foreach (var stage in Model.lstSTCInvoiceStages)
+                    {
+                        if (stage.JobStageId != 4)
+                        {
+                            <li><a id="invoicestage_@stage.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<span>@stage.jobCount</span></a></li>
+                        }
+                    }
+                    <li><a id="invoicestage_0" href="javascript:void(0);" style="cursor:pointer; background-color: #f7f7f7;" onclick="SetStageId('0');">Show All<span>@Model.lstSTCInvoiceStages.Sum(t => t.jobCount)</span></a></li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="grid">
+        <!-- Grid start -->
+        <div class="table-responsive toggle-table-row">
+            <table id="datatable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                        <th><span>JobID</span></th>
+                        <th><span>Invoice Number</span></th>
+                        <th><span>REF No - Company Name - Owner Name</span></th>
+                        <th><span>Installation address</span></th>
+                        <th><span>Payment status</span></th>
+                        <th><span>Solar company</span></th>
+                        <th>STC</th>
+                        @*<th>Calculated STC</th>*@
+                        <th><span>Settlement Term</span></th>
+                        <th><span>Submission Date</span></th>
+                        <th><span>Settlement Date</span></th>
+                        <th><span>I</span></th>
+                        <th><span>Total</span></th>
+                        <th><span>Amount Paid</span></th>
+                        <th>F</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div class="total-amount-block">
+        <div class="total-amount">
+            <lable>Total Amount : <b style="margin-left:0px;">$</b><b id="lblTotalAmount"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total Amount Selected : <b style="margin-left:0px;">$</b><b id="lblTotalAmountSelected"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total Amount Viewable : <b style="margin-left:0px;">$</b><b id="lblTotalAmountViewable"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total STC Selected : <b style="margin-left:0px;"></b><b><span id="btotalTradedSTC">0</span></b></lable>
+        </div>
+    </div>
+    @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+    {
+        <div class="total-amount-rigth-btn">
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2)
+            {
+                @*<a href="javascript:void(0);" onclick="CheckContactInXero();" style="margin-right:0; margin-top:10px;" class="btn default pull-right sync-ic" title="Check In Xero">Check In Xero</a>*@
+                <a href="javascript:void(0);" onclick="$('#IsWholeSaler').val() == 1 ? CheckInXero(false, false) : CheckContactInXero();" style="margin-right:0; margin-top:10px;" class="btn default pull-right sync-ic" title="Check In Xero">Check In Xero</a>
+            }
+            @if (isInvoiceSyncWithXero)
+            {
+                <a href="javascript:void(0);" onclick="SyncWithXero();" style="margin-right:0; margin-top:10px;margin-right:10px;" class="btn default pull-right sync-ic" title="Sync With Xero">Sync With Xero</a>
+            }
+            @if (isInvoiceSendToXero)
+            {
+                <a href="javascript:void(0);" onclick="SendXeroDrafts();" style="margin-right:0; margin-top:10px;margin-right:10px;" class="btn default  pull-right send-ic" title="Send To Xero Draft">Send To Xero Draft</a>
+            }
+            @if (isInvoiceExportCSV || ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2)
+            {
+                @*<div class="btn-group" role="group">
+                        <button type="button" class="btn primary dropdown-toggle save_ic" id="btnDropMainSave" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" tabindex="81">
+                            Export CSV <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" id="SaveJob" style="min-width:96%;text-align:center;">
+                            <li><a href="javascript:void(0)">Selected Invoice</a></li>
+                            <li><a href="javascript:void(0)">All invoice</a></li>
+                        </ul>
+                    </div>*@
+                <div class="btn-group pull-right" role="group">
+                    <a href="javascript:void(0);" style="margin-right:0; margin-top:10px;margin-right:10px;color:#383838 !important;" class="btn default dropdown-toggle pull-right export-ic" title="Export CSV" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Export CSV <span class="caret"></span></a>
+                    <ul class="dropdown-menu" id="SaveJob" style="min-width:96%;text-align:center;">
+                        <li><a href="javascript:void(0)" onclick="SendStcCsv(0);">Selected Invoice</a></li>
+                        <li><a href="javascript:void(0)" onclick="SendStcCsv(1);">All invoice</a></li>
+                    </ul>
+                </div>
+            }
+            @*<a href="javascript:void(0);" onclick="ImportCSV();" id="importCSV" style="margin-right:0; margin-top:10px;margin-right:10px;" class="primary pull-right import-h-ic" title="Import CSV">Import CSV</a>*@
+            @if (isInvoiceImportCSV || ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2)
+            {
+                <div class="fileUpload btn default import-ic pull-right" id="divImportCSV" title="Import CSV" style="margin-right:0; margin-top:10px;margin-right:10px;">
+                    <span>Import CSV</span>
+                    <input id="importCSV" type="file" class="upload fileUpload" title="Import CSV" name="Import CSV" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                </div>
+            }
+            @if (isInvoiceBulkUploadRemittances || ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2)
+            {
+                <div class="fileUpload btn primary upload_ic primary pull-right add_ic" id="divUpload" title="Bulk upload Remittances(.zip file format)" style="margin-right:0; margin-top:10px;margin-right:10px;">
+                    <i class="upload_ic sprite-img"></i>
+                    <span>Bulk upload Remittances(.zip file format)</span>
+                    <div class="btn primary icon-btn ">
+                        @*<i class="upload_ic sprite-img"></i>*@
+                        <span class="sprite-img save_ic"></span>
+                        <input id="uploadBtnBulk" type="file" class="upload fileUpload" name="Bulk upload Remittances(.zip file format)" />
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+<div class="modal fade add-part-modal" tabindex="-1" role="dialog" id="popupOpenInvoice">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div id="frmAddInvoicing"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade add-part-modal" tabindex="-1" role="dialog" id="popupOpenAmountDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div id="frmAmountDetail"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade add-part-modal" id="popupboxContact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" id="LoadContactDetail">
+            @*<div class="modal-footer">
+                    <button type="button" class="btn primary save_ic">Update in Greenbot</button>
+                </div>*@
+        </div>
+    </div>
+</div>
+
+
+@*<div class="modal fade" id="popupSyncWithXeroLog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title" id="myModalLabel">Sync with Xero Log</h4>
+                </div>
+                <div class="modal-body">
+                    <ul id="listOfLog">
+                        <li>this is exmple</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>*@
+
+
+
+@*Popup for export csv*@
+@*<div class="modal fade" id="popupboxExportCSV" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title" id="myModalLabel">Export CSV</h4>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <label class="radio-inline"><input type="radio" value="1" name="exportInvoice">All Invoice</label>
+                        <label class="radio-inline"><input type="radio" value="2" name="exportInvoice" checked>Selected Invoice(s) </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary" id="btnExportCSV">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+@*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/bootstrap-datetimepicker.js"></script>
+    <script src="~/Scripts/bootstrap-datepicker.js"></script>
+    <link href="~/Content/datepicker.css" rel="stylesheet" />
+
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+<script>
+        var chkCount=0;
+        var selectedRows = [];
+        var SelectedStageId = 4;
+        var totalAmount=0;
+        var BaseURL= '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'STCInvoice/';
+        var UserType = '@ProjectSession.UserTypeId';
+        var reId;
+        var urlJobIndex = '@Url.Action("Index", "Job")';
+        var toggleId;
+        var urlXeroContact = '@Url.Action("_XeroContact", "User")';
+        var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+        @*if('@TempData["SendDrafts"]' !=null && '@TempData["SendDrafts"]'!='')
+        {
+            showSuccessMessage("Xero drafts has been sent successfully.");
+        }
+        if('@TempData["SendCreditNote"]' !=null && '@TempData["SendCreditNote"]'!='')
+        {
+            showSuccessMessage("Xero credit note has been sent successfully.");
+        }*@
+        @*if('@TempData["SyncXero"]' !=null && '@TempData["SyncXero"]'!='')
+        {
+            showSuccessMessage("STC Invoice has been synced successfully.");
+        }*@
+
+    $(document).ready(function () {
+        $("#ResellerId").select2();
+            $('#searchSolarCompany').autocomplete({
+                minLength: 0,
+                source: function (request, response) {
+                    var data=[];
+                    $("#hdnsolarCompanyid").val(0);
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.text.toLowerCase().indexOf($("#searchSolarCompany").val().toLowerCase()) > -1 ) {
+                            data.push({Title : value.text,id:value.value});
+                        }
+                    });
+
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title,id:item.id };
+                    }))
+                },
+                select: function (event, ui) {
+                    $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+                }
+            }).on('focus', function() { $(this).keydown(); });
+
+            $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+                var re = new RegExp($.trim(this.term.toLowerCase()));
+                var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                    "</span>");
+                return $("<li style='font-size:14px;'></li>")
+                    .data("item.autocomplete", item)
+                    .append("<a>" + t + "</a>")
+                    .appendTo(ul);
+            };
+
+            var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+            var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+
+            FillDropDown('PaymentStatusID', '@Url.Action("GetPaymentStatus", "STCInvoice")', null, true, null, 'Select Payment Status');
+
+            if(UserType == 2 || UserType == 5 )
+            {
+                reId = '@ProjectSession.ResellerId';
+            }
+            else
+            {
+                reId = $('#ResellerId').val();
+            }
+
+            $('#txtSubmissionFromDate').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                if ($("#txtSubmissionToDate").val() != '') {
+                    var fromDate = new Date(ConvertDateToTick($("#txtSubmissionFromDate").val(), dateFormat));
+                    var toDate = new Date(ConvertDateToTick($("#txtSubmissionToDate").val(), dateFormat));
+                    if (fromDate > toDate) {
+                        $("#txtSubmissionToDate").val('');
+                    }
+                }
+                var tickStartDate = ConvertDateToTick($("#txtSubmissionFromDate").val(), dateFormat);
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                if ($('#txtSubmissionToDate').data('datepicker')) {
+                    $('#txtSubmissionToDate').data('datepicker').setStartDate(new Date(tDate));
+                }
+            });
+            $("#txtSubmissionToDate").datepicker({
+                format: dateFormat,
+                autoclose: true
+            });
+            $('#txtSubmissionToDate').change(function () {
+                var fromDate = new Date(ConvertDateToTick($("#txtSubmissionFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtSubmissionToDate").val(), dateFormat));
+            });
+
+            $('#txtSettlementFromDate').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                if ($("#txtSettlementToDate").val() != '') {
+                    var fromDate = new Date(ConvertDateToTick($("#txtSettlementFromDate").val(), dateFormat));
+                    var toDate = new Date(ConvertDateToTick($("#txtSettlementToDate").val(), dateFormat));
+                    if (fromDate > toDate) {
+                        $("#txtSettlementToDate").val('');
+                    }
+                }
+                var tickStartDate = ConvertDateToTick($("#txtSettlementFromDate").val(), dateFormat);
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                if ($('#txtSettlementToDate').data('datepicker')) {
+                    $('#txtSettlementToDate').data('datepicker').setStartDate(new Date(tDate));
+                }
+            });
+            $("#txtSettlementToDate").datepicker({
+                format: dateFormat,
+                autoclose: true
+            });
+            $('#txtSettlementToDate').change(function () {
+                var fromDate = new Date(ConvertDateToTick($("#txtSettlementFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtSettlementToDate").val(), dateFormat));
+            });
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3)
+            {
+                var IsResellerExist = false;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetReseller", "Reseller")',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (reseller) {
+                        $.each(reseller, function (i, res) {
+                            $("#ResellerId").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                            if(IsResellerExist==false && res.Value==localStorage.getItem('STCInvoice_ResellerId')){
+                                IsResellerExist=true;
+                            }
+                        });
+
+                        if(IsResellerExist){
+                            document.getElementById("ResellerId").value = localStorage.getItem('STCInvoice_ResellerId')
+                        }
+                        else{
+                            $("#ResellerId").val($("#ResellerId option:first").val());
+                            localStorage.setItem('STCInvoice_ResellerId',$("#ResellerId option:first").val());
+                        }
+
+                        GetRAMByResellerId($("#ResellerId").val());
+                        BindSolarCompany($("#ResellerId").val(),document.getElementById("RamId").value);
+                        GetSTCInvoicePaymentStatusStageCount();
+                        checkIsWholeSaler($('#ResellerId').val());
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Resellers.' + ex);
+                    }
+                });
+            }
+
+            if('@Model.UserTypeID'==2){
+                GetRAMByResellerId('@ProjectSession.ResellerId');
+                BindSolarCompany('@ProjectSession.ResellerId',document.getElementById("RamId").value);
+                GetSTCInvoicePaymentStatusStageCount();
+            }
+
+            if ('@Model.UserTypeID' == 5) {
+                if (isAllScaJobView == "true") {
+                    BindSolarCompany('@ProjectSession.ResellerId',0);
+                } else {
+                    BindSolarCompany(0,'@ProjectSession.LoggedInUserId');
+                }
+                GetSTCInvoicePaymentStatusStageCount();
+            }
+
+            if('@Model.UserTypeID'==4){
+                GetSTCInvoicePaymentStatusStageCount();
+            }
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                $("#ResellerId").focus();
+            }
+            else if('@Model.UserTypeID'==2){
+                $("#RamId").focus();
+            }
+            else if('@Model.UserTypeID'==5){
+                //$("#SolarCompanyId").focus();
+                $("#searchSolarCompany").focus();
+            }
+            else{
+                $("#txtInvoiceNumber").focus();
+            }
+
+            SetParamsFromLocalStorage();
+
+            $("#ResellerId").change(function () {
+                GetRAMByResellerId($("#ResellerId").val());
+                BindSolarCompany($("#ResellerId").val(),0);
+                GetSTCInvoicePaymentStatusStageCount();
+                $("#datatable").dataTable().fnDraw();
+                localStorage.setItem('STCInvoice_ResellerId',document.getElementById("ResellerId").value);
+
+                if(UserType == 2 || UserType == 5 )
+                {
+                    reId = '@ProjectSession.ResellerId';
+                }
+                else
+                {
+                    reId = $('#ResellerId').val();
+                }
+                checkIsWholeSaler($('#ResellerId').val());
+            });
+
+            $("#RamId").change(function () {
+                if ($("#RamId").val() > 0 ) {
+                    BindSolarCompany(0,$("#RamId").val());
+                }
+                else {
+                    BindSolarCompany($("#ResellerId").val(),0);
+                }
+                GetSTCInvoicePaymentStatusStageCount();
+                localStorage.setItem('STCInvoice_RamId',document.getElementById("RamId").value);
+                $("#datatable").dataTable().fnDraw();
+            });
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+
+                columns: [
+                        { 'data': 'Id',
+                            "orderable": false,
+                            "render": function (data, type, full, meta) {
+                                if($('#chkAll').prop('checked')==true){
+                                    //return '<input type="checkbox" id="chk_'+full.STCInvoiceID+'" jobId='+full.JobID+' isInvoice='+full.IsInvoice+' STC='+full.STC+' IsGst='+full.IsGst+' TaxRate='+full.TaxRate+' STCPVDCode='+full.STCPVDCode+' PaymentStatusID='+full.PaymentStatusID+'  IsCreditNote='+full.IsCreditNote+' STCInvoiceNumber='+full.STCInvoiceNumber+' XeroInvoiceId='+ full.XeroInvoiceId +' checked >';
+                                    return '<input type="checkbox" id="chk_'+full.STCInvoiceID+'" jobId='+full.JobID+' isInvoice='+full.IsInvoice+' STC='+full.STC+' IsGst='+full.IsGst+' TaxRate='+full.TaxRate+' STCPVDCode='+full.STCPVDCode+' PaymentStatusID='+full.PaymentStatusID+'  IsCreditNote='+full.IsCreditNote+' STCInvoiceNumber='+full.STCInvoiceNumber+' XeroInvoiceId='+ full.XeroInvoiceId +' STCJobDetailsID='+ full.STCJobDetailsID +' SolarCompanyID='+ full.SolarCompanyId +' checked >';
+                                }
+                                else{
+                                    //return '<input type="checkbox" id="chk_'+full.STCInvoiceID+'" jobId='+full.JobID+' isInvoice='+full.IsInvoice+' STC='+full.STC+' IsGst='+full.IsGst+' TaxRate='+full.TaxRate+' STCPVDCode='+full.STCPVDCode+' PaymentStatusID='+full.PaymentStatusID+'  IsCreditNote='+full.IsCreditNote+' STCInvoiceNumber='+full.STCInvoiceNumber+' XeroInvoiceId='+ full.XeroInvoiceId +'>';
+                                    return '<input type="checkbox" id="chk_'+full.STCInvoiceID+'" jobId='+full.JobID+' isInvoice='+full.IsInvoice+' STC='+full.STC+' IsGst='+full.IsGst+' TaxRate='+full.TaxRate+' STCPVDCode='+full.STCPVDCode+' PaymentStatusID='+full.PaymentStatusID+'  IsCreditNote='+full.IsCreditNote+' STCInvoiceNumber='+full.STCInvoiceNumber+' XeroInvoiceId='+ full.XeroInvoiceId +' STCJobDetailsID='+ full.STCJobDetailsID +' SolarCompanyID='+ full.SolarCompanyId +'>';
+                                }
+                            }
+                        },
+                        { 'data': 'JobID' },
+                        { 'data' : 'STCInvoiceNumber',
+                            "render": function (data, type, full, meta) {
+                                if(full.STCInvoiceNumber!=null){
+                                    return '<a href="javascript:void(0);" style="text-decoration:none;" onclick="OpenInvoice(\''+full.STCInvoiceID+'\')">'+full.STCInvoiceNumber+'</a>'
+                                }
+                                else{
+                                    return '';
+                                }
+                            },
+                        },
+
+                       { 'data': 'RefNumberOwnerName',
+                           "render": function (data, type, full, meta) {
+
+                               if (full.RefNumberOwnerName != null) {
+                                   var urlIndex = '@Url.Action("Index", "Job")'
+                                   var url = urlIndex +"?id="+ full.Job_Id;
+
+                                   return '<a href="' + url + '" style="text-decoration:none;">' + full.RefNumberOwnerName + '</a>'
+                               }
+                               else {
+                                   return '';
+                               }
+                           },
+                       },
+
+                        { 'data': 'InstallationAddress'},
+
+                        { 'data': 'PaymentStatusName'},
+
+                        { 'data': 'SolarCompany',
+                            "render": function (data, type, full, meta) {
+                                $("#lblTotalAmount").html(parseFloat(full.TotalAmount).toFixed(2));
+                                //return full.SolarCompany;
+                                return '<lable id="SC" class="linkableSCA">'+full.SolarCompany+'</lable>'
+                            },
+                        },
+
+                        { 'data': 'STC',
+                            "render": function (data, type, full, meta) {
+                                if(full.IsGst){
+                                    return '<lable class="clsLabel" style=display:none>'+PrintDecimal(full.CalculatedSTC)+'</lable>' + data+'+GST';
+                                }
+                                else{
+                                    return '<lable class="clsLabel" style=display:none>'+PrintDecimal(full.CalculatedSTC)+'</lable>' + data;
+                                }
+                            },
+                            "orderable": false
+                        },
+
+                        //{ 'data': 'CalculatedSTC',
+                        //    "render": function (data, type, full, meta) {
+                        //        return '<lable class="clsLabel">'+PrintDecimal(full.CalculatedSTC)+'</lable>' ;
+                        //    },
+                        //    "orderable": false,
+                        //    "visible": false
+                        //},
+
+                        { 'data': 'SettlementTerms' ,
+                            "render": function (data, type, full, meta) {
+                                if(full.SettlementTerms==1){
+                                    return '24 Hour';
+                                }
+                                else if(full.SettlementTerms==2){
+                                    return '3 Days';
+                                }
+                                else if(full.SettlementTerms==3){
+                                    return '7 Days';
+                                }
+                                else if(full.SettlementTerms==4){
+                                    return 'CER Approved';
+                                }
+                                else if(full.SettlementTerms==5){
+                                    return 'Partial Payment';
+                                }
+                                else if(full.SettlementTerms==6){
+                                    return 'Upfront';
+                                }
+                                else if (full.SettlementTerms == 7) {
+                                    return 'Rapid-Pay';
+                                }
+                                else if (full.SettlementTerms == 8) {
+                                    return 'Opti-Pay';
+                                }
+                                else if (full.SettlementTerms == 9) {
+                                    return 'Commercial';
+                                }
+                                else if (full.SettlementTerms == 10) {
+                                    if(full.CustomSettlementTerm == 12)
+                                    {
+                                        imginfo = 'background:url(../Images/ic-info.png) no-repeat center; text-decoration:none; cursor:default;';
+                                        icn= '<a id="'+full.STCJobDetailsID+'"  onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" onclick="clickToggle(this.id);" " style="' + imginfo + '" data-toggle="tooltip" data-placement="bottom" title="' +full.PeakPayInfo+'" >&nbsp; &nbsp; &nbsp; &nbsp;</a>';
+                                        return full.CustomTermLabel + icn;
+                                    }
+                                    else
+                                        return full.CustomTermLabel;
+                                }
+                                else if (full.SettlementTerms == 11) {
+                                    return "Invoice Stc";
+                                }
+                                else if (full.SettlementTerms == 12) {
+                                    imginfo = 'background:url(../Images/ic-info.png) no-repeat center; text-decoration:none; cursor:default;';
+                                    icn= '<a id="'+full.STCJobDetailsID+'"  onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" onclick="clickToggle(this.id);" " style="' + imginfo + '" data-toggle="tooltip" data-placement="bottom" title="' +full.PeakPayInfo+'" >&nbsp; &nbsp; &nbsp; &nbsp;</a>';
+                                    return "PeakPay" + icn;
+                                }
+                                else {
+                                    return '';
+                                }
+                            },
+                        },
+
+        { 'data': 'strSubmissionDate' ,
+            "render": function (data, type, full, meta) {
+                //return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                return ToDate(data);
+            }
+        },
+
+        { 'data': 'strSettlementDate' ,
+            "render": function (data, type, full, meta) {
+                if(full.SettlementDate!=null){
+                    //return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                    return ToDate(data);
+                }
+                else{
+                    if(full.SettlementTerms==4){
+                        return 'On Approval';
+                    }
+                    else{
+                        return '';
+                    }
+                }
+            }
+        },
+
+        { 'data': 'IsInvoice',
+            "render": function (data, type, full, meta) {
+                if(full.IsInvoice){
+                    return 'Yes'
+                }
+                else{
+                    return 'No';
+                }
+            }
+        },
+
+        { 'data': 'Total',"sClass": "dt-right",
+            "render": function (data, type, full, meta) {
+                return '<lable class="lblTotal">'+PrintDecimal(full.Total)+'</lable>';
+            }
+        },
+
+        { 'data': 'AmountPaid',
+            "render": function (data, type, full, meta) {
+                imginfo = 'background:url(../Images/ic-info.png) no-repeat center; text-decoration:none; cursor:default;';
+                icn = '<a id="'+full.STCInvoiceID+'" onclick="OpenAmountPaidDetail(this.id);" " style="' + imginfo + '">&nbsp; &nbsp; &nbsp; &nbsp;</a>';
+                return '<lable class="lblAmountPaid">'+full.strAmountPaid+'</lable>'+icn;
+            }
+        },
+
+        { 'data': 'InvoiceFilePath',
+            "render": function (data, type, full, meta) {
+                if(full.InvoiceFilePath!=null){
+                    imgpdf = 'background:url(../Images/pdf-icon.png) no-repeat center; text-decoration:none;';
+                    return '<a name="' + full.InvoiceFilePath + '" id="chk_' + full.STCInvoiceID + '" jobId=' + full.JobID + ' isInvoice=' + full.IsInvoice + ' STC=' + full.STC + ' IsGst=' + full.IsGst + ' TaxRate=' + full.TaxRate + ' STCPVDCode=' + full.STCPVDCode + ' PaymentStatusID=' + full.PaymentStatusID + '  IsCreditNote=' + full.IsCreditNote + ' STCInvoiceNumber=' + full.STCInvoiceNumber + ' XeroInvoiceId=' + full.XeroInvoiceId + ' STCJobDetailsID=' + full.STCJobDetailsID + ' SolarCompanyID=' + full.SolarCompanyId +' href="javascript:void();" class="action delete" style="' + imgpdf + '" title="Invoice File" onclick="OpenPdf(this)">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                }
+                else{
+                    return '';
+                }
+            },
+            "orderable": false
+        },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function (settings, json) {
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    //$(".ellipsis").html("...");
+
+                },
+                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                    //$("#lblTotalAmount").html(aData.TotalAmount);
+                    //$(nRow).addClass('togglerow');
+                    //if(aData.HasMultipleRecords)
+                    //{
+                    //    $(nRow).addClass('togglerow').find('.toggle-icon').parent().addClass('toggle-btn');
+                    //}
+                },
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetSTCInvoiceList", "STCInvoice")',
+
+                "fnDrawCallback": function () {
+
+                    $("#btotalTradedSTC").html(0);
+
+                    $("#lblTotalAmountSelected").html(parseFloat(0).toFixed(2));
+                    $("#lblTotalAmountViewable").html(parseFloat(0).toFixed(2));
+
+                    var tViewablwAmount = 0;
+                    $('#datatable tbody tr').each(function(){
+                        var lbTotal = $(this).find('.lblTotal').text();
+                        var cTotal=(lbTotal=='' || lbTotal == undefined) ? 0 : lbTotal;
+                        tViewablwAmount = parseFloat(parseFloat(tViewablwAmount)+parseFloat(cTotal)).toFixed(2);
+                    })
+                    $("#lblTotalAmountViewable").html(tViewablwAmount);
+
+                    if($('#chkAll').prop('checked')==true){
+                        chkCount=$('#datatable >tbody >tr').length;
+                        var tSelsectedAmount=0;
+                        var tSTC=0;
+                        $('#datatable tbody input[type="checkbox"]').each(function(){
+                            var lbTotal = $(this).parent().parent().find('.lblTotal').text();
+                            var cTotal=(lbTotal=='' || lbTotal == undefined) ? 0 : lbTotal;
+                            tSelsectedAmount = parseFloat((parseFloat(tSelsectedAmount)+parseFloat(cTotal))).toFixed(2);
+
+                            var cSTC=($(this).parent().parent().find('.clsLabel').text()=='' ||$(this).parent().parent().find('.clsLabel').text()==undefined)?0:$(this).parent().parent().find('.clsLabel').text();
+                            tSTC = (parseFloat(parseFloat(tSTC)+parseFloat(cSTC)).toFixed(2));
+                        })
+                        $("#lblTotalAmountSelected").html(tSelsectedAmount);
+                        $("#btotalTradedSTC").html(tSTC);
+                    }
+                    else{
+                        chkCount=0;
+                        $("#lblTotalAmountSelected").html(parseFloat(0).toFixed(2));
+                        $("#btotalTradedSTC").html(0);
+                    }
+
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length >= 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> STC Invoice(s) found';
+                        $("#lblTotalAmount").html(parseFloat(0).toFixed(2));
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> STC Invoice(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                    $('[data-toggle="tooltip"]').tooltip();
+                },
+
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "stageid", "value": SelectedStageId });
+                    if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3){
+                        aoData.push({ "name": "reseller", "value": document.getElementById("ResellerId").value });
+                        aoData.push({ "name": "ramid", "value": document.getElementById("RamId").value });
+                        //aoData.push({ "name": "solarcompanyid", "value": document.getElementById("SolarCompanyId").value });
+                        aoData.push({ "name": "solarcompanyid", "value": $('#hdnsolarCompanyid').val() });
+                    }
+                    else if(@Model.UserTypeID == 2){
+                        aoData.push({ "name": "ramid", "value": document.getElementById("RamId").value });
+                        //aoData.push({ "name": "solarcompanyid", "value": document.getElementById("SolarCompanyId").value });
+                        aoData.push({ "name": "solarcompanyid", "value": $('#hdnsolarCompanyid').val() });
+                    }
+                    else if(@Model.UserTypeID == 5){
+                        //aoData.push({ "name": "solarcompanyid", "value": document.getElementById("SolarCompanyId").value });
+                        aoData.push({ "name": "solarcompanyid", "value": $('#hdnsolarCompanyid').val() });
+                    }
+
+                    aoData.push({ "name": "invoicenumber", "value": $("#txtInvoiceNumber").val() });
+                    aoData.push({ "name": "RefJobId", "value": $("#txtRefJobId").val() });
+                    aoData.push({ "name": "ownername", "value": $("#txtOwnerName").val() });
+                    aoData.push({ "name": "installationaddress", "value": $("#txtInstallationAddress").val() });
+                    aoData.push({ "name": "submissionfromdate", "value": GetDates($("#txtSubmissionFromDate").val()) });
+                    aoData.push({ "name": "submissiontodate", "value": GetDates($("#txtSubmissionToDate").val()) });
+                    aoData.push({ "name": "settlementfromdate", "value": GetDates($("#txtSettlementFromDate").val()) });
+                    aoData.push({ "name": "settlementtodate", "value": GetDates($("#txtSettlementToDate").val()) });
+
+                    aoData.push({ "name": "isstcinvoice", "value": document.getElementById('chkSTCInvoice').checked });
+                    aoData.push({ "name": "iscreditnotes", "value": document.getElementById('chkCreditNotes').checked });
+                    aoData.push({ "name": "issentinvoice", "value": document.getElementById('chkSentInvoice').checked });
+                    aoData.push({ "name": "isunsentinvoice", "value": document.getElementById('chkUnsentInvoice').checked });
+                    aoData.push({ "name": "isAllScaJobView", "value": isAllScaJobView });
+                    aoData.push({ "name": "SettlementTermId", "value": $("#SettlementTermId").val() });
+                }
+            });
+
+            var table = $('#datatable').DataTable();
+
+            $('#chkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                chkCount = this.checked ? $('#datatable >tbody >tr').length : 0;
+
+                if(this.checked){
+                    var tSelsectedAmount=0;
+                    var tSTC=0;
+                    $('#datatable tbody input[type="checkbox"]').each(function(){
+                        var cTotal=($(this).parent().parent().find('.lblTotal').text()=='' ||$(this).parent().parent().find('.lblTotal').text()==undefined)?0:$(this).parent().parent().find('.lblTotal').text();
+                        tSelsectedAmount = (parseFloat(tSelsectedAmount)+parseFloat(cTotal));
+
+                        var cSTC=($(this).parent().parent().find('.clsLabel').text()=='' ||$(this).parent().parent().find('.clsLabel').text()==undefined)?0:$(this).parent().parent().find('.clsLabel').text();
+                        tSTC = (parseFloat(parseFloat(tSTC)+parseFloat(cSTC)).toFixed(2));
+                    })
+                    $("#lblTotalAmountSelected").html(parseFloat(tSelsectedAmount).toFixed(2));
+                    $("#btotalTradedSTC").html(tSTC);
+                }
+                else{
+                    $("#lblTotalAmountSelected").html(parseFloat(0).toFixed(2));
+                    $("#btotalTradedSTC").html(0);
+                }
+
+            });
+
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (this.checked) {
+                    chkCount++;
+                    if (chkCount == $('#datatable >tbody >tr').length) {
+                        $('#chkAll').prop('checked', this.checked)
+                    }
+                    var cTotal=($(this).parent().parent().find('.lblTotal').text()=='' ||$(this).parent().parent().find('.lblTotal').text()==undefined)?0:$(this).parent().parent().find('.lblTotal').text();
+                    var tSelsectedAmount = $("#lblTotalAmountSelected").html();
+                    $("#lblTotalAmountSelected").html(parseFloat(parseFloat(cTotal)+parseFloat(tSelsectedAmount)).toFixed(2));
+
+
+                    var cSTC=($(this).parent().parent().find('.clsLabel').text()=='' ||$(this).parent().parent().find('.clsLabel').text()==undefined)?0:$(this).parent().parent().find('.clsLabel').text();
+                    var tSTC = $("#btotalTradedSTC").html();
+                    $("#btotalTradedSTC").html(parseFloat(parseFloat(cSTC)+parseFloat(tSTC)).toFixed(2));
+
+                }
+                else {
+                    chkCount--;
+                    $('#chkAll').prop('checked', this.checked)
+                    var cTotal=($(this).parent().parent().find('.lblTotal').text()=='' ||$(this).parent().parent().find('.lblTotal').text()==undefined)?0:$(this).parent().parent().find('.lblTotal').text();
+                    var tSelsectedAmount = $("#lblTotalAmountSelected").html();
+                    $("#lblTotalAmountSelected").html(parseFloat(parseFloat(tSelsectedAmount)-parseFloat(cTotal)).toFixed(2));
+
+                    var cSTC=($(this).parent().parent().find('.clsLabel').text()=='' ||$(this).parent().parent().find('.clsLabel').text()==undefined)?0:$(this).parent().parent().find('.clsLabel').text();
+                    var tSTC = $("#btotalTradedSTC").html();
+                    $("#btotalTradedSTC").html(parseFloat(parseFloat(tSTC)-parseFloat(cSTC)).toFixed(2));
+                }
+            });
+
+            var resellerId;
+            var solarCompanyId;
+            //var sendData= true;
+            $('#importCSV').fileupload({
+
+                url: '@Url.Action("ImportCSV", "StcInvoice")',
+                dataType: 'json',
+                add : function(e,data){
+                    if(@Model.UserTypeID == 1)
+                        resellerId = $("#ResellerId").val();
+                    else if(@Model.UserTypeID == 2 || @Model.UserTypeID == 5)
+                        resellerId = '@ProjectSession.ResellerId';
+                    //solarCompanyId = $("#SolarCompanyId").val();
+                    solarCompanyId = $('#hdnsolarCompanyid').val();
+
+                    //if(sendData){
+                    //    data.formData = { resellerId: resellerId, solarCompanyId: solarCompanyId},
+                    //    sendData = false;
+                    //}
+                    data.formData = { resellerId: resellerId, solarCompanyId: solarCompanyId};
+                    data.submit();
+                },
+                done: function (e, data) {
+                    if(data.result.status)
+                    {
+                        $("#datatable").dataTable().fnDraw();
+                        showSuccessMessage("CSV File has been imported successfully.");
+                    }
+                    else
+                    {
+                        if(data.result.error)
+                            showErrorMessage(data.result.error);
+                        else
+                            showErrorMessage("CSV File has not been imported.");
+                    }
+
+                },
+
+                progressall: function (e, data) {
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+
+                    var mimeType =  data.files[0].type;
+                    if (data.files.length == 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].name.length > 50) {
+                                showErrorMessage("Please upload small filename.");
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                return false;
+                            }
+                        }
+                    }
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt(MaxImageSize)) {
+                                showErrorMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxLogoSize + "MB");
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt(MaxImageSize)) {
+                            showErrorMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxLogoSize + "MB");
+                            return false;
+                        }
+                    }
+                    if (!(mimeType == "text/csv" ||  mimeType == "application/csv" || mimeType == "csv" ||  mimeType == "text/x-csv" ||  mimeType == "application/x-csv" ||  mimeType == "text/x-comma-separated-values" ||
+                        mimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || mimeType == "application/vnd.ms-excel" || mimeType == "text/comma-separated-values" || mimeType == "")) {
+                        showErrorMessage("Please upload a file with .csv extension.");
+                        return false;
+                    }
+
+                    $(".alert").hide();
+                    $("#errorMsgRegionForPopUp").html("");
+                    $("#errorMsgRegionForPopUp").hide();
+                    $('<input type="hidden">').attr({
+                        name: 'Guid',
+                        value: USERID,
+                        id: USERID,
+                    }).appendTo('form');
+                    return true;
+                },
+                //formData: { resellerId: resellerId, solarCompanyId: solarCompanyId},
+                change: function (e, data) {
+                    $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+                }
+            }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+            //Bulk Upload
+            $('#uploadBtnBulk').fileupload({
+                url: '@Url.Action("UploadStcBulk", "StcInvoice")',
+                dataType: 'json',
+                done: function (e, data) {
+
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    var UploadFailedFilesName = [];
+                    UploadFailedFilesName.length = 0;
+                    //formbot start
+                    for (var i = 0; i < data.result.length; i++) {
+
+                        if (data.result[i].Status == true) {
+
+                            showSuccessMessage("File has been uploaded successfully.");
+                        }
+
+                        else {
+                            showErrorMessage(data.result[i].Message);
+
+                        }
+                    }
+
+                },
+
+                progressall: function (e, data) {
+
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+                    var mimeType =  data.files[0].type;
+                    if (data.files.length == 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].name.length > 50) {
+                                showErrorMessage("Please upload small filename.");
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                return false;
+                            }
+                        }
+                    }
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt(MaxImageSize)) {
+                                showErrorMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxLogoSize + "MB");
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt(MaxImageSize)) {
+                            showErrorMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxLogoSize + "MB");
+
+                            return false;
+                        }
+                    }
+                    if (mimeType !=  "application/x-zip-compressed") {
+                        showErrorMessage("Please upload a file with .zip extension.");
+
+                        return false;
+
+
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegionForPopUp").html("");
+                    $("#errorMsgRegionForPopUp").hide();
+                    $('<input type="hidden">').attr({
+                        name: 'Guid',
+                        value: USERID,
+                        id: USERID,
+                    }).appendTo('form');
+                    return true;
+                },
+                formData: { jobId: reId },
+                change: function (e, data) {
+
+                    //$("#uploadBtnBulk").val("C:\\fakepath\\" + data.files[0].name);
+                }
+            }).prop('disabled', !$.support.fileInput)
+              .parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+            Array.prototype.pushArray = function () {
+                var toPush = this.concat.apply([], arguments);
+                for (var i = 0, len = toPush.length; i < len; ++i) {
+                    this.push(toPush[i]);
+                }
+            };
+            $.fn.serializeToJson = function () {
+                var $form = $(this[0]);
+
+                var items = $form.serializeArray();
+
+                var returnObj = {};
+                var nestedObjectNames = [];
+
+                $.each(items, function (i, item) {
+                    //Split nested objects and assign properties
+                    //You may want to make this recursive - currently only works one step deep, but that's all I need
+                    if (item.name.indexOf('.') != -1) {
+                        var nameArray = item.name.split('.');
+                        if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                            nestedObjectNames.push(nameArray[0]);
+                        }
+                        var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                        if (!tempObj[nameArray[1]]) {
+                            tempObj[nameArray[1]] = item.value;
+                        }
+                        returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                    } else if (!returnObj[item.name]) {
+                        returnObj[item.name] = item.value;
+                    }
+                });
+
+                return returnObj;
+            };
+
+        });
+
+        function OpenInvoice(stcInvoiceID) {
+            $.ajax({
+                url: '@Url.Action("GetSTCInvoice", "STCInvoice")',
+                dataType: 'html',
+                method: "get",
+                data: { id: stcInvoiceID },
+                success: function (data) {
+                    $("#frmAddInvoicing").html(data);
+                }
+            });
+            $("#popupOpenInvoice").modal();
+            $('#popupbox').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        function BindSolarCompany(resellerID,ramID){
+            var IsCompanyExist=false;
+            //$("#SolarCompanyId").empty();
+            $("#searchSolarCompany").val("");
+            var scurl = '';
+            var searchid='';
+            if(ramID==0){
+                scurl = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+                searchid = resellerID
+            }
+            else{
+                scurl = '@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")';
+                searchid = ramID
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: scurl,
+                dataType: 'json',
+                async: false,
+                data: { id: searchid },
+                success: function (solarcompany) {
+                    solarCompanyList=[];
+                    //$("#SolarCompanyId").append('<option value="' + 0 + '">' +
+                    //         "All" + '</option>');
+                    solarCompanyList.push({ value:'0',text:'All' });
+                    $.each(solarcompany, function (i, company) {
+                        //$("#SolarCompanyId").append('<option value="' + company.Value + '">' + company.Text + '</option>');
+                        solarCompanyList.push({ value:company.Value,text:company.Text });
+                        if(IsCompanyExist==false && company.Value==localStorage.getItem('STCInvoice_SolarCompanyId')){
+                            IsCompanyExist=true;
+                        }
+                    });
+
+                    if(IsCompanyExist){
+                        //document.getElementById("SolarCompanyId").value = localStorage.getItem('STCInvoice_SolarCompanyId');
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('STCInvoice_SolarCompanyId'));
+                    }
+                    else{
+                        //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                        //localStorage.setItem('STCInvoice_SolarCompanyId',$("#SolarCompanyId option:first").val());
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('STCInvoice_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    if (localStorage.getItem('STCInvoice_SolarCompanyId') == '') {
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('STCInvoice_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.value ==  localStorage.getItem('STCInvoice_SolarCompanyId')) {
+                            $("#searchSolarCompany").val(value.text);
+                            $('#hdnsolarCompanyid').val(localStorage.getItem('STCInvoice_SolarCompanyId'));
+                        }
+                    });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function GetRAMByResellerId(resellerId){
+            var IsRamExist = false;
+            $("#RamId").empty();
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetRAMForReseller", "Reseller")',
+                dataType: 'json',
+                async: false,
+                data: { rId: resellerId },
+                success: function (ramuser) {
+                    $("#RamId").append('<option value="0">Select</option>');
+                    $.each(ramuser, function (i, ram) {
+                        $("#RamId").append('<option value="' + ram.Value + '">' + ram.Text + '</option>');
+                        if(IsRamExist == false && ram.Value==localStorage.getItem('STCInvoice_RamId')){
+                            IsRamExist=true;
+                        }
+                    });
+
+                    if(IsRamExist){
+                        document.getElementById("RamId").value = localStorage.getItem('STCInvoice_RamId')
+                    }
+                    else{
+                        $("#RamId").val($("#RamId option:first").val());
+                        localStorage.setItem('STCInvoice_RamId',$("#RamId option:first").val());
+                    }
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Account Managers.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function ResetSearchFilters(ShowAll) {
+            if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3 || @Model.UserTypeID == 2 || @Model.UserTypeID == 5){
+                //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                $('#hdnsolarCompanyid').val('0');
+                $("#searchSolarCompany").val('All');
+                //localStorage.setItem('STCInvoice_SolarCompanyId',document.getElementById("SolarCompanyId").value);
+                localStorage.setItem('STCInvoice_SolarCompanyId',$('#hdnsolarCompanyid').val());
+            }
+
+            localStorage.setItem('STCInvoice_InvoiceNumber','');
+            localStorage.setItem('STCInvoice_RefJobId','');
+            localStorage.setItem('STCInvoice_OwnerName','');
+            localStorage.setItem('STCInvoice_InstallationAddress','');
+
+            $("#txtSubmissionFromDate").val('');
+            $("#txtSubmissionToDate").val('');
+            $("#txtSettlementFromDate").val('');
+            $("#txtSettlementToDate").val('');
+
+            document.getElementById("SettlementTermId").selectedIndex = 0;
+            localStorage.setItem('STCInvoice_STCSettlementTerm', document.getElementById("SettlementTermId").value);
+
+            document.getElementById('chkSTCInvoice').checked=true;
+            document.getElementById('chkCreditNotes').checked=true;
+            document.getElementById('chkSentInvoice').checked=true;
+            document.getElementById('chkUnsentInvoice').checked=true;
+
+            SetParamsFromLocalStorage();
+            GetSTCInvoicePaymentStatusStageCount();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function SearchSTCInvoiceRecords(){
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 5) {
+                //localStorage.setItem('STCInvoice_SolarCompanyId',document.getElementById("SolarCompanyId").value);
+                localStorage.setItem('STCInvoice_SolarCompanyId',$('#hdnsolarCompanyid').val());
+            }
+
+            localStorage.setItem('STCInvoice_InvoiceNumber',$("#txtInvoiceNumber").val());
+            localStorage.setItem('STCInvoice_RefJobId',$("#txtRefJobId").val());
+            localStorage.setItem('STCInvoice_OwnerName',$("#txtOwnerName").val());
+            localStorage.setItem('STCInvoice_InstallationAddress',$("#txtInstallationAddress").val());
+            localStorage.setItem('STCInvoice_STCSettlementTerm', document.getElementById("SettlementTermId").value);
+
+            GetSTCInvoicePaymentStatusStageCount();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function GetDates(date){
+            if(date!=''){
+                var tickStartDate = ConvertDateToTick(date, '@ProjectConfiguration.GetDateFormat');
+                return moment(tickStartDate).format("YYYY-MM-DD");
+            }
+            else{
+                return '';
+            }
+        }
+
+        function SetStageId(id){
+            var a = document.getElementById("invoicestage_"+SelectedStageId);
+            a.style.backgroundColor = "#f7f7f7";
+
+            SelectedStageId = id;
+
+            var a = document.getElementById("invoicestage_"+SelectedStageId);
+            a.style.backgroundColor = "#686868";
+
+            localStorage.setItem('STCInvoice_InvoiceNumber','');
+            localStorage.setItem('STCInvoice_RefJobId','');
+            localStorage.setItem('STCInvoice_OwnerName','');
+            localStorage.setItem('STCInvoice_InstallationAddress','');
+
+            $("#txtSubmissionFromDate").val('');
+            $("#txtSubmissionToDate").val('');
+            $("#txtSettlementFromDate").val('');
+            $("#txtSettlementToDate").val('');
+
+            document.getElementById("SettlementTermId").selectedIndex = 0;
+            localStorage.setItem('STCInvoice_STCSettlementTerm', document.getElementById("SettlementTermId").value);
+
+            document.getElementById('chkSTCInvoice').checked=true;
+            document.getElementById('chkCreditNotes').checked=true;
+            document.getElementById('chkSentInvoice').checked=true;
+            document.getElementById('chkUnsentInvoice').checked=true;
+            SetParamsFromLocalStorage();
+            GetSTCInvoicePaymentStatusStageCount();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function GetSTCInvoicePaymentStatusStageCount(){
+            var resellerId =0;
+            var ramId = 0;
+            var solarcompanyId = 0;
+            var isSentInvoice = document.getElementById('chkSentInvoice').checked;
+            var isUnsentInvoice = document.getElementById('chkUnsentInvoice').checked;
+            var isSTCInvoice = document.getElementById('chkSTCInvoice').checked;
+            var isCreditNotes = document.getElementById('chkCreditNotes').checked;
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                resellerId = document.getElementById("ResellerId").value;
+                ramId = document.getElementById("RamId").value;
+                //solarcompanyId = document.getElementById("SolarCompanyId").value;
+                solarcompanyId = $('#hdnsolarCompanyid').val();
+            }
+            else if('@Model.UserTypeID'==2){
+                resellerId = '@ProjectSession.ResellerId';
+                ramId = document.getElementById("RamId").value;
+                //solarcompanyId = document.getElementById("SolarCompanyId").value;
+                solarcompanyId = $('#hdnsolarCompanyid').val();
+            }
+            else if('@Model.UserTypeID'==5){
+                resellerId = '@ProjectSession.ResellerId';
+                ramId = '@ProjectSession.LoggedInUserId';
+                //solarcompanyId = document.getElementById("SolarCompanyId").value;
+                solarcompanyId = $('#hdnsolarCompanyid').val();
+            }
+            else{
+                solarcompanyId = '@ProjectSession.SolarCompanyId';
+            }
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetSTCInvoiceStageCount", "STCInvoice")',
+                dataType: 'json',
+                async: false,
+                data: { reseller: resellerId, ram: ramId, sId: solarcompanyId, isAllScaJobView: isAllScaJobView},
+                success: function (jobstagescount) {
+                    var sum=0;
+                    $.each(jobstagescount.lstSTCInvoiceStagesCount, function (i, count) {
+                        document.getElementById("invoicestage_"+count.JobStageId).innerHTML = count.StageName+'<span>('+ count.jobCount+')</span>';
+                        sum = sum + count.jobCount;
+                    });
+                    document.getElementById("invoicestage_0").innerHTML = 'Show All'+'<span>('+ sum +')</span>';
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve count for STC Invoice Stages.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function SendXeroDrafts()
+        {
+            SendDraftsToXero();
+            //if($('#IsWholeSaler').val() == 1){
+            //    CheckInXero(false,true);
+            //}
+            //else{
+            //    SendDraftsToXero();
+            //}
+        }
+
+        function SendDraftsToXero(){
+            var stcInvoiceIds = null
+            var stcInvoiceTrue = 0;
+            var stcInvoicePriceQuantityAndId = [];
+            var isCancelled = 0;
+
+            $.each($("#datatable").find('input[type="checkbox"]:checked'),function(i,e){
+                if($(e).attr('id') && $(e).attr('isInvoice') == 'false' && $(e).attr('PaymentStatusID') !=2 )
+                {
+                    var id = $(e).attr('id').split('_')[1];
+
+                    var quantity = $(e).attr('STC').split('$')[0].slice(0,-1);
+                    var price = $(e).attr('STC').split('$')[1];
+                    var isTax = $(e).attr('IsGst') == "true" ? 1 : 0;
+                    var taxRate = $(e).attr('TaxRate') == "null" ? 0 : $(e).attr('TaxRate');
+                    var STCPVDCode = $(e).attr('STCPVDCode');
+                    var isCreditNote = $(e).attr('IsCreditNote');
+
+                    stcInvoicePriceQuantityAndId.push({Id : id, Price : price, Quantity : quantity, IsTax : isTax, TaxRate:taxRate, STCPVDCode:STCPVDCode,IsCreditNote:isCreditNote});
+
+                    if(stcInvoiceIds == null)
+                        stcInvoiceIds = id;
+                    else
+                        stcInvoiceIds += ','+id;
+                }
+                if($(e).attr('isInvoice') == 'true')
+                    stcInvoiceTrue = 1;
+
+                if($(e).attr('PaymentStatusID') == 2)
+                    isCancelled = 1;
+            });
+
+            if(stcInvoicePriceQuantityAndId.length > 0)
+            {
+                //var solarCompanyId = $("#SolarCompanyId").val();
+                var solarCompanyId = $('#hdnsolarCompanyid').val();
+
+                var resellerId;
+                if('@ProjectSession.UserTypeId' == 1)
+                    resellerId = $("#ResellerId").val();
+                else
+                    resellerId = '@ProjectSession.ResellerId';
+
+                var invoices = JSON.stringify(stcInvoicePriceQuantityAndId);
+
+                $.ajax(
+                {
+                    url: '@Url.Action("GetSelectedIdsRecord", "STCInvoice")',//?stcInvoiceIds='+stcInvoiceIds+'&solarCompanyId='+solarCompanyId+'&drafts='+1+'&invoices='+invoices+'&resellerId='+resellerId,
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    type: 'post',
+                    data : JSON.stringify({stcInvoiceIds:stcInvoiceIds,solarCompanyId:solarCompanyId,drafts:1,invoices:invoices,resellerId:resellerId}),
+                    //async: false,
+                        success: function (response) {
+                        if (response && response.status == false) {
+                            if (response.error && response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == "invalid_grant") {
+                                window.close();
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(response.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if(response.error.toLowerCase() == "error")
+                                showErrorMessage("Xero drafts has not been sent.");
+                            else if(response.error)
+                                showErrorMessage(response.error);
+                            else
+                                showErrorMessage("Xero drafts has not been sent.");
+
+                            $("#datatable").dataTable().fnDraw();
+
+                            if($('#popupboxContact').is(":visible"))
+                                $('#popupboxContact').modal('toggle');
+                        }
+                        else {
+                            $("#datatable").dataTable().fnDraw();
+                            if($('#popupboxContact').is(":visible"))
+                                $('#popupboxContact').modal('toggle');
+
+                            showSuccessMessage("Xero drafts has been sent successfully.");
+                            @*window.location.href ='@Url.Action("Index", "STCInvoice")';*@
+                        }
+                    },
+                    error: function (response) {
+                        if($('#popupboxContact').is(":visible"))
+                            $('#popupboxContact').modal('toggle');
+
+                        showErrorMessage("Xero drafts has not been sent.");
+                    }
+                });
+            }
+            else
+            {
+                //if(stcInvoicePriceQuantityAndId.length > 0 && stcInvoiceTrue==0)
+                if(stcInvoicePriceQuantityAndId.length == 0 && stcInvoiceTrue==0)
+                    alert("Please select atleast one STC Invoice.");
+                else if(stcInvoiceTrue == 1)
+                    alert("Draft is already sent for selected STC Invoice.");
+                else if(isCancelled == 1)
+                    alert("Draft is not sent for cancelled STC Invoice.");
+            }
+
+        }
+
+        function logOutSession()
+        {
+            window.location.href = '@Url.Action("Logout", "Account")';
+        }
+
+        function SyncWithXero() {
+
+            var resellerId;
+            if(@Model.UserTypeID == 1)
+                resellerId = $("#ResellerId").val();
+            else if(@Model.UserTypeID == 2 || @Model.UserTypeID == 5)
+                resellerId = '@ProjectSession.ResellerId';
+
+            $.ajax(
+            {
+                url: '@Url.Action("SyncWithXero", "STCInvoice")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                data: { resellerId: resellerId },
+                //async: false,
+                success: function (response) {
+                    if (response && response.status == false) {
+                        if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() =='invalid_grant') {
+                            window.close();
+                            window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                        }
+                        else if(response.error.toLowerCase() == 'sessiontimeout')
+                            logOutSession();
+                        else if(response.error)
+                            showErrorMessage(response.error);
+                        else
+                            showErrorMessage("Xero has not been synced.");
+                    }
+                    else {
+                        var msg;
+                        if(response.msg)
+                            msg = response.msg;
+                        else
+                            msg = "Xero has been synced successfully."
+
+                        $("#datatable").dataTable().fnDraw();
+                        showSuccessMessage(msg);
+                    }
+                },
+                error: function (response) {
+                    showErrorMessage("Xero has not been synced.");
+                }
+            });
+        }
+
+        function showErrorMessage(message) {
+            $(".alert").hide();
+            $("#successMsgRegion").hide();
+            $("#errorMsgRegion").html(closeButton + message);
+            $("#errorMsgRegion").show();
+            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+            $('body').animate({ scrollTop: 0 }, 'slow');
+
+        }
+
+        function showSuccessMessage(message) {
+            $(".alert").hide();
+            $("#errorMsgRegion").hide();
+            $("#successMsgRegion").html(closeButton + message);
+            $("#successMsgRegion").show();
+            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+            $('body').animate({ scrollTop: 0 }, 'slow');
+
+        }
+
+    function OpenPdf(e, isFromOpenPdf = false, isFromRemittance = false) {
+        if (isFromRemittance == false) {
+            RegenerateSTCInvoice_New(e, isFromOpenPdf);
+        }
+        if (isFromRemittance) {
+            RegenrateRemittance(e);
+        }
+
+        var name = e.name;
+        var jobId = $(e).attr('jobId');
+            var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath'+'/';
+        var imagePath = UploadedDocumentPath + name;
+        //+ '?_=' + (new Date()).getTime();
+        window.location.href = '@Url.Action("DownloadSTCInvoice", "STCInvoice")?documentName=' + name + '&jobId=' + jobId;
+        //window.open(imagePath);
+        }
+        function SendStcCsv(IsAllExportCSV){
+            if(IsAllExportCSV == 0){
+                selectedRows=[];
+                $('#datatable tbody input[type="checkbox"]').each(function(){
+                    if($(this).prop('checked')==true){
+
+                        var STCJobDetailsID=$(this).attr('id').substring(4);
+                        var STCTerm=$(this).attr('term');
+                        selectedRows.push(STCJobDetailsID);
+
+                    }
+                });
+                if(selectedRows!=null && selectedRows.length>0){
+                    var rId=0;
+                    if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                        rId = document.getElementById("ResellerId").value;
+                    }
+                    window.location.href = '@Url.Action("GenerateCSVForSelectedInvoice", "STCInvoice")?resellerId='+ rId + '&jobs='+ selectedRows.join(',')  ;
+
+                }
+                else{
+                    alert('Please select any job to assign.');
+                }
+            }else{
+
+                window.location.href = '@Url.Action("ExportAllCSV", "STCInvoice")?stageid=' + SelectedStageId + '&resellerId=' + $("#ResellerId").val() + '&ramid=' + $("#RamId").val() + '&solarcompanyid=' + $('#hdnsolarCompanyid').val() + '&invoicenumber=' + $("#txtInvoiceNumber").val() + '&RefJobId=' + $("#txtRefJobId").val() + '&ownername=' + $("#txtOwnerName").val() + '&installationaddress=' + $("#txtInstallationAddress").val() + '&submissionfromdate=' + GetDates($("#txtSubmissionFromDate").val()) + '&submissiontodate=' + GetDates($("#txtSubmissionToDate").val()) + '&settlementfromdate=' + GetDates($("#txtSettlementFromDate").val()) + '&settlementtodate=' + GetDates($("#txtSettlementToDate").val()) + '&isstcinvoice=' + document.getElementById('chkSTCInvoice').checked + '&iscreditnotes=' + document.getElementById('chkCreditNotes').checked + '&issentinvoice=' + document.getElementById('chkSentInvoice').checked + '&isunsentinvoice=' + document.getElementById('chkUnsentInvoice').checked + '&SettlementTermId=' + $("#SettlementTermId").val();
+                @*$.ajax({
+                    url : '@Url.Action("ExportAllCSV", "STCInvoice")',
+                    data: JSON.stringify({'stageid': SelectedStageId , 'reseller':$("#ResellerId").val(),'ramid':document.getElementById("RamId").value,'solarcompanyid':$('#hdnsolarCompanyid').val(),'invoicenumber' : $("#txtInvoiceNumber").val(),'RefJobId' :$("#txtRefJobId").val(),'ownername':$("#txtOwnerName").val(),'installationaddress':$("#txtInstallationAddress").val(),'submissionfromdate' : GetDates($("#txtSubmissionFromDate").val()),'submissiontodate' : GetDates($("#txtSubmissionToDate").val()), 'settlementfromdate' :GetDates($("#txtSettlementFromDate").val()),'settlementtodate' : GetDates($("#txtSettlementToDate").val()),'isstcinvoice' : document.getElementById('chkSTCInvoice').checked ,'iscreditnotes' :document.getElementById('chkCreditNotes').checked,'issentinvoice' :document.getElementById('chkSentInvoice').checked,'isunsentinvoice' : document.getElementById('chkUnsentInvoice').checked,'SettlementTermId' : $("#SettlementTermId").val() }),
+                    method : 'POST',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8'
+                })*@
+            }
+        }
+
+        function BulkChangePaymentStatus(){
+            if(document.getElementById('PaymentStatusID').selectedIndex > 0){
+                selectedRows=[];
+                $('#datatable tbody input[type="checkbox"]').each(function(){
+                    if($(this).prop('checked')==true){
+                        selectedRows.push($(this).attr('id').substring(4));
+                    }
+                })
+                if(selectedRows!=null && selectedRows.length>0){
+                    var paymentStatusId = $("#PaymentStatusID").val();
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("BulkChangePaymentStatus", "STCInvoice")',
+                        //async: false,
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        //data: JSON.stringify({ paymentstatus:document.getElementById('PaymentStatusID').selectedIndex ,stcinvoiceids: selectedRows.join(',') }),
+                        data: JSON.stringify({ paymentstatus:paymentStatusId ,stcinvoiceids: selectedRows.join(',') }),
+                        success: function (data) {
+                            if (data.success) {
+                                $(".alert").hide();
+                                $("#errorMsgRegion").removeClass("alert-danger");
+                                $("#errorMsgRegion").addClass("alert-success");
+                                $("#errorMsgRegion").html(closeButton + "Payment status updated successfully.");
+                                $("#errorMsgRegion").show();
+
+                                GetSTCInvoicePaymentStatusStageCount();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        },
+                        error: function (ex) {
+
+                        }
+                    });
+                }
+                else{
+                    alert('Please select any STC Invoice to update payment status.');
+                }
+            }
+            else{
+                alert('Please select Payment Status first.');
+            }
+        }
+
+        function RemoveSelectedSTCInvoice(){
+            selectedRows=[];
+            var xeroInvoiceIds=[];
+            $('#datatable tbody input[type="checkbox"]').each(function(){
+                if($(this).prop('checked')==true){
+                    selectedRows.push({ STCInvoiceNumber: $(this).attr('STCInvoiceNumber'), STCInvoiceID: $(this).attr('id').substring(4), STCJobDetailsID: $(this).attr('stcjobdetailsid'), JobID: $(this).attr('jobId') });
+                    if($(this).attr('XeroInvoiceId')!='' && $(this).attr('XeroInvoiceId')!=null && $(this).attr('XeroInvoiceId')!=undefined)
+                        xeroInvoiceIds.push({ STCInvoiceNumber: $(this).attr('STCInvoiceNumber'), XeroInvoiceId: $(this).attr('XeroInvoiceId'), JobID: $(this).attr('jobId'), STCInvoiceID: $(this).attr('id').substring(4), STCJobDetailsID: $(this).attr('stcjobdetailsid') });
+                }
+            })
+            if(selectedRows!=null && selectedRows.length>0){
+                var result = confirm("Are you sure you want to remove selected STC Invoice(s) ?");
+                if (result) {
+                    $.ajax({
+                        type: 'POST',
+                        @*url: '@Url.Action("RemoveSelectedSTCInvoice", "STCInvoice")',*@
+                        url: '@Url.Action("RemoveSelectedSTCInvoice", "STCInvoice")',
+                        //async: false,
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({ stcinvoiceids: JSON.stringify(selectedRows) , xeroInvoiceIdsArray: JSON.stringify(xeroInvoiceIds) }),
+                        success: function (data) {
+                            if (data && data.status == false) {
+                                if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant') {
+                                    window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                                }
+                                else if(data.error.toLowerCase() == 'sessiontimeout')
+                                    logOutSession();
+                                else if (data.error)
+                                    showErrorMessage(data.error);
+                                else
+                                {
+                                    msg = "Selected STC Invoice(s) has not been removed."
+                                    showErrorMessage(msg);
+                                }
+                            }
+                            else
+                            {
+                                if (data.success) {
+                                    var msg ;
+                                    if(data.InvoiceNum)
+                                    {
+                                        if(data.count == xeroInvoiceIds.length)
+                                        {
+                                            //msg = "Selected STC Invoice(s) has not been removed as its approved or paid or not exist in xero."
+                                            //showErrorMessage(msg);
+                                            confirm_msg = "Selected STC Invoice(s) has not been removed as its approved or paid or not exist in xero.Do you want to remove that invoice?"
+                                            var r = confirm(confirm_msg);
+                                            if (r == true) {
+                                                RemoveApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, data.StcJobDetailsIds);
+                                            } else {
+                                                msg = " Selected STC Invoice(s) has not been removed as its approved or paid or not exist in xero.";
+                                            }
+                                            showSuccessMessage(msg);
+                                        }
+                                        else
+                                        {
+                                            //msg = data.InvoiceNum +" has not been removed as its approved or paid not exist in xero. Other(s) has been removed successfully.";
+                                            //showSuccessMessage(msg);
+                                            confirm_msg = data.InvoiceNum + " has not been removed as its approved or paid in xero. Do you want to remove that invoices?";
+                                            var r = confirm(confirm_msg);
+                                            if (r == true) {
+                                                RemoveApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, data.StcJobDetailsIds);
+                                            } else {
+                                                msg = data.InvoiceNum + " has not been removed as its approved or paid not exist in xero. Other(s) has been removed successfully.";
+                                                showSuccessMessage(msg);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        msg = "Selected STC Invoice(s) has been removed successfully."
+                                        showSuccessMessage(msg);
+                                    }
+
+                                    GetSTCInvoicePaymentStatusStageCount();
+                                    $("#datatable").dataTable().fnDraw();
+                                }
+                            }
+                        },
+                        error: function (ex) {
+                            alert(0);
+                        }
+                    });
+                }
+            }
+            else{
+                if(selectedRows==null || selectedRows.length == 0)
+                    alert('Please select any STC Invoice to remove.');
+                //else
+                //    alert('Please send to xero draft for this STC Invoice.');
+            }
+        }
+
+    function RegenerateSTCInvoice() {
+        debugger;
+        var selectedRows = [];
+        $('#datatable tbody input[type="checkbox"]').each(function () {
+                if($(this).prop('checked')==true){
+                    selectedRows.push({JobID : $(this).attr('jobId'),SolarCompanyId : $(this).attr('SolarCompanyID'), STCInvoiceID:$(this).attr('id').substring(4), STCInvoiceNumber:$(this).attr('STCInvoiceNumber'), STCJobDetailsID:$(this).attr('STCJobDetailsID')});
+                }
+        });
+        //console.log($(this).attr('id'));
+        //console.log($(this).attr('jobId'));
+        //selectedRows = {
+        //    JobID: $(this).attr('jobId'),
+        //    SolarCompanyId: $(this).attr('SolarCompanyID'),
+        //    STCInvoiceID: $(this).attr('id').substring(4),
+        //    STCInvoiceNumber: $(this).attr('STCInvoiceNumber'),
+        //    STCJobDetailsID: $(this).attr('STCJobDetailsID')
+        //}
+            if(selectedRows!=null && selectedRows.length>0){
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("RegenerateSTCInvoice", "STCInvoice")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({stcInvoiceData: JSON.stringify(selectedRows)}),
+                    success: function (data) {
+                        debugger;
+                        if (data && data.success == true) {
+                            showSuccessMessage("Recipient tax invoice and Remittance file has been re-generate successfully for selected STC Invoice(s).");
+                            //OpenPdf(this);
+                        }
+                        else{
+                            showErrorMessage("Recipient tax invoice and Remittance file has not been re-generate for selected STC Invoice(s).");
+                        }
+                    },
+                    error: function (ex) {
+                        showErrorMessage("Recipient tax invoice and Remittance file has not been re-generate for selected STC Invoice(s).");
+                    }
+                });
+            }
+            else{
+                alert("Please select atleast one STC invoice for re-generate recipient tax invoice and remittance file.");
+            }
+    }
+
+    function RegenerateSTCInvoice_New(e,isFromOpenPdf=false) {
+        var selectedRows = [];
+        //$('#datatable tbody input[type="checkbox"]').each(function () {
+        //        //if($(this).prop('checked')==true){
+        //            selectedRows.push({JobID : $(this).attr('jobId'),SolarCompanyId : $(this).attr('SolarCompanyID'), STCInvoiceID:$(this).attr('id').substring(4), STCInvoiceNumber:$(this).attr('STCInvoiceNumber'), STCJobDetailsID:$(this).attr('STCJobDetailsID')});
+        //        //}
+        //});
+        console.log($(e).attr('id'));
+        console.log($(e).attr('jobId'));
+
+
+        if (isFromOpenPdf) {
+            selectedRows.push({
+                JobID: $(e).attr('jobId'),
+                SolarCompanyId: $("#SolarCompanyId").val(),
+                STCInvoiceNumber: $("#STCInvoiceNumber").val(),
+                STCJobDetailsID: $("#STCJobDetailsID").val()
+            });
+        }
+        else {
+            selectedRows.push({
+                JobID: $(e).attr('jobId'),
+                SolarCompanyId: $(e).attr('SolarCompanyID'),
+                STCInvoiceID: $(e).attr('id').substring(4),
+                STCInvoiceNumber: $(e).attr('STCInvoiceNumber'),
+                STCJobDetailsID: $(e).attr('STCJobDetailsID')
+            });
+        }
+
+            if(selectedRows!=null){
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("RegenerateSTCInvoice", "STCInvoice")',
+                    dataType: 'json',
+                    async: false,
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ stcInvoiceData: JSON.stringify(selectedRows) }),
+                    async:false,
+                    success: function (data) {
+                        debugger;
+                        if (data && data.success == true) {
+                            showSuccessMessage("Recipient tax invoice and Remittance file has been re-generate successfully for selected STC Invoice(s).");
+                            //OpenPdf(this);
+                        }
+                        else{
+                            showErrorMessage("Recipient tax invoice and Remittance file has not been re-generate for selected STC Invoice(s).");
+                        }
+                    },
+                    error: function (ex) {
+                        showErrorMessage("Recipient tax invoice and Remittance file has not been re-generate for selected STC Invoice(s).");
+                    }
+                });
+            }
+            else{
+                alert("Please select atleast one STC invoice for re-generate recipient tax invoice and remittance file.");
+            }
+        }
+
+        function MarkUnMarkSelectedAsSentForPayment(markbit){
+            selectedRows=[];
+            var xeroInvoiceIds=[];
+            var stcInvoiceTrue = 0;
+            var stcInvoiceFalse = 0;
+            var isCancelled = 0;
+
+            //var isOutstanding = true;
+            $('#datatable tbody input[type="checkbox"]').each(function(){
+                if($(this).prop('checked')==true){
+                    if($(this).attr('id') && (($(this).attr('isInvoice') == 'false' && markbit == 1) || ($(this).attr('isInvoice') == 'true' && markbit == 0)) && $(this).attr('PaymentStatusID') !=2)
+                    {
+                        selectedRows.push({ STCInvoiceNumber: $(this).attr('STCInvoiceNumber'), STCInvoiceID: $(this).attr('id').substring(4), JobID: $(this).attr('jobId')});
+                        if($(this).attr('XeroInvoiceId')!='' && $(this).attr('XeroInvoiceId')!=null && $(this).attr('XeroInvoiceId')!=undefined)
+                            xeroInvoiceIds.push({ STCInvoiceNumber: $(this).attr('STCInvoiceNumber'), XeroInvoiceId: $(this).attr('XeroInvoiceId'), JobID: $(this).attr('jobId')});
+                    }
+                    if($(this).attr('isInvoice') == 'true' && markbit == 1)
+                        stcInvoiceTrue = 1;
+                    if($(this).attr('isInvoice') == 'false' && markbit == 0)
+                        stcInvoiceFalse = 1;
+                    if($(this).attr('PaymentStatusID') == 2)
+                        isCancelled = 1;
+                }
+            });
+            //if(isOutstanding){
+            if (selectedRows != null && selectedRows.length > 0) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MarkUnMarkSelectedAsSentForPayment", "STCInvoice")',
+                    //async: false,
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ markbit: markbit, stcinvoiceids: JSON.stringify(selectedRows) , xeroInvoiceIdsArray: JSON.stringify(xeroInvoiceIds)}),
+                    success: function (data) {
+                        if (data && data.status == false) {
+                            if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant') {
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(data.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if (data.error)
+                                showErrorMessage(data.error);
+                            else
+                            {
+                                if(markbit == 0)
+                                    msg = "Selected STC Invoice(s) has not been unmarked."
+                                else
+                                    msg = "Selected STC Invoice(s) has not been marked."
+
+                                showErrorMessage(msg);
+                            }
+                        }
+                        else
+                        {
+                            if (data.success) {
+                                var msg;
+                                var confirm_msg;
+                                if(data.InvoiceNum)
+                                {
+                                    if(data.count == xeroInvoiceIds.length && markbit == 0)
+                                    {
+                                        confirm_msg = "Selected STC Invoice(s) has not been unmarked as its approved or paid in xero.Do you want to unmark that invoice?"
+                                        var r = confirm(confirm_msg);
+                                        if (r == true) {
+                                            MarkUnmarkApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, 0);
+                                        } else {
+                                            msg = " Selected STC Invoice(s) has not been unmarked as its approved or paid in xero.";
+                                        }
+                                            showSuccessMessage(msg);
+                                    }
+                                    else if(markbit == 0)
+                                    {
+
+                                        confirm_msg = data.InvoiceNum + " has not been unmarked as its approved or paid in xero. Do you want to unmark that invoices?";
+                                        var r = confirm(confirm_msg);
+                                        if (r == true) {
+                                            MarkUnmarkApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, 0);
+                                        } else {
+                                            msg = data.InvoiceNum + " has not been unmarked as its approved or paid in xero. Other(s) has been unmarked successfully.";
+                                            showSuccessMessage(msg);
+                                        }
+
+                                    }
+
+                                }
+                                else
+                                {
+                                if(markbit == 0)
+                                    msg = "Selected STC Invoice(s) has been unmarked successfully."
+                                else
+                                    msg = "Selected STC Invoice(s) has been marked successfully."
+
+                                showSuccessMessage(msg);
+                                }
+
+                                GetSTCInvoicePaymentStatusStageCount();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        }
+                    },
+                    error: function (ex) {
+
+                    }
+                });
+            }
+            else{
+
+                if(stcInvoiceTrue==1 && markbit == 1)
+                    alert("Please select any STC invoice which has status unmark for payment.");
+                else if(stcInvoiceFalse==1 && markbit == 0)
+                    alert("Please select any STC invoice which has status mark for payment.");
+                else if(isCancelled == 1)
+                    alert("Can not mark/unmark for cancelled STC Invoice.");
+                //alert('Please select any STC Invoice to update status of Sent For Payment.');
+            }
+            //}
+        }
+
+
+
+
+        function ToDate(data) {
+            if (data != null) {
+                var tickStartDate = ConvertDateToTick(data, 'dd/mm/yyyy');
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                var date = new Date(tDate);
+                //console.log(moment(date).format('@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()'));
+                //console.log(date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2));
+                //return date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2);
+                return moment(date).format('@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()');
+            }
+            else {
+                return '';
+            }
+        }
+
+        function OpenAmountPaidDetail(StcInvoiceId){
+            $.ajax({
+                url: '@Url.Action("GetSTCAmountPaidDetail", "STCInvoice")',
+                dataType: 'html',
+                method: "get",
+                data: { id: StcInvoiceId },
+                success: function (data) {
+                    $("#frmAmountDetail").html(data);
+                }
+            });
+            $("#popupOpenAmountDetail").modal();
+            $('#popupbox').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        function SetParamsFromLocalStorage(){
+            $("#txtInvoiceNumber").val(localStorage.getItem('STCInvoice_InvoiceNumber'))
+            $("#txtRefJobId").val(localStorage.getItem('STCInvoice_RefJobId'));
+            $("#txtOwnerName").val(localStorage.getItem('STCInvoice_OwnerName'));
+            $("#txtInstallationAddress").val(localStorage.getItem('STCInvoice_InstallationAddress'));
+        }
+
+        function CheckContactInXero()
+        {
+            var solarCompanyIds = null
+            var solarCompanyIdArray = [];
+
+            $.each($("#datatable").find('input[type="checkbox"]:checked'),function(i,e){
+                var id = $(e).attr('SolarCompanyID');
+                solarCompanyIdArray.push(id);
+            });
+
+            if(solarCompanyIdArray.length > 0)
+            {
+                var solarCompanyIds = JSON.stringify(solarCompanyIdArray);
+                $.ajax(
+                {
+                    url: '@Url.Action("CheckAllContactInXero", "User")?solarCompanyIds='+solarCompanyIds,
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    type: 'get',
+                        success: function (response) {
+                        if (response && response.status == false) {
+                            if (response.error && response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'unauthorizedexception' || response.error.toLowerCase() == 'invalid_grant') {
+                                window.close();
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(response.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if(response.error.toLowerCase() == "error")
+                                showErrorMessage("Contact has not been checked with xero.");
+                            else if(response.error)
+                                showErrorMessage(response.error);
+                            else
+                                showErrorMessage("Contact has not been checked with xero.");
+                        }
+                        else {
+                            if(response.data)
+                            {
+                                var array = JSON.parse(response.data);
+                                $.each($("#datatable").find('input[type="checkbox"]:checked'),function(i,e){
+                                    var isMatch = false;
+                                    var userId;
+                                    var id = $(e).attr('SolarCompanyID');
+                                    $.each(array,function(index,ele){
+                                        if(ele.Key == id)
+                                        {
+                                            isMatch = true;
+                                            userId = ele.Value;
+                                            return false;
+                                        }
+                                    });
+                                    if(isMatch == true)
+                                    {
+                                        $(e).closest('tr').css('background','#FEC6C6');
+                                        $(e).closest('tr').attr('isMatch','0');
+                                        $.each($(e).closest('tr').find('td').find('lable'),function(ii,ee){
+                                            if($(ee).attr('id') == "SC")
+                                            {
+                                                // red color
+                                                // append i icon hover
+                                                // solar company linkable
+                                                var name;
+                                                if($(ee).find('#SCANameChange').length > 0)
+                                                {
+                                                    name = $(ee).find('#SCANameChange').html();
+                                                    $(ee).find('#SCANameChange').remove();
+                                                    if($(ee).find('.infoSTC').length > 0)
+                                                    {
+                                                        $(ee).find('.infoSTC').remove();
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    name = $(this).html();
+                                                }
+                                                var info = '<a class=infoSTC title="Company details do not match with xero or not yet created in xero.">&nbsp; &nbsp; &nbsp; &nbsp;</a>';
+                                                var anchor = '<a id=SCANameChange href=/User/ViewDetail/'+userId+' style=text-decoration:none; target="_blank">'+name+'</a>';
+                                                $(this).html(anchor).append(info);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                            if(response.companyName)
+                            {
+                                var array = JSON.parse(response.companyName);
+                                $.each($("#datatable").find('input[type="checkbox"]:checked'),function(i,e){
+                                    var isMatch = false;
+                                    var company;
+                                    var id = $(e).attr('SolarCompanyID');
+                                    $.each(array,function(index,ele){
+                                        if(ele.Key == id)
+                                        {
+                                            isMatch = true;
+                                            company = ele.Value;
+                                            return false;
+                                        }
+                                    });
+                                    if(isMatch == true)
+                                    {
+                                        if( $(e).closest('tr').attr('isMatch') == 0)
+                                        {
+                                            // green color
+                                            $(e).closest('tr').css('background','#AADEAB');
+                                            $.each($(e).closest('tr').find('td').find('lable'),function(ii,ee){
+                                                if($(ee).attr('id') == "SC")
+                                                {
+                                                    // change SCA name if changed
+                                                    $(this).find('#SCANameChange').html(company);
+                                                    if($(this).find('.infoSTC').length > 0)
+                                                    {
+                                                        $(this).find('.infoSTC').remove();
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        else
+                                        {
+                                            $.each($(e).closest('tr').find('td').find('lable'),function(ii,ee){
+                                                if($(ee).attr('id') == "SC")
+                                                {
+                                                    $(this).html(company);
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                            showSuccessMessage("Contact has been checked with xero.");
+                        }
+                    },
+                    error: function (response) {
+                        showErrorMessage("Contact has not been checked with xero.");
+                    }
+                });
+            }
+            else
+            {
+                alert("Please select atleast one STC Invoice.");
+            }
+
+        }
+
+        function checkIsWholeSaler(rId) {
+            $.ajax({
+                url: '@Url.Action("CheckIsWholeSaler_ByResellerId", "SolarCompany")?id=' + rId,
+                type: "get",
+                async: false,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    var response = JSON.parse(data)
+                    if(typeof (response) != "undefined" && response.Table[0] != null){
+                        if(response.Table[0].IsWholeSaler)
+                        {
+                            $('#IsWholeSaler').val(1);
+                            $('#UserId_WholeSaler').val(response.Table[0].UserId);
+                        }
+                        else{
+                            $('#IsWholeSaler').val(0);
+                        }
+                    }
+                },
+            });
+        }
+
+        function CheckInXero(isAllowInsert,isSendDraftsToXero){
+            var UserId,isSendDrafts;
+
+            if($("#IsWholeSaler").val() == 1 ){
+                UserId = $("#UserId_WholeSaler").val();
+                if(isSendDraftsToXero == true)
+                    isSendDrafts == true;
+                else
+                    isSendDrafts == false;
+            }
+            else{
+                UserId = $("#UserId").val();
+            }
+
+            $.ajax(
+            {
+                url: '@Url.Action("CheckInXero", "User")',
+                data: { userId : UserId, isAllowInsert : isAllowInsert},
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                success: function (response) {
+                    if (response && response.status == false) {
+                        if(response.isAllowInsert == false)
+                        {
+                            var result = confirm("This contact is not found, would you like to create this contact in XERO?");
+                            if(result)
+                            {
+                                CheckInXero(true,isSendDrafts);
+                                return false;
+                            }
+                            else
+                                return false;
+                        }
+
+                        if (typeof (response.error) != 'undefined' && (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'unauthorizedexception' || response.error.toLowerCase() == 'invalid_grant')) {
+                            window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                        }
+                        else if(typeof (response.error) != 'undefined' && response.error.toLowerCase() == 'sessiontimeout')
+                            window.location.href = '@Url.Action("Logout", "Account")';
+                        else if (typeof (response.error) != 'undefined' && response.error)
+                            showErrorMessage(response.error);
+                        else{
+                            if($("#IsWholeSaler").val() == 1){
+                                if(isSendDraftsToXero == true)
+                                    SendDraftsToXero();
+                                else
+                                    showSuccessMessage("Contact has been checked.");
+
+                                return true;
+                            }
+                            else{
+                                showErrorMessage("Contact has not been checked.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var obj = jQuery.parseJSON(response.data);
+                        @*$('#LoadContactDetail').load('@Url.Action("_XeroContact", "User")',{Data: obj});
+                        setTimeout(function(){
+                            $('#popupboxContact').modal({ backdrop: 'static', keyboard: false });
+                        },1000);*@
+
+                        $('#LoadContactDetail').html('');
+                        $('#LoadContactDetail').load('@Url.Action("_XeroContact", "User")',{Data: obj});
+                        setTimeout(function(){
+                            $('#popupboxContact').modal({ backdrop: 'static', keyboard: false });
+                            $("#LoadContactDetail").load();
+                            //$("#IsWholeSaler").val() == 1?HeighlightDifference(true):HeighlightDifference(false);
+                        },1000);
+
+                        //$.post(urlXeroContact + "?Data=" + obj, function (data) {
+                        //    $('#LoadContactDetail').empty();
+                        //    $('#LoadContactDetail').append(data);
+                        //    $('#popupboxContact').modal({ backdrop: 'static', keyboard: false });
+                        //    //HeighlightDifference();
+                        //});
+                    }
+                },
+                error: function (response) {
+                    showErrorMessage("Contact has not been checked.");
+                }
+            });
+        }
+
+        function HideToolTip(){
+            $('.tooltip').hide();
+        }
+
+        function ShowToolTip(id){
+            if(id==toggleId){
+                $('.tooltip').show();
+            }
+        }
+
+        function clickToggle(id){
+            toggleId=id;
+        }
+      function SyncwithXeroLog() {
+            var resellerId;
+            if(@Model.UserTypeID == 1)
+                resellerId = $("#ResellerId").val();
+            else if(@Model.UserTypeID == 2 || @Model.UserTypeID == 5)
+                resellerId = '@ProjectSession.ResellerId';
+
+            $.ajax({
+                url: '@Url.Action("GetSyncToXeroLog", "STCInvoice")',
+                type: 'GET',
+                data: { resellerId: resellerId },
+                dataType: 'json',
+                contentType: 'application/json',
+                success: function (response) {
+                    $('#popupSyncWithXeroLog').modal('toggle');
+                    $("#listOfLog").html('');
+                    if (response.syncWithXeroLogs.length > 0) {
+                        for (var i = 0; i < response.syncWithXeroLogs.length; i++) {
+                            $("#listOfLog").append('<li>All the jobs of ' + response.syncWithXeroLogs[i].ResellerName + ' is sync wit Xero by ' + response.syncWithXeroLogs[i].UserName + ' on ' + response.syncWithXeroLogs[i].strModifiedDate+'.</li>');
+                        }
+
+                    }
+                }
+                , error: function (response) {
+                    alert(response);
+                }
+            });
+        }
+
+
+        function MarkUnmarkApprovedDeletedInvoices(InvoiceNum,markbit) {
+             $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MarkUnmarkApprovedDeletedInvoices", "STCInvoice")',
+                    //async: false,
+                    dataType: 'json',
+                 contentType: 'application/json; charset=utf-8',
+                 data: JSON.stringify({ stcinvoiceids: InvoiceNum }),
+                    success: function (data) {
+                        if (data && data.status == false) {
+                            if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant') {
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(data.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if (data.error)
+                                showErrorMessage(data.error);
+                            else
+                            {
+                                    msg = "Selected STC Invoice(s) has not been unmarked."
+
+                                showErrorMessage(msg);
+                            }
+                        }
+                        else
+                        {
+                            if (data.success) {
+                                var msg ;
+
+                                    msg = "Selected STC Invoice(s) has been unmarked successfully."
+
+                                showSuccessMessage(msg);
+
+
+                                GetSTCInvoicePaymentStatusStageCount();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        }
+                    },
+                    error: function (ex) {
+
+                    }
+                });
+        }
+         function RemoveApprovedDeletedInvoices(InvoiceNum,stcJobDetailIds) {
+             $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("RemoveApprovedDeletedInvoices", "STCInvoice")',
+                    //async: false,
+                    dataType: 'json',
+                 contentType: 'application/json; charset=utf-8',
+                 data: JSON.stringify({ stcinvoiceids: InvoiceNum, stcJobDetailIds: stcJobDetailIds }),
+                    success: function (data) {
+                        if (data && data.status == false) {
+                            if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant') {
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(data.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if (data.error)
+                                showErrorMessage(data.error);
+                            else
+                            {
+                                    msg = "Selected STC Invoice(s) has not been deleted."
+
+                                showErrorMessage(msg);
+                            }
+                        }
+                        else
+                        {
+                            if (data.success) {
+                                var msg ;
+
+                                    msg = "Selected STC Invoice(s) has been deleted successfully."
+
+                                showSuccessMessage(msg);
+
+
+                                GetSTCInvoicePaymentStatusStageCount();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        }
+                    },
+                    error: function (ex) {
+
+                    }
+                });
+    }
+        function RegenrateRemittance(e) {
+        debugger;
+
+        var path = e.name;
+        var resellerId = $("#ResellerID").val();
+         $.ajax({
+                url: '@Url.Action("RegenerateRemittance", "STCInvoice")',
+             method: 'GET',
+             async: false,
+             data: { reseller: resellerId, path: path },
+                dataType: 'json',
+                contentType: 'application/json',
+             success: function (success) {
+
+                }
+                , error: function (response) {
+
+                }
+         });
+
+    }
+</script>

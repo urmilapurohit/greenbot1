@@ -1,0 +1,160 @@
+﻿@model List<FormBot.Entity.DocumentSignatureRequest.DocumentSignatureLog>
+<ul>
+    @if (Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            <li>
+                <span class="icon">
+                    @GetImagePath(item.MessageType)
+                </span>
+                <h4>
+                    @HeadingMessage(item.MessageType, item.UserFullName, item.UserTypeName)
+                </h4>
+                @GetMessageDetails(item.MessageType, item.UserFullName, "", item.UserTypeName)
+                @if (!string.IsNullOrEmpty(item.Message))
+                {
+                    <p class="message">@Html.Raw(item.Message)</p>
+                }
+                @*<p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+                    <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+                    <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>*@
+                <p class="date-and-ip">
+                    <span>@item.CreatedOn.ToString() AEST</span> | <span><strong>IP recorded:</strong> @item.IpAddress</span>
+                </p>
+            </li>
+        }
+    }
+    else
+    {
+        <li>No history found</li>
+    }
+</ul>
+
+@helper GetMessageDetails(int number, string name, string email, string UserTypeName)
+{
+    if (number == 1)
+    {
+        @Html.Raw("<p class='document'>Document: <span class='user-details'>" + name + "</span> created a document " + ViewBag.FileName + "</p>");
+    }
+    @*if (number == 1)
+        {
+            @Html.Raw("<p class='document'>Document: <span class='user-details'>" + name + "</span> created a document " + ViewBag.FileName + "</p>");
+        }*@
+}
+
+
+@helper GetImagePath(int number)
+{
+    string ImageTag = "<img src='{0}' />";
+    if (number == 1)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/1.png"));
+    }
+    else if (number == 2)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/2.png"));
+    }
+    else if (number == 3)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/3.png"));
+    }
+    else if (number == 4)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/4.png"));
+    }
+    else if (number == 5)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/5.png"));
+    }
+    else if (number == 6)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/6.png"));
+    }
+    else if (number == 7)
+    {
+        @Html.Raw(string.Format(ImageTag, "/Images/Document/2.png"));
+    }
+}
+@helper HeadingMessage(int number, string Name, string UserTypeName)
+{
+    if (number == 1)
+    {
+        @Html.Raw("Document created by <span class='user-details'>" + UserTypeName + "</span>.");
+    }
+    else if (number == 2)
+    {
+        @Html.Raw("Document has been sent successfully.");
+    }
+    else if (number == 3)
+    {
+        @Html.Raw("Document opened by <span class='user-details'> " + UserTypeName + ".");
+    }
+    else if (number == 4)
+    {
+        @Html.Raw("<span class='user-details'>" + UserTypeName + "</span> has signed the document.");
+    }
+    else if (number == 5)
+    {
+        @Html.Raw("Document has been <span class='user-details'>Completed</span>.");
+    }
+    else if (number == 6)
+    {
+        @Html.Raw("Completed Document Sent.");
+    }
+    else if (number == 7)
+    {
+        @Html.Raw("Update email id.");
+    }
+}
+@*<ul>
+        <li>
+            <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 60 60" style="enable-background:new 0 0 60 60;" xml:space="preserve" width="512px" height="512px">
+                <path d="M38.914,0H6.5v60h47V14.586L38.914,0z M17.5,14h10c0.552,0,1,0.447,1,1s-0.448,1-1,1h-10c-0.552,0-1-0.447-1-1  S16.948,14,17.5,14z M42.5,48h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,48,42.5,48z M42.5,40h-25  c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,40,42.5,40z M42.5,32h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25  c0.552,0,1,0.447,1,1S43.052,32,42.5,32z M42.5,24h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,24,42.5,24z   M37.5,16V2l14,14H37.5z" fill="#adb5bd"></path>
+
+
+                        </svg>
+            </span>
+            <h4>Document has ben sent successfully.</h4>
+            <p class="document">Document: <span>STC Assignment Form.pdf has been sent to:</span> </p>
+            <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+            <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+            <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+            <p class="date-and-ip">
+                <span>20/02/2019 15:00AEST</span> | <span><strong>IP recorded:</strong> 198.168.1.1</span>
+            </p>
+        </li>
+        <li>
+            <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 60 60" style="enable-background:new 0 0 60 60;" xml:space="preserve" width="512px" height="512px">
+                <path d="M38.914,0H6.5v60h47V14.586L38.914,0z M17.5,14h10c0.552,0,1,0.447,1,1s-0.448,1-1,1h-10c-0.552,0-1-0.447-1-1  S16.948,14,17.5,14z M42.5,48h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,48,42.5,48z M42.5,40h-25  c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,40,42.5,40z M42.5,32h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25  c0.552,0,1,0.447,1,1S43.052,32,42.5,32z M42.5,24h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,24,42.5,24z   M37.5,16V2l14,14H37.5z" fill="#adb5bd"></path>
+
+
+                        </svg>
+            </span>
+            <h4>Document has ben sent successfully.</h4>
+            <p class="document">Document: <span>STC Assignment Form.pdf has been sent to:</span> </p>
+            <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+            <p class="date-and-ip">
+                <span>20/02/2019 15:00AEST</span> | <span><strong>IP recorded:</strong> 198.168.1.1</span>
+            </p>
+
+        </li>
+        <li>
+            <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 60 60" style="enable-background:new 0 0 60 60;" xml:space="preserve" width="512px" height="512px">
+                <path d="M38.914,0H6.5v60h47V14.586L38.914,0z M17.5,14h10c0.552,0,1,0.447,1,1s-0.448,1-1,1h-10c-0.552,0-1-0.447-1-1  S16.948,14,17.5,14z M42.5,48h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,48,42.5,48z M42.5,40h-25  c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,40,42.5,40z M42.5,32h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25  c0.552,0,1,0.447,1,1S43.052,32,42.5,32z M42.5,24h-25c-0.552,0-1-0.447-1-1s0.448-1,1-1h25c0.552,0,1,0.447,1,1S43.052,24,42.5,24z   M37.5,16V2l14,14H37.5z" fill="#adb5bd"></path>
+
+
+                        </svg>
+            </span>
+            <h4>Document has ben sent successfully.</h4>
+            <p class="document">Document: <span>STC Assignment Form.pdf has been sent to:</span> </p>
+            <p class="user-details"><span>Aaron Roseller</span> - <span>Designer</span>, <span>emauil1@email.com</span> <span>(same as installer)</span></p>
+            <p class="date-and-ip">
+                <span>20/02/2019 15:00AEST</span> | <span><strong>IP recorded:</strong> 198.168.1.1</span>
+            </p>
+
+        </li>
+    </ul>*@

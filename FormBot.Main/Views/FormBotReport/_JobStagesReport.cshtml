@@ -1,0 +1,843 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<div class="form-group">
+    <div class="form-group">
+        <p class="rep-text"><strong>Description: </strong> <span id="Description">This report will show total amount of jobs in their respective stages stage filterable by group user types. </span>
+    </div>
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label>Chart Types:</label>
+        @Html.DropDownListFor(m => m.ChartType, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Combo Bar Chart", Value = "ComboBar" },
+                                        new SelectListItem{ Text="Bar Chart", Value = "Bar" }
+                                     }, new { @id = "drdChartType", @class = "form-control" }
+                            )
+    </div>
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label>Filters For Deleted Jobs:</label>
+        @Html.DropDownListFor(m => m.DeletedFilter, new List<SelectListItem>
+                                     {
+                                         new SelectListItem{ Text="Exclude", Value = "2" },
+                                        new SelectListItem{ Text="Include", Value = "1" },
+                                        new SelectListItem{ Text="Show Only Deleted Job", Value = "3" },
+                                     }, new { @id = "drdDelete", @class = "form-control" }
+                            )
+    </div>
+</div>
+<br />
+@if (FormBot.Helper.ProjectSession.UserTypeId != 4)
+{
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 2)
+        {
+            <label class="control-label">Filters:</label>
+        }
+        <div class="rep-list">
+            <ul>
+                @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+                {
+                    <li><a href="javascript:void(0);" id="ResellerID" onclick="Reseller();">Reseller<span id="cntResellers">0</span></a></li>
+                }
+                @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 2)
+                {
+                    <li><a href="javascript:void(0);" id="UserID" onclick="Users();">Solar Company<span id="cntUsers">0</span></a></li>
+                }
+            </ul>
+        </div>
+        <label class="control-label">Restriction:</label>
+        <ul id="Restrictions" class="control-label">
+            @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+            {
+                <li>
+                    Minimum 1 Reseller must be selected.
+                </li>
+            }
+            @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 2)
+            {
+                <li>
+                    Minimum 1 Solar Company must be selected.
+                </li>
+            }
+        </ul>
+    </div>
+}
+<div class="rep-btn">
+    <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" id="btnReset" value="Reset Filters" class="default reset_ic">
+    </div>
+    </div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" id="closeUsers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0</label> Selected
+                    </label>
+                </div>
+                @if (FormBot.Helper.ProjectSession.UserTypeId != 4)
+                {
+                    <div class="form-border" id="divSolarCompanyies">
+                        @*@Html.Action("_SolarCompany", "FormBotReport")*@
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupReseller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeResellers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Reseller</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="ResellerUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_Reseller", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    if ($('#LstUsersAssignedUser option').length == 0) {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+    else {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        $('#btnJobStatusBarReport').css('opacity', '1');
+    }
+    if (@FormBot.Helper.ProjectSession.UserTypeId == 4)
+    {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        $('#btnJobStatusBarReport').css('opacity', '1');
+    }
+
+    function Reseller() {
+        $('#popupReseller').modal({ backdrop: 'static', keyboard: false });
+        $('#ResellerBit').val('0');
+        $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+        //document.getElementById('UserID').style.pointerEvents = 'none';
+        //$('#UserID').css('opacity', '0.5');
+    }
+
+    function Users() {
+        //$('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        //$('#SCABit').val('0');
+        //$('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        //document.getElementById('ResellerID').style.pointerEvents = 'none';
+        //$('#ResellerID').css('opacity', '0.5');
+
+        var url = '@Url.Action("_SolarCompany", "FormBotReport")';
+        url += '?hdnResellers=' + $("#hdnResellers").val();
+        var assignedUsers = $("#hdnUsers").val();
+
+        $.ajaxSetup({ cache: false });
+        $('#divSolarCompanyies').load(url, function () {
+            $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + $('#SCABit').val());
+            $('#SCABit').val('0');
+            SetSelectedSolarCompanies(assignedUsers);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });
+    }
+
+    function SetSelectedSolarCompanies(assignedUsers) {
+        if (assignedUsers != "" && assignedUsers != null) {
+            var array = assignedUsers.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstUsers option[value=' + array[i] + ']').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_SCA").click();
+        }
+    }   
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetJobStagesReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                $('#divGrid').show();
+                BindGrid(result.lstRecord);
+                BindChart(result.lstChartRecord);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result) {
+        if ($('#datatable')) {
+            var table = $('#datatable').DataTable();
+            table.destroy();
+        }
+        var tableHeaders = '';
+        var tableFooters = '';
+        var tableColumns = [];
+        //report 5
+        //if ($('#ReportID').val() == 4) {
+        if($('#LstUsersAssignedUser option').length == 0)
+        {
+            tableColumns.push("Reseller Name");
+            tableColumns.push("New");
+            tableColumns.push("PreApproval");
+            tableColumns.push("New Installation");
+            tableColumns.push("In Progress");
+            tableColumns.push("Complete");
+            tableColumns.push("STC Trade");
+            tableColumns.push("Aftersales");
+            tableColumns.push("Cancellations");
+            tableColumns.push("Installation Completed");
+            tableFooters = '<th style="text-align:right;"></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>';
+        }
+        else
+        {
+            tableColumns.push("Reseller Name");
+            tableColumns.push("Solar Company Name");
+            tableColumns.push("New");
+            tableColumns.push("PreApproval");
+            tableColumns.push("New Installation");
+            tableColumns.push("In Progress");
+            tableColumns.push("Complete");
+            tableColumns.push("STC Trade");
+            tableColumns.push("Aftersales");
+            tableColumns.push("Cancellations");
+            tableColumns.push("Installation Completed");
+            tableFooters = '<th></th><th style="text-align:right;"></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>';
+        }
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th><span>" + val + "</span></th>";
+        });
+        $("#displayTable").empty();
+        $("#displayTable").append('<table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead><tfoot><tr>'+tableFooters+'</tr></tfoot></table>');
+
+        getColumn($('#LstUsersAssignedUser option').length);
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            retrieve: true,
+            columns: columnsArray,
+            dom: 'Bfrtip',
+            //"sDom": '<"top"i>rt<"bottom"flp><"clear">',
+            buttons: [
+                {
+                    extend: 'excel',
+                    footer: true
+                }
+            ],
+            order: [[0, "asc"]],
+            footerCallback: function (row, data, start, end, display) {
+                if(data.toString() != ""){
+                    var api = this.api(), data;
+                    var intVal = function (i) {
+                        return typeof i === 'string' ?
+                            i * 1 :
+                            typeof i === 'number' ?
+                            i : 0;
+                    };
+                    if($('#LstUsersAssignedUser option').length == 0){
+                        NewTotal = api
+                           .column(1)
+                           .data()
+                           .reduce(function (a, b) {
+                               return intVal(a) + intVal(b);
+                           }, 0);
+                        PreApprovalTotal = api
+                            .column(2)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        NewInstallationTotal = api
+                            .column(3)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        InProgressTotal = api
+                            .column(4)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        CompleteTotal = api
+                            .column(5)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        STCTradeTotal = api
+                            .column(6)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        AftersalesTotal = api
+                            .column(7)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        CancellationsTotal = api
+                            .column(8)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        InstallationCompletedTotal = api
+                            .column(9)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        // Update footer
+                        $(api.column(1).footer()).html(
+                            NewTotal
+                        );
+                        $(api.column(2).footer()).html(
+                            PreApprovalTotal
+                        );
+                        $(api.column(3).footer()).html(
+                            NewInstallationTotal
+                        );
+                        $(api.column(4).footer()).html(
+                            InProgressTotal
+                        );
+                        $(api.column(5).footer()).html(
+                            CompleteTotal
+                        );
+                        $(api.column(6).footer()).html(
+                            STCTradeTotal
+                        );
+                        $(api.column(7).footer()).html(
+                            AftersalesTotal
+                        );
+                        $(api.column(8).footer()).html(
+                            CancellationsTotal
+                        );
+                        $(api.column(9).footer()).html(
+                            InstallationCompletedTotal
+                        );
+                        $( api.column(0).footer() ).html(
+                           'Total:'
+                        );
+                    }else
+                    {
+                        NewTotal = api
+                            .column(2)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        PreApprovalTotal = api
+                            .column(3)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        NewInstallationTotal = api
+                            .column(4)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        InProgressTotal = api
+                            .column(5)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        CompleteTotal = api
+                            .column(6)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        STCTradeTotal = api
+                            .column(7)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        AftersalesTotal = api
+                            .column(8)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        CancellationsTotal = api
+                            .column(9)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        InstallationCompletedTotal = api
+                            .column(10)
+                            .data()
+                            .reduce(function (a, b) {
+                                return intVal(a) + intVal(b);
+                            }, 0);
+                        // Update footer
+                        $(api.column(2).footer()).html(
+                            NewTotal
+                        );
+                        $(api.column(3).footer()).html(
+                            PreApprovalTotal
+                        );
+                        $(api.column(4).footer()).html(
+                            NewInstallationTotal
+                        );
+                        $(api.column(5).footer()).html(
+                            InProgressTotal
+                        );
+                        $(api.column(6).footer()).html(
+                            CompleteTotal
+                        );
+                        $(api.column(7).footer()).html(
+                            STCTradeTotal
+                        );
+                        $(api.column(8).footer()).html(
+                            AftersalesTotal
+                        );
+                        $(api.column(9).footer()).html(
+                            CancellationsTotal
+                        );
+                        $(api.column(10).footer()).html(
+                            InstallationCompletedTotal
+                        );
+                        $( api.column(1).footer() ).html(
+                           'Total:'
+                        );
+                    }
+                }else{
+                    $('#datatable tfoot').remove();
+                }
+            }
+        });
+        $('#datatable_length').hide();
+        $('#datatable_info').hide();
+        //$('#datatable tr th').attr('class', 'sorting_disabled table-header');
+        if($('#LstUsersAssignedUser option').length == 0)
+        {
+            $('#datatable tbody tr td:nth-child(2)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(10)').attr('style', 'text-align:right;');
+
+            $('#datatable thead tr th:nth-child(2)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(10)').attr('style', 'text-align:right;');
+
+            $('#datatable tfoot tr th:nth-child(2)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(10)').attr('style', 'text-align:right;');
+
+            $('#datatable thead th:nth-child(1)').attr('style', 'width:12% !important;');
+        }
+        else
+        {
+            $('#datatable tbody tr td:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(10)').attr('style', 'text-align:right;');
+            $('#datatable tbody tr td:nth-child(11)').attr('style', 'text-align:right;');
+
+            $('#datatable thead tr th:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(10)').attr('style', 'text-align:right;');
+            $('#datatable thead tr th:nth-child(11)').attr('style', 'text-align:right;');
+
+            $('#datatable tfoot tr th:nth-child(3)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(4)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(5)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(6)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(7)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(8)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(9)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(10)').attr('style', 'text-align:right;');
+            $('#datatable tfoot tr th:nth-child(11)').attr('style', 'text-align:right;');
+
+            $('#datatable thead th:nth-child(1)').attr('style', 'width:12% !important;');
+            $('#datatable thead th:nth-child(2)').attr('style', 'width:14% !important;');
+        }
+        $('.buttons-excel').addClass('primary pull-right');
+        $('.buttons-excel').html('<span>Export to Excel</span>');
+    }
+    function getColumn(id) {
+        if (id == 0) {
+            columnsArray = [
+               {
+                   'data': 'ResellerName',
+                   "orderable": true
+               },
+               {
+                   'data': 'New',
+                   "orderable": true
+               },
+               {
+                   'data': 'PreApproval',
+                   "orderable": true
+               },
+               {
+                   'data': 'NewInstallation',
+                   "orderable": true
+               },
+               {
+                   'data': 'InProgress',
+                   "orderable": true
+               },
+               {
+                   'data': 'Complete',
+                   "orderable": true
+               },
+               {
+                   'data': 'STCTrade',
+                   "orderable": true
+               },
+               {
+                   'data': 'Aftersales',
+                   "orderable": true
+               },
+               {
+                   'data': 'Cancellations',
+                   "orderable": true
+               },
+                {
+                    'data': 'InstallationCompleted',
+                    "orderable": true
+                },
+            ];
+        }
+        else
+        {
+            columnsArray = [
+              {
+                  'data': 'ResellerName',
+                  "orderable": true
+              },
+              {
+                  'data': 'CompanyName',
+                  "orderable": true
+              },
+              {
+                  'data': 'New',
+                  "orderable": true
+              },
+              {
+                  'data': 'PreApproval',
+                  "orderable": true
+              },
+              {
+                  'data': 'NewInstallation',
+                  "orderable": true
+              },
+              {
+                  'data': 'InProgress',
+                  "orderable": true
+              },
+              {
+                  'data': 'Complete',
+                  "orderable": true
+              },
+              {
+                  'data': 'STCTrade',
+                  "orderable": true
+              },
+              {
+                  'data': 'Aftersales',
+                  "orderable": true
+              },
+              {
+                  'data': 'Cancellations',
+                  "orderable": true
+              },
+               {
+                   'data': 'InstallationCompleted',
+                   "orderable": true
+               },
+            ];
+        }
+    }
+
+    function ResetSearchFilters() {
+        $('#cntUsers').html('0');
+        $('#cntResellers').html('0');
+        $('#hdnResellers').val('');
+        $("#hdnUsers").val('');
+        $("#drdDelete").val(1);
+
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+        document.getElementById('ResellerID').style.pointerEvents = 'auto';
+        $('#ResellerID').css('opacity', '1');
+
+        document.getElementById('UserID').style.pointerEvents = 'auto';
+        $('#UserID').css('opacity', '1');
+
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        $('#btnJobStatusBarReport').css('opacity', '1');
+
+        if ($('#minSCA').val() > 0 && $('#LstUsersAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+    }
+
+    //charts
+    function BindChart(resultData) {
+        var chartType = 'bar';
+        var groupedData = {};
+        var xAxis = ['xAxis'];
+        var data1 = ['New'];
+        var data2 = ['PreApproval'];
+        var data3 = ['NewInstallation'];
+        var data4 = ['InProgress'];
+        var data5 = ['Complete'];
+        var data6 = ['STCTrade'];
+        var data7 = ['Aftersales'];
+        var data8 = ['Cancellations'];
+        var data9 = ['InstallationCompleted'];
+        var result = [];
+        var dataGroup = [];
+        if($('#drdChartType').val() == 'ComboBar'){
+            dataGroup = ['New','PreApproval', 'NewInstallation', 'InProgress', 'Complete','STCTrade','Aftersales','Cancellations','InstallationCompleted'];
+        }
+
+        if($('#LstUsersAssignedUser option').length == 0){
+            for (var i = 0; i < resultData.length; i++) {
+                var item = resultData[i];
+                xAxis.push(item.ResellerName);
+                data1.push(item.New);
+                data2.push(item.PreApproval);
+                data3.push(item.NewInstallation);
+                data4.push(item.InProgress);
+                data5.push(item.Complete);
+                data6.push(item.STCTrade);
+                data7.push(item.Aftersales);
+                data8.push(item.Cancellations);
+                data9.push(item.InstallationCompleted);
+            }
+        }else
+        {
+            for (var i = 0; i < resultData.length; i++) {
+                var item = resultData[i];
+                xAxis.push(item.ResellerName);
+                data1.push(item.New);
+                data2.push(item.PreApproval);
+                data3.push(item.NewInstallation);
+                data4.push(item.InProgress);
+                data5.push(item.Complete);
+                data6.push(item.STCTrade);
+                data7.push(item.Aftersales);
+                data8.push(item.Cancellations);
+                data9.push(item.InstallationCompleted);
+            }
+        }
+        result.push(xAxis);
+        result.push(data1);
+        result.push(data2);
+        result.push(data3);
+        result.push(data4);
+        result.push(data5);
+        result.push(data6);
+        result.push(data7);
+        result.push(data8);
+        result.push(data9);
+
+        $('#chartbox').css('display', 'block');
+        chartdiv = c3.generate({
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+                , groups: [dataGroup]
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if(chartType == 'pie'){
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    //function disableSC() {
+    //    //disable solar company button
+    //    if ($('#UserID').length > 0) {
+    //        if ($('#LstResellerAssignedUser option').length > 0) {
+    //            document.getElementById('UserID').style.pointerEvents = 'none';
+    //            $('#UserID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('UserID').style.pointerEvents = 'auto';
+    //            $('#UserID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+
+    //function disableReseller() {
+    //    //disable solar company button
+    //    if ($('#ResellerID').length > 0) {
+    //        if ($('#LstUsersAssignedUser option').length > 0) {
+    //            document.getElementById('ResellerID').style.pointerEvents = 'none';
+    //            $('#ResellerID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('ResellerID').style.pointerEvents = 'auto';
+    //            $('#ResellerID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+</style>

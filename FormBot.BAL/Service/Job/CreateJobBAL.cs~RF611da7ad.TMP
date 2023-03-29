@@ -1,0 +1,1760 @@
+﻿using FormBot.DAL;
+using FormBot.Entity;
+using FormBot.Entity.Job;
+using FormBot.Entity.Settings;
+using FormBot.Helper;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Mvc;
+
+namespace FormBot.BAL.Service
+{
+    public class CreateJobBAL : ICreateJobBAL
+    {
+        /// <summary>
+        /// Gets the se user.
+        /// </summary>
+        /// <param name="isInstaller">if set to <c>true</c> [is installer].</param>
+        /// <param name="companyId">The company identifier.</param>
+        /// <param name="existUserId">The exist user identifier.</param>
+        /// <returns>Solar Electrician View</returns>
+        public List<SolarElectricianView> GetSEUser(bool isInstaller, int companyId, int existUserId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("IsInstaller", SqlDbType.Bit, isInstaller));
+            sqlParameters.Add(DBClient.AddParameters("CompanyId", SqlDbType.Int, companyId));
+            sqlParameters.Add(DBClient.AddParameters("ExistUserId", SqlDbType.Int, existUserId));
+            List<SolarElectricianView> lstSolarElectrician = CommonDAL.ExecuteProcedure<SolarElectricianView>("Job_GetSEUser", sqlParameters.ToArray()).ToList();
+            return lstSolarElectrician;
+        }
+        /// <summary>
+        /// Gets the se user With Status.
+        /// </summary>
+        /// <param name="isInstaller">if set to <c>true</c> [is installer].</param>
+        /// <param name="companyId">The company identifier.</param>
+        /// <param name="existUserId">The exist user identifier.</param>
+        /// <returns>Solar Electrician View</returns>
+        public List<SolarElectricianView> GetSEUserWithStatus(bool isInstaller, int companyId, int existUserId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("IsInstaller", SqlDbType.Bit, isInstaller));
+            sqlParameters.Add(DBClient.AddParameters("CompanyId", SqlDbType.Int, companyId));
+            sqlParameters.Add(DBClient.AddParameters("ExistUserId", SqlDbType.Int, existUserId));
+            List<SolarElectricianView> lstSolarElectrician = CommonDAL.ExecuteProcedure<SolarElectricianView>("Job_GetSEUserWithStatus", sqlParameters.ToArray()).ToList();
+            return lstSolarElectrician;
+        }
+        /// <summary>
+        /// Gets the job stage.
+        /// </summary>
+        /// <returns>
+        /// list of job stage
+        /// </returns>
+        public List<JobStage> GetJobStage()
+        {
+            List<JobStage> lstJobStage = CommonDAL.ExecuteProcedure<JobStage>("Job_GetJobSatge").ToList();
+            return lstJobStage;
+        }
+
+        /// <summary>
+        /// Bind Panel Dropdowns.
+        /// </summary>
+        /// <param name="Mode">Mode</param>
+        /// <param name="CertificateHolder">Certificate Holder</param>
+        /// <returns>Job Panel Details</returns>
+        public List<JobPanelDetails> GetPanel(string Mode, string CertificateHolder, string JobType)
+        {
+            string spName = "[Job_GetPanelBrandModelNumber]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("Mode", SqlDbType.NVarChar, Mode));
+            sqlParameters.Add(DBClient.AddParameters("CertificateHolder", SqlDbType.NVarChar, CertificateHolder));
+            //if (JobType=="undefined" || !string.IsNullOrEmpty(JobType) )
+            //{
+            //    JobType = "1";
+            //}
+            sqlParameters.Add(DBClient.AddParameters("JobType", SqlDbType.Int, Convert.ToInt32(JobType)));
+            IList<JobPanelDetails> PanelList = CommonDAL.ExecuteProcedure<JobPanelDetails>(spName, sqlParameters.ToArray());
+            return PanelList.ToList();
+        }
+
+        /// <summary>
+        /// Bind Panel Dropdowns.
+        /// </summary>
+        /// <param name="Mode">Mode</param>
+        /// <param name="CertificateHolder">Certificate Holder</param>
+        /// <returns>Job Panel Details</returns>
+        public List<HWBrandModel> GetHWPanel(string Mode, string CertificateHolder, string JobType)
+        {
+            string spName = "[Job_GetPanelBrandModelNumber]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("Mode", SqlDbType.NVarChar, Mode));
+            sqlParameters.Add(DBClient.AddParameters("CertificateHolder", SqlDbType.NVarChar, CertificateHolder));
+            sqlParameters.Add(DBClient.AddParameters("JobType", SqlDbType.Int, Convert.ToInt32(JobType)));
+            IList<HWBrandModel> HWList = CommonDAL.ExecuteProcedure<HWBrandModel>(spName, sqlParameters.ToArray());
+            return HWList.ToList();
+        }
+
+        /// <summary>
+        /// Bind Inverter Dropdowns.
+        /// </summary>
+        /// <param name="Mode">Mode</param>
+        /// <param name="Search">Search</param>
+        /// <param name="menufacturer">menufacturer</param>
+        /// <returns>Job Inverter Details</returns>
+        public List<JobInverterDetails> GetJobInverter(string Mode, string Search, string menufacturer = null)
+        {
+            string spName = "[Job_GetInverter]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("Mode", SqlDbType.NVarChar, Mode));
+            sqlParameters.Add(DBClient.AddParameters("Search", SqlDbType.NVarChar, Search));
+            sqlParameters.Add(DBClient.AddParameters("Manufacturer", SqlDbType.NVarChar, menufacturer));
+            IList<JobInverterDetails> inverterList = CommonDAL.ExecuteProcedure<JobInverterDetails>(spName, sqlParameters.ToArray());
+            return inverterList.ToList();
+        }
+
+        /// <summary>
+        /// Gets the electricity provider.
+        /// </summary>
+        /// <returns>
+        /// list of electricity provider
+        /// </returns>
+        public List<ElectricityProvider> GetElectricityProvider()
+        {
+            List<ElectricityProvider> lstElectricityProvider = CommonDAL.ExecuteProcedure<ElectricityProvider>("Job_GetElectricityProvider").ToList();
+            return lstElectricityProvider;
+        }
+
+        /// <summary>
+        /// Inserts the job.
+        /// </summary>
+        /// <param name="createJob">The create job.</param>
+        /// <param name="xmlPanels">The XML panels.</param>
+        /// <param name="xmlInverters">The XML inverters.</param>
+        /// <returns>
+        /// integer job id
+        /// </returns>
+        public int InsertJob(CreateJob createJob, string xmlPanels, string xmlInverters)
+        {
+            try
+            {
+                DataSet dataSet = createJobNumber(ProjectSession.LoginCompanyName, ProjectSession.LoginCompanyName.Length > 1 ? ProjectSession.LoginCompanyName.Substring(0, 2) : "", createJob.BasicDetails.JobType);
+                createJob.BasicDetails.CompanyName = ProjectSession.LoginCompanyName;
+                createJob.BasicDetails.ShortCompanyName = ProjectSession.LoginCompanyName.Length > 1 ? ProjectSession.LoginCompanyName.Substring(0, 2) : "";
+                if (dataSet != null && dataSet.Tables.Count > 1)
+                {
+                    createJob.BasicDetails.CompanyCounter = Convert.ToInt32(dataSet.Tables[1].Rows[0].ItemArray[0].ToString());
+                }
+
+                List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                sqlParameters.Add(DBClient.AddParameters("BasicJobID", SqlDbType.Int, createJob.BasicDetails.JobID));
+                sqlParameters.Add(DBClient.AddParameters("RefNumber", SqlDbType.NVarChar, createJob.BasicDetails.RefNumber));
+                sqlParameters.Add(DBClient.AddParameters("Title", SqlDbType.NVarChar, createJob.BasicDetails.Title));
+                sqlParameters.Add(DBClient.AddParameters("Description", SqlDbType.NVarChar, createJob.BasicDetails.Description));
+                sqlParameters.Add(DBClient.AddParameters("JobNumber", SqlDbType.NVarChar, createJob.BasicDetails.JobNumber));
+                sqlParameters.Add(DBClient.AddParameters("JobStage", SqlDbType.Int, createJob.BasicDetails.JobStage));
+                sqlParameters.Add(DBClient.AddParameters("JobType", SqlDbType.TinyInt, createJob.BasicDetails.JobType));
+                sqlParameters.Add(DBClient.AddParameters("InstallerID", SqlDbType.Int, createJob.BasicDetails.InstallerID));
+                sqlParameters.Add(DBClient.AddParameters("DesignerID", SqlDbType.Int, createJob.BasicDetails.DesignerID));
+                sqlParameters.Add(DBClient.AddParameters("JobElectricianID", SqlDbType.Int, createJob.BasicDetails.JobElectricianID));
+                sqlParameters.Add(DBClient.AddParameters("InstallationDate", SqlDbType.DateTime, createJob.BasicDetails.InstallationDate));
+                sqlParameters.Add(DBClient.AddParameters("Priority", SqlDbType.NVarChar, createJob.BasicDetails.Priority));
+                sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+                sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.Int, ProjectSession.SolarCompanyId));
+                sqlParameters.Add(DBClient.AddParameters("CompanyName", SqlDbType.NVarChar, createJob.BasicDetails.CompanyName));
+                sqlParameters.Add(DBClient.AddParameters("ShortCompanyName", SqlDbType.NVarChar, createJob.BasicDetails.ShortCompanyName));
+                sqlParameters.Add(DBClient.AddParameters("CompanyCounter", SqlDbType.Int, createJob.BasicDetails.CompanyCounter));
+                sqlParameters.Add(DBClient.AddParameters("SSCID", SqlDbType.Int, createJob.BasicDetails.SSCID));
+                sqlParameters.Add(DBClient.AddParameters("ScoID", SqlDbType.Int, createJob.BasicDetails.ScoID));
+                sqlParameters.Add(DBClient.AddParameters("SoldBy", SqlDbType.NVarChar, createJob.BasicDetails.SoldBy));
+                sqlParameters.Add(DBClient.AddParameters("EleCompanyName", SqlDbType.NVarChar, createJob.JobElectricians.CompanyName));
+                sqlParameters.Add(DBClient.AddParameters("EleFirstName", SqlDbType.NVarChar, createJob.JobElectricians.FirstName));
+                sqlParameters.Add(DBClient.AddParameters("EleLastName", SqlDbType.NVarChar, createJob.JobElectricians.LastName));
+                sqlParameters.Add(DBClient.AddParameters("EleUnitTypeID", SqlDbType.Int, createJob.JobElectricians.UnitTypeID));
+                sqlParameters.Add(DBClient.AddParameters("EleUnitNumber", SqlDbType.NVarChar, createJob.JobElectricians.UnitNumber));
+                sqlParameters.Add(DBClient.AddParameters("EleStreetNumber", SqlDbType.NVarChar, createJob.JobElectricians.StreetNumber));
+                sqlParameters.Add(DBClient.AddParameters("EleStreetName ", SqlDbType.NVarChar, createJob.JobElectricians.StreetName));
+                sqlParameters.Add(DBClient.AddParameters("EleStreetTypeID", SqlDbType.Int, createJob.JobElectricians.StreetTypeID));
+                sqlParameters.Add(DBClient.AddParameters("EleTown", SqlDbType.NVarChar, createJob.JobElectricians.Town));
+                sqlParameters.Add(DBClient.AddParameters("EleState", SqlDbType.NVarChar, createJob.JobElectricians.State));
+                sqlParameters.Add(DBClient.AddParameters("ElePostCode", SqlDbType.NVarChar, createJob.JobElectricians.PostCode));
+                sqlParameters.Add(DBClient.AddParameters("ElePhone", SqlDbType.NVarChar, createJob.JobElectricians.Phone));
+                sqlParameters.Add(DBClient.AddParameters("EleMobile", SqlDbType.NVarChar, createJob.JobElectricians.Mobile));
+                sqlParameters.Add(DBClient.AddParameters("EleEmail", SqlDbType.NVarChar, createJob.JobElectricians.Email));
+                sqlParameters.Add(DBClient.AddParameters("EleLicenseNumber", SqlDbType.NVarChar, createJob.JobElectricians.LicenseNumber));
+                sqlParameters.Add(DBClient.AddParameters("EleIsPostalAddress", SqlDbType.Bit, createJob.JobElectricians.IsPostalAddress));
+                sqlParameters.Add(DBClient.AddParameters("ElePostalAddressID", SqlDbType.NVarChar, createJob.JobElectricians.PostalAddressID));
+                sqlParameters.Add(DBClient.AddParameters("ElePostalDeliveryNumber", SqlDbType.NVarChar, createJob.JobElectricians.PostalDeliveryNumber));
+                sqlParameters.Add(DBClient.AddParameters("EleSignature", SqlDbType.NVarChar, createJob.Signature));
+                sqlParameters.Add(DBClient.AddParameters("EleCreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+                sqlParameters.Add(DBClient.AddParameters("EleModifiedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+                sqlParameters.Add(DBClient.AddParameters("InsUnitTypeID", SqlDbType.Int, createJob.JobInstallationDetails.UnitTypeID));
+                sqlParameters.Add(DBClient.AddParameters("InsUnitNumber", SqlDbType.NVarChar, createJob.JobInstallationDetails.UnitNumber));
+                sqlParameters.Add(DBClient.AddParameters("InsStreetNumber", SqlDbType.NVarChar, createJob.JobInstallationDetails.StreetNumber));
+                sqlParameters.Add(DBClient.AddParameters("InsStreetName", SqlDbType.NVarChar, createJob.JobInstallationDetails.StreetName));
+                sqlParameters.Add(DBClient.AddParameters("InsStreetTypeID", SqlDbType.Int, createJob.JobInstallationDetails.StreetTypeID));
+                sqlParameters.Add(DBClient.AddParameters("InsTown", SqlDbType.NVarChar, createJob.JobInstallationDetails.Town));
+                sqlParameters.Add(DBClient.AddParameters("InsState", SqlDbType.NVarChar, createJob.JobInstallationDetails.State));
+                sqlParameters.Add(DBClient.AddParameters("InsPostCode", SqlDbType.NVarChar, createJob.JobInstallationDetails.PostCode));
+                sqlParameters.Add(DBClient.AddParameters("InsNMI", SqlDbType.NVarChar, createJob.JobInstallationDetails.NMI));
+                sqlParameters.Add(DBClient.AddParameters("InsDistributorID", SqlDbType.NVarChar, createJob.JobInstallationDetails.DistributorID));
+                sqlParameters.Add(DBClient.AddParameters("InsPropertyType", SqlDbType.NVarChar, createJob.JobInstallationDetails.PropertyType));
+                sqlParameters.Add(DBClient.AddParameters("InsPropertyName", SqlDbType.NVarChar, createJob.JobInstallationDetails.PropertyName));
+                sqlParameters.Add(DBClient.AddParameters("InsSingleMultipleStory", SqlDbType.NVarChar, createJob.JobInstallationDetails.SingleMultipleStory));
+                sqlParameters.Add(DBClient.AddParameters("InsInstallingNewPanel", SqlDbType.NVarChar, createJob.JobInstallationDetails.InstallingNewPanel));
+                sqlParameters.Add(DBClient.AddParameters("InsMeterNumber", SqlDbType.NVarChar, createJob.JobInstallationDetails.MeterNumber));
+                sqlParameters.Add(DBClient.AddParameters("InsPhaseProperty", SqlDbType.NVarChar, createJob.JobInstallationDetails.PhaseProperty));
+                sqlParameters.Add(DBClient.AddParameters("InsElectricityProviderID ", SqlDbType.Bit, createJob.JobInstallationDetails.ElectricityProviderID));
+                sqlParameters.Add(DBClient.AddParameters("InsExistingSystem ", SqlDbType.NVarChar, createJob.JobInstallationDetails.ExistingSystem));
+                sqlParameters.Add(DBClient.AddParameters("InsExistingSystemSize", SqlDbType.Decimal, createJob.JobInstallationDetails.ExistingSystemSize));
+                sqlParameters.Add(DBClient.AddParameters("InsNoOfPanels", SqlDbType.Int, createJob.JobInstallationDetails.NoOfPanels));
+                sqlParameters.Add(DBClient.AddParameters("InsSystemLocation", SqlDbType.NVarChar, createJob.JobInstallationDetails.SystemLocation));
+                sqlParameters.Add(DBClient.AddParameters("InsPostalDeliveryNumber ", SqlDbType.NVarChar, createJob.JobInstallationDetails.PostalDeliveryNumber));
+                sqlParameters.Add(DBClient.AddParameters("InsIsPostalAddress", SqlDbType.Bit, createJob.JobInstallationDetails.IsPostalAddress));
+                sqlParameters.Add(DBClient.AddParameters("InsPostalAddressID", SqlDbType.NVarChar, createJob.JobInstallationDetails.PostalAddressID));
+                sqlParameters.Add(DBClient.AddParameters("InsLocation", SqlDbType.NVarChar, createJob.JobInstallationDetails.Location));
+                sqlParameters.Add(DBClient.AddParameters("InsCreatedBy", SqlDbType.NVarChar, ProjectSession.LoggedInUserId));
+                sqlParameters.Add(DBClient.AddParameters("InstallerFirstname", SqlDbType.NVarChar, createJob.JobInstallerDetails.FirstName));
+                sqlParameters.Add(DBClient.AddParameters("InstallerSurname", SqlDbType.NVarChar, createJob.JobInstallerDetails.Surname));
+                sqlParameters.Add(DBClient.AddParameters("InstallerPhone", SqlDbType.NVarChar, createJob.JobInstallerDetails.Phone));
+                sqlParameters.Add(DBClient.AddParameters("InstallerMobile", SqlDbType.NVarChar, createJob.JobInstallerDetails.Mobile));
+                sqlParameters.Add(DBClient.AddParameters("InstallerEmail", SqlDbType.NVarChar, createJob.JobInstallerDetails.Email));
+                sqlParameters.Add(DBClient.AddParameters("InstallerUnitTypeID", SqlDbType.Int, createJob.JobInstallerDetails.UnitTypeID));
+                sqlParameters.Add(DBClient.AddParameters("InstallerUnitNumber", SqlDbType.NVarChar, createJob.JobInstallerDetails.UnitNumber));
+                sqlParameters.Add(DBClient.AddParameters("InstallerStreetNumber", SqlDbType.NVarChar, createJob.JobInstallerDetails.StreetNumber));
+                sqlParameters.Add(DBClient.AddParameters("InstallerStreetName", SqlDbType.NVarChar, createJob.JobInstallerDetails.StreetName));
+                sqlParameters.Add(DBClient.AddParameters("InstallerStreetTypeID", SqlDbType.Int, createJob.JobInstallerDetails.StreetTypeID));
+                sqlParameters.Add(DBClient.AddParameters("InstallerTown", SqlDbType.NVarChar, createJob.JobInstallerDetails.Town));
+                sqlParameters.Add(DBClient.AddParameters("InstallerState", SqlDbType.NVarChar, createJob.JobInstallerDetails.State));
+                sqlParameters.Add(DBClient.AddParameters("InstallerPostCode", SqlDbType.NVarChar, createJob.JobInstallerDetails.PostCode));
+                sqlParameters.Add(DBClient.AddParameters("InstallerIsPostalAddress", SqlDbType.Bit, createJob.JobInstallerDetails.IsPostalAddress));
+                sqlParameters.Add(DBClient.AddParameters("InstallerPostalAddressID", SqlDbType.NVarChar, createJob.JobInstallerDetails.PostalAddressID));
+                sqlParameters.Add(DBClient.AddParameters("InstallerPostalDeliveryNumber", SqlDbType.NVarChar, createJob.JobInstallerDetails.PostalDeliveryNumber));
+                sqlParameters.Add(DBClient.AddParameters("OwnerType", SqlDbType.NVarChar, createJob.JobOwnerDetails.OwnerType));
+                sqlParameters.Add(DBClient.AddParameters("OwnerCompanyName", SqlDbType.NVarChar, createJob.JobOwnerDetails.CompanyName));
+                sqlParameters.Add(DBClient.AddParameters("OwnerFirstName", SqlDbType.NVarChar, createJob.JobOwnerDetails.FirstName));
+                sqlParameters.Add(DBClient.AddParameters("OwnerLastName", SqlDbType.NVarChar, createJob.JobOwnerDetails.LastName));
+                sqlParameters.Add(DBClient.AddParameters("OwnerUnitTypeID", SqlDbType.Int, createJob.JobOwnerDetails.UnitTypeID));
+                sqlParameters.Add(DBClient.AddParameters("OwnerUnitNumber", SqlDbType.NVarChar, createJob.JobOwnerDetails.UnitNumber));
+                sqlParameters.Add(DBClient.AddParameters("OwnerStreetNumber", SqlDbType.NVarChar, createJob.JobOwnerDetails.StreetNumber));
+                sqlParameters.Add(DBClient.AddParameters("OwnerStreetName", SqlDbType.NVarChar, createJob.JobOwnerDetails.StreetName));
+                sqlParameters.Add(DBClient.AddParameters("OwnerStreetTypeID", SqlDbType.NVarChar, createJob.JobOwnerDetails.StreetTypeID));
+                sqlParameters.Add(DBClient.AddParameters("OwnerTown", SqlDbType.NVarChar, createJob.JobOwnerDetails.Town));
+                sqlParameters.Add(DBClient.AddParameters("OwnerState", SqlDbType.NVarChar, createJob.JobOwnerDetails.State));
+                sqlParameters.Add(DBClient.AddParameters("OwnerPostCode", SqlDbType.NVarChar, createJob.JobOwnerDetails.PostCode));
+                sqlParameters.Add(DBClient.AddParameters("OwnerPhone", SqlDbType.NVarChar, createJob.JobOwnerDetails.Phone));
+                sqlParameters.Add(DBClient.AddParameters("OwnerMobile", SqlDbType.NVarChar, createJob.JobOwnerDetails.Mobile));
+                sqlParameters.Add(DBClient.AddParameters("OwnerEmail", SqlDbType.NVarChar, createJob.JobOwnerDetails.Email));
+                sqlParameters.Add(DBClient.AddParameters("OwnerIsPostalAddress", SqlDbType.Bit, createJob.JobOwnerDetails.IsPostalAddress));
+                sqlParameters.Add(DBClient.AddParameters("OwnerPostalAddressID", SqlDbType.NVarChar, createJob.JobOwnerDetails.PostalAddressID));
+                sqlParameters.Add(DBClient.AddParameters("OwnerPostalDeliveryNumber", SqlDbType.NVarChar, createJob.JobOwnerDetails.PostalDeliveryNumber));
+                sqlParameters.Add(DBClient.AddParameters("STCTypeOfConnection", SqlDbType.NVarChar, createJob.JobSTCDetails.TypeOfConnection));
+                sqlParameters.Add(DBClient.AddParameters("STCSystemMountingType", SqlDbType.NVarChar, createJob.JobSTCDetails.SystemMountingType));
+                if (!string.IsNullOrEmpty(createJob.JobInstallationDetails.InstallingNewPanel))
+                {
+                    if (createJob.JobInstallationDetails.InstallingNewPanel.ToLower() == "new")
+                    {
+                        createJob.JobSTCDetails.InstallingCompleteUnit = "Yes";
+                        createJob.JobSTCDetails.AdditionalCapacityNotes = null;
+                    }
+                    else
+                    {
+                        createJob.JobSTCDetails.InstallingCompleteUnit = "No";
+                    }
+                }
+                else
+                {
+                    createJob.JobSTCDetails.AdditionalCapacityNotes = null;
+                }
+
+                if (!string.IsNullOrEmpty(createJob.JobSTCDetails.MultipleSGUAddress))
+                {
+                    if (createJob.JobSTCDetails.MultipleSGUAddress.ToLower() != "yes")
+                    {
+                        createJob.JobSTCDetails.Location = null;
+                    }
+                }
+                else
+                {
+                    createJob.JobSTCDetails.Location = null;
+                }
+
+                sqlParameters.Add(DBClient.AddParameters("STCInstallingCompleteUnit", SqlDbType.NVarChar, createJob.JobSTCDetails.InstallingCompleteUnit));
+                sqlParameters.Add(DBClient.AddParameters("STCAdditionalCapacityNotes", SqlDbType.NVarChar, createJob.JobSTCDetails.AdditionalCapacityNotes));
+                sqlParameters.Add(DBClient.AddParameters("STCDeemingPeriod", SqlDbType.NVarChar, createJob.JobSTCDetails.DeemingPeriod));
+                sqlParameters.Add(DBClient.AddParameters("STCCertificateCreated", SqlDbType.NVarChar, createJob.JobSTCDetails.CertificateCreated));
+                sqlParameters.Add(DBClient.AddParameters("STCFailedAccreditationCode", SqlDbType.NVarChar, createJob.JobSTCDetails.FailedAccreditationCode));
+                sqlParameters.Add(DBClient.AddParameters("STCCECAccreditationStatement", SqlDbType.NVarChar, "Yes"));
+                sqlParameters.Add(DBClient.AddParameters("STCGovernmentSitingApproval", SqlDbType.NVarChar, "Yes"));
+                sqlParameters.Add(DBClient.AddParameters("STCElectricalSafetyDocumentation", SqlDbType.NVarChar, "Yes"));
+                sqlParameters.Add(DBClient.AddParameters("STCAustralianNewZealandStandardStatement", SqlDbType.NVarChar, "Yes"));
+                sqlParameters.Add(DBClient.AddParameters("STCVolumetricCapacity", SqlDbType.NVarChar, createJob.JobSTCDetails.VolumetricCapacity));
+                sqlParameters.Add(DBClient.AddParameters("STCStatutoryDeclarations", SqlDbType.NVarChar, createJob.JobSTCDetails.StatutoryDeclarations));
+                sqlParameters.Add(DBClient.AddParameters("STCSecondhandWaterHeater", SqlDbType.NVarChar, createJob.JobSTCDetails.SecondhandWaterHeater));
+                if (createJob.JobSTCDetails.TypeOfConnection == "Stand-alone (not connected to an electricity grid)")
+                {
+                    createJob.JobSTCDetails.StandAloneGridSelected = "Yes";
+                }
+                else
+                {
+                    createJob.JobSTCDetails.StandAloneGridSelected = "No";
+                }
+
+                sqlParameters.Add(DBClient.AddParameters("STCStandAloneGridSelected", SqlDbType.NVarChar, createJob.JobSTCDetails.StandAloneGridSelected));
+                sqlParameters.Add(DBClient.AddParameters("STCMultipleSGUAddress", SqlDbType.NVarChar, createJob.JobSTCDetails.MultipleSGUAddress));
+                sqlParameters.Add(DBClient.AddParameters("STCSGUSystemLocated", SqlDbType.NVarChar, createJob.JobSTCDetails.SGUSystemLocated));
+                sqlParameters.Add(DBClient.AddParameters("STCCreatedBy", SqlDbType.NVarChar, ProjectSession.LoggedInUserId));
+                sqlParameters.Add(DBClient.AddParameters("STCAdditionalInstallationInformation", SqlDbType.NVarChar, createJob.JobSTCDetails.AdditionalInstallationInformation));
+                sqlParameters.Add(DBClient.AddParameters("STCLocation", SqlDbType.NVarChar, createJob.JobSTCDetails.Location));
+                sqlParameters.Add(DBClient.AddParameters("SystemSize", SqlDbType.Decimal, createJob.JobSystemDetails.SystemSize));
+                sqlParameters.Add(DBClient.AddParameters("NoOfPanel", SqlDbType.Int, createJob.JobSystemDetails.NoOfPanel));
+                sqlParameters.Add(DBClient.AddParameters("SerialNumbers", SqlDbType.NVarChar, createJob.JobSystemDetails.SerialNumbers));
+                sqlParameters.Add(DBClient.AddParameters("CalculatedSTC", SqlDbType.Decimal, createJob.JobSystemDetails.CalculatedSTC));
+                sqlParameters.Add(DBClient.AddParameters("InstallationType", SqlDbType.NVarChar, createJob.JobSystemDetails.InstallationType));
+                if (createJob.BasicDetails.JobType == 2)
+                {
+                    xmlPanels = "<Panels><panel><Brand>" + createJob.JobSystemDetails.SystemBrand + "</Brand><Model>" + createJob.JobSystemDetails.SystemModel + "</Model><NoOfPanel>" + createJob.JobSystemDetails.NoOfPanel + "</NoOfPanel></panel></Panels>";
+                }
+
+                sqlParameters.Add(DBClient.AddParameters("xmlPanels", SqlDbType.Xml, xmlPanels));
+                sqlParameters.Add(DBClient.AddParameters("xmlInverters", SqlDbType.Xml, xmlInverters));
+                int jobId = 0;
+                DataSet dataset = CommonDAL.ExecuteDataSet("Job_Insert", sqlParameters.ToArray());
+                if (dataset != null && dataset.Tables.Count > 0)
+                {
+                    jobId = Convert.ToInt32(dataset.Tables[0].Rows[0].ItemArray[0].ToString());
+                }
+
+                return jobId;
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(ex);
+                return 0;
+            }
+        }
+
+        /// <summary>
+        ///Yesr wise calculation of Deeming Period.
+        /// </summary>
+        /// <param name="year">year</param>
+        /// <returns>string</returns>
+        public List<string> GetDeemingPeriod(int year)
+        {
+            const string ONE_YEAR = "One year";
+            const string FIVE_YEARS = "Five years";
+            const string FIFTEEN_YEARS = "Fifteen years";
+            List<string> lstYear = new List<string> { ONE_YEAR, FIVE_YEARS, FIFTEEN_YEARS };
+            switch (year)
+            {
+                case 2013:
+                    return lstYear;
+                case 2014:
+                    return lstYear;
+                case 2015:
+                    return lstYear;
+                case 2016:
+                    return lstYear;
+                case 2017:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Fourteen years" };
+                case 2018:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Thirteen years" };
+                case 2019:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Twelve years" };
+                case 2020:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Eleven years" };
+                case 2021:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Ten years" };
+                case 2022:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Nine years" };
+                case 2023:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Eight years" };
+                case 2024:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Seven years" };
+                case 2025:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS, "Six years" };
+                case 2026:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS };
+                case 2027:
+                    return new List<string> { ONE_YEAR, FIVE_YEARS };
+                case 2028:
+                    return new List<string> { ONE_YEAR, "Three years" };
+                case 2029:
+                    return new List<string> { ONE_YEAR, "Two years" };
+                case 2030:
+                    return new List<string> { ONE_YEAR };
+                default:
+                    break;
+            }
+
+            return lstYear;
+        }
+
+        /// <summary>
+        /// Creates the job number.
+        /// </summary>
+        /// <param name="companyName">Name of the company.</param>
+        /// <param name="shortCompanyName">Short name of the company.</param>
+        /// <param name="jobType">Type of the job.</param>
+        /// <returns>
+        /// data table
+        /// </returns>
+        public DataSet createJobNumber(string companyName, string shortCompanyName, int jobType)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("CompanyName", SqlDbType.NVarChar, companyName));
+            sqlParameters.Add(DBClient.AddParameters("ShortCompanyName", SqlDbType.NChar, shortCompanyName));
+            sqlParameters.Add(DBClient.AddParameters("jobType", SqlDbType.Int, jobType));
+            DataSet dsUsers = CommonDAL.ExecuteDataSet("Job_createJobNumber", sqlParameters.ToArray());
+            return dsUsers;
+        }
+
+        /// <summary>
+        /// Get Job By ID.
+        /// </summary>
+        /// <param name="jobID">JobID</param>
+        /// <returns>
+        /// job by id
+        /// </returns>
+        public CreateJob GetJobByID(int jobID)
+        {
+            CreateJob createjob = new CreateJob();
+            string spName = "[Job_GetJobByJobId]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            DataSet dataSet = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+            if (dataSet != null && dataSet.Tables.Count > 0)
+            {
+                createjob.BasicDetails = dataSet.Tables[0].Rows.Count > 0 ? DBClient.DataTableToList<BasicDetails>(dataSet.Tables[0])[0] : new BasicDetails();
+                createjob.JobElectricians = dataSet.Tables[1].Rows.Count > 0 ? DBClient.DataTableToList<JobElectricians>(dataSet.Tables[1])[0] : new JobElectricians();
+                createjob.JobInstallationDetails = dataSet.Tables[2].Rows.Count > 0 ? DBClient.DataTableToList<JobInstallationDetails>(dataSet.Tables[2])[0] : new JobInstallationDetails();
+                createjob.JobSTCDetails = dataSet.Tables[3].Rows.Count > 0 ? DBClient.DataTableToList<JobSTCDetails>(dataSet.Tables[3])[0] : new JobSTCDetails();
+                createjob.JobSystemDetails = dataSet.Tables[4].Rows.Count > 0 ? DBClient.DataTableToList<JobSystemDetails>(dataSet.Tables[4])[0] : new JobSystemDetails();
+                createjob.lstJobInverterDetails = dataSet.Tables[5].Rows.Count > 0 ? DBClient.DataTableToList<JobInverterDetails>(dataSet.Tables[5]) : new List<JobInverterDetails>();
+                createjob.lstJobPanelDetails = dataSet.Tables[6].Rows.Count > 0 ? DBClient.DataTableToList<JobPanelDetails>(dataSet.Tables[6]) : new List<JobPanelDetails>();
+                createjob.JobOwnerDetails = dataSet.Tables[7].Rows.Count > 0 ? DBClient.DataTableToList<JobOwnerDetails>(dataSet.Tables[7])[0] : new JobOwnerDetails();
+                createjob.JobInstallerDetails = dataSet.Tables[8].Rows.Count > 0 ? DBClient.DataTableToList<JobInstallerDetails>(dataSet.Tables[8])[0] : new JobInstallerDetails();
+                if (createjob.BasicDetails.JobType == 2 && createjob.lstJobPanelDetails.Count > 0)
+                {
+                    createjob.JobSystemDetails.SystemBrand = createjob.lstJobPanelDetails[0].Brand;
+                    createjob.JobSystemDetails.SystemModel = createjob.lstJobPanelDetails[0].Model;
+                    createjob.JobSystemDetails.NoOfPanel = createjob.lstJobPanelDetails[0].NoOfPanel;
+                }
+                createjob.JobPanelDetails = new JobPanelDetails();
+                createjob.JobInverterDetails = new JobInverterDetails();
+                createjob.lstPVModules = dataSet.Tables[9].Rows.Count > 0 ? DBClient.DataTableToList<PVModules>(dataSet.Tables[9]) : new List<PVModules>();
+                createjob.lstInverters = dataSet.Tables[10].Rows.Count > 0 ? DBClient.DataTableToList<Inverters>(dataSet.Tables[10]) : new List<Inverters>();
+            }
+            return createjob;
+        }
+
+        /// <summary>
+        /// Gets the job list.
+        /// </summary>
+        /// <param name="UserId">The user identifier.</param>
+        /// <param name="UserTypeId">The usertype identifier.</param>
+        /// <param name="PageNumber">The page number.</param>
+        /// <param name="PageSize">Size of the page.</param>
+        /// <param name="SortCol">The sort column.</param>
+        /// <param name="SortDir">The sort direction.</param>
+        /// <param name="UrgentJobDay">The urgentjobday.</param>
+        /// <param name="StageId">The stage identifier.</param>
+        /// <param name="SolarCompanyId">The solar company identifier.</param>
+        /// <param name="IsArchive">set true to view deleted jobs.</param>
+        /// <param name="ScheduleType">Type of the schedule.</param>
+        /// <param name="JobType">Type of the job.</param>
+        /// <param name="JobPriority">The job priority.</param>
+        /// <param name="searchtext">The searchtext.</param>
+        /// <param name="FromDate">From date.</param>
+        /// <param name="ToDate">To date.</param>
+        /// <param name="jobref">set true to search on reference number.</param>
+        /// <param name="jobdescription">set true to search on jobdescription.</param>
+        /// <param name="jobaddress">set true to search on jobaddress.</param>
+        /// <param name="jobclient">set true to search on jobclient.</param>
+        /// <param name="jobstaff">set true to search on jobstaff.</param>
+        /// <param name="notesdescription">set true to search on Notes Description.</param>
+        /// <param name="nottraded">set true to search on Not Traded.</param>
+        /// <param name="title">set true to search on Title.</param>
+        /// <param name="nopreapprovals">set true to search on NoPreApprovals.</param>
+        /// <param name="noconnections">set true to search on No connections.</param>
+        /// <param name="ACT">set true to filter ACT Jobs.</param>
+        /// <param name="NSW">set true to filter NSW Jobs.</param>
+        /// <param name="NT">set true to filter NT Jobs.</param>
+        /// <param name="QLD">set true to filter QLD Jobs.</param>
+        /// <param name="SA">set true to filter SA Jobs.</param>
+        /// <param name="TAS">set true to filter TAS Jobs.</param>
+        /// <param name="WA">set true to filter WA Jobs.</param>
+        /// <param name="VIC">set true to filter VIC Jobs.</param>
+        /// <returns>List of Jobs</returns>
+        public List<JobList> GetJobList(int userId, int userTypeId, int pageNumber, int pageSize, string sortCol, string sortDir, int urgentJobDay, int stageId, int solarCompanyId, bool isArchive, int scheduleType, int jobType, int jobPriority, string searchtext, DateTime? fromDate, DateTime? toDate, bool jobref = true, bool jobdescription = true, bool jobaddress = true, bool jobclient = true, bool jobstaff = false, bool notesdescription = false, bool nottraded = false, bool title = true, bool nopreapprovals = false, bool noconnections = false, bool act = true, bool nsw = true, bool nt = true, bool qld = true, bool sa = true, bool tas = true, bool wa = true, bool vic = true)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.Int, userId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, userTypeId));
+            sqlParameters.Add(DBClient.AddParameters("PageNumber", SqlDbType.Int, pageNumber));
+            sqlParameters.Add(DBClient.AddParameters("PageSize", SqlDbType.Int, pageSize));
+            sqlParameters.Add(DBClient.AddParameters("SortCol", SqlDbType.NVarChar, sortCol));
+            sqlParameters.Add(DBClient.AddParameters("SortDir", SqlDbType.VarChar, sortDir));
+            sqlParameters.Add(DBClient.AddParameters("UrgentJobDay", SqlDbType.Int, urgentJobDay));
+            sqlParameters.Add(DBClient.AddParameters("StageId", SqlDbType.Int, stageId));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.Int, solarCompanyId));
+            sqlParameters.Add(DBClient.AddParameters("IsArchive", SqlDbType.Bit, isArchive));
+            sqlParameters.Add(DBClient.AddParameters("ScheduleType", SqlDbType.Int, scheduleType));
+            sqlParameters.Add(DBClient.AddParameters("JobType", SqlDbType.Int, jobType));
+            sqlParameters.Add(DBClient.AddParameters("JobPriority", SqlDbType.Int, jobPriority));
+            sqlParameters.Add(DBClient.AddParameters("searchtext", SqlDbType.NVarChar, searchtext));
+            sqlParameters.Add(DBClient.AddParameters("FromDate", SqlDbType.DateTime, fromDate != null ? fromDate : (object)DBNull.Value));
+            sqlParameters.Add(DBClient.AddParameters("ToDate", SqlDbType.DateTime, toDate != null ? toDate : (object)DBNull.Value));
+
+            sqlParameters.Add(DBClient.AddParameters("IsJobRef", SqlDbType.Bit, jobref));
+            sqlParameters.Add(DBClient.AddParameters("IsJobDescription", SqlDbType.Bit, jobdescription));
+            sqlParameters.Add(DBClient.AddParameters("IsJobAddress", SqlDbType.Bit, jobaddress));
+            sqlParameters.Add(DBClient.AddParameters("IsJobClient", SqlDbType.Bit, jobclient));
+            sqlParameters.Add(DBClient.AddParameters("IsJobStaff", SqlDbType.Bit, jobstaff));
+            sqlParameters.Add(DBClient.AddParameters("IsNotesDescription", SqlDbType.Bit, notesdescription));
+            sqlParameters.Add(DBClient.AddParameters("IsNotTraded", SqlDbType.Bit, nottraded));
+            sqlParameters.Add(DBClient.AddParameters("IsTitle", SqlDbType.Bit, title));
+            sqlParameters.Add(DBClient.AddParameters("IsNoPreApprovals", SqlDbType.Bit, nopreapprovals));
+            sqlParameters.Add(DBClient.AddParameters("IsNoConnections", SqlDbType.Bit, noconnections));
+
+            sqlParameters.Add(DBClient.AddParameters("IsACT", SqlDbType.Bit, act));
+            sqlParameters.Add(DBClient.AddParameters("IsNSW", SqlDbType.Bit, nsw));
+            sqlParameters.Add(DBClient.AddParameters("IsNT", SqlDbType.Bit, nt));
+            sqlParameters.Add(DBClient.AddParameters("IsQLD", SqlDbType.Bit, qld));
+            sqlParameters.Add(DBClient.AddParameters("IsSA", SqlDbType.Bit, sa));
+            sqlParameters.Add(DBClient.AddParameters("IsTAS", SqlDbType.Bit, tas));
+            sqlParameters.Add(DBClient.AddParameters("IsWA", SqlDbType.Bit, wa));
+            sqlParameters.Add(DBClient.AddParameters("IsVIC", SqlDbType.Bit, vic));
+
+            List<JobList> lstJobs = CommonDAL.ExecuteProcedure<JobList>("Job_GetJobList", sqlParameters.ToArray()).ToList();
+            return lstJobs;
+        }
+
+        /// <summary>
+        /// Deletes the selected jobs.
+        /// </summary>
+        /// <param name="lstJobs">The list jobs to delete.</param>
+        public void DeleteSelectedJobs(List<int> lstJobs)
+        {
+            if (lstJobs != null && lstJobs.Count > 0)
+            {
+                var iDs = lstJobs.Select(i => i.ToString(CultureInfo.InvariantCulture)).Aggregate((s1, s2) => s1 + ", " + s2);
+                List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                sqlParameters.Add(DBClient.AddParameters("JobIDs", SqlDbType.NVarChar, iDs));
+                CommonDAL.Crud("Jobs_DeleteSelectedJobs", sqlParameters.ToArray());
+            }
+        }
+
+        /// <summary>
+        /// Gets the sco user.
+        /// </summary>
+        /// <returns>
+        /// reutn assign sco list
+        /// </returns>
+        public List<AssignSCO> GetSCOUser()
+        {
+            string spName = "[User_GetSCOUser]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, FormBot.Helper.ProjectSession.LoggedInUserId));
+            IList<AssignSCO> userTypeList = CommonDAL.ExecuteProcedure<AssignSCO>(spName, sqlParameters.ToArray());
+            return userTypeList.ToList();
+        }
+
+        /// <summary>
+        /// Gets the assign job to list.
+        /// </summary>
+        /// <param name="logedinUserID">The logedin user identifier.</param>
+        /// <param name="scoID">identifier.</param>
+        /// <returns>
+        /// list of user
+        /// </returns>
+        public List<SelectListItem> GetAssignJobToSCOList(int logedinUserID, int scoID)
+        {
+            string spName = "[JobSCOMapping_GetAssignedJobToSCO]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, logedinUserID));
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, scoID));
+            var jobList = CommonDAL.ExecuteProcedure<AssignSCO>(spName, sqlParameters.ToArray())
+            .Select(d => new SelectListItem()
+            {
+                Value = Convert.ToString(d.JobID),
+                Text = d.Title
+            }).ToList();
+            return jobList;
+        }
+
+        /// <summary>
+        /// Assigns the job.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>Get List of job</returns>
+        public IEnumerable<SelectListItem> AssignJobToSCO(int userID)
+        {
+            string spName = "[JobDetails_GetAllJob]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.NVarChar, userID));
+            IList<AssignSCO> jobList = CommonDAL.ExecuteProcedure<AssignSCO>(spName, sqlParameters.ToArray());
+            return jobList.Select(d => new SelectListItem()
+            {
+                Value = Convert.ToString(d.JobID),
+                Text = d.Title
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Creates the job sco mapping.
+        /// </summary>
+        /// <param name="rAMID">The r amid.</param>
+        /// <param name="solarCompanyIDs">The solar company i ds.</param>
+        /// <returns>object</returns>
+        public object CreateJobSCOMapping(int rAMID, string solarCompanyIDs)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.NVarChar, rAMID));
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.NVarChar, solarCompanyIDs));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+            sqlParameters.Add(DBClient.AddParameters("IsDeleted", SqlDbType.Bit, 0));
+            CommonDAL.Crud("JobSCOMapping_Insert", sqlParameters.ToArray());
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the sco by user identifier.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>
+        /// integer id
+        /// </returns>
+        public int GetSCOByUserId(int userID)
+        {
+            string spName = "[JobSCOMapping_GetSCOByUserId]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, userID));
+            object scoID = CommonDAL.ExecuteScalar(spName, sqlParameters.ToArray());
+            return Convert.ToInt32(scoID);
+        }
+
+        /// <summary>
+        /// Gets all job to sco.
+        /// </summary>
+        /// <param name="userID">The user identifier.</param>
+        /// <returns>select list</returns>
+        public IEnumerable<SelectListItem> GetAllJobToSCO(int userID)
+        {
+            string spName = "[JobDetails_GetAllJobToSCO]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.NVarChar, userID));
+            IList<AssignSCO> jobList = CommonDAL.ExecuteProcedure<AssignSCO>(spName, sqlParameters.ToArray());
+            return jobList.Select(d => new SelectListItem()
+            {
+                Value = Convert.ToString(d.JobID),
+                Text = d.Title
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Creates the job notes.
+        /// </summary>
+        /// <param name="notes">notes</param>
+        /// <param name="jobID">job ID</param>
+        /// <param name="createdBy">created By</param>
+        public void CreateJobNotes(string notes, int jobID, int createdBy)
+        {
+            string spName = "[JobNotes_InsertJobNotes]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("Notes", SqlDbType.NVarChar, notes));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, createdBy));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job notes list.
+        /// </summary>
+        /// <param name="pageIndex">Index of the page.</param>
+        /// <param name="jobID">job ID</param>
+        /// <returns>data set</returns>
+        public DataSet GetJobNotesList(int pageIndex, int jobID)
+        {
+            string spName = "[JobNotes_GetJobList]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("PageSize", SqlDbType.Int, 10));
+            sqlParameters.Add(DBClient.AddParameters("PageNumber", SqlDbType.Int, pageIndex));
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            DataSet dsUsers = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+            return dsUsers;
+        }
+
+        /// <summary>
+        /// Deletes the job notes.
+        /// </summary>
+        /// <param name="jobNotesId">The job notes identifier.</param>
+        public void DeleteJobNotes(int jobNotesId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobNotesID", SqlDbType.Int, jobNotesId));
+            CommonDAL.Crud("JobNotes_DeleteJobNotes", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Inserts the photo.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="filename">The filename.</param>
+        /// <param name="status">The status.</param>
+        /// <param name="createdBy">The created by.</param>
+        public void InsertPhoto(int jobID, string filename, int status)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("Name", SqlDbType.NVarChar, filename));
+            sqlParameters.Add(DBClient.AddParameters("Status", SqlDbType.Int, status));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+            CommonDAL.Crud("JobPhoto_Insert", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Inserts the photo.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="filename">The filename.</param>
+        /// <param name="status">The status.</param>
+        /// <param name="createdBy">The created by.</param>
+        public void InsertPhotoForAPI(int jobID, string filename, int status, int UserID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("Name", SqlDbType.NVarChar, filename));
+            sqlParameters.Add(DBClient.AddParameters("Status", SqlDbType.Int, status));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, UserID));
+            CommonDAL.Crud("JobPhoto_Insert", sqlParameters.ToArray());
+        }
+
+
+        /// <summary>
+        /// Deletes the photo.
+        /// </summary>
+        /// <param name="filename">The filename.</param>
+        public void DeletePhoto(string filename)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("Name", SqlDbType.NVarChar, filename));
+            CommonDAL.Crud("JobPhoto_Delete", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job installation photo by job identifier.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <returns>user document</returns>
+        public List<UserDocument> GetJobInstallationPhotoByJobID(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            List<UserDocument> lstUserDocument = CommonDAL.ExecuteProcedure<UserDocument>("JobPhoto_GetJobInstallationPhotoByJobID", sqlParameters.ToArray()).ToList();
+            if (lstUserDocument != null && lstUserDocument.Count > 0)
+            {
+                for (int i = 0; i < lstUserDocument.Count; i++)
+                {
+                    if (lstUserDocument[i].DocumentPath.Length > 20)
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath.Substring(0, 20) + "...";
+                    }
+                    else
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath;
+                    }
+
+                    if (System.Web.MimeMapping.GetMimeMapping(lstUserDocument[i].DocumentPath).ToLower().StartsWith("image"))
+                        lstUserDocument[i].MimeType = "image";
+                    lstUserDocument[i].index = i + 1;
+                }
+            }
+            return lstUserDocument;
+        }
+
+        /// <summary>
+        /// Gets the job installation serial by job identifier.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <returns>user document</returns>
+        public List<UserDocument> GetJobInstallationSerialByJobID(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            List<UserDocument> lstUserDocument = CommonDAL.ExecuteProcedure<UserDocument>("JobPhoto_GetJobInstallationSerialByJobID", sqlParameters.ToArray()).ToList();
+            if (lstUserDocument != null && lstUserDocument.Count > 0)
+            {
+                for (int i = 0; i < lstUserDocument.Count; i++)
+                {
+                    if (lstUserDocument[i].DocumentPath.Length > 20)
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath.Substring(0, 20) + "...";
+                    }
+                    else
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath;
+                    }
+
+                    if (System.Web.MimeMapping.GetMimeMapping(lstUserDocument[i].DocumentPath).ToLower().StartsWith("image"))
+                    {
+                        lstUserDocument[i].MimeType = "image";
+                    }
+
+                    lstUserDocument[i].index = i + 1;
+                }
+
+            }
+
+            return lstUserDocument;
+        }
+
+        /// <summary>
+        /// Gets the ssc user.
+        /// </summary>
+        /// <returns>Basic Details</returns>
+        public List<BasicDetails> GetSSCUser()
+        {
+            string spName = "[User_GetSSCUser]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, FormBot.Helper.ProjectSession.LoggedInUserId));
+            IList<BasicDetails> userTypeList = CommonDAL.ExecuteProcedure<BasicDetails>(spName, sqlParameters.ToArray());
+            return userTypeList.ToList();
+        }
+
+        /// <summary>
+        /// Creates the job mapping.
+        /// </summary>
+        /// <param name="ramID">rAM ID</param>
+        /// <param name="jobID">job ID</param>
+        public void CreateJobSSCMapping(int ramID, int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, ramID));
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            CommonDAL.Crud("JobSSCMapping_Insert", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job scheduling  by job Id.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <returns></returns>
+        public List<JobScheduling> GetJobschedulingByJobID(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            List<JobScheduling> lstJobSchedule = CommonDAL.ExecuteProcedure<JobScheduling>("job_GetSchedulingByJobID", sqlParameters.ToArray()).ToList();
+            if (lstJobSchedule != null && lstJobSchedule.Count > 0)
+            {
+                for (int i = 0; i < lstJobSchedule.Count; i++)
+                {
+                    lstJobSchedule[i].UserName = lstJobSchedule[i].FirstName + "  " + lstJobSchedule[i].LastName;
+                    int month = lstJobSchedule[i].CreatedDate.Month;
+                    lstJobSchedule[i].Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
+                    lstJobSchedule[i].Year = lstJobSchedule[i].CreatedDate.Year;
+                    lstJobSchedule[i].Date = lstJobSchedule[i].CreatedDate.Day;
+
+                    lstJobSchedule[i].StatusName = ((SystemEnums.UserStatus)lstJobSchedule[i].Status).ToString();
+                    if (lstJobSchedule[i].CreatedDate.Minute < 10)
+                    {
+                        lstJobSchedule[i].time = lstJobSchedule[i].CreatedDate.Hour + ":" + "0" + lstJobSchedule[i].CreatedDate.Minute;
+                    }
+                    else
+                    {
+                        lstJobSchedule[i].time = lstJobSchedule[i].CreatedDate.Hour + ":" + lstJobSchedule[i].CreatedDate.Minute;
+                    }
+
+                }
+            }
+            return lstJobSchedule;
+        }
+
+        public int CreateJobDocuments(Entity.Documents.DocumentsView documentsView)
+        {
+            string spName = "[JobDocument_InsertUpdate]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, documentsView.JobId));
+            sqlParameters.Add(DBClient.AddParameters("DocumentId", SqlDbType.Int, documentsView.DocumentId));
+            sqlParameters.Add(DBClient.AddParameters("isUpload", SqlDbType.Bit, documentsView.IsUpload));
+            sqlParameters.Add(DBClient.AddParameters("CreatedDate", SqlDbType.DateTime, documentsView.CreatedDate));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, documentsView.CreatedBy));
+            object userID = CommonDAL.ExecuteScalar(spName, sqlParameters.ToArray());
+            return Convert.ToInt32(userID);
+        }
+
+        /// <summary>
+        /// Gets the SSC user by jb identifier.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="solarCompanyId">The solar company identifier.</param>
+        /// <returns>Basic Details</returns>
+        public List<BasicDetails> GetSSCUserByJbID(int jobID, int solarCompanyId)
+        {
+            string spName = "[User_GetSSCUserByJbID]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("SolarID", SqlDbType.Int, solarCompanyId));
+            IList<BasicDetails> userTypeList = CommonDAL.ExecuteProcedure<BasicDetails>(spName, sqlParameters.ToArray());
+            return userTypeList.ToList();
+        }
+
+        /// <summary>
+        /// Gets the sscid.
+        /// </summary>
+        /// <param name="sscJOBID">The SSC jobid.</param>
+        /// <returns>
+        /// ineteger id
+        /// </returns>
+        public List<SolarSubContractor> GetSSCID(int sscJOBID)
+        {
+            string spName = "[JobDetails_GetSSCID]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, sscJOBID));
+            IList<SolarSubContractor> sscID = CommonDAL.ExecuteProcedure<SolarSubContractor>(spName, sqlParameters.ToArray());
+            return sscID.ToList();
+            //if (Convert.ToString(sscID) == string.Empty)
+            //{
+            //    return 0;
+            //}
+            //else
+            //{
+            //    return Convert.ToInt32(sscID);
+            //}
+        }
+
+        /// <summary>
+        /// Gets the job stages with count.
+        /// </summary>
+        /// <param name="userId">User Id</param>
+        /// <param name="userTypeId">User Type Id</param>
+        /// <returns>
+        /// List of Job Stages with count
+        /// </returns>
+        public List<JobStage> GetJobStagesWithCount(int userId, int userTypeId, int SolarCompanyId)
+        {
+            string spName = "[Job_GetJobSatgesWithCount]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, userId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, userTypeId));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyId", SqlDbType.Int, SolarCompanyId));
+            List<JobStage> lstJobStage = CommonDAL.ExecuteProcedure<JobStage>(spName, sqlParameters.ToArray()).ToList();
+            return lstJobStage;
+        }
+
+        /// <summary>
+        ///  Delete Job Documents from database it will mark isDeleted to true.
+        /// </summary>
+        /// <param name="documentsView"></param>
+        /// <returns>integer id</returns>
+        public int DeleteJobDocument(Entity.Documents.DocumentsView documentsView)
+        {
+            string spName = "[JobDocument_Delete]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, documentsView.JobId));
+            sqlParameters.Add(DBClient.AddParameters("DocumentId", SqlDbType.Int, documentsView.DocumentId));
+            sqlParameters.Add(DBClient.AddParameters("CreatedDate", SqlDbType.DateTime, documentsView.CreatedDate));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, documentsView.CreatedBy));
+            object userID = CommonDAL.ExecuteScalar(spName, sqlParameters.ToArray());
+            return Convert.ToInt32(userID);
+        }
+        /// <summary>
+        /// Inserts the other documents.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="filename">The filename.</param>
+        public void InsertOtherDocuments(int jobID, string filename, int logedInUserID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("FileName", SqlDbType.NVarChar, filename));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, logedInUserID));
+            CommonDAL.Crud("JobDocument_InsertOtherDocument", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job other document by job identifier.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <returns>User Document</returns>
+        public List<UserDocument> GetJobOtherDocumentByJobID(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            List<UserDocument> lstUserDocument = CommonDAL.ExecuteProcedure<UserDocument>("JobDocument_GetJobDocumentByJobID", sqlParameters.ToArray()).ToList();
+
+            if (lstUserDocument != null && lstUserDocument.Count > 0)
+            {
+                for (int i = 0; i < lstUserDocument.Count; i++)
+                {
+                    if (lstUserDocument[i].DocumentPath.Length > 20)
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath.Substring(0, 20) + "...";
+                    }
+                    else
+                    {
+                        lstUserDocument[i].strDocumentPath = lstUserDocument[i].DocumentPath;
+                    }
+                    if (System.Web.MimeMapping.GetMimeMapping(lstUserDocument[i].DocumentPath).ToLower().StartsWith("image"))
+                        lstUserDocument[i].MimeType = "image";
+                    lstUserDocument[i].index = i + 1;
+                }
+            }
+
+            return lstUserDocument;
+        }
+
+        /// <summary>
+        /// Deletes the other document.
+        /// </summary>
+        /// <param name="filename">The filename.</param>
+        public void DeleteOtherDocument(string filename)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("Name", SqlDbType.NVarChar, filename));
+            CommonDAL.Crud("JobOtherDocument_Delete", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets all calendar data.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="userTypeId">The user type identifier.</param>
+        /// <param name="solarCompanyId">The solar company identifier.</param>
+        /// <returns>data set</returns>
+        public DataSet GetAllCalendarData(int userId, int userTypeId, int solarCompanyId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.BigInt, userId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.BigInt, userTypeId));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.BigInt, solarCompanyId));
+            DataSet dsJobSchedulingDetail = CommonDAL.ExecuteDataSet("Calendar_GetAllData", sqlParameters.ToArray());
+            return dsJobSchedulingDetail;
+        }
+
+        /// <summary>
+        /// Gets the identifier by job identifier.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns>
+        /// integer id
+        /// </returns>
+        public int GetSCOIdByJobId(int JobID)
+        {
+            string spName = "[Job_GetSCOByJobId]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, JobID));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+            object scoID = CommonDAL.ExecuteScalar(spName, sqlParameters.ToArray());
+            if (Convert.ToString(scoID) == string.Empty)
+            {
+                return 0;
+            }
+            else
+            {
+                return Convert.ToInt32(scoID);
+            }
+
+        }
+
+        /// <summary>
+        /// Get dataset from database for SCA and Job
+        /// </summary>
+        /// <param name="jobID">job ID</param>
+        /// <param name="solarCompanyID">solar Company ID</param>
+        /// <param name="installerSignPath">installer Sign Path</param>
+        /// <param name="ownerSignPath">owner Sign Path</param>
+        /// <returns>data set</returns>
+        public DataSet GetJobByIDForPDF(int jobID, int solarCompanyID, string installerSignPath, string ownerSignPath, string sCASignPath, string electricianSignPath)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.Int, solarCompanyID));
+            sqlParameters.Add(DBClient.AddParameters("InstallerSignPath", SqlDbType.NVarChar, installerSignPath));
+            sqlParameters.Add(DBClient.AddParameters("OwnerSignPath", SqlDbType.NVarChar, ownerSignPath));
+            sqlParameters.Add(DBClient.AddParameters("SCASignPath", SqlDbType.NVarChar, sCASignPath));
+            sqlParameters.Add(DBClient.AddParameters("ElectricianSignPath", SqlDbType.NVarChar, electricianSignPath));
+            DataSet ds = CommonDAL.ExecuteDataSet("Job_GetJobByIDForPDF", sqlParameters.ToArray());
+            return ds;
+        }
+
+        /// <summary>
+        /// Gets the header details.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <returns>data set</returns>
+        public DataSet GetHeaderDetails(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            DataSet ds = CommonDAL.ExecuteDataSet("JobOwnerDetails_Header", sqlParameters.ToArray());
+            return ds;
+        }
+
+        /// <summary>
+        /// Collect Job Owner Signature
+        /// </summary>
+        /// <param name="jobId">The job identifier.</param>
+
+        public void GetJobOwnerSignature(int jobId, string ownerSignature, string Latitude, string Longitude, string IpAddress, string Location, DateTime SignatureDate)
+        {
+            string spName = "[Job_GetOwnerSignature]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobId));
+            sqlParameters.Add(DBClient.AddParameters("OwnerSignature", SqlDbType.NVarChar, ownerSignature));
+            sqlParameters.Add(DBClient.AddParameters("Latitude", SqlDbType.NVarChar, Latitude));
+            sqlParameters.Add(DBClient.AddParameters("Longitude", SqlDbType.NVarChar, Longitude));
+            sqlParameters.Add(DBClient.AddParameters("IpAddress", SqlDbType.NVarChar, IpAddress));
+            sqlParameters.Add(DBClient.AddParameters("Location", SqlDbType.NVarChar, Location));
+            sqlParameters.Add(DBClient.AddParameters("SignatureDate", SqlDbType.DateTime, SignatureDate));
+
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Get Accreditation Detail by UserId
+        /// </summary>
+        /// <param name="UserId">The job identifier.</param>
+        /// <returns>data set</returns>
+        public DataSet CheckStatusAndInstallationDate(int InstallerId, int DesignerId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("InstallerUserId", SqlDbType.Int, InstallerId));
+            sqlParameters.Add(DBClient.AddParameters("DesignerUserId ", SqlDbType.Int, DesignerId));
+            DataSet ds = CommonDAL.ExecuteDataSet("Job_CheckStatusAndInstallationDate", sqlParameters.ToArray());
+            return ds;
+        }
+
+        /// <summary>
+        /// Updates the priority for jobs.
+        /// </summary>
+        /// <param name="urgentJobDay">The urgent job day.</param>
+        public void UpdatePriorityForJobs(int urgentJobDay)
+        {
+            string spName = "[Jobs_UpdatePriorityForJobs]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UrgentJobDay", SqlDbType.Int, urgentJobDay));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Inserts the record data.
+        /// </summary>
+        /// <param name="dtRECData">The dt record data.</param>
+        /// <param name="createdDate">The created date.</param>
+        public void InsertRECData(DataTable dtRECData, DateTime createdDate)
+        {
+            string spName = "[InsertRECData]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("TableRECData", SqlDbType.Structured, dtRECData));
+            sqlParameters.Add(DBClient.AddParameters("CreatedDate", SqlDbType.Date, createdDate));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Checks the record data exist for date.
+        /// </summary>
+        /// <param name="createdDate">The created date.</param>
+        /// <returns></returns>
+        public bool CheckRECDataExistForDate(DateTime createdDate)
+        {
+            string spName = "[CheckRECDataExistForDate]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("CreatedDate", SqlDbType.Date, createdDate));
+            //CommonDAL.Crud(spName, sqlParameters.ToArray());
+            return Convert.ToBoolean(CommonDAL.ExecuteScalar(spName, sqlParameters.ToArray()));
+        }
+
+        /// <summary>
+        /// Gets the Theme and other Detail by jobId.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns>
+        /// DataSet
+        /// </returns>
+        /// 
+        public DataSet GetThemeByJobId(int JobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, JobID));
+            DataSet ds = CommonDAL.ExecuteDataSet("GetThemeByJobId", sqlParameters.ToArray());
+            return ds;
+        }
+
+        /// <summary>
+        /// Gets text by dropdown value. 
+        /// </summary>
+        /// <returns>
+        /// DataSet
+        /// </returns>
+        /// 
+        public DataSet GetDropDownValuesByJobId(int UnitTypeID, int StreetTypeId, int PostalAddressID, int Model, int Brand)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UnitTypeID", SqlDbType.Int, UnitTypeID));
+            sqlParameters.Add(DBClient.AddParameters("StreetTypeId", SqlDbType.Int, StreetTypeId));
+            sqlParameters.Add(DBClient.AddParameters("PostalAddressID", SqlDbType.Int, PostalAddressID));
+            sqlParameters.Add(DBClient.AddParameters("Model", SqlDbType.Int, Model));
+            sqlParameters.Add(DBClient.AddParameters("Brand", SqlDbType.Int, Brand));
+            DataSet ds = CommonDAL.ExecuteDataSet("GetDropDownValuesByJobId", sqlParameters.ToArray());
+            return ds;
+        }
+
+        /// <summary>
+        /// Gets the jobs for custom pricing.
+        /// </summary>
+        /// <param name="UserId">The user identifier.</param>
+        /// <param name="UserTypeId">The user type identifier.</param>
+        /// <param name="ResellerId">The reseller identifier.</param>
+        /// <param name="SolarCompanyId">The solar company identifier.</param>
+        /// <param name="SystemSize">Size of the system.</param>
+        /// <param name="OwnerName">Name of the owner.</param>
+        /// <param name="OwnerAddress">The owner address.</param>
+        /// <param name="RefNumber">The reference number.</param>
+        /// <returns></returns>
+        public List<JobList> GetJobsForCustomPricing(int UserId, int UserTypeId, int ResellerId, int SolarCompanyId, int SystemSize, string OwnerName, string OwnerAddress, string RefNumber)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.Int, UserId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, UserTypeId));
+            sqlParameters.Add(DBClient.AddParameters("ResellerId", SqlDbType.Int, ResellerId));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyId", SqlDbType.Int, SolarCompanyId));
+            sqlParameters.Add(DBClient.AddParameters("OwnerName", SqlDbType.NVarChar, OwnerName));
+            sqlParameters.Add(DBClient.AddParameters("OwnerAddress", SqlDbType.NVarChar, OwnerAddress));
+            sqlParameters.Add(DBClient.AddParameters("RefNumber", SqlDbType.NVarChar, RefNumber));
+            sqlParameters.Add(DBClient.AddParameters("SystemSize", SqlDbType.Int, SystemSize));
+            List<JobList> lstJobs = CommonDAL.ExecuteProcedure<JobList>("GetJobsForCustomPricing", sqlParameters.ToArray()).ToList();
+            return lstJobs;
+        }
+
+        /// <summary>
+        /// Removes the SSC request.
+        /// </summary>
+        /// <param name="notes">The notes.</param>
+        /// <param name="jobID">The job identifier.</param>
+        public void RemoveSSCRequest(string notes, int jobID, int requestedBy)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("Notes", SqlDbType.NVarChar, notes));
+            sqlParameters.Add(DBClient.AddParameters("SSCRequestedBy", SqlDbType.Int, requestedBy));
+            CommonDAL.Crud("JobDetails_RemoveSSCRequest", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job history list.
+        /// </summary>
+        /// <param name="jobID">job ID</param>
+        /// <returns>data set</returns>
+        public DataSet GetJobHistoryList(int jobID, string order, DateTime? fromDate, DateTime? toDate, int? categoryID)
+        {
+            string spName = "[JobHistory_Select]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("Order", SqlDbType.VarChar, order));
+            sqlParameters.Add(DBClient.AddParameters("CategoryID", SqlDbType.Int, categoryID));
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, ProjectSession.LoggedInUserId));
+            sqlParameters.Add(DBClient.AddParameters("FromDate", SqlDbType.DateTime, fromDate));
+            sqlParameters.Add(DBClient.AddParameters("ToDate", SqlDbType.DateTime, toDate));
+            DataSet dsUsers = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+            return dsUsers;
+        }
+
+        /// <summary>
+        /// Gets the job STC submission.
+        /// </summary>
+        /// <param name="UserId">The user identifier.</param>
+        /// <param name="UserTypeId">The user type identifier.</param>
+        /// <param name="PageNumber">The page number.</param>
+        /// <param name="PageSize">Size of the page.</param>
+        /// <param name="SortCol">The sort col.</param>
+        /// <param name="SortDir">The sort dir.</param>
+        /// <param name="StageId">The stage identifier.</param>
+        /// <param name="ComplianceOfficcerId">The compliance officcer identifier.</param>
+        /// <param name="SolarCompanyId">The solar company identifier.</param>
+        /// <param name="pvdswhcode">The pvdswhcode.</param>
+        /// <param name="RefJobId">The reference job identifier.</param>
+        /// <param name="ownername">The ownername.</param>
+        /// <param name="installationaddress">The installationaddress.</param>
+        /// <param name="SubmissionFromDate">The submission from date.</param>
+        /// <param name="SubmissionToDate">The submission to date.</param>
+        /// <param name="SettlementFromDate">The settlement from date.</param>
+        /// <param name="SettlementToDate">The settlement to date.</param>
+        /// <returns></returns>
+        public List<JobList> GetJobSTCSubmission(int UserId, int UserTypeId, int PageNumber, int PageSize, string SortCol, string SortDir, int StageId, int ComplianceOfficcerId, int SolarCompanyId, string pvdswhcode, string RefJobId, string ownername, string installationaddress, DateTime? SubmissionFromDate, DateTime? SubmissionToDate, DateTime? SettlementFromDate, DateTime? SettlementToDate, int Invoiced)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.Int, UserId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, UserTypeId));
+            sqlParameters.Add(DBClient.AddParameters("PageNumber", SqlDbType.Int, PageNumber));
+            sqlParameters.Add(DBClient.AddParameters("PageSize", SqlDbType.Int, PageSize));
+            sqlParameters.Add(DBClient.AddParameters("SortCol", SqlDbType.NVarChar, SortCol));
+            sqlParameters.Add(DBClient.AddParameters("SortDir", SqlDbType.VarChar, SortDir));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.Int, SolarCompanyId));
+            sqlParameters.Add(DBClient.AddParameters("StageId", SqlDbType.Int, StageId));
+            sqlParameters.Add(DBClient.AddParameters("ComplianceOfficcerId", SqlDbType.Int, ComplianceOfficcerId));
+            sqlParameters.Add(DBClient.AddParameters("PVDSWHCode", SqlDbType.NVarChar, pvdswhcode));
+            sqlParameters.Add(DBClient.AddParameters("RefJobId", SqlDbType.NVarChar, RefJobId));
+            sqlParameters.Add(DBClient.AddParameters("OwnerName", SqlDbType.NVarChar, ownername));
+            sqlParameters.Add(DBClient.AddParameters("InstallationAddress", SqlDbType.NVarChar, installationaddress));
+            sqlParameters.Add(DBClient.AddParameters("SubmissionFromDate", SqlDbType.DateTime, SubmissionFromDate != null ? SubmissionFromDate : (object)DBNull.Value));
+            sqlParameters.Add(DBClient.AddParameters("SubmissionToDate", SqlDbType.DateTime, SubmissionToDate != null ? SubmissionToDate : (object)DBNull.Value));
+            sqlParameters.Add(DBClient.AddParameters("SettlementFromDate", SqlDbType.DateTime, SettlementFromDate != null ? SettlementFromDate : (object)DBNull.Value));
+            sqlParameters.Add(DBClient.AddParameters("SettlementToDate", SqlDbType.DateTime, SettlementToDate != null ? SettlementToDate : (object)DBNull.Value));
+            sqlParameters.Add(DBClient.AddParameters("Invoiced", SqlDbType.Int, Invoiced));
+
+            List<JobList> lstJobsSTCSubmission = CommonDAL.ExecuteProcedure<JobList>("Job_GetJobSTCSubmission", sqlParameters.ToArray()).ToList();
+            return lstJobsSTCSubmission;
+        }
+
+        /// <summary>
+        /// Updates the settlement date.
+        /// </summary>
+        /// <param name="JobId">The job identifier.</param>
+        /// <param name="SettlementDate">The settlement date.</param>
+        public void UpdateSettlementDate(int JobId, DateTime SettlementDate)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("STCJobDetailsId", SqlDbType.Int, JobId));
+            sqlParameters.Add(DBClient.AddParameters("SettlementDate", SqlDbType.DateTime, SettlementDate));
+            CommonDAL.Crud("Jobs_UpdateSettlementDate", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Updates the PVDSWH code.
+        /// </summary>
+        /// <param name="JobId">The job identifier.</param>
+        /// <param name="PVDSWHCode">The PVDSWH code.</param>
+        public void UpdatePVDSWHCode(int JobId, string PVDSWHCode)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("STCJobDetailsId", SqlDbType.Int, JobId));
+            sqlParameters.Add(DBClient.AddParameters("PVDSWHCode", SqlDbType.VarChar, PVDSWHCode));
+            CommonDAL.Crud("Jobs_UpdatePVDSWHCode", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the STC job history.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="jobId">The job identifier.</param>
+        /// <param name="userTypeId">The user type identifier.</param>
+        /// <returns></returns>
+        public List<STCJobHistory> GetSTCJobHistory(int userId, int jobId, int userTypeId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.Int, userId));
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, jobId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, userTypeId));
+
+            List<STCJobHistory> lstSTCJobHistory = CommonDAL.ExecuteProcedure<STCJobHistory>("STCJobHistory_GetJobHistory", sqlParameters.ToArray()).ToList();
+            return lstSTCJobHistory;
+        }
+        /// <summary>
+        /// Gets the StcSubmission Count.
+        /// </summary>
+        /// <param name="userId">User Id</param>
+        /// <param name="userTypeId">User Type Id</param>
+        /// <returns>
+        /// List of Job Stages with count
+        /// </returns>
+        public List<GeneralClass> GetStcSubmissionCount(int jobid)
+        {
+            string spName = "[GetStcSubmissionCount]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("jobid", SqlDbType.Int, jobid));
+            DataSet dsStc = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+
+            List<GeneralClass> lstSubmission = new List<GeneralClass>();
+            lstSubmission = dsStc.Tables[0].ToListof<GeneralClass>();
+
+            return lstSubmission;
+        }
+
+        /// <summary>
+        /// Updates the pv module waltage.
+        /// </summary>
+        /// <param name="PVModuleId">The pv module identifier.</param>
+        /// <param name="Wattage">The wattage.</param>
+        public void UpdatePVModuleWaltage(int PVModuleId, int Wattage)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("PVModuleId", SqlDbType.Int, PVModuleId));
+            sqlParameters.Add(DBClient.AddParameters("Wattage", SqlDbType.Int, Wattage));
+            CommonDAL.Crud("Jobs_UpdatePVModuleWaltage", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the STC job stages with count.
+        /// </summary>
+        /// <param name="UserId">The user identifier.</param>
+        /// <param name="UserTypeId">The user type identifier.</param>
+        /// <param name="SolarCompanyId">The solar company identifier.</param>
+        /// <returns></returns>
+        public List<JobStage> GetSTCJobStagesWithCount(int UserId, int UserTypeId, int SolarCompanyId)
+        {
+            string spName = "[Job_GetSTCJobSatgesWithCount]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserID", SqlDbType.Int, UserId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, UserTypeId));
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyId", SqlDbType.Int, SolarCompanyId));
+            List<JobStage> lstSTCJobStage = CommonDAL.ExecuteProcedure<JobStage>(spName, sqlParameters.ToArray()).ToList();
+            return lstSTCJobStage;
+        }
+
+        /// <summary>
+        /// Gets the STC sub records for job.
+        /// </summary>
+        /// <param name="JobId">The job identifier.</param>
+        /// <returns></returns>
+        public List<JobList> GetSTCSubRecordsForJob(int JobId)
+        {
+            string spName = "[Job_GetSTCSubRecordsForJob]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, JobId));
+            List<JobList> lstSTCSubRecords = CommonDAL.ExecuteProcedure<JobList>(spName, sqlParameters.ToArray()).ToList();
+            return lstSTCSubRecords;
+        }
+
+        /// <summary>
+        /// Checks the business rules.
+        /// </summary>
+        /// <param name="createJob">The create job.</param>
+        /// <param name="xmlPanels">The XML panels.</param>
+        /// <param name="xmlInverters">The XML inverters.</param>
+        /// <returns></returns>
+        public string CheckBusinessRules(CreateJob createJob, string xmlPanels, string xmlInverters, int? jobId = 0)
+        {
+            try
+            {
+                List<SqlParameter> sqlParameters = new List<SqlParameter>();
+                sqlParameters.Add(DBClient.AddParameters("JobType", SqlDbType.TinyInt, createJob.BasicDetails.JobType));
+                sqlParameters.Add(DBClient.AddParameters("InstallerID", SqlDbType.Int, createJob.BasicDetails.InstallerID));
+                sqlParameters.Add(DBClient.AddParameters("DesignerID", SqlDbType.Int, createJob.BasicDetails.DesignerID));
+                sqlParameters.Add(DBClient.AddParameters("InstallationDate", SqlDbType.DateTime, createJob.BasicDetails.InstallationDate));
+                sqlParameters.Add(DBClient.AddParameters("STCTypeOfConnection", SqlDbType.NVarChar, createJob.JobSTCDetails.TypeOfConnection));
+                sqlParameters.Add(DBClient.AddParameters("SerialNumbers", SqlDbType.NVarChar, createJob.JobSystemDetails.SerialNumbers));
+                sqlParameters.Add(DBClient.AddParameters("CalculatedSTC", SqlDbType.NVarChar, createJob.JobSystemDetails.CalculatedSTC));
+                if (jobId != null && jobId > 0)
+                {
+                    sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, jobId));
+                }
+
+                string validationSummary = string.Empty;
+                DataSet dataset = CommonDAL.ExecuteDataSet("Job_CheckBusinessRules", sqlParameters.ToArray());
+                if (dataset != null && dataset.Tables.Count > 0)
+                {
+                    validationSummary = dataset.Tables[0].Rows[0][0].ToString();
+                }
+
+                return validationSummary;
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(ex);
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Inserts the STC job compliance.
+        /// </summary>
+        /// <param name="StcComplianceCheck">The STC compliance check.</param>
+        /// <returns></returns>
+        public int InsertSTCJobCompliance(StcComplianceCheck StcComplianceCheck)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("STCJobDetailsID", SqlDbType.Int, StcComplianceCheck.STCJobDetailsID));
+            sqlParameters.Add(DBClient.AddParameters("IsNameCorrect", SqlDbType.NVarChar, StcComplianceCheck.IsNameCorrect));
+            sqlParameters.Add(DBClient.AddParameters("IsAddressCorrect", SqlDbType.NVarChar, StcComplianceCheck.IsAddressCorrect));
+            sqlParameters.Add(DBClient.AddParameters("IsInstallerSignatureVisible", SqlDbType.NVarChar, StcComplianceCheck.IsInstallerSignatureVisible));
+            sqlParameters.Add(DBClient.AddParameters("IsDesignerSignatureVisible", SqlDbType.NVarChar, StcComplianceCheck.IsDesignerSignatureVisible));
+            sqlParameters.Add(DBClient.AddParameters("IsElectriciandetailsvisible", SqlDbType.NVarChar, StcComplianceCheck.IsElectriciandetailsvisible));
+            sqlParameters.Add(DBClient.AddParameters("IsSerialNumbersMatch", SqlDbType.NVarChar, StcComplianceCheck.IsSerialNumbersMatch));
+            sqlParameters.Add(DBClient.AddParameters("IsSTCAmountMatch", SqlDbType.NVarChar, StcComplianceCheck.IsSTCAmountMatch));
+            sqlParameters.Add(DBClient.AddParameters("IsOwnerDetailsMatch", SqlDbType.NVarChar, StcComplianceCheck.IsOwnerDetailsMatch));
+            sqlParameters.Add(DBClient.AddParameters("IsDescriptionCES", SqlDbType.NVarChar, StcComplianceCheck.IsDescriptionCES));
+            sqlParameters.Add(DBClient.AddParameters("FirstName", SqlDbType.NVarChar, StcComplianceCheck.FirstName));
+            sqlParameters.Add(DBClient.AddParameters("LastName", SqlDbType.NVarChar, StcComplianceCheck.LastName));
+            sqlParameters.Add(DBClient.AddParameters("Address", SqlDbType.NVarChar, StcComplianceCheck.Address));
+            sqlParameters.Add(DBClient.AddParameters("NoOfPanel", SqlDbType.Int, StcComplianceCheck.NoOfPanel));
+            sqlParameters.Add(DBClient.AddParameters("Notes", SqlDbType.NVarChar, StcComplianceCheck.Notes));
+            sqlParameters.Add(DBClient.AddParameters("CallDateTime", SqlDbType.DateTime, StcComplianceCheck.CallDateTime));
+            sqlParameters.Add(DBClient.AddParameters("Status", SqlDbType.TinyInt, StcComplianceCheck.Status));
+            sqlParameters.Add(DBClient.AddParameters("IsRequestedAuthorize", SqlDbType.Bit, StcComplianceCheck.IsRequestedAuthorize));
+            sqlParameters.Add(DBClient.AddParameters("CallMadeBy", SqlDbType.NVarChar, StcComplianceCheck.CallMadeBy));
+            sqlParameters.Add(DBClient.AddParameters("CreatedBy", SqlDbType.Int, ProjectSession.LoggedInUserId));
+            sqlParameters.Add(DBClient.AddParameters("CreatedDate", SqlDbType.DateTime, DateTime.Now));
+            sqlParameters.Add(DBClient.AddParameters("FileUploadJson", SqlDbType.NVarChar, StcComplianceCheck.FileName));
+            sqlParameters.Add(DBClient.AddParameters("Description", SqlDbType.NVarChar, StcComplianceCheck.Description));
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, StcComplianceCheck.JobId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, ProjectSession.UserTypeId));
+            sqlParameters.Add(DBClient.AddParameters("STCLastUpdatedDate", SqlDbType.DateTime, StcComplianceCheck.STCLastUpdatedDate));
+            sqlParameters.Add(DBClient.AddParameters("StcComplianceJobId", SqlDbType.Int, StcComplianceCheck.STCJobComplianceID));
+            object complianceCheckId = CommonDAL.ExecuteScalar("STCJobCompliance_InsertSTCJobCompliance", sqlParameters.ToArray());
+            return Convert.ToInt32(complianceCheckId);
+        }
+
+        /// <summary>
+        /// Gets the STC job compliance.
+        /// </summary>
+        /// <param name="jobId">The job identifier.</param>
+        /// <param name="STCJobDetailsID">The STC job details identifier.</param>
+        /// <returns></returns>
+        public StcComplianceCheck GetSTCJobCompliance(int jobId, int STCJobDetailsID)
+        {
+            DataTable dt = new DataTable();
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, jobId));
+            sqlParameters.Add(DBClient.AddParameters("STCJobDetailsID", SqlDbType.Int, STCJobDetailsID));
+
+            DataSet dsComplianceCheck = CommonDAL.ExecuteDataSet("STCJobCompliance_GetSTCJobCompliance", sqlParameters.ToArray());
+            StcComplianceCheck StcComplianceCheck = new StcComplianceCheck();
+
+            if (dsComplianceCheck != null && dsComplianceCheck.Tables.Count > 0)
+            {
+                if (dsComplianceCheck.Tables[0] != null && dsComplianceCheck.Tables[0].Rows.Count > 0)
+                {
+                    StcComplianceCheck = dsComplianceCheck.Tables[0].ToListof<StcComplianceCheck>().FirstOrDefault();
+                }
+                if (dsComplianceCheck.Tables[1] != null && dsComplianceCheck.Tables[1].Rows.Count > 0)
+                {
+                    StcComplianceCheck.CallMadeBy = dsComplianceCheck.Tables[1].Rows[0][0].ToString();
+                    StcComplianceCheck.CallMadeUserId = dsComplianceCheck.Tables[1].Rows[0][1].ToString();
+                }
+
+            }
+            //if (StcComplianceCheck.CallDateTime != null)
+            //{
+            //    StcComplianceCheck.CallDate = StcComplianceCheck.CallDateTime.Value.ToString();
+            //}
+            return StcComplianceCheck;
+
+        }
+        /// <summary>
+        /// get stc documents
+        /// </summary>
+        /// <param name="UserID"></param>
+        /// <returns></returns>
+        public List<UserDocument> GetSTCDocumentBySTCJobDetailsID(int STCJobDetailsID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("STCJobDetailsID", SqlDbType.Int, STCJobDetailsID));
+            List<UserDocument> lstUserDocument = CommonDAL.ExecuteProcedure<UserDocument>("STC_GetStcDocument", sqlParameters.ToArray()).ToList();
+            if (lstUserDocument != null && lstUserDocument.Count > 0)
+            {
+                for (int i = 0; i < lstUserDocument.Count; i++)
+                {
+                    if (System.Web.MimeMapping.GetMimeMapping(lstUserDocument[i].DocumentPath).ToLower().StartsWith("image"))
+                        lstUserDocument[i].MimeType = "image";
+                    lstUserDocument[i].index = i + 1;
+                }
+            }
+            return lstUserDocument;
+        }
+
+        /// Ge tStc Compliance Details
+        /// </summary>
+        /// <param name="jobId"></param>
+        /// <returns></returns>
+        public DataSet GetStcComplianceDetails(int jobId, int JobDetailsId)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobId", SqlDbType.Int, jobId));
+            sqlParameters.Add(DBClient.AddParameters("JobDetailsId", SqlDbType.Int, JobDetailsId));
+            DataSet dsUsers = CommonDAL.ExecuteDataSet("GetStcComplianceDetails", sqlParameters.ToArray());
+            return dsUsers;
+        }
+
+        /// <summary>
+        /// Accepts the reject job to SSC.
+        /// </summary>
+        /// <param name="jobId">The job identifier.</param>
+        public void AcceptRejectJobToSSC(int jobId, string role)
+        {
+            string spName = "[JobDetails_SSCJobAccept]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobId));
+            sqlParameters.Add(DBClient.AddParameters("Role", SqlDbType.NVarChar, role));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Cancels the removal request.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        public void CancelRemovalRequest(int jobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            CommonDAL.Crud("JobDetails_CancelRemovalRequest", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Assigns the job to fco.
+        /// </summary>
+        /// <param name="ComplianceOfficerId">The compliance officer identifier.</param>
+        /// <param name="jobs">The jobs.</param>
+        public void AssignJobToFCO(int ComplianceOfficerId, string jobs)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("ComplianceOfficerId", SqlDbType.Int, ComplianceOfficerId));
+            sqlParameters.Add(DBClient.AddParameters("STCJobIDs", SqlDbType.NVarChar, jobs));
+            CommonDAL.Crud("STCJobDetails_AssignJobToFCO", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the bult upload for job.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns></returns>
+        public DataSet GetBultUploadForJob(string JobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.NVarChar, JobID));
+            return CommonDAL.ExecuteDataSet("[Job_BulkUploadCSV]", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the nmi by job identifier.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns></returns>
+        public string GetNMIByJobID(int JobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.NVarChar, JobID));
+            DataSet dataset = CommonDAL.ExecuteDataSet("Job_GetNMIByJobID", sqlParameters.ToArray());
+            string nmi = string.Empty;
+            if (dataset != null && dataset.Tables.Count > 0)
+            {
+                if (dataset.Tables[0].Rows.Count > 0)
+                {
+                    if (dataset.Tables[0].Rows[0].ItemArray.Count() > 0)
+                    {
+                        nmi = dataset.Tables[0].Rows[0].ItemArray[0].ToString();
+                    }
+                }
+            }
+            return nmi;
+        }
+        /// <summary>
+        /// Gets the jobs to assign message.
+        /// </summary>
+        /// <param name="UserId">The user identifier.</param>
+        /// <param name="UserTypeId">The user type identifier.</param>
+        /// <param name="searchText">The search text.</param>
+        /// <returns></returns>
+        public List<JobList> GetJobsToAssignMessage(int UserId, int UserTypeId, string searchText)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("UserId", SqlDbType.Int, UserId));
+            sqlParameters.Add(DBClient.AddParameters("UserTypeId", SqlDbType.Int, UserTypeId));
+            sqlParameters.Add(DBClient.AddParameters("searchtext", SqlDbType.NVarChar, searchText));
+            List<JobList> lstJobs = CommonDAL.ExecuteProcedure<JobList>("GetJobsToAssignMessage", sqlParameters.ToArray()).ToList();
+            return lstJobs;
+        }
+
+        /// <summary>
+        /// Gets the bulk upload for job.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns>data set</returns>
+        public DataSet GetBulkUploadForJob(string JobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.NVarChar, JobID));
+            return CommonDAL.ExecuteDataSet("[Job_BulkUploadCSV]", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the bulk upload for job.
+        /// </summary>
+        /// <param name="JobID">The job identifier.</param>
+        /// <returns>data set</returns>
+        public DataSet GetSWHBulkUploadForJob(string JobID)
+        {
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.NVarChar, JobID));
+            return CommonDAL.ExecuteDataSet("[Job_BulkUploadSWHCSV]", sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the job notes list.
+        /// </summary>
+        /// <param name="pageIndex">Index of the page.</param>
+        /// <param name="jobID">job ID</param>
+        /// <returns>data set</returns>
+        public DataSet GetJobNotesListForAPI(int jobID)
+        {
+            string spName = "[JobNotes_GetJobList]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("PageSize", SqlDbType.Int, Int16.MaxValue));
+            sqlParameters.Add(DBClient.AddParameters("PageNumber", SqlDbType.Int, 1));
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            DataSet dsUsers = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+            return dsUsers;
+        }
+
+        /// <summary>
+        /// Gets the electrician by solar company identifier.
+        /// </summary>
+        /// <param name="solarCompanyID">The solar company identifier.</param>
+        /// <returns></returns>
+        public DataSet GetElectricianBySolarCompanyID(int solarCompanyID, bool isFullDetail, int electricianID)
+        {
+            string spName = "[GetElectrician]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("SolarCompanyID", SqlDbType.Int, solarCompanyID));
+            sqlParameters.Add(DBClient.AddParameters("IsFullDetail", SqlDbType.Bit, isFullDetail));
+            sqlParameters.Add(DBClient.AddParameters("ElectricianID", SqlDbType.Int, electricianID));
+            DataSet dsElectrician = CommonDAL.ExecuteDataSet(spName, sqlParameters.ToArray());
+            return dsElectrician;
+        }
+
+        /// <summary>
+        /// Gets the distributor.
+        /// </summary>
+        /// <returns></returns>
+        public DataSet GetDistributor()
+        {
+            string spName = "[GetDistributor]";
+            DataSet dsDistributor = CommonDAL.ExecuteDataSet(spName);
+            return dsDistributor;
+        }
+
+        /// <summary>
+        /// Updates the serial number.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="SerialNumbers">The serial numbers.</param>
+        public void UpdateSerialNumber(int jobID, string SerialNumbers)
+        {
+            string spName = "[UpdateSerialNumberForAPI]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("SerialNumbers", SqlDbType.NVarChar, SerialNumbers));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+
+        /// <summary>
+        /// Updates the signature.
+        /// </summary>
+        /// <param name="jobID">The job identifier.</param>
+        /// <param name="signatureName">Name of the signature.</param>
+        public void UpdateSignature(int jobID, string signatureName)
+        {
+            string spName = "[UpdateSignatureForAPI]";
+            List<SqlParameter> sqlParameters = new List<SqlParameter>();
+            sqlParameters.Add(DBClient.AddParameters("JobID", SqlDbType.Int, jobID));
+            sqlParameters.Add(DBClient.AddParameters("SignatureName", SqlDbType.NVarChar, signatureName));
+            CommonDAL.Crud(spName, sqlParameters.ToArray());
+        }
+    }
+}
+

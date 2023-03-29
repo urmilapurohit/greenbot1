@@ -1,0 +1,461 @@
+﻿@model FormBot.Entity.REC
+@using Newtonsoft.Json
+<form id="RECFailureReasonForm" enctype="multipart/form-data">
+    <div class="vertical-alignment-helper recFailureReason">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row" style="background:#48b373">
+                        <div class="col-md-3 topmargbtn">
+                            <a href="javascript:" style="color:White !important; font-size:15px !important;vertical-align:middle !important;font-weight:bold; padding-bottom:5px !important" data-dismiss="modal">
+                                <i class="glyphicon glyphicon-circle-arrow-left small" style="color:white !important"></i>&nbsp;Back
+                            </a>
+                        </div>
+                        <div class="col-md-9" style="vertical-align:middle !important">
+                            <label class="col-md-3 pull-right topmargbtn" style="color:White !important">TOTAL STCs: @Model.TotalSTCs</label>
+                            <label class="col-md-3 pull-right topmargbtn" style="color:White !important">TOTAL JOBS: @Model.TotalJob</label>
+                            <label class="col-md-3 pull-right topmargbtn" style="color:White !important">BATCH ID: <span id="batchId">@Model.BatchId</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding:0px !important">
+                    <div class="panel-group " style="margin-bottom:0px !important">
+                        <div class="panel-body">
+                            <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion_FailedJob" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="row">
+                                <div>
+                                    <div class="submission-filters">
+                                        <span class="stage_title">Filters:</span>
+                                        <div class="filters-row" style="padding:0;">
+                                            <ul>
+                                                <li><a id="RECJobstage_1" href="javascript:void(0);" style="cursor:pointer; background-color:#686868;" onclick="CheckStatus('@Model.BatchId','@Model.TotalSTCs','true','true');">Failed Jobs</a></li>
+                                                <li><a id="RECJobstage_2" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="CheckStatus('@Model.BatchId','@Model.TotalSTCs','true','false');">All Jobs</a></li>
+                                            </ul>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-9" style="padding-right:0px !important">
+                                    <div id="gridJobs" class="box-border batchDetails">
+                                        <!-- Grid start -->
+                                        <div class="table-responsive">
+                                            <table id="datatable_FailedJobs" class="table table-hover blueBorder">
+                                                <thead>
+                                                    <tr>
+                                                        <th width="10%" style="background-image:none !important;"><input type="checkbox" id="chkAll_FailedJobs" name="select_all" onclick="checkallchange()"></th>
+                                                        <th width="10%"><span>@Html.DisplayName("Job Id")</span></th>
+                                                        <th width="20%"><span>@Html.DisplayName("Reference Number")</span></th>
+                                                        <th class="RecIssue" width="45%"><span>@Html.DisplayName("REC Issue Description") </span></th>
+                                                        <th width="15%"><span>@Html.DisplayName("Status")</span></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (Model.lstREC != null)
+                                                    {
+                                                        for (var i = 0; i < Model.lstREC.Count; i++)
+                                                        {
+                                                            <tr class="togglerow">
+                                                                <td><input type="checkbox" onchange="checkchange(this)" class="stcjobdetailsid" data-id="@Model.lstREC[i].StcJobDetailsId" checked="@Model.lstREC[i].IsChecked" /></td>
+                                                                <td>@Model.lstREC[i].JobId</td>
+                                                                <td><a href="@Url.Action("Index", "Job", new { id = Model.lstREC[i].Id })" style="text-decoration:none;" target="_blank">@Model.lstREC[i].RefNumber</a></td>
+                                                                <td class="RecIssue">
+                                                                    <ul>
+                                                                        @{
+                                                                            string[] failureReasons = Model.lstREC[i].FailureReason.Split(new string[] { ";@;" }, StringSplitOptions.None);
+                                                                            for (int j = 0; j < failureReasons.Length; j++)
+                                                                            {
+                                                                                <li><span>&#8226;</span><span>@failureReasons[j]</span></li>
+                                                                            }
+                                                                        }
+
+                                                                    </ul>
+                                                                </td>
+                                                                <td>@Model.lstREC[i].RecStatus</td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-group" style="display:none;" id="divComplianceNote">
+                                            <div class="col-md-6">
+                                                <label class="control-label"> Compliance Notes:</label>
+                                                <textarea class="form-control txtField" cols="20" id="Notes" maxlength="1000" name="Notes" rows="4" style="resize:none" tabindex="21"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="pull-right">
+                                            <div style="margin-top:8px !important">
+                                                <button class="btn primary icon-btn" id="btnRemoveFromBatch" type="button" onclick="RemoveJobFromBatch()">Remove From Batch</button>
+                                                <button class="btn primary icon-btn" id="btnCompNote" type="button" onclick=" SetComplianceNote()">Set Compliance Issue Notes</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div id="batchDetails" class="batchDetails bg-success">
+                                        <span><b>Batch Details</b></span><br />
+
+                                        <span>Batch Id:  </span><b>@Model.BatchId</b><br />
+                                        @if (Model.lstREC.Count > 0)
+                                        {
+                                            <span>Batch Created By:  </span><b>@Model.lstREC[0].InitiatedBy</b><br />
+                                            <span>Batch Creation Time:  </span><b>@Model.lstREC[0].CreatedDate</b><br />
+                                            <span>Reseller:  </span><b>@Model.lstREC[0].ResellerName</b><br />
+                                            <span>Reseller Client Name:  </span><b>@Model.lstREC[0].ResellerName</b><br /><br />
+                                            <span><b>CER Creation Details</b></span><br />
+                                            <span>Account Name: </span><b>@Model.lstREC[0].RECUserName</b><br />
+                                            <span>User:  </span><b>@Model.lstREC[0].RECName</b>
+                                        }
+                                        @if ((Model.IsIssue == false) && Model.lstREC != null && Model.lstREC.Count > 0)
+                                        {
+                                            <br /><br />
+                                            <div><span><b>Internal Error Description:</b></span></div>
+                                            <div class="RecInternalIssue">
+                                                <ul>
+                                                    <li>@Model.lstREC[0].InternalIssueDescription</li>
+                                                </ul>
+                                            </div>
+                                        }
+                                        @if (Model.IsIssue == false )
+                                        {
+                                            <div style="margin-top:100px !important">
+                                                <button class="btn primary" type="button" style="width:258px !important" onclick="UpdatePvdCodeFromRec('@Model.BatchId');">
+                                                    Update PVD code
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div style="margin-top:258px !important">
+                                                <button class="btn primary icon-btn" id="btnAutoCompNote" type="button" onclick="SetAutoComplianceNote()">Set Auto Compliance Issue Notes</button>
+                                            </div>
+                                        }
+                                        <div style="margin-top:10px !important">
+                                            <button class="btn primary icon-btn" id="btnRecreateBatch" type="button" style="width:258px !important" onclick="ReleaseForRecreation('@Model.BatchId');">Recreate Batch</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    var urlRemoveJobFromBatch = '@Url.Action("RemoveJobFromBatch","Job")';
+    var urlAutoComplianceNote = '@Url.Action("SetAutoComplianceNote","Job")';
+    var urlSetComplianceNote = '@Url.Action("SetComplianceNote", "Job")';
+    var urlReleaseForRecreation = '@Url.Action("ReleaseForRecreation", "STCInvoice")';
+    var urlUpdatePvdCodeFromRec = '@Url.Action("UpdatePvdCodeFromRec", "STCInvoice")';
+    var chkCount_FailedJobs = 0;
+    var IsIssue = '@Model.IsIssue';
+    var IsFailedJobs = '@Model.IsFailedJobs';
+    var IsUnlockLockBtns = '@Model.IsUnLockBtns';
+    $(document).ready(function () {
+
+        var id;
+        if (IsFailedJobs.toString().toLowerCase() == 'true')
+            id = 1;
+        else {
+            id = 2;
+            $(".RecIssue").hide();
+          //  $("#RECJobstage_1").hide();
+        }
+        if (IsIssue.toString().toLowerCase() == 'true') {
+            $("#RECJobstage_1").show();
+            selectedid = 1;
+            $("#btnRecreateBatch").removeAttr("disabled");
+            $("#btnRemoveFromBatch").removeAttr("disabled");
+            $("#btnCompNote").removeAttr("disabled");
+            $("#btnAutoCompNote").removeAttr("disabled");
+        }
+        else {
+            $("#RECJobstage_1").hide();
+            selectedid = 2;
+            $("#btnRecreateBatch").attr("disabled", "disabled");
+            $("#btnRemoveFromBatch").attr("disabled", "disabled");
+            $("#btnCompNote").attr("disabled", "disabled");
+            $("#btnAutoCompNote").attr("disabled", "disabled");
+            $("#RECJobstage_2").removeAttr("onclick");
+        }
+        if (IsUnlockLockBtns.toString().toLowerCase() == 'true') {
+            $("#btnRecreateBatch").attr("disabled", "disabled");
+            $("#btnRemoveFromBatch").attr("disabled", "disabled");
+            $("#btnCompNote").attr("disabled", "disabled");
+            $("#btnAutoCompNote").attr("disabled", "disabled");
+        }
+        
+        if (document.getElementsByClassName('modal-backdrop fade in').length == 0) {
+            var iDiv = document.createElement('div');
+            iDiv.className = 'modal-backdrop fade in';
+            document.getElementsByTagName('body')[0].appendChild(iDiv);
+        }
+        var a = document.getElementById("RECJobstage_" + selectedid);
+        if (a != null) {
+            a.style.backgroundColor = "#f7f7f7";
+            selectedid = id;
+            var a = document.getElementById("RECJobstage_" + selectedid);
+            a.style.backgroundColor = "#686868";
+        }
+    });
+    function checkchange(ele) {
+        if (ele.checked) {
+            $(ele).addClass("active");
+            chkCount_FailedJobs++;
+            if (chkCount_FailedJobs == $('#datatable_FailedJobs >tbody >tr').length) {
+                $('#chkAll_FailedJobs').prop('checked', true);
+            }
+        }
+        else {
+            if (chkCount_FailedJobs > 0)
+                chkCount_FailedJobs--;
+            $(ele).removeClass("active");
+            $('#chkAll_FailedJobs').prop('checked', false);
+        }
+    }
+
+    function SetAutoComplianceNote() {
+        var batchId = $("#batchId").text();
+        var totalSTC = '@Model.TotalSTCs';
+        var isIssue = '@Model.IsIssue';
+        var id = "";
+        $("#datatable_FailedJobs tbody .active").each(function (k, data) {
+            id = id + $(this).data("id") + ",";
+        });
+        if (id == "") {
+            alert("Please select jobs");
+            return;
+        }
+
+        if (confirm('Are you sure you want to set compliance notes to the jobs?')) {
+            $.ajax({
+                url: urlAutoComplianceNote,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    batchId: $("#batchId").text(),
+                    Ids: id.replace(/,\s*$/, "")
+                },
+                success: function (data) {
+                    if (data.status) {
+                        $("#errorMsgRegion_FailedJob").removeClass("alert-danger");
+                        $("#errorMsgRegion_FailedJob").addClass("alert-success");
+                        $("#errorMsgRegion_FailedJob").html(closeButton + "Compliance Note added successfully");
+                        $("#errorMsgRegion_FailedJob").show();
+                    }
+                    else {
+                        $("#errorMsgRegion_FailedJob").addClass("alert-danger");
+                        $("#errorMsgRegion_FailedJob").removeClass("alert-success");
+                        $("#errorMsgRegion_FailedJob").html(closeButton + "Something happend cannot add Compliance Note.");
+                        $("#errorMsgRegion_FailedJob").show();
+                    }
+                    if (selectedid == 1) {
+                        CheckStatus(batchId, totalSTC, isIssue, true);
+                    }
+                    else {
+                        CheckStatus(batchId, totalSTC, isIssue, false);
+                    }
+                },
+                error: function (ex) {
+                    console.log(ex);
+                    alert('Failed to retrive.' + ex);
+                }
+            });
+        }
+    }
+
+    function SetComplianceNote() {
+        var id = "";
+        $("#datatable_FailedJobs tbody .active").each(function (k, data) {
+            id = id + $(this).data("id") + ",";
+        });
+        if (id == "") {
+            alert("Please select jobs");
+            return;
+        }
+        $("#divComplianceNote").show();
+        if ($("#Notes").val() != "") {
+            var batchId = $("#batchId").text();
+        var totalSTC = '@Model.TotalSTCs';
+        var isIssue = '@Model.IsIssue';
+            if (confirm('Are you sure you want to add Compliance note to these jobs?')) {
+                $.ajax({
+                    url: urlSetComplianceNote,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        stcJobDetailIds: id.replace(/,\s*$/, ""),
+                        Note: $("#Notes").val()
+                    },
+                    success: function (data) {
+                        if (data.status) {
+                            $("#errorMsgRegion_FailedJob").removeClass("alert-danger");
+                            $("#errorMsgRegion_FailedJob").addClass("alert-success");
+                            $("#errorMsgRegion_FailedJob").html(closeButton + "Compliance Note added successfully");
+                            $("#errorMsgRegion_FailedJob").show();
+                        }
+                        else {
+                            $("#errorMsgRegion_FailedJob").addClass("alert-danger");
+                            $("#errorMsgRegion_FailedJob").removeClass("alert-success");
+                            $("#errorMsgRegion_FailedJob").html(closeButton + "Something happend cannot add Compliance Note.");
+                            $("#errorMsgRegion_FailedJob").show();
+                        }
+                        if (selectedid == 1) {
+                            CheckStatus(batchId, totalSTC, isIssue, true);
+                        }
+                        else {
+                            CheckStatus(batchId, totalSTC, isIssue, false);
+                        }
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrive.' + ex);
+                    }
+                });
+            }
+        }
+    }
+
+    function ReleaseForRecreation(recUploadId) {
+        if (confirm('Are you sure you want to release it for recreation?')) {
+            $.ajax({
+                url: urlReleaseForRecreation,
+                type: 'POST',
+                dataType: 'json',
+                //async: false,
+                data: { recUploadId: recUploadId },
+                success: function (data) {
+                    if (data.status) {
+                        $("#errorMsgRegion_FailedJob").removeClass("alert-danger");
+                        $("#errorMsgRegion_FailedJob").addClass("alert-success");
+                        $("#errorMsgRegion_FailedJob").html(closeButton + "Released for recreation successfully");
+                        $("#errorMsgRegion_FailedJob").show();
+                        $("#rec-status").modal('hide');
+                        $(".modal-backdrop.fade.in").remove();
+                    } else {
+                        $("#errorMsgRegion_FailedJob").addClass("alert-danger");
+                        $("#errorMsgRegion_FailedJob").removeClass("alert-success");
+                        $("#errorMsgRegion_FailedJob").html(closeButton + "Something happend cannot release for recreation.");
+                        $("#errorMsgRegion_FailedJob").show();
+                    }
+                },
+                error: function (ex) {
+                    alert('Failed to retrive.' + ex);
+                }
+            });
+        }
+    }
+
+    function RemoveJobFromBatch() {
+        var id = "";
+        $("#datatable_FailedJobs tbody .active").each(function (k, data) {
+            id = id + $(this).data("id") + ",";
+        });
+        if (id == "") {
+            alert("Please select jobs");
+            return;
+        }
+        RemoveSelectedJobFromBatch(id.replace(/,\s*$/, ""));
+    }
+
+    function RemoveSelectedJobFromBatch(id) {
+        var batchId = $("#batchId").text();
+        var totalSTC = '@Model.TotalSTCs';
+        var isIssue = '@Model.IsIssue';
+
+        event.preventDefault();
+        $.ajax({
+            url: urlRemoveJobFromBatch,
+            type: 'POST',
+            dataType: 'json',
+            data: { StcJobdetailsId: id},
+            success: function (data) {
+                if (data.status) {
+                    $("#errorMsgRegion_FailedJob").removeClass("alert-danger");
+                    $("#errorMsgRegion_FailedJob").addClass("alert-success");
+                    $("#errorMsgRegion_FailedJob").html(closeButton + "Remove Job From Batch Successfully");
+                    $("#errorMsgRegion_FailedJob").show();
+                    if (isIssue.toString().toLowerCase() == 'true') {
+                        if (selectedid == 1) {
+                            CheckStatus(batchId, totalSTC, isIssue, true);
+                        }
+                        else {
+                            CheckStatus(batchId, totalSTC, isIssue, false);
+                        }
+                    }
+                    else {
+                        CheckStatus(batchId, totalSTC, isIssue, true);
+                    }
+
+                } else {
+                    $("#errorMsgRegion_FailedJob").html(closeButton + "Something happend not remove job from batch");
+                    $("#errorMsgRegion_FailedJob").show();
+                }
+            },
+            error: function (ex) {
+                alert('Failed to retrive.' + ex);
+            }
+        });
+    }
+
+    function checkallchange() {
+        if ($('#chkAll_FailedJobs').prop('checked')) {
+            $('.stcjobdetailsid').prop('checked', true);
+            $('.stcjobdetailsid').addClass("active");
+        }
+        else {
+            $('.stcjobdetailsid').prop('checked', false);
+            $('.stcjobdetailsid').removeClass("active");
+        }
+    }
+
+    function UpdatePvdCodeFromRec(recUploadId) {
+        $("#loading-image").css("display", "block");
+        $.ajax({
+            url: urlUpdatePvdCodeFromRec,
+            type: 'POST',
+            dataType: 'json',
+            data: { recUploadId: recUploadId },
+            success: function (data) {
+                $("#loading-image").css("display", "none");
+                if (data.status) {
+                    $("#errorMsgRegion_FailedJob").removeClass("alert-danger");
+                    $("#errorMsgRegion_FailedJob").addClass("alert-success");
+                    $("#errorMsgRegion_FailedJob").html(closeButton + "PVD code updated successfully");
+                    $("#errorMsgRegion_FailedJob").show();
+                }
+                else {
+                    if (data.IsError) {
+                        $("#errorMsgRegion_FailedJob").addClass("alert-danger");
+                        $("#errorMsgRegion_FailedJob").removeClass("alert-success");
+                        $("#errorMsgRegion_FailedJob").html(closeButton + "Something happend cannot update PVD code.");
+                        $("#errorMsgRegion_FailedJob").show();
+                    }
+                    else {
+                        if(confirm("The batch was not found on REC Registry. Do you want to unlock for Recreation?")){
+                            $("#btnRecreateBatch").removeAttr("disabled");
+                            $("#btnRemoveFromBatch").removeAttr("disabled");
+                            $("#btnCompNote").removeAttr("disabled");
+                            $("#btnAutoCompNote").removeAttr("disabled");
+                            IsUnlockLockBtns = true;
+                        }
+                    }
+                }
+            },
+            error: function (ex) {
+                alert('Failed to retrive.' + ex);
+            }
+        })
+    }
+</script>

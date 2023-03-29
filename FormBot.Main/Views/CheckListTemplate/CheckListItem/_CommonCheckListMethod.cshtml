@@ -1,0 +1,154 @@
+﻿<script type="text/javascript">
+
+    var visitCheckListItemIds = [];
+    var isVisitCheckListTemplateChange = false;
+
+    function CommonOpenaAddTemplate(templateId, itemId) {
+
+        if ($("#checkListTemplate_CheckListTemplateName"))
+        {
+            $("#checkListTemplate_CheckListTemplateName").removeClass('input-validation-error');
+            $("#checkListTemplate_CheckListTemplateName").next("span").attr('class', 'field-validation-valid');
+        }
+
+        $("#checkListTemplate_CheckListTemplateId").val(0);
+        $("#checkListTemplate_CopyOfCheckListTemplateId").val(0);
+        $("#checkListTemplate_DeleteDefaultItemId").val(0);
+
+        clearTemplate();
+        $('#popupAddTemplate').modal({ backdrop: 'static', keyboard: false });
+        $('#popupAddTemplate').css('z-index', 10000);
+        if (templateId) {
+            $("#checkListTemplate_CopyOfCheckListTemplateId").val(templateId);
+        }
+        if (itemId) {
+            $("#checkListTemplate_DeleteDefaultItemId").val(itemId);
+        }
+    }
+
+    function clearTemplate() {
+        $("#checkListTemplate_CheckListTemplateName").val('');
+        $("#checkListTemplate_IsDefault").prop("checked", false);
+    }
+
+    function CommonAddTemplate(isCheckListView) {
+
+        var data = JSON.stringify($('#addTemplateForm').serializeToJson());
+        var id = $("#checkListTemplate_CheckListTemplateId").val();
+        var copyTemplateId = $("#checkListTemplate_CopyOfCheckListTemplateId").val();
+        var deleteDefaultItemId = $("#checkListTemplate_DeleteDefaultItemId").val();
+
+        var itemIds = [];
+        var isSetFromSetting = isCheckListView;
+        var visitCheckListItemIdsString = ''
+
+        if (isCheckListView == "true")
+        {
+            $.each($(".checklist").find('li'), function () {
+                itemIds.push($(this).data('visitchecklistitemid'));
+            });
+
+            visitCheckListItemIdsString = itemIds.join(',');
+        }
+
+        var objData = JSON.parse(data);
+        objData.checkListTemplate.isSetFromSetting = isCheckListView == "true" ? false : true;
+        objData.checkListTemplate.VisitCheckListItemIds = visitCheckListItemIdsString;
+
+        $.ajax(
+           {
+               url: '@Url.Action("AddTemplate", "CheckListTemplate")',
+               dataType: 'json',
+               contentType: 'application/json; charset=utf-8',
+               type: 'post',
+               data: JSON.stringify(objData),
+               success: function (response) {
+                   debugger;
+                   if (response.id && response.id > 0) {
+                       $('#popupAddTemplate').modal('toggle');
+                       $(".datatableTemplateList").dataTable().fnDraw();
+
+                       var jobSchedulingId = $("#JobSchedulingID").val();
+                       var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+
+                       if (copyTemplateId) {
+
+                           //if (isCheckListView && jobSchedulingId == 0)
+                           if (isCheckListView)
+                               CommonOpenCheckListItemPopup(response.templateEncodedId, "false", jobSchedulingId, false, tempJobSchedulingId, $("#BasicDetails_JobID").val());
+                           else
+                               OpenCheckListItemPopup(response.templateEncodedId);
+                       }
+
+                       if (id > 0)
+                           showSuccessMessage("CheckList template has been updated successfully.");
+                       else
+                           showSuccessMessage("CheckList template has been added successfully.");
+                   }
+                   else {
+                       if (response.error.toLowerCase() == 'sessiontimeout')
+                           window.location.href = '@Url.Action("Logout", "Account")';
+                       else
+                           showErrorMessageAddTemplate(response.error);
+                   }
+               },
+               error: function () {
+                   if (id > 0)
+                       showErrorMessageAddTemplate("CheckList template has not been updated.");
+                   else
+                       showErrorMessageAddTemplate("CheckList template has not been added.");
+               }
+           });
+
+    }
+
+    function CommonOpenCheckListItemPopup(templateId, isSetFromSetting, jobSchedulingId, isTemplateChange, TempJobSchedulingId, jobId, isAddVisit) {
+        debugger;
+        if (isTemplateChange)
+            isTemplateChange = true;
+        else
+            isTemplateChange = false;
+
+        var visitCheckListIdsString = '';
+
+        if (isSetFromSetting == "false" && visitCheckListItemIds.length > 0)
+        {
+            visitCheckListIdsString = visitCheckListItemIds.join(',');
+        }
+
+        var url = '@Url.Action("GetCheckListItemByTemplateId", "CheckListItem")?id=' + templateId + '&isSetFromSetting=' + isSetFromSetting + '&jobSchedulingId=' + jobSchedulingId + '&isTemplateChange=' + isVisitCheckListTemplateChange + '&tempJobSchedulingId=' + TempJobSchedulingId + '&jobId=' + $("#BasicDetails_JobID").val() + '&visitCheckListIdsString=' + visitCheckListIdsString + '&isAddVisit=' + isAddVisit;
+        $.get(url, function (data) {
+
+            $('#checkListTemplateForm').empty();
+            $('#checkListTemplateForm').append(data);
+
+            if(isSetFromSetting == true)
+            {
+                $("#popupCheckListTemplate").modal({ backdrop: 'static', keyboard: false });
+            }
+
+            if(templateId == '')
+            {
+                $(".liAddCheckListItem").hide();
+            }
+            
+            if (isSetFromSetting.toString() == "false")
+            {
+                visitCheckListItemIds = [];
+                $.each($(".checklist").find('li'), function () {
+                    visitCheckListItemIds.push($(this).data('visitchecklistitemid'));
+                });
+            }
+
+            $("#loading-image").hide();
+
+        });
+    }
+
+    function showErrorMessageAddTemplate(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionAddTemplate").html(closeButton + message);
+        $("#errorMsgRegionAddTemplate").show();
+    }
+
+</script>

@@ -1,0 +1,305 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper;
+
+@{ ViewBag.Title = "BillingManager"; }
+<style>
+    .ddlResellerWholeseller .form-group {
+        padding-left: 15px;
+    }
+
+    .cancel_ic {
+        padding-left: 15px;
+    }
+
+    #myTab {
+        width: 1225px;
+        margin-bottom: 6px;
+        margin-left: 17px;
+    }
+
+    .multiselect-container > li > a > label > input[type=checkbox] {
+        opacity: 100% !important;
+    }
+
+    .dropdown-menu > .active > a, .dropdown-menu > .active > a:focus, .dropdown-menu > .active > a:hover {
+        background-color: #64a7e1;
+    }
+
+    .input-group-addon {
+        z-index: 0;
+    }
+</style>
+<script src="~/Scripts/bootstrap-multiselect.js"></script>
+<link href="~/Content/bootstrap-multiselect.css" rel="stylesheet" />
+
+<div class="container-fluid">
+    <div class="title">
+        <h1>Billing Manager</h1>
+    </div>
+    <form class="form-block" style="margin-top:10px;">
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">User Role:</label>
+                <input type="text" id="txtUserRole" class="form-control" maxlength="200">
+            </div>
+        </div>*@
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">User Type:</label>
+                @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "drpUserType", @class = "form-control", @tabindex = "2" })
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Role:</label>
+                @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3 rolefilter">
+            <div class="form-group">
+                <label class="control-label">Term Name:</label>
+                <input type="text" id="txtTermName" class="form-control" maxlength="200">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Billable Code:</label>
+                <input type="text" id="txtBillableCode" class="form-control" maxlength="200">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Term Code:</label>
+                <input type="text" id="txtTermCode" class="form-control" maxlength="200">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3 userfilter" style="display:none">
+            <div class="form-group">
+                <label class="control-label">Reseller:</label>
+                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3 userfilter" style="display:none">
+            <div class="form-group">
+                <label class="control-label">Solar Company:</label>
+                <input type="hidden" id="hdnsolarCompanyid" value="0">
+                <input type="text" id="txtCompanyName" name="txtCompanyName" class="form-control" maxlength="50">
+            </div>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchUsers();">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    </form>
+</div>
+
+<form id="form">
+    <!-- Navbar -->
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">User Role</a>
+        </li>
+        @*<li class="nav-item">
+                <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Users in User Roles</a>
+            </li>*@
+        <li class="nav-item">
+            <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Users</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="grid_topbar col-xs-12" style="margin-left:18px">
+            <p class="job_result" id="numRecords"></p>
+        </div>
+        <div class="tab-pane fade " id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div id="grid" class="col-sm-8">
+                <div class="table-responsive">
+                    <table id="datatable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                                <th style="display:none;"><span>@Html.DisplayName("RoleId")</span></th>
+                                <th><span>@Html.DisplayName("Role Name")</span></th>
+                                <th><span>@Html.DisplayName("User Type")</span></th>
+                                @*<th><span>@Html.DisplayName("Total Users")</span></th>*@
+                                @*<th><span>@Html.DisplayName("Users Assigned") </span></th>*@
+                                <th><span>@Html.DisplayName("Total Users")</span></th>
+                                <th><span>@Html.DisplayName("Billable Terms") </span></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!--<div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div id="grid" class="col-sm-8">
+                <div class="table-responsive">
+                    <table id="datatableUsersInRoles" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="background-image:none !important;"><input type="checkbox" id="chkAll2" name="select_all"></th>
+                                <th style="display:none;"><span>@Html.DisplayName("UserId")</span></th>
+                                <th><span>@Html.DisplayName("User Name")</span></th>
+                                <th><span>@Html.DisplayName("User Role") </span></th>
+                                <th><span>@Html.DisplayName("User Type") </span></th>
+                                <th><span>@Html.DisplayName("Term Code") </span></th>-->
+        @*<th><span>@Html.DisplayName("Global Price") </span></th>
+            <th><span>@Html.DisplayName("IsGlobalGST") </span></th>*@
+        <!--</tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>-->
+        <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+            <div id="grid" class="col-sm-8">
+                <div class="table-responsive">
+                    <table id="datatableUsers" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="background-image:none !important;"><input type="checkbox" id="chkAll3" name="select_all"></th>
+                                @*<th style="display:none;"><span>@Html.DisplayName("UserId")</span></th>*@
+                                <th><span>@Html.DisplayName("Name")</span></th>
+                                <th><span>@Html.DisplayName("User Name")</span></th>
+                                <th><span>@Html.DisplayName("Email")</span></th>
+                                <th><span>@Html.DisplayName("Contact Number")</span></th>
+                                <th><span>@Html.DisplayName("User Role") </span></th>
+                                <th><span>@Html.DisplayName("User Type") </span></th>
+                                <th><span>@Html.DisplayName("Billable Terms") </span></th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-4">
+                <label class="control-label">Billable Terms: </label>
+                <div class="form-group" id="dvBillableTerms">
+                    <select name="PricindType" id="ddlBillableTerms" onchange="BindGlobalPricingTermDescription(this)" multiple="multiple" style="opacity:100%;">
+                    </select>
+                </div>
+
+                <div class="col-sm-12" id="dvBillingDescription">
+                    <div class="form-group">
+                        <label class="control-label">Description: </label><br />
+                        <span id="spnBillingDescription"></span>
+                    </div>
+                </div>
+
+                <div id="dvGlobalPricingButtons">
+                    <div class="btn primary icon-btn " id="dvApplyGlobalPricing">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="button" value="Apply to Selected" class="" id="btnApplyGlobalPricing" tabindex="1" onclick="ApplyGlobalPricing()">
+                    </div>
+                    <div class="icon-btn " id="dvBtnCancel">
+                        <input type="button" value="Cancel" id="btnCancelGlobalPricing" class="default cancel_ic" data-dismiss="modal" tabindex="2" onclick="CancelGlobalPricing()">
+                    </div>
+                    <!--<div class="icon-btn " id="dvBtnOptions">-->
+                    @*<input type="button" value="Options" id="btnOptions" class="default options" data-dismiss="modal" tabindex="2" onclick="GlobalPricingOptions()">*@
+                    <!--<input type="button" value="Options" id="btnOptions" class="default options" data-dismiss="modal" tabindex="2">
+                    </div>-->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="popupmanageprice" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:250px">
+        <div class="modal-dialog  modal-lg" role="document">
+            <div class="modal-content" style="margin:50px;">
+                <div class="modal-header ">
+
+                    <button type="button" id="btnpopupmanagepriceclose" class="close" data-dismiss="modal" aria-label="Close">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Manage Price</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-border">
+                        <div class="container-fluid">
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            </div>
+                            <label class="label-warning">This price is applied temporary to user billable settings if not applied in setting it will not be saved.</label>
+                            <div class="row">
+
+                                <div class="col-sm-4">
+                                    <label class="control-label">Term Code: </label>
+                                    <select id="ddlTermCode" class="form-control" onchange="BindGlobalPrices(this)">
+                                    </select>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Global Price :</label>
+                                        </div>
+                                        <input type="hidden" id="hdnPopGlobalTermId" />
+                                        <input type="hidden" id="hdnPopUserId" />
+                                        <input type="text" id="txtpopGlobalPrice" name="txtGlobalPrice" class="form-control" maxlength="50" />
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">IsGlobalGST :</label>
+                                        </div>
+                                        <div class="checkbox-box">
+                                            <input data-val="true" data-val-required="The Is Active: field is required." id="IspopGlobalGST" name="IsGlobalGST" tabindex="8" type="checkbox" value="true"><input name="IsGlobalGST" type="hidden" value="false">
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group defaultFormBot tab_bottomrow">
+                                <input type="button" name="SavePricing" value="Save" class="primary save_ic" id="btnpopSaveGlobalPricing" onclick="SavePricingLocally()" tabindex="15">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<script>
+    var saasUsersList = [];
+    var PricingLocalDataArr = [];
+    var savepricingURL = '@Url.Action("SavePricingSAAS", "SAASPricingManager")';
+    var SaveUserBillableSettingsURL = '@Url.Action("SaveUserBillableSettings", "SAASPricingManager")';
+    var SaveGlobalBillableTermSAASURL = '@Url.Action("SaveGlobalBillableTermSAAS", "GlobalBillableTermsSAAS")';
+    var urlGetUserType = '@Url.Action("GetUserType", "UserType")';
+    var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+    var urlGetSAASPricingList = '@Url.Action("GetSAASPricingList", "SAASPricingManager")';
+    var urlGetRoleWiseUserSAAS = '@Url.Action("GetRoleWiseUserSAAS", "SAASPricingManager")';
+    var urlGetAllRoleUserList = '@Url.Action("GetAllRoleUserList", "SAASPricingManager")';
+    var urlGetGlobalPricingList = '@Url.Action("GetGlobalPricingList", "SAASPricingManager")';
+    var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")';
+    var urlGetRole = '@Url.Action("GetRole", "Role")';
+    var PageSize = [10, 25, 50,100,200];
+    var LoggedInUserId = '@ProjectSession.LoggedInUserId';
+    var ProjectSessionUserTypeId = '@ProjectSession.UserTypeId';
+    var SAASId = '';
+    var GlblRoleId = '';
+    var GlblUserId = '';
+    var GrdRoleId = '';
+    var ActiveTab = '';
+</script>
+<script src="~/Scripts/View/BillingManager.min.js"></script>
+@*<script src="~/Scripts/View/BillingManager.dev.js"></script>*@

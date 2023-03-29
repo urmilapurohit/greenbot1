@@ -1,0 +1,1352 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@{
+    ////Todo
+    bool isJobDocumentManagerUpload = false;
+    bool isJobDocumentManagerDelete = false;
+    bool isJobDocumentManagerGenerate = false;
+    bool isJobDocumentManagerView = false;
+    bool isJobDocumentManagerSave = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+        });
+    }
+}
+
+<div class="job-com-box coc-form-box">
+    <div class="sub-title">
+        <h4>Document Manager</h4>
+
+        <div class="title-btn">
+
+            <div class="btn-group pull-right" role="group">
+                <button id="btnGroupDrop1" type="button" class="btn primary add_ic dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Add Document
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                    <a class="btn" id="btnCreateDoc" href="#">Create</a>
+                    <a class="btn" id="btnUploadOther" href="#">Upload</a>
+                    <input id="uploadOthreBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt" multiple type="file" class="upload fileUpload" style="display:none;" />
+                </div>
+            </div>
+            @*<button type="button" class="btn primary add_ic pull-right">Add Document</button>*@
+            <button type="button" data-type="other" id="btnDownloadAllOther" class="btn primary download_ic pull-right">Download All</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOther" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionOther" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <tbody id="tbodyOther"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade popupInstaller" tabindex="-1" role="dialog" id="popupViewer">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Document Viewer</h4>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="save pull-right " style="padding-bottom:10px;">*@
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="primary save_ic pull-right " style="padding-bottom:10px;">*@
+
+                    <a class="pull-right" style=" margin: 4px 10px 0 0;" title="Save" id="btnSave" href="javascript:void(0);">
+                        <img src="~/images/savepdf.png" alt="">
+                    </a>
+
+
+                </div>
+                <div class="modal-body">
+                    <div id="divViewer"></div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="viewDoc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+                <embed id="embDoc" width="500" height="375" type='application/pdf' src="http://localhost:56199/JobDocuments/2393/CES/test.pdf" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="mdlDocs" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">CREATE A DOCUMENT</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-inline">
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="control-label" style="margin-top:8px; float:left;">Select Category</label>
+                        <div class="col-md-6">
+                            <select id="ddlCat" class="form-control"></select>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                        <ul class="list-group checked-list-box" id="tbodyItems" style="margin-bottom:0px;"></ul>
+                    </div>
+                </div>
+
+
+
+                <div class="form-inline">
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="control-label" style="margin-top:8px; float:left;">Populate Documents with Job Data?</label>
+                        <div class="col-md-3">
+                            <select id="ddlFillData" class="form-control">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="clearfix">
+                    <button type="button" id="btnAddDoc" class="btn primary add_ic dropdown-toggle">Add Document</button>
+                    <button type="button" class="btn default" id="btnClear">Clear</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="popupDocumentCreateConfirm" tabindex="-1" role="dialog" aria-labelledby="lblDocumentCreateConfirm">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" id="btnPopupDocumentCreateConfirm">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="lblDocumentCreateConfirm">Document Template</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-6 col-md-6 col-lg-6">
+                        <div class="form-group">
+                            <label class="control-label">Choose the document template you would like to create :</label>
+                            <select class="form-control" id="docTemplateId" name="docTemplateId">
+                                <option value="1">New Document Template</option>
+                                <option value="2">Existing</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary save_ic" id="nextDocumentTemplate">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="DocumentTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">USE EXISTING DOCUMENT</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                        <ul class="list-group checked-list-box" id="tbodyDocItems" style="margin-bottom:0px;"></ul>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <button type="button" id="btnAddExistingDoc" class="btn primary add_ic dropdown-toggle">Add Document</button>
+                    <button type="button" class="btn default" id="btnClearExistingDoc">Clear</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@*Document script*@
+
+<script>
+
+    //  $(function () {
+    //     'use strict';
+    var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+    var JobId = '@Model.JobID';
+    var eJobId = '@Model.Id';
+    var urlDocumentCES = BaseURL + 'UploadDocumentCES/Job';
+    var urlDocumentSTC = BaseURL + 'UploadDocument/Job';
+    var allowdViewTypes = ['pdf', 'jpg', 'png', 'jpeg'];
+    var imageTypes = ['jpg', 'jpeg', 'png', 'gif'];
+    var USERID = '@ProjectSession.LoggedInUserId';
+
+    var DistributorId = '@Model.JobInstallationDetails.DistributorID' ? '@Model.JobInstallationDetails.DistributorID' : 0;
+    console.log(DistributorId);
+    //mulitiple proof upload
+
+    $('#btnUploadCESDocument').click(function (e) {
+        e.preventDefault();
+        document.getElementById('uploadCESBtnDocument').click();
+    });
+
+
+
+    $('#uploadCESBtnDocument').fileupload({
+        url: urlDocumentCES,
+        dataType: 'json',
+        done: function (e, data) {
+            var UploadFailedFiles = [];
+            UploadFailedFiles.length = 0;
+
+            var UploadFailedFilesName = [];
+            UploadFailedFilesName.length = 0;
+
+            var UploadFailedFilesType = [];
+            UploadFailedFilesType.length = 0;
+            var $tbodyCES = $('#tbodyCES');
+            //formbot start
+            for (var i = 0; i < data.result.length; i++) {
+                if (data.result[i].Status == true) {
+
+                    var path = 'JobDocuments\\' + '@Model.JobID' + '\\CES\\' + data.result[i].FileName;
+
+                    var tr = $('<tr/>')
+                        .data('path', path)
+                        .data('id', data.result[i].AttachmentID)
+                        .appendTo($tbodyCES);
+                    var td = $('<td/>')
+                        .text(data.result[i].FileName)
+                        .appendTo(tr);
+                    var td1 = $('<td/>')
+                        .addClass('action')
+                        .appendTo(tr);
+                    var aView = $('<a/>')
+                        .addClass('view')
+                        .attr('href', '#')
+                        .attr('title', 'View')
+                        .attr('type', 'CES')
+                        .appendTo(td1);
+
+                    if (!(allowdViewTypes.indexOf(path.split('.').pop()) > -1)) {
+                        OpacityIncreaseDecrease(aView, 0);
+                    }
+
+                    var aDownload = $('<a/>')
+                        .addClass('download')
+                        .attr('href', '#')
+                        .attr('title', 'Download')
+                        .appendTo(td1);
+                    var aDelete = $('<a/>')
+                  .addClass('delete')
+                  .attr('href', '#')
+                  .attr('title', 'Delete')
+                  .appendTo(td1);
+                }
+                else if (data.result[i].Status == false && data.result[i].Message == "File Type Not Allowed.") {
+                    UploadFailedFilesType.push(data.result[i].FileName);
+                }
+                else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                    UploadFailedFilesName.push(data.result[i].FileName);
+                }
+                else {
+                    UploadFailedFiles.push(data.result[i].FileName);
+
+                }
+
+                if($tbodyCES.children().length == 0)
+                {
+                    $("#divDocumentsCES").find('.table-responsive').hide();
+                    $("#divDocumentsCES").find('.noDocumentCES').show();
+                }
+                else{
+                    $("#divDocumentsCES").find('.table-responsive').show();
+                    $("#divDocumentsCES").find('.noDocumentCES').hide();
+                }
+
+                debugger;
+                if($("#tbodyCES").find('tr').length == 1)
+                {
+                    ReloadSTCModule();
+                }
+
+            }
+            if (UploadFailedFiles.length > 0) {
+                showMessage(UploadFailedFiles.length + " " + "File has not been uploaded.",true,'CES');
+                return false;
+            }
+            if (UploadFailedFilesType.length > 0) {
+                showMessage(UploadFailedFilesType.length + " " + "Uploaded file type is not supported.",true,'CES');
+                return false;
+            }
+            else {
+                showMessage("File has been uploaded successfully.",false,'CES');
+            }
+        },
+
+        progressall: function (e, data) {
+
+        },
+
+        singleFileUploads: false,
+        send: function (e, data) {
+            if (data.files.length == 1) {
+                for (var i = 0; i < data.files.length; i++) {
+                    if (data.files[i].name.length > 50) {
+                        showMessage("Please upload small filename.",true,'CES');
+                        return false;
+                    }
+                }
+            }
+            if (data.files.length > 1) {
+                for (var i = 0; i < data.files.length; i++) {
+                    if (data.files[i].size > parseInt(MaxImageSize)) {
+                        showMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB",true,'CES');
+                        return false;
+                    }
+                }
+            }
+            else {
+                if (data.files[0].size > parseInt(MaxImageSize)) {
+                    showMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB",true,'CES');
+                    return false;
+                }
+            }
+            $(".alert").hide();
+            $("#errorMsgRegion").html("");
+            $("#errorMsgRegion").hide();
+            $('<input type="hidden">').attr({
+                name: 'Guid',
+                value: USERID,
+                id: USERID,
+            }).appendTo('form');
+            return true;
+        },
+        formData: { UserId: USERID, JobId: JobId, Type: "CES" },
+        change: function (e, data) {
+            $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+        }
+    }).prop('disabled', !$.support.fileInput);
+
+
+
+
+    $('#uploadOthreBtnDocument').fileupload({
+
+        url: urlDocumentCES,
+        dataType: 'json',
+        done: function (e, data) {
+            var UploadFailedFiles = [];
+            UploadFailedFiles.length = 0;
+
+            var UploadFailedFilesName = [];
+            UploadFailedFilesName.length = 0;
+
+            var UploadFailedFilesType = [];
+            UploadFailedFilesType.length = 0;
+            var $tbodyCES = $('#tbodyOther');
+            //formbot start
+            for (var i = 0; i < data.result.length; i++) {
+                if (data.result[i].Status == true) {
+
+                    var path = 'JobDocuments\\' + '@Model.JobID' + '\\OTHER\\' + data.result[i].FileName;
+
+                    var tr = $('<tr/>')
+                        .data('path', path)
+                        .data('id', data.result[i].AttachmentID)
+                        .appendTo($tbodyCES);
+                    var td = $('<td/>')
+                        .text(data.result[i].FileName)
+                        .appendTo(tr);
+                    var td1 = $('<td/>')
+                        .addClass('action')
+                        .appendTo(tr);
+                    var aView = $('<a/>')
+                        .addClass('view')
+                        .attr('href', '#')
+                        .attr('title', 'View')
+                        .attr('type', 'CES')
+                        .appendTo(td1);
+
+                    if (!(allowdViewTypes.indexOf(path.split('.').pop()) > -1)) {
+                        OpacityIncreaseDecrease(aView, 0);
+                    }
+
+                    var aDownload = $('<a/>')
+                        .addClass('download')
+                        .attr('href', '#')
+                        .attr('title', 'Download')
+                        .appendTo(td1);
+                    var aDelete = $('<a/>')
+                  .addClass('delete')
+                  .attr('href', '#')
+                  .attr('title', 'Delete')
+                  .appendTo(td1);
+                }
+                else if (data.result[i].Status == false && data.result[i].Message == "File Type Not Allowed.") {
+                    UploadFailedFilesType.push(data.result[i].FileName);
+                }
+                else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                    UploadFailedFilesName.push(data.result[i].FileName);
+                }
+                else {
+                    UploadFailedFiles.push(data.result[i].FileName);
+
+                }
+            }
+            if (UploadFailedFiles.length > 0) {
+                showMessage(UploadFailedFiles.length + " " + "File has not been uploaded.",true,'Other');
+                return false;
+            }
+            if (UploadFailedFilesType.length > 0) {
+                showMessage(UploadFailedFilesType.length + " " + "Uploaded file type is not supported.",true,'Other');
+                return false;
+            }
+            else {
+                showMessage("File has been uploaded successfully.",false,'Other');
+            }
+        },
+
+        progressall: function (e, data) {
+
+        },
+
+        singleFileUploads: false,
+        send: function (e, data) {
+            if (data.files.length == 1) {
+                for (var i = 0; i < data.files.length; i++) {
+                    if (data.files[i].name.length > 50) {
+                        showMessage("Please upload small filename.",true,'Other');
+                        return false;
+                    }
+                }
+            }
+            if (data.files.length > 1) {
+                for (var i = 0; i < data.files.length; i++) {
+                    if (data.files[i].size > parseInt(MaxImageSize)) {
+                        showMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB",true,'Other');
+                        return false;
+                    }
+                }
+            }
+            else {
+                if (data.files[0].size > parseInt(MaxImageSize)) {
+                    showMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB",true,'Other');
+                    return false;
+                }
+            }
+            $(".alert").hide();
+            $("#errorMsgRegion").html("");
+            $("#errorMsgRegion").hide();
+            $('<input type="hidden">').attr({
+                name: 'Guid',
+                value: USERID,
+                id: USERID,
+            }).appendTo('form');
+            return true;
+        },
+        formData: { UserId: USERID, JobId: JobId, Type: "OTHER" },
+        change: function (e, data) {
+            // $("#uploadCESBtnDocument").val("C:\\fakepath\\" + data.files[0].name);
+        }
+    }).prop('disabled', !$.support.fileInput);
+
+    getDocuments(false);
+
+    function getDocuments(isUpload) {
+        $.get('@Url.Action("GetDocumentsListAll", "Job")' + "?id=" + JobId + "&distributorID=" + DistributorId + "&stage=stc&jobTypeId=1", "", function (response) {
+            debugger;
+            if (response) {
+
+                var data = JSON.parse(response),
+                 cesData = data.Table,
+                 stcData = data.Table1,
+                 CESList = cesData.filter(e => e.Type === "CES"),
+                 STCList = cesData.filter(e => e.Type === "STC"),
+                 OtherList = cesData.filter(e => e.Type === "OTHER"),
+                 $tbodyCES = $('#tbodyCES'),
+                 $tbodySTC = $('#tbodySTC'),
+                $tbodyOther = $('#tbodyOther');
+                setFiles($('#tbodyCES'), CESList, 'CES');
+                setFiles($tbodyOther, OtherList);
+                //setFiles($('#tbodySTC'), STCList);
+                //if (stcData.length > 0) {
+                if (STCList.length > 0) {
+
+                    if($("#divDocumentsSTC").find('table').find('tr') && $("#divDocumentsSTC").find('table').find('tr').length > 0)
+                    {
+                        $("#divDocumentsSTC").find('table').find('tr').remove();
+                    }
+
+                    for (var i = 0; i < STCList.length; i++) {
+
+                        debugger;
+                        var d = STCList[i];
+                        d.Stage = 'STC';
+                        var name = d.Name || d.Path.split('\\').pop();
+                        d.Name = name;
+                        d.IsExist = true;
+                        var params = "'" + d.Stage + "','" + "" + "','" + "" + "','" + d.Path + "','" + 0 + "','" + ('trDoc_' + i) + "','" + d.JobDocumentId + "'";
+                        var exParams = "'" + d.Stage + "','" + "" + "','" + "" + "','" + d.Path + "','" + d.Id + "','" + "uploadBtnPhoto_" + d.DocumentId + "'";
+                        var td = $('<td>').attr('class', 'action');
+                        td.append('<input type="hidden" class="hdnIsExists" val="' + (d.IsExist == true ? 1 : 0) + '" />')
+                            .append('<input type="hidden" class="hdnIsUpload" val="' + (d.isUpload == true ? 1 : 0) + '" />')
+                        @if(isJobDocumentManagerGenerate)
+                        {<text>
+                            .append('<a class="ganret" href="' + "javascript:void(0);" + '"onclick="' + "generateDocument(" + params + ");" + '" title="Generate">')
+                    </text>}
+
+                        @if(isJobDocumentManagerView)
+                        {<text>
+                        .append('<a class="view ' + ((d.IsExist && d.IsExist == true) ? '' : 'disView') + '" href="' + "javascript:void(0);" + '"onclick="' + "viewDocument(" + params + ");" + '" title="View">')
+                    </text>}
+                         @if(isJobDocumentManagerView)
+                         {<text>
+                         .append('<a class="download_doc ' + ((d.IsExist && d.IsExist == true) ? '' : 'notdownload') + '" href="' + "javascript:void(0);" + '"onclick="' + "downloadDocument(" + params + ");" + '" title="Donwload">')
+                  </text>}
+                        @if(isJobDocumentManagerDelete)
+                        {<text>
+                        .append('<a class="delete ' + ((d.IsExist && d.IsExist == true) ? '' : 'disDelete') + '" href="' + "javascript:void(0);" + '"onclick="' + "deleteDocument(" + params + ");" + '" title="Delete">');
+                        </text>}
+                        var tr = $('<tr id="trDoc_' + i + '">').append($('<td class="tdDoc ' + ((d.IsExist && d.IsExist == true) ? 'semiBold' : '') + '">').attr('style', 'text-align:left!important;word-break: break-all;').html(d.Name)).append(td);
+                        tr.data('data',d);
+
+                        debugger;
+
+                        if(imageTypes.indexOf($(tr).find('td').html().toLowerCase().split('.').pop()) > -1)
+                        {
+                            OpacityIncreaseDecrease($(tr).find('.ganret'),0);
+                        }
+
+                        $tbodySTC.append(tr);
+
+                        if(isUpload)
+                        {
+                            showMessage("Document has been uploaded successfully.", false,'STC');
+                        }
+
+                        $("#divDocumentsSTC").find('.table-responsive').show();
+                        $("#divDocumentsSTC").find('.noDocument').hide();
+                    }
+                    debugger;
+                    //reloadSTCdocument
+                    if(isUpload && $("#divDocumentsSTC").find('table').find('tr') && $("#divDocumentsSTC").find('table').find('tr').length == 1)
+                    {
+                        $("#loading-image").show();
+                        setTimeout(function () {
+                            ReloadSTCJobScreen(eJobId);
+                        },500);
+                    }
+                }
+                else {
+                    $("#divDocumentsSTC").find('.table-responsive').hide();
+                    $("#divDocumentsSTC").find('.noDocument').show();
+                }
+            }
+            assignEvent();
+        });
+    }
+
+    $('#btnSTCDocument').click(function (e) {
+        e.preventDefault();
+        //var isValid = true;
+        //if($("#divDocumentsSTC").find('table').find('tr').length > 0)
+        //{
+        //    if (!confirm('File has been already uploaded. If you are uploading file then uploaded file will be removed and new file will be generated. Are you still want to upload ?'))
+        //        isValid = false;
+        //}
+        //if (isValid) {
+        document.getElementById('btnUploadSTCDocument').click();
+        //}
+    });
+
+    function setFiles(tbody, data,type) {
+
+        var $tbody = tbody;
+        for (var i = 0; i < data.length; i++) {
+            var tr = $('<tr/>')
+                .data('path', data[i].Path)
+                .data('id', data[i].JobDocumentId)
+                .appendTo($tbody);
+            var td = $('<td/>')
+                .text(data[i].Path.split('\\').pop())
+                .appendTo(tr);
+            var td1 = $('<td/>')
+                .addClass('action')
+                .appendTo(tr);
+
+            var aView = $('<a/>')
+                .addClass('view')
+                .attr('href', '#')
+                .attr('title', 'View')
+                .attr('type', type)
+                .appendTo(td1);
+
+            if (!(allowdViewTypes.indexOf(data[i].Path.split('.').pop()) > -1)) {
+                OpacityIncreaseDecrease(aView, 0);
+            }
+            var aDownload = $('<a/>')
+                .addClass('download')
+                .attr('href', '#')
+                .attr('title', 'Download')
+                .appendTo(td1);
+            var aDelete = $('<a/>')
+          .addClass('delete')
+          .attr('href', '#')
+          .attr('title', 'Delete')
+          .appendTo(td1);
+
+        }
+        if(type == "CES" && $(tbody).children().length == 0)
+        {
+            $("#divDocumentsCES").find('.table-responsive').hide();
+            $("#divDocumentsCES").find('.noDocumentCES').show();
+        }
+        else if(type == "CES" && $(tbody).children().length > 0){
+            $("#divDocumentsCES").find('.table-responsive').show();
+            $("#divDocumentsCES").find('.noDocumentCES').hide();
+        }
+    };
+
+    function generateDocument(stage, state, provName, name, id, obj, jobDocumentId) {
+        debugger;
+
+        var data = $("#divDocumentsSTC").find('table').find('#'+obj).data('data');
+
+        if (eJobId) {
+            var isValid = true;
+            //if ($('tr#' + obj).find('.hdnIsExists').attr('val') == '1' && $('tr#' + obj).find('.hdnIsUpload').attr('val') == '1') {
+            //    if (!confirm('File has been already uploaded. If you are generating file then uploaded file will be removed and new file will be generated. Are you still want to generate ?'))
+            //        isValid = false;
+            //}
+            if (isValid) {
+                $("#loading-image").show();
+                $.ajaxSetup({ async: true, cache: false });
+                $.get('@Url.Action("GenerateDocument", "Job")' + "?id=" + eJobId + "&documentId=" + 0 + "&stage=" + data.Stage + "&state=" + "" + "&provName=" + "" + "&name=" + data.Path + "&isDeleteFirst=" + $('tr#' + obj).find('.hdnIsUpload').attr('val') + "&isClassic=false" + "&jobDocumentId=" + data.JobDocumentId, "", function (data) {
+                    showMessage("Document has been generated successfully.", false,'STC');
+                    //setViewIcon(('tr#' + obj), false, false);
+                });
+            }
+        }
+    }
+
+    function viewDocument(stage, state, provName, name, id, obj) {
+
+        var data = $("#divDocumentsSTC").find('table').find('#'+obj).data('data');
+
+        if (isImage($("#divDocumentsSTC").find('table').find('#'+obj).find('td').html())) {
+            ViewPhoto(data.Path,true);
+            $('#btnPrev,#btnNext').attr('disabled', 'disabled');
+            $('#hdrFileName').text(data.Path.split('\\').slice(data.Path.split('\\').length - 1));
+        }
+        else
+        {
+            if (eJobId) {
+                if ($('tr#' + obj).find('.hdnIsExists') && $('tr#' + obj).find('.hdnIsExists').attr('val') && $('tr#' + obj).find('.hdnIsExists').attr('val') == '1') {
+                    $("#loading-image").show();
+                    $.ajaxSetup({ async: false, cache: false });
+                    $('#divViewer').load('@Url.Action("_Viewer","Job")' + "?jobid=" + eJobId + "&docId=" + id + "&isClassic=false" + "&jobDocumentPath="+data.Path);
+                    $('#popupViewer').modal({ backdrop: 'static', keyboard: false });
+                    @if (!isJobDocumentManagerSave)
+                    {
+                        <text>
+                    $('#divViewer').find('form').find('#btnSave').hide();
+                    </text>
+                    }
+                }
+            }
+        }
+    }
+
+    function viewDocumeneCES(path) {
+        if (path) {
+
+            $("#loading-image").show();
+            $.ajaxSetup({ async: false, cache: false });
+            $('#divViewer').load('@Url.Action("_Viewer","Job")' + "?path=" + path);
+
+            $('#popupViewer').modal({ backdrop: 'static', keyboard: false });
+            @if (!isJobDocumentManagerSave)
+                {
+                    <text>
+            $('#divViewer').find('form').find('#btnSave').hide();
+            </text>
+                }
+
+        }
+    }
+
+
+
+    function downloadDocument(stage, state, provName, name, id, obj, isExist) {
+        var data = $("#divDocumentsSTC").find('table').find('#'+obj).data('data');
+        if (eJobId) {
+            if ($('tr#' + obj).find('.hdnIsExists') && $('tr#' + obj).find('.hdnIsExists').attr('val') && $('tr#' + obj).find('.hdnIsExists').attr('val') == '1') {
+                window.location.href = '@Url.Action("DownloadSTCDocument", "Job")' + "?jobid=" + eJobId + "&docId=" + id + "&isClassic=false" + "&jobDocumentPath=" +data.Path;
+            }
+        }
+        return false;
+    }
+
+    function uploadDocument(stage, state, provName, name, id, objId) {
+        debugger;
+        if (eJobId) {
+
+            var isValid = true;
+            //var obj = $('#' + objId).closest('tr').attr('id');
+            //if ($('tr#' + obj).find('.hdnIsExists').attr('val') == '1' && $('tr#' + obj).find('.hdnIsUpload').attr('val') == '0') {
+            //    if (!confirm('File has been already generated. If you are uploading file then generated file will be removed and new file will be uploaded. Are you still want to upload ?'))
+            //        isValid = false;
+            //}
+            //else if ($('tr#' + obj).find('.hdnIsExists').attr('val') == '1' && $('tr#' + obj).find('.hdnIsUpload').attr('val') == '1') {
+            //    if (!confirm('File has been already uploaded. If you are uploading file then uploaded file will be removed and new file will be uploaded. Are you still want to upload ?'))
+            //        isValid = false;
+            //}
+            if (isValid) {
+                $('.fileUpload1').unbind('fileuploadsubmit').bind('fileuploadsubmit', function (e, data) {
+                    data.formData = { id: eJobId, documentid: id, stage: stage, state: state, provName: provName, name: name , isClassic : false};
+                });
+
+                doneCallBack = function () {
+                    if (stage == 'STC') {
+                        $("#divDocumentsSTC").find('.table-responsive').show();
+                        $('#trDoc_1').css('display', '');
+                        $("#divDocumentsSTC").find('.noDocument').hide();
+                    }
+                    else {
+                        showMessage("Document has been generated successfully.", false,'STC');
+                        setViewIcon(('tr#' + obj), false, false);
+                    }
+                }
+
+                $('.fileUpload1').click();
+            }
+            //$("#loading-image").hide();
+        }
+        return false;
+    }
+
+    function doneCallBack() {
+
+        getDocuments(true);
+
+
+        //if (stage == 'STC') {
+        //$("#divDocumentsSTC").find('.table-responsive').show();
+        //$('#trDoc_1').css('display', '');
+        //$("#divDocumentsSTC").find('.noDocument').hide();
+        //}
+        //else {
+        //    showMessage("Document has been generated successfully.", false,'STC');
+        //    setViewIcon($("#tbodySTC").find('tr')[0], false, false);
+        //}
+    };
+
+    function checkBusinessRulesForDocument(objDoc) {
+        var data = CommonDataForSave();
+        $.ajax({
+            url: '@Url.Action("CheckBusinessRules", "Job")',
+            type: "POST",
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8', // Not to set any content header
+            processData: false, // Not to process data
+            data: data,
+            success: function (result) {
+
+                //$("#BasicDetails_strInstallationDate").val(dateaa);
+                if (result.IsSuccess) {
+
+                    showMessage("Document has been generated successfully.", false,'STC');
+
+                    setViewIcon(('tr#' + objDoc), false, false);
+                    if (result.STCStatusName != null && result.STCStatusName != undefined && result.STCStatusName != '') {
+                        $('#spanSTCStatus').text(result.STCStatusName.trim());
+                    }
+
+                    if (result.STCDescription != null && result.STCDescription != undefined && result.STCDescription != '') {
+                        $('#STCDescription').html(result.STCDescription.trim());
+                    }
+
+                    if (result.STCStatusId != null && result.STCStatusId != undefined && result.STCStatusId != '') {
+                        $('#STCStatusId').val(result.STCStatusId.trim());
+                    }
+                }
+                else if (result.IsError) {
+
+                    showMessage("Document has been generated successfully.", false,'STC');
+                    setViewIcon(('tr#' + objDoc), false, false);
+                }
+                // IncreaseCountOfDocumentOnGenerate();
+            }
+        });
+    }
+
+    function deleteDocument(stage, state, provName, name, id, obj) {
+        var data = $("#divDocumentsSTC").find('table').find('#'+obj).data('data');
+        if (eJobId) {
+            if ($('tr#' + obj).find('.hdnIsExists') && $('tr#' + obj).find('.hdnIsExists').attr('val') && $('tr#' + obj).find('.hdnIsExists').attr('val') == '1') {
+                if (confirm('Are you sure you want to delete this file ?')) {
+                    $.ajaxSetup({ async: false, cache: false });
+                    $.get('@Url.Action("DeleteDocument", "Job")' + "?id=" + eJobId + "&documentId=" + id + "&stage=" + stage + "&state=" + state + "&provName=" + provName + "&name=" + name +"&isClassic=false" + "&jobDocumentPath=" + data.Path +"&jobDocumentId=" + data.JobDocumentId, "", function (data) {
+
+                        if (stage == 'STC') {
+
+                            $("#divDocumentsSTC").find('table').find('#'+obj).remove();
+
+                            if($("#divDocumentsSTC").find('table').find('tr') && $("#divDocumentsSTC").find('table').find('tr').length > 0)
+                            {
+                                $("#divDocumentsSTC").find('.table-responsive').show();
+                                $("#divDocumentsSTC").find('.noDocument').hide();
+                            }
+                            else
+                            {
+                                $("#divDocumentsSTC").find('.table-responsive').hide();
+                                $("#divDocumentsSTC").find('.noDocument').show();
+
+                                $("#loading-image").show();
+                                setTimeout(function () {
+                                    ReloadSTCJobScreen(eJobId);
+                                },500);
+                            }
+                        }
+                        showMessage("Document has been deleted successfully.", false,'STC');
+                        //setViewIcon(('tr#' + obj), true, false);
+                    });
+                }
+            }
+        }
+    }
+
+    function showMessage(msg, isError,type) {
+        $(".alert").hide();
+        var visible,inVisible;
+        if(type == 'CES')
+        {
+            visible = isError ? "errorMsgRegionCES" : "successMsgRegionCES";
+            inVisible = isError ? "successMsgRegionCES" : "errorMsgRegionCES";
+        }
+        else if(type == 'STC')
+        {
+            visible = isError ? "errorMsgRegionSTC" : "successMsgRegionSTC";
+            inVisible = isError ? "successMsgRegionSTC" : "errorMsgRegionSTC";
+        }
+        else if(type == 'Other')
+        {
+            visible = isError ? "errorMsgRegionOther" : "successMsgRegionOther";
+            inVisible = isError ? "successMsgRegionOther" : "errorMsgRegionOther";
+        }
+
+        $("#" + inVisible).hide();
+        $("#" + visible).html(closeButton + msg);
+        $("#" + visible).show();
+    }
+
+
+
+    function OpacityIncreaseDecrease(obj, count) {
+        if (count > 0) {
+            obj.css('opacity', '1');
+            obj.css('pointer-events', 'visible');
+        }
+        else {
+            obj.css('opacity', '0.5');
+            obj.css('pointer-events', 'none');
+        }
+    }
+
+    function setViewIcon(obj, isRemove, isUpload) {
+        var removeCls = isRemove ? "" : "disView";
+        var addCls = isRemove ? "disView" : "";
+        var removedownloadCls = isRemove ? "" : "notdownload";
+        var adddownloadCls = isRemove ? "notdownload" : "";
+        var tdaddCls = isRemove ? "" : "semiBold";
+        var tdremoveCls = isRemove ? "semiBold" : "";
+        $(obj).find('.view').removeClass(removeCls).addClass(addCls);
+        $(obj).find('.download_doc').removeClass(removedownloadCls).addClass(adddownloadCls);
+        $(obj).find('.delete').removeClass(removeCls.replace('View', 'Delete')).addClass(addCls.replace('View', 'Delete'));
+        $(obj).find('.tdDoc').removeClass(tdremoveCls).addClass(tdaddCls);
+        $(obj).find('.hdnIsExists').attr('val', (isRemove ? '0' : '1'));
+        $(obj).find('.hdnIsUpload').attr('val', (isUpload ? '1' : '0'));
+    }
+
+    function assignEvent() {
+        $("#loading-image").show();
+        'use strict';
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+        var urlDocument = BaseURL + 'UploadDocument/Job';
+        $('#btnUploadSTCDocument').fileupload({
+            url: urlDocument,
+            dataType: 'json',
+            done: function (e, data) {
+
+                if (doneCallBack)
+                    doneCallBack();
+
+                //doneCallBack = undefined;
+            },
+            progressall: function (e, data) {
+            },
+            singleFileUploads: false,
+            send: function (e, data) {
+                var documentType = data.files[0].type.split("/");
+                var mimeType = documentType[0];
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            showMessage(" " + data.files[i].name + " Maximum document size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB.", true,'STC');
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                        showMessage("Maximum  document size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB.", true,'STC');
+                        return false;
+                    }
+                }
+                if (data.files.length == 1) {
+
+                    var ext = data.files[0].name.toLowerCase().split('.').length > 0 ? data.files[0].name.toLowerCase().split('.')[data.files[0].name.toLowerCase().split('.').length - 1] : '';
+                    if ((data.files[0].type != "application/pdf" && ext != 'pdf') && mimeType!= "image") {
+                        showMessage("Please upload a document with .pdf extension or image file.", true,'STC');
+                        return false;
+                    }
+                }
+                return true;
+            },
+            formData: { id: eJobId, stage: "STC", isClassic : false },
+            change: function (e, data) {
+            }
+        }).prop('disabled', !$.support.fileInput)
+      .parent().addClass($.support.fileInput ? undefined : 'disabled');
+    }
+
+    $('#btnCreateDoc').click(function (e) {
+        e.preventDefault();
+        //$.get('@Url.Action("GetStateList", "Job")', function (response) {
+        //    if (response) {
+        //        var states = JSON.parse(response).Table;
+        //        var options = "";
+        //        for (var i = 0; i < states.length; i++) {
+        //            options += '<option value=' + states[i].StateID + '>' + states[i].Name + '</option>'
+        //        }
+        //        $('#ddlCat').append(options);
+        //        $('#ddlCat').change();
+        //    }
+        //});
+        $('#popupDocumentCreateConfirm').modal('show');
+    });
+
+    $('#ddlCat').change(function () {
+        if (this.value && this.value > 0) {
+            $.get('@Url.Action("GetDocumentsByStateId", "Job")' + "?stateId=" + this.value, function (response) {
+                var $tbody = $('#tbodyItems');
+                $tbody.html('');
+                if (response) {
+                    var data = JSON.parse(response).Table;
+                    for (var i = 0; i < data.length; i++) {
+                        var li = $('<li/>').addClass('list-group-item').data({ 'stage': data[i].Stage, 'abbr': data[i].Abbreviation, 'name': data[i].Name, 'sp': data[i].SP }).appendTo($tbody);
+                        var $div = $('<div/>').addClass('checkbox').appendTo(li);
+                        var $lable = $('<label/>').css({ 'word-wrap': 'break-word' }).appendTo($div);
+                        var input = '<input type="checkbox">' + data[i].Name;
+                        $lable.html(input);
+                    }
+                }
+            });
+        }
+    });
+
+    $('#btnAddDoc').click(function (e) {
+        e.preventDefault();
+        var $selectedLi = $('#tbodyItems').find('input[type=checkbox]:checked').closest('li'),
+            data = [];
+
+        if ($selectedLi.length < 1) {
+            alert("Please select atleast one document");
+            return false;
+        }
+
+
+        for (var i = 0; i < $selectedLi.length; i++) {
+            var $li = $($selectedLi[i]);
+            data.push({
+                name: $li.data('name'),
+                stage: $li.data('stage'),
+                abbr: $li.data('abbr'),
+                sp: $li.data('sp')
+            });
+        }
+        var obj = {
+            jobId: JobId,
+            docs: data,
+            UserId: USERID,
+            fillData: $('#ddlFillData').val(),
+            UseNewDocTemplate : false
+        }
+        $.post('@Url.Action("AddOtherDocuments", "Job")', obj, function (response) {
+            if (response) {
+                var failed = response.filter(e=>e.JobDocumentId === 0),
+                     data = response.filter(e=>e.JobDocumentId != 0),
+                     $tbody = $('#tbodyOther')
+                for (var i = 0; i < data.length; i++) {
+                    var tr = $('<tr/>')
+                        .data('path', data[i].Path)
+                        .data('id', data[i].JobDocumentId)
+                        .appendTo($tbody);
+                    var td = $('<td/>')
+                        .text(data[i].name)
+                        .appendTo(tr);
+                    var td1 = $('<td/>')
+                        .addClass('action')
+                        .appendTo(tr);
+                    var aView = $('<a/>')
+                        .addClass('view')
+                        .attr('href', '#')
+                        .attr('title', 'View')
+                        .appendTo(td1);
+
+                    if (!(allowdViewTypes.indexOf(data[i].Path.split('.').pop()) > -1)) {
+                        OpacityIncreaseDecrease(aView, 0);
+                    }
+                    var aDownload = $('<a/>')
+                        .addClass('download')
+                        .attr('href', '#')
+                        .attr('title', 'Download')
+                        .appendTo(td1);
+                    var aDelete = $('<a/>')
+                  .addClass('delete')
+                  .attr('href', '#')
+                  .attr('title', 'Delete')
+                  .appendTo(td1);
+                }
+                if (failed.length > 0) {
+                    var message = "";
+                    for (var i = 0; i < failed.length; i++) {
+                        message += '- ' + failed[i].message + '\n';
+                    }
+                    alert(message);
+                }
+                $('#mdlDocs').modal('hide');
+                return false;
+            }
+        });
+    });
+
+
+    $('#btnClear').click(function (e) {
+        e.preventDefault();
+    });
+
+    $('#tbodyCES,#tbodyOther').on('click', '.view', function (e) {
+        e.preventDefault();
+        var $this = $(this);
+        var path = $this.closest('tr').data('path');
+        $('#loading-image').show();
+
+
+        setTimeout(function () {
+
+            if (isImage(path)) {
+
+                ViewPhoto(path,true);
+                $('#btnPrev,#btnNext').attr('disabled', 'disabled');
+                $('#hdrFileName').text(path.split('\\').slice(path.split('\\').length - 1));
+            }
+            else {
+                viewDocumentOther($this.closest('tr').data('id'),$this.attr('type'));
+            }
+
+        }, 500);
+
+
+
+    });
+    //$('#tbodyOther').on('click', '.view', function (e) {
+    //    e.preventDefault();
+    //    //var path = $(this).closest('tr').data('path');
+    //    //   $('#embDoc').prop('src', path);
+    //    viewDocumentOther($(this).closest('tr').data('id'));
+    //    //viewDocumeneCES(path);
+    //});
+
+    function isImage(path) {
+        return (imageTypes.indexOf(path.toLowerCase().split('.').pop()) > -1) ? true : false;
+    }
+
+
+
+    $('#divDocumentsCES').on('click', '.delete', function (e) {
+        e.preventDefault();
+
+        var $tr = $(this).closest('tr');
+        deleteFile($tr, false,'CES');
+    });
+
+
+    function deleteFile($tr,hardDelete,type) {
+        var id = $tr.data('id');
+        var path = $tr.data('path');
+
+        var obj = {
+            id: $tr.data('id'),
+            path: $tr.data('path'),
+            deleteFile: hardDelete
+        }
+
+        if (confirm('Are you sure you want to delete this file ?')) {
+            deleteDoc(obj).then(function (response) {
+                if (response) {
+                    $tr.remove();
+                    if(type == 'CES')
+                    {
+                        if($('#tbodyCES').children().length == 0)
+                        {
+                            $("#divDocumentsCES").find('.table-responsive').hide();
+                            $("#divDocumentsCES").find('.noDocumentCES').show();
+                        }
+                        else{
+                            $("#divDocumentsCES").find('.table-responsive').show();
+                            $("#divDocumentsCES").find('.noDocumentCES').hide();
+                        }
+                        if($("#tbodyCES").find('tr').length == 0)
+                        {
+                            ReloadSTCModule();
+                        }
+                    }
+                    showMessage("File has been deleted Successfully.", false,type);
+                }
+                else {
+                    showMessage("There is some error while deleting file.", true,type);
+                }
+            });;
+        }
+
+    }
+
+    $('#tbodyOther').on('click', '.delete', function (e) {
+        e.preventDefault();
+        var $tr = $(this).closest('tr');
+        deleteFile($tr, true,'Other');
+    });
+
+
+
+    $('#tbodyOther,#divDocuments,#divDocumentsCES').on('click', '.download', function (e) {
+        e.preventDefault();
+
+        var id = $(this).closest('tr').data('id');
+        window.location.href = '@Url.Action("DownloadJobDocuments", "Job")' + "?jobDocId=" + id;
+    });
+
+
+    function deleteDoc(obj) {
+        // Return a new promise.
+        return new Promise(function (resolve) {
+            // Do the usual XHR stuff
+            $.ajaxSetup({ async: false, cache: false });
+            $.post('@Url.Action("DeleteDocumentNew", "Job")', obj, function (data) {
+                resolve(data);
+            });
+        });
+    }
+
+    $('#btnDownloadAllCES,#btnDownloadAllOther').click(function (e) {
+        e.preventDefault();
+        var type = $(this).data('type');
+
+        var $tbody = type == "ces" ? $('#tbodyCES') : $('#tbodyOther');
+
+        if ($tbody.find('tr').length > 0) {
+            window.location.href = '@Url.Action("DownloadAllDocumentsNew", "Job")' + "?jobid=" + JobId + "&type=" + type;
+        }
+        else {
+            alert("No documents available.");
+            return false;
+        }
+        @*$.get('@Url.Action("DownloadAllDocumentsNew", "Job")' + "?jobid="+ JobId +"&type=" + type, function (data) {
+
+        });*@
+
+    });
+
+    function viewDocumentOther(id,type) {
+
+        if (eJobId) {
+            $("#loading-image").show();
+            $.ajaxSetup({ async: false,cache:false });
+            $('#divViewer').load('@Url.Action("_DocViewer","Job")' + "?jobDocId=" + id +"&jobid="+eJobId);
+            $('#popupViewer').modal({ backdrop: 'static', keyboard: false });
+            if(type.toLowerCase() == 'ces')
+            {
+                $('#popupViewer').find('#btnSave').hide();
+            }
+
+            @if (!isJobDocumentManagerSave)
+                {
+                    <text>
+            $('#divViewer').find('form').find('#btnSave').hide();
+            </text>
+                }
+        }
+    }
+
+    $('#btnUploadOther').click(function (e) {
+        e.preventDefault();
+        document.getElementById('uploadOthreBtnDocument').click();
+    });
+
+    $(document).ready(function () {
+
+        $("#nextDocumentTemplate").click(function () {
+            if ($("#docTemplateId").val() == 1) {
+                $.get('@Url.Action("GetAllDocumentTemplate", "DocumentTemplate")', function (response) {
+                    var $tbody = $('#tbodyDocItems');
+                    $tbody.html('');
+                    if (response) {
+                        var data = response;
+                        for (var i = 0; i < data.length; i++) {
+                            var li = $('<li/>').addClass('list-group-item').data({ 'path': data[i].Path, 'name' : data[i].Path.split('/').pop() }).appendTo($tbody);
+                            var $div = $('<div/>').addClass('checkbox').appendTo(li);
+                            var $lable = $('<label/>').css({ 'word-wrap': 'break-word' }).appendTo($div);
+                            var input = '<input type="checkbox">' + data[i].Path.split('/').pop();
+                            $lable.html(input);
+                        }
+                    }
+                });
+                $('#popupDocumentCreateConfirm').modal('toggle');
+                $('#DocumentTemplate').modal('show');
+            }
+            else {
+                $.get('@Url.Action("GetStateList", "Job")', function (response) {
+                    if (response) {
+                        var states = JSON.parse(response).Table;
+                        var options = "";
+                        for (var i = 0; i < states.length; i++) {
+                            options += '<option value=' + states[i].StateID + '>' + states[i].Name + '</option>'
+                        }
+                        $('#ddlCat').append(options);
+                        $('#ddlCat').change();
+                    }
+                });
+                $('#popupDocumentCreateConfirm').modal('hide');
+                $('#mdlDocs').modal('show');
+            }
+        });
+
+        $("#btnPopupDocumentCreateConfirm").click(function () {
+            $('#popupDocumentCreateConfirm').modal('toggle');
+        });
+
+        $('#btnAddExistingDoc').click(function (e) {
+            e.preventDefault();
+            var $selectedLi = $('#tbodyDocItems').find('input[type=checkbox]:checked').closest('li'),
+                data = [];
+
+            if ($selectedLi.length < 1) {
+                alert("Please select atleast one document");
+                return false;
+            }
+
+            for (var i = 0; i < $selectedLi.length; i++) {
+                var $li = $($selectedLi[i]);
+                data.push({
+                    name: $li.data('name'),
+                    path: $li.data('path'),
+                });
+            }
+            var obj = {
+                jobId: JobId,
+                docs: data,
+                UserId: USERID,
+                fillData : true,
+                UseNewDocTemplate : true
+            }
+            $.post('@Url.Action("AddOtherDocuments", "Job")', obj, function (response) {
+                if (response) {
+                    var failed = response.filter(e=> e.JobDocumentId === 0),
+                         data = response.filter(e=> e.JobDocumentId != 0),
+                         $tbody = $('#tbodyOther')
+                    for (var i = 0; i < data.length; i++) {
+                        var tr = $('<tr/>')
+                            .data('path', data[i].Path)
+                            .data('id', data[i].JobDocumentId)
+                            .appendTo($tbody);
+                        var td = $('<td/>')
+                            .text(data[i].name)
+                            .appendTo(tr);
+                        var td1 = $('<td/>')
+                            .addClass('action')
+                            .appendTo(tr);
+                        var aView = $('<a/>')
+                            .addClass('view')
+                            .attr('href', '#')
+                            .attr('title', 'View')
+                            .appendTo(td1);
+
+                        if (!(allowdViewTypes.indexOf(data[i].Path.split('.').pop()) > -1)) {
+                            OpacityIncreaseDecrease(aView, 0);
+                        }
+                        var aDownload = $('<a/>')
+                            .addClass('download')
+                            .attr('href', '#')
+                            .attr('title', 'Download')
+                            .appendTo(td1);
+                        var aDelete = $('<a/>')
+                      .addClass('delete')
+                      .attr('href', '#')
+                      .attr('title', 'Delete')
+                      .appendTo(td1);
+                    }
+                    if (failed.length > 0) {
+                        var message = "";
+                        for (var i = 0; i < failed.length; i++) {
+                            message += '- ' + failed[i].message + '\n';
+                        }
+                        alert(message);
+                    }
+                    $('#mdlDocs').modal('hide');
+                    return false;
+                }
+            });
+        });
+
+    });
+</script>

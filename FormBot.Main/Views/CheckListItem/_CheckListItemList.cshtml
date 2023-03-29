@@ -1,0 +1,405 @@
+﻿@model FormBot.Entity.CheckList.CheckListTemplate
+@using FormBot.Helper;
+
+@Scripts.Render("~/bundles/jqueryval")
+
+<style>
+</style>
+
+<div id="chkListOfScheduling">
+    <div class="clearfix">
+        <div class="form-group">
+            @Html.LabelFor(m => m.CheckListTemplateId, new { @class = "control-label" })
+            @Html.DropDownListFor(m => m.CheckListTemplateId, new List<SelectListItem>(), new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="checklist-block m-b-15">
+        <ul class="checklist">
+            @if (Model.lstCheckListItem != null && Model.lstCheckListItem.Count > 0)
+            {
+                for (int i = 0; i < Model.lstCheckListItem.Count; i++)
+                {
+                    <li data-id="@Model.lstCheckListItem[i].CheckListItemId" data-visitchecklistitemid="@Model.lstCheckListItem[i].VisitCheckListItemId">
+                        @if (Model.lstCheckListItem[i].VisitCheckListItemId > 0 || ((ProjectSession.UserTypeId == 6 || ProjectSession.UserTypeId == 8) && Model.CreatedBy == ProjectSession.LoggedInUserId) || (ProjectSession.UserTypeId == 4 && Model.SolarCompanyId != null) || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                        {
+                            <span class="draggable draggableCheckList sort-down sprite-img" itemid="@Model.lstCheckListItem[i].Id" order="@Model.lstCheckListItem[i].OrderNumber"></span>
+                        }
+                        <span>
+                            <a href="#" onclick="EditCheckListItem('@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].Id','@Model.SolarCompanyId','@Model.lstCheckListItem[i].VisitCheckListItemId');">@Model.lstCheckListItem[i].ItemName</a><span class="color-text">
+                                @if (Model.isSetFromSetting == false && Model.lstCheckListItem[i].VisitCheckListItemId > 0 && Model.lstCheckListItem[i].CheckListClassTypeId != 5)
+                                {
+                                    <span>(@Model.lstCheckListItem[i].VisitedCount/@Model.lstCheckListItem[i].TotalCount)</span>
+                                }
+                            </span>
+                        </span>
+                        @if (Model.lstCheckListItem[i].VisitCheckListItemId > 0 || ((ProjectSession.UserTypeId == 6 || ProjectSession.UserTypeId == 8) && Model.CreatedBy == ProjectSession.LoggedInUserId) || (ProjectSession.UserTypeId == 4 && Model.SolarCompanyId != null) || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                        {
+                        <span class="action">
+
+                            <a class=" up-row sprite-img" href="#" title=""></a>
+                            <a class=" down-row sprite-img" href="#" title=""></a>
+                            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                            {
+
+                                <a class="delete edit sprite-img" href="#" title="Delete" onclick="DeleteCheckListItem('@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].Id','@Model.lstCheckListItem[i].VisitCheckListItemId','@Model.lstCheckListItem[i].CheckListItemId');"></a>
+
+                            }
+                        </span>
+                        }
+                        @if (Model.lstCheckListItem[i].VisitCheckListItemId > 0 || Model.SolarCompanyId != null)
+                        {
+                            if (Model.isSetFromSetting == false && Model.lstCheckListItem[i].VisitCheckListItemId > 0)
+                            {
+                                <span class="accept">
+                                    @if (Model.lstCheckListItem[i].IsCompleted == true)
+                                    {
+                                        <a href="#" onclick="MarkUnMarkItem(this,'@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].VisitCheckListItemId','@Model.lstCheckListItem[i].IsCompleted','@Model.lstCheckListItem[i].VisitedCount','@Model.lstCheckListItem[i].TotalCount')"><i class="border-btn active sprite-img"></i></a>
+                                    }
+                                    else
+                                    {
+                                        <a href="#" onclick="MarkUnMarkItem(this,'@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].VisitCheckListItemId','@Model.lstCheckListItem[i].IsCompleted','@Model.lstCheckListItem[i].VisitedCount','@Model.lstCheckListItem[i].TotalCount')"><i class="border-btn sprite-img"></i></a>
+                                    }
+                                </span>
+                            }
+                        }
+
+                    </li>
+                }
+            }
+        </ul>
+        @if (Model.isSetFromSetting == false || ((ProjectSession.UserTypeId == 6 || ProjectSession.UserTypeId == 8) && Model.CreatedBy == ProjectSession.LoggedInUserId) || (ProjectSession.UserTypeId == 4 && Model.SolarCompanyId != null) || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+        {
+            if (Model.isSetFromSetting == true)
+            {
+                <ul>
+                    <li class="liAddCheckListItem">
+                        <span class="add">
+                            <i>
+                                <a href="#" onclick="AddCheckListItem()"><img src='@Url.Content("~/images/ic-plus_black.png")' alt=""></a>
+                            </i>
+                        </span>
+                        <span>
+                            <a href="#" onclick="AddCheckListItem()"><strong class="color-text">Add New item</strong></a>
+                        </span>
+                    </li>
+                </ul>
+            }
+        }
+    </div>
+
+    @if (Model.isSetFromSetting == true)
+    {
+        <div class="clearfix">
+            <button type="button" class="btn primary icon-btn save-as-input pull-left m-l-0" id="saveNewTemplate" onclick="OpenaAddTemplate($('#CheckListTemplateId').val());"><span class="sprite-img save_ic"></span>Save as New Template</button>
+        </div>
+    }
+
+</div>
+
+<script type="text/javascript">
+
+    var isSetFromSetting = '@Model.isSetFromSetting.ToString().ToLower()';
+    var jobType = 0;
+    $(document).ready(function () {
+
+        $('.templateName').html('@Model.CheckListTemplateName');
+        var chkTemplateNameForCustom = '@Model.CheckListTemplateName';
+        var solarCompanyId = $("#hdnsolarCompanyid").val();
+        
+        var defaultChecklistTempName = '@Model.defaultCheckListTemplateName';
+        var isFromIsDeletedChecklistItem = '@Model.isFromIsDeletedChecklistItem';
+        if (isSetFromSetting == 'true')
+            jobType = '@Model.JobType';
+        else if ($('#IsFromCalendarView').val().toLowerCase() == 'true') {
+            jobType = '@Model.JobType';
+            if (jobType == '0' || jobType == null || jobType == '')
+                jobType = $("#JobType").val();
+        }
+        else
+            jobType = $('#BasicDetails_JobType').val();
+        var defaultText = '';
+        if (isSetFromSetting == 'true')
+            defaultText = 'Select';
+        else if (isFromIsDeletedChecklistItem.toLowerCase() == 'true' || chkTemplateNameForCustom=='')
+            defaultText = 'Custom';
+        else
+            defaultText = defaultChecklistTempName;
+       
+        FillDropDown('CheckListTemplateId', '@Url.Action("GetCheckListTemplate", "CheckListTemplate")?solarCompanyId=' + solarCompanyId + '&JobType=' + jobType, '@Model.Id', true, function () {
+            if ('@Model.CheckListTemplateId' == null || '@Model.CheckListTemplateId' == '' || '@Model.CheckListTemplateId' == 0) {
+                $("#CheckListTemplateId").val('');
+            }
+        }, defaultText);
+
+        if ('@Model.JobSchedulingId' == null || '@Model.JobSchedulingId' == 0 ) {
+            $("#CheckListTemplateId").prop("disabled", false);
+        }
+        else {
+            if (@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3) {
+                $("#CheckListTemplateId").prop("disabled", false);
+            } else {
+                $("#CheckListTemplateId").prop("disabled", true);
+            }
+        }
+
+        $("#CheckListTemplateId").change(function () {
+            if (isSetFromSetting == "false") {
+                isVisitCheckListTemplateChange = true;
+                var isAddVisit = false;
+                var jobSchedulingId = $("#JobSchedulingID").val() > 0 ? $("#JobSchedulingID").val() : 0;
+                if (jobSchedulingId == 0)
+                {
+                    isAddVisit = true
+                }
+                if ($('#IsFromCalendarView').val().toLowerCase() == 'true')
+                    TempCheckListTemplateItemAdd($("#CheckListTemplateId").val(), isAddVisit, $("#JobID").val());
+                else
+                    TempCheckListTemplateItemAdd($("#CheckListTemplateId").val(), isAddVisit, $("#BasicDetails_JobID").val());
+            }
+            else {
+                OpenCheckListItemPopup($("#CheckListTemplateId").val(), true);
+            }
+
+        });
+
+        $(".checklist").sortable({
+            handle: '.draggableCheckList',
+            cancel: '.liAddCheckListItem',
+            stop: function (event, ui) {
+                // new Index because the ui.item is the node and the visual element has been reordered
+                updateIndex();
+            }
+        });
+        });
+
+        $("#chk-default-temp").click(function () {
+            SaveDefaultChecklistitemTemplate(true)
+            $.ajax({
+                url: '@Url.Action("SaveDefaultChecklistTemplate", "CheckListItem")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                data: { strData: JSON.stringify(data) },
+                success: function (response) {
+
+                },
+                error: function () {
+
+                }
+            });
+        })
+
+    $('.checklist').on('click', 'a.up-row', function () {
+        var li = $(this).closest('li');
+        li.prev().before(li);
+
+        updateIndex();
+    });
+
+    $('.checklist').on('click', 'a.down-row', function () {
+        var li = $(this).closest('li');
+        if (!li.next().hasClass('liAddCheckListItem'))
+            li.next().after(li);
+
+        updateIndex();
+    });
+
+
+
+    function ShowHideCopyTemplate() {
+        var templateId = $("#CheckListTemplateId").val();
+        if (templateId != '')
+            $("#saveNewTemplate").show();
+        else
+            $("#saveNewTemplate").hide();
+    }
+
+    function updateIndex() {
+        var data = [];
+        $('.checklist li').each(function (a, li) {
+            data.push({
+                checkListItemId: $(li).data('id'),
+                orderNo: a + 1,
+                visitCheckListItemId: $(li).data('visitchecklistitemid')
+            });
+        });
+
+        $.ajax({
+            url: '@Url.Action("MoveUPAndDownOrderOfCheckListItemNew", "CheckListItem")',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: 'get',
+            data: { strData: JSON.stringify(data) },
+            success: function (response) {
+                $(".datatableTemplateList").dataTable().fnDraw();
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+    function AddCheckListItem() {
+        var url = '@Url.Action("CreateCheckListItemPopup", "CheckListItem")?isSetFromSetting=' + '@Model.isSetFromSetting' + '&templateId=' + '@Model.Id';
+        OpenItemPopup(url);
+    }
+
+    function EditCheckListItem(templateId, itemId, solarCompanyId, visitCheckListItemId) {
+
+        if (isSetFromSetting == "false") {
+            isDefault = false;
+        }
+        else {
+            if (solarCompanyId == null || solarCompanyId == '')
+                isDefault = true;
+            else
+                isDefault = false;
+        }
+
+        var url = '@Url.Action("CreateCheckListItemPopup", "CheckListItem")?isSetFromSetting=' + '@Model.isSetFromSetting' + '&templateId=' + templateId + '&itemId=' + itemId + '&isDefaultTemplate=' + isDefault + '&visitCheckListItemId=' + visitCheckListItemId;
+        OpenItemPopup(url);
+    }
+
+    function OpenItemPopup(url) {
+        $.get(url, function (data) {
+            $('#checkListItemForm').empty();
+            $('#checkListItemForm').append(data);
+            $('#popupCheckListItem').modal({ backdrop: 'static', keyboard: false });
+        });
+    }
+
+    function showSuccessMessageAddEditItem(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionItem").hide();
+        $("#successMsgRegionAddEditItem").html(closeButton + message);
+        $("#successMsgRegionAddEditItem").show();
+    }
+
+    function showErrorMessageItem(message) {
+        $(".alert").hide();
+        $("#successMsgRegionAddEditItem").hide();
+        $("#errorMsgRegionItem").html(closeButton + message);
+        $("#errorMsgRegionItem").show();
+    }
+
+    function showErrorMessageItemOnVisit(message) {
+        $(".alert").hide();
+        $("#successMsgRegionAddEditItem").hide();
+        $("#errorMsgRegionForPopUp").html(closeButton + message);
+        $("#errorMsgRegionForPopUp").show();
+    }
+
+    function DeleteCheckListItem(templateId, itemId, visitCheckListItemId, checkListItemId) {
+        if (confirm('Are you sure you want to delete this check list item?')) {
+            DeleteCheckListItemByItemId(templateId, itemId, visitCheckListItemId);
+        }
+    }
+
+    function DeleteCheckListItemByItemId(templateId, itemId, visitCheckListItemId) {
+        $.ajax(
+              {
+                  url: '@Url.Action("DeleteCheckListItem", "CheckListItem")',
+                  dataType: 'json',
+                  contentType: 'application/json; charset=utf-8',
+                  type: 'get',
+                  data: { templateId: templateId, itemId: itemId, visitCheckListItemId: visitCheckListItemId },
+                  success: function (response) {
+
+                      if (response.status) {
+
+                          if (isSetFromSetting == "false") {
+
+                              $.grep(visitCheckListItemIds, function (a) {
+                                  return a != visitCheckListItemId;
+                              });
+
+                              var jobSchedulingId = $("#JobSchedulingID").val();
+                              var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+                              CommonOpenCheckListItemPopup(response.templateId, "false", jobSchedulingId, false, tempJobSchedulingId, $("#JobID").val(), false, jobType, true);
+                              ReloadJobPhotoSection($("#BasicDetails_JobID").val());
+                          }
+                          else {
+                              OpenCheckListItemPopup(response.templateId);
+                              $(".datatableTemplateList").dataTable().fnDraw();
+                          }
+                          showSuccessMessageAddEditItem("CheckList item has been deleted successfully.");
+                      }
+                      else {
+                          if (response.error.toLowerCase() == 'sessiontimeout')
+                              window.location.href = '@Url.Action("Logout", "Account")';
+                          else
+                              showErrorMessageItem("CheckList item has not been deleted.");
+                      }
+                  },
+                  error: function () {
+                      showErrorMessageItem("CheckList item has not been deleted.");
+                  }
+              });
+    }
+
+    function MarkUnMarkItem(obj, templateId, itemId, isCompleted, visitedCount, totalCount) {
+        if (visitedCount >= totalCount) {
+            var isMark = $(obj).find("i").hasClass('active');
+            var jobSchedulingId = '@Model.JobSchedulingId';
+
+            if (jobSchedulingId > 0) {
+                $.ajax(
+               {
+                   url: '@Url.Action("MarkUnMarkCheckListItem", "CheckListItem")',
+                   dataType: 'json',
+                   contentType: 'application/json; charset=utf-8',
+                   type: 'get',
+                   data: { templateId: templateId, itemId: itemId, isMark: !isMark, jobSchedulingId: jobSchedulingId },
+                   success: function (response) {
+
+                       if (response.id && response.id > 0) {
+                           if (!isMark)
+                           {
+                               $(obj).find("i").addClass('active');
+                           }
+                           else
+                           {
+                               $(obj).find("i").removeClass('active');
+                           }
+                           showSuccessMessageAddEditItem("CheckList item has been marked/un-marked as completed successfully.");
+                       }
+                       else {
+                           if (response.error.toLowerCase() == 'sessiontimeout')
+                               window.location.href = '@Url.Action("Logout", "Account")';
+                           else {
+                               if (response.error)
+                                   showErrorMessageItemOnVisit(response.error);
+                               else
+                                   showErrorMessageItemOnVisit("CheckList item has not been marked/un-marked as completed.");
+                           }
+
+                       }
+                   },
+                   error: function () {
+                       showErrorMessageItemOnVisit("CheckList item has not been marked/un-marked as completed.");
+                   }
+               });
+            }
+            else {
+                alert('First save job visit.');
+            }
+        }
+        else {
+            alert('Please complete checklist item of this visit.');
+        }
+    }
+    function setDefaultCheckListTemplateId(jobType) {
+        var defaultChecklistTempName = '';
+         $.ajax(
+                     {
+                         url: '@Url.Action("GetDefaultCheckListTemplateId", "CheckListItem")?JobType=' + jobType+ "&SolarCompanyId=" + $("#hdnsolarCompanyid").val(),
+                         contentType: 'application/json',
+                         method: 'get',
+                 success: function (response) {
+                     defaultChecklistTempName = response.DefaultcheckListTemplateName;
+                     return defaultChecklistTempName;
+                         }
+                     });
+    }
+
+</script>

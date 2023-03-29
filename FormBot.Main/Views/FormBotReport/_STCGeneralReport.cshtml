@@ -1,0 +1,1020 @@
+﻿@model FormBot.Entity.FormBotReport
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    Layout = null;
+}
+
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label class="control-label">Date Range:</label>
+        <div class="btn-group btn-group-justified" role="group" id="DateGroups">
+            <div class="btn-group" role="group">
+                <button onclick="setLBD();" type="button" class="btn btn-default" tabindex="2">LBD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button onclick="setMTD();" type="button" class="btn primary" tabindex="3">MTD</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setPM();" tabindex="4">PM</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="setCFY();" tabindex="5">CFY</button>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-default" type="button" onclick="set12M();" tabindex="6">12M</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">Start Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">End Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label>Filters For Deleted Jobs:</label>
+        @Html.DropDownListFor(m => m.DeletedFilter, new List<SelectListItem>
+                                     {
+                                         new SelectListItem{ Text="Exclude", Value = "2" },
+                                        new SelectListItem{ Text="Include", Value = "1" },
+                                     }, new { @id = "drdDelete", @class = "form-control" }
+                            )
+    </div>
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label>Chart Types:</label>
+        @Html.DropDownListFor(m => m.ChartType, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Combo Bar Chart", Value = "ComboBar" },
+                                        new SelectListItem{ Text="Bar Chart", Value = "Bar" }
+                                     }, new { @id = "drdChartType", @class = "form-control" }
+                            )
+    </div>
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <div>
+            @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+            {
+                @Html.CheckBoxFor(m => m.IsAllSelected, new { @id = "IsAllSelected" })
+                <label>All users on FormBot</label>
+            }
+        </div>
+        <div id="chkFBuser">
+
+            <div class="rep-list">
+                <ul>
+                    @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+                    {
+                        <li><a href="javascript:void(0);" id="ResellerID" onclick="Reseller();">Reseller<span id="cntResellers">0</span></a></li>
+                    }
+                    @*@if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 2)
+                        {
+                            <li><a href="javascript:void(0);" id="RAMID" onclick="RAM();">RAM Users<span id="cntRAM">0</span></a></li>
+                        }*@
+                    @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 2 || FormBot.Helper.ProjectSession.UserTypeId == 5)
+                    {
+                        <li><a href="javascript:void(0);" id="UserID" onclick="Users();">Solar Company<span id="cntUsers">0</span></a></li>
+                    }
+                    <li><a href="javascript:void(0);" id="STCsubmissionID" onclick="STCsubmission();">STC submission<span id="cntSTCSubmissions">0</span></a></li>
+                </ul>
+            </div>
+            <label class="control-label">Restriction:</label>
+            <ul id="Restrictions" class="control-label">
+                <li>
+                    Maximum 1 solar company should be selected for bar chart.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="rep-btn">
+        <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+        <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+            <span class="sprite-img reset_ic"></span>
+            <input type="button" id="btnReset" value="Reset Filters" class="">
+        </div>
+        </div>
+</div>
+
+
+<div class="modal fade" id="popupReseller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeResellers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Reseller</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="ResellerUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_Reseller", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header">
+                <button type="button" class="close" id="closeUsers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border" id="divSolarCompanyies">
+                    @*@Html.Action("_SolarCompany", "FormBotReport")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupStcSubmission" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" id="closeStcSubmission">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">STC Submission Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableStcSubmission">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_STCSubmission", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupRAM" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeRAM">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">RAM Users</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableRAM">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_RAMView", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    function Reseller() {
+
+        $("#ResellerBit").val(0);
+
+        $('#popupReseller').modal({ backdrop: 'static', keyboard: false });
+        $('#ResellerUsers').html($('#LstResellerAssignedUser option').length);
+        //if ($("UserID").length > 0) {
+        //    document.getElementById('UserID').style.pointerEvents = 'none';
+        //    $('#UserID').css('opacity', '0.5');
+        //}
+        //if ($("#RAMID").length > 0) {
+        //    document.getElementById('RAMID').style.pointerEvents = 'none';
+        //    $('#RAMID').css('opacity', '0.5');
+        //}
+    }
+
+    function Users() {
+        //$('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        //$('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+
+        var url = '@Url.Action("_SolarCompany", "FormBotReport")';
+        url += '?hdnResellers=' + $("#hdnResellers").val();
+        var assignedUsers = $("#hdnUsers").val();
+
+        $.ajaxSetup({ cache: false });
+        $('#divSolarCompanyies').load(url, function () {
+            $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+            $('#SCABit').val('1');
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + $('#SCABit').val());            
+            SetSelectedSolarCompanies(assignedUsers);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });      
+    }
+
+    function SetSelectedSolarCompanies(assignedUsers) {
+        if (assignedUsers != "" && assignedUsers != null) {
+            var array = assignedUsers.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstUsers option[value=' + array[i] + ']').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_SCA").click();
+        }
+    }
+
+    function STCsubmission() {
+        $('#popupStcSubmission').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableStcSubmission').html($('#LstAvailableStcSubmissionAssigned option').length);
+        //$('#STCBit').val('0');
+    }
+
+    function RAM() {
+        $('#popupRAM').modal({ backdrop: 'static', keyboard: false });
+        $('#AvailableRAM').html($('#LstRAMAssignedUser option').length);
+        if ($('#ResellerID').length > 0) {
+            document.getElementById('ResellerID').style.pointerEvents = 'none';
+            $('#ResellerID').css('opacity', '0.5');
+        }
+        if ($('#UserID').length > 0) {
+            document.getElementById('UserID').style.pointerEvents = 'none';
+            $('#UserID').css('opacity', '0.5');
+        }
+    }
+
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+
+    $(document).ready(function () {
+        $('#txtFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtToDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtToDate').data('datepicker')) {
+                $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        //$('#txtToDate').change(function () {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //});
+
+        $('#SCABit').val('0');
+        $('#ResellerBit').val('0');
+        $('#STCBit').val('0');
+        $('#RAMBit').val('0');
+
+        $('#btnResellerSave,#btnUserSave').mouseup(function (e) {
+            setTimeout(function () {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }, 500);
+        });
+
+        setMTD();
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    });
+
+    $("#DateGroups").on("click", "button", function () {
+        $('#DateGroups').each(function () {
+            $(this).find('button').each(function () {
+                $(this).removeClass("primary");
+                $(this).addClass("btn-default");
+            });
+        });
+
+        $(this).addClass("primary");
+        $(this).removeClass("btn-default");
+    });
+
+    $('#IsAllSelected').change(function () {
+        if ($(this).is(":checked")) {
+            $('#chkFBuser').hide();
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        else {
+            $('#chkFBuser').show();
+        }
+    });
+
+    function setMTD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - (d.getDate() - 1));
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setPM() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - (d1.getDate()));
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function setCFY() {
+        removeStartDate();
+
+        var d2 = new Date();
+        var d = new Date(d2.getFullYear(), d2.getMonth(), "1");
+        d.setDate(1);
+
+        if (d2.getMonth() < 7) {
+            d.setYear(d.getFullYear() - 1);
+            d.setMonth(6);
+        } else {
+            d.setMonth(6);
+        }
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function set12M() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setYear(d.getFullYear() - 1);
+        d.setDate(d.getDate() - 1);
+
+        var d1 = new Date();
+        d1.setDate(d1.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(d1);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+        $("#txtFromDate").val(fDate);
+        $("#txtToDate").val(tDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").datepicker("update", tDate);
+    }
+
+    function removeStartDate() {
+        var d = new Date();
+        d.setDate(d.getDate() - 730);
+        $('#txtToDate').data('datepicker').setStartDate(d);
+    }
+
+    function setLBD() {
+        removeStartDate();
+
+        var d = new Date();
+        d.setDate(d.getDate() - 1);
+
+        var tickStartDate = Date.parse(d);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+
+        $("#txtFromDate").val(fDate);
+        $("#txtFromDate").datepicker("update", fDate);
+        $("#txtToDate").val(fDate);
+        $("#txtToDate").datepicker("update", fDate);
+    }
+
+    function RunReport() {
+        //if ($('#IsAllSelected').is(":checked")) {
+        //    if ($('#drdChartType').val() == 'Bar') {
+        //        alert('Bar chart is not applicable for reseller filter or all users. Please select combo bar chart.');
+        //        return false;
+        //    }
+        //}
+
+
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("STCGeneralReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            //async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                if (result != "") {
+                    $('#divGrid').show();
+                    BindGrid(result.dsSTCGeneralGrid);
+                    $('#chartbox').show();
+                    BindChart(result.dsSTCGeneralChart);
+                    //result = $.parseJSON(result);
+                    //    $('#divGrid').show();
+                    //    BindGrid(result.dsSTCGeneralGrid);
+                    //    if (result.length > 0) {
+                    //        BindChart(result.dsSTCGeneralChart);
+                    //        $('#chartbox').show();
+                    //    } else { $('#chartbox').hide(); }
+                    //} else {
+                    //    $('#divGrid').show();
+                    //    BindGrid('');
+                    //    $("#chartbox").hide();
+                }
+            },
+            //error: OnError
+            error: function (e) {
+                console.log("From Method");
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result) {
+        $('#chartbox').hide();
+        var tableHeaders = '';
+        var tableFooters = '';
+        var tableColumns = [];
+        //tableColumns.push("Solar Company Name");
+
+        tableColumns.push("Reseller Name");
+        tableColumns.push("Company Name");
+        tableColumns.push("Reference Number");
+        tableColumns.push("Client Name");
+        tableColumns.push("Submission Date");
+        tableColumns.push("Status");
+        tableColumns.push("No Of STC");
+        tableColumns.push("STC Price");
+        tableColumns.push("Total");
+
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th>" + val + "</th>";
+        });
+        $("#displayTable").empty();
+
+        // Generate CSV Report Logic (To append export csv button manually and remove export csv button from Datatable initialization)
+        var jsonObj = "[" + JSON.stringify($("#FormBotReportDetails").serializeToJson()) + "]";
+        var arrayobject = eval('(' + jsonObj + ')');
+        var temparr = [];
+        var data = '';
+        for (i in arrayobject) {
+            data = "hdnFormBotResellerAssignedUser=" + arrayobject[i]["hdnFormBotResellerAssignedUser"] + "&&hdnFormBotSolarCompanyAssignedUser=" + arrayobject[i]["hdnFormBotSolarCompanyAssignedUser"] + "&&hdnFormBotRAMAssignedUser=" + arrayobject[i]["hdnFormBotRAMAssignedUser"]
+                + "&&StartDate=" + arrayobject[i]["StartDate"] + "&&EndDate=" + arrayobject[i]["EndDate"] + "&&hdnSTCSubmissionStatusAssigned=" + arrayobject[i]["hdnSTCSubmissionStatusAssigned"] + "&&IsAllSelected=" + arrayobject[i]["IsAllSelected"];
+        }
+        var url = '@Url.Action("Generate_STCGeneralReport_CSV", "FormBotReport")?' + data;
+        // End here
+
+        $("#displayTable").append('<div class="dt-buttons"><a class="dt-button buttons-excel buttons-html5 primary pull-right" tabindex="0" aria-controls="datatable" href="' + url + '" "><span>Export to Excel</span></a></div><table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead></table>');
+
+        columnsArray = [
+            //{
+            //    'data': 'SolarCompanyId',
+            //    "orderable": false,
+            //},
+          {
+              'data': 'ResellerName',
+              "orderable": false
+          },
+            {
+                'data': 'CompanyName',
+                "orderable": false,
+                "render": function (data, type, full, meta) {
+                    return '<span class="lbl" data-id=' + full.SolarCompanyId + '>' + full.CompanyName + '</span>';
+                }
+            },
+
+            {
+                'data': 'RefNumber',
+                "orderable": false,
+                "render": function (data, type, full, meta) {
+                    if (full.RefNumber != null) {
+                        var url = '@Url.Action("Index", "Job")' + "/" + full.ID;
+                        return '<a href="' + url + '" style="text-decoration:none;">' + full.RefNumber + '</a>'
+                    }
+                    else {
+                        return '';
+                    }
+                }
+            },
+            {
+                'data': 'ClientName',
+                "orderable": false
+            },
+             {
+                 'data': 'STCSubmissionDate',
+                 "orderable": false,
+                 "render": function (data, type, full, meta) {
+                     if (full.STCSubmissionDate != null) {
+                         return ConvertToDateWithFormat(full.STCSubmissionDate, '@ProjectConfiguration.GetDateFormat');
+                     }
+                     else
+                         return '';
+                 }
+             },
+             {
+                 'data': 'Status',
+                 "orderable": false
+             },
+              {
+                  'data': 'NoOfSTC',
+                  "orderable": false,
+                  'render': function (data, type, full, meta) {
+                      return parseInt(full.NoOfSTC);
+                  },
+              },
+               {
+                   'data': 'STCPrice',
+                   "orderable": false,
+                   'render': function (data, type, full, meta) {
+                       return PrintDecimal(full.STCPrice);
+                   },
+               },
+                {
+                    'data': 'Total',
+                    "orderable": false,
+                    'render': function (data, type, full, meta) {
+                        return PrintDecimal(full.Total);
+                    },
+                },
+        ];
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            info: false,
+            retrieve: true,
+            columns: columnsArray,
+            //dom: 'Bfrtip',
+            //buttons: [
+            //    {
+            //        extend: 'excel',
+            //        footer: true
+            //    }
+            //],
+
+            order: [[0, "asc"]],
+            "drawCallback": function (settings) {
+
+                var api = this.api();
+                var rows = api.rows({ page: 'current' }).nodes();
+                var last = null;
+                if (rows.length > 0) {
+                    var colonne = api.row(0).data().length;
+                }
+                var totale = new Array();
+                totale['Totale'] = new Array();
+                var groupid = -1;
+                var subtotale = new Array();
+                if (rows.length > 0) {
+                    api.column(1, { page: 'current' }).data().each(function (group, i) {
+                        if (last !== group) {
+                            groupid++;
+                            $(rows).eq(i).before(
+                                '<tr class="group"><td colspan="7"></td><td></td><td></td></tr>'
+                            );
+                            last = group;
+                        }
+
+                        val = api.row(api.row($(rows).eq(i)).index()).data();      //current order index
+                        $.each(val, function (index2, val2) {
+                            if (typeof subtotale[groupid] == 'undefined') {
+                                subtotale[groupid] = new Array();
+                            }
+                            if (typeof subtotale[groupid][index2] == 'undefined') {
+                                subtotale[groupid][index2] = 0;
+                            }
+                            if (typeof totale['Totale'][index2] == 'undefined') { totale['Totale'][index2] = 0; }
+
+                            subtotale[groupid][index2] += val2;
+                            totale['Totale'][index2] += val2;
+                        });
+                    });
+                }
+                $('tbody').find('.group').each(function (i, v) {
+                    var rowCount = $(this).nextUntil('.group').length;
+
+                    var STCCount = 0;
+                    var STCTotal = 0;
+                    var solarCompanyId = 0;
+                    var CompanyId = 0, NoofSTC = 0, total = 0, index = 0;
+
+                    $(this).nextUntil('.group').each(function (i, e) {
+
+                        CompanyId = $(this).find('td:nth-child(2)').find('span').attr('data-id');
+                        NoofSTC = $(this).find('td:nth-child(7)').text();
+                        total = $(this).find('td:nth-child(9)').text();
+
+                        index = i;
+                        if (solarCompanyId == CompanyId || solarCompanyId == 0) {
+                            solarCompanyId = CompanyId;
+                            STCCount = STCCount + parseInt(NoofSTC);
+                            STCTotal = STCTotal + parseFloat(total);
+                        }
+                        else {
+                            solarCompanyId = 0;
+                            STCCount = parseInt(NoofSTC);
+                            STCTotal = parseFloat(total);
+                        }
+                    });
+
+                    //var TotalCountText = '<div> Total No of STC (' + PrintDecimal(STCCount) + ')' + '&nbsp;&nbsp;&nbsp;<span class="subtotalSpace"> Total (' + PrintDecimal(STCTotal) + ')</span>' + '</div>';
+                    //$(this).find('td:first').append($('<span />', { 'class': 'rowCount-grid' }).append($('<b />', { 'html': $.parseHTML(TotalCountText) })));
+
+                    $($(this).find('td')[1]).text('STC Amount: '+STCCount);
+                    $($(this).find('td')[1]).css('text-align', 'right');
+                    $($(this).find('td')[1]).css('font-family', 'OpenSansSemibold');
+                    $($(this).find('td')[2]).text('Value:$ '+STCTotal);
+                    $($(this).find('td')[2]).css('text-align', 'right');
+                    $($(this).find('td')[2]).css('font-family', 'OpenSansSemibold');
+
+                    //$(this).find('td:second').append(STCCount);
+                    //$(this).find('td:third').append(STCTotal);
+
+
+                    //var TotalCountText = '<div>  (' + PrintDecimal(STCCount) + ')' + '<span class="subtotalSpace"> (' + PrintDecimal(STCTotal) + ')</span>' + '</div>';
+                    //$(this).find('td:first').append($('<span />', { 'class': 'rowCount-grid' }).append($('<b />', { 'html': $.parseHTML(TotalCountText) })));
+
+                });
+            }
+        });
+        $('table thead').css('color', '#383838 !important');
+        $('table thead').css('font-family', 'OpenSansSemibold !important');
+        $('table thead').css('font-size', '13px !important');
+        $('table thead').css('background', '#f8f8f8 none repeat scroll 0 0 !important');
+        //$('.buttons-excel').addClass('primary pull-right');
+        //$('.buttons-excel').html('<span>Export to Excel</span>');
+        $('#datatable tr th').attr('class', 'sorting_disabled table-header');
+
+        $('#datatable th:nth-child(1)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(2)').attr('style', 'width:20% !important;');
+        $('#datatable th:nth-child(3)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(4)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(5)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(6)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(7)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(8)').attr('style', 'width:10% !important;');
+        $('#datatable th:nth-child(9)').attr('style', 'width:10% !important;');
+
+        $('#datatable thead tr th:nth-child(7)').attr('style', 'text-align:right;');
+        $('#datatable thead tr th:nth-child(8)').attr('style', 'text-align:right;');
+        $('#datatable thead tr th:nth-child(9)').attr('style', 'text-align:right;');
+        $('#datatable tbody tr td:nth-child(7)').attr('style', 'text-align:right;');
+        $('#datatable tbody tr td:nth-child(8)').attr('style', 'text-align:right;');
+        $('#datatable tbody tr td:nth-child(9)').attr('style', 'text-align:right;');
+
+    }
+
+    function getColumn(id) {
+    }
+
+    //charts
+    function BindChart(resultData) {
+
+        if (resultData)
+        {
+            var chartType = 'bar';
+            var groupedData = {};
+            var xAxis = ['xAxis'];
+
+            var dataGroup = [];
+            if ($('#drdChartType').val() == 'ComboBar') {
+                dataGroup = ["Not Yet Submitted", "Re-submission", "Ready to Trade", "Awaiting Authorization", "CER Failed", "Cannot re-create", "Under Review", "Compliance Issues", "Requires Call Back", "Ready To Create", "Pending Approval", "New Submission", "CER Approved"];
+            }
+
+            //var dataGroup = ["Not Yet Submitted", "Re-submission", "Ready to Trade", "Awaiting Authorization", "CER Failed", "Cannot re-create", "Under Review", "Compliance Issues", "Requires Call Back", "Ready To Create", "Pending Approval", "New Submission", "CER Approved"];
+
+            var data1 = ["Not Yet Submitted"];
+            var data2 = ["Re-submission"];
+            var data3 = ["Ready to Trade"];
+            var data4 = ["Awaiting Authorization"];
+            var data5 = ["CER Failed"];
+            var data6 = ["Cannot re-create"];
+            var data7 = ["Under Review"];
+            var data8 = ["Compliance Issues"];
+            var data9 = ["Requires Call Back"];
+            var data10 = ["Ready To Create"];
+            var data11 = ["Pending Approval"];
+            var data12 = ["New Submission"];
+            var data13 = ["CER Approved"];
+            for (var i = 0; i < resultData.length; i++) {
+                var item = resultData[i];
+
+                //if (('#cntResellers').html() == 0)
+                //    xAxis.push(item.CompanyName);
+                //else
+                //    xAxis.push(item.ResellerName);
+
+                xAxis.push(item.Name);
+
+                data1.push(item.NotYetSubmitted);
+                data2.push(item.ReSubmission);
+                data3.push(item.ReadyToTrade);
+                data4.push(item.AwaitingAuthorization);
+                data5.push(item.CERFailed);
+                data6.push(item.CannotReCreate);
+                data7.push(item.UnderReview);
+                data8.push(item.ComplianceIssues);
+                data9.push(item.RequiresCallBack);
+                data10.push(item.ReadyToCreate);
+                data11.push(item.PendingApproval);
+                data12.push(item.NewSubmission);
+                data13.push(item.CERApproved);
+            }
+
+            var result = [];
+            result.push(xAxis);
+            result.push(data1);
+            result.push(data2);
+            result.push(data3);
+            result.push(data4);
+            result.push(data5);
+            result.push(data6);
+            result.push(data7);
+            result.push(data8);
+            result.push(data9);
+            result.push(data10);
+            result.push(data11);
+            result.push(data12);
+            result.push(data13);
+            //console.log(result);
+            $('#chartbox').css('display', 'block');
+            chartdiv = c3.generate({
+                data: {
+                    columns: result,
+                    type: chartType,
+                    x: 'xAxis',
+                    groups: [dataGroup]
+                },
+                axis: {
+                    x: {
+                        type: 'category',
+                        categories: xAxis
+                    }
+                },
+                bar: {
+                    width: {
+                        ratio: 0.3,
+                        max: 30
+                    },
+                },
+                tooltip: {
+                    format: {
+                        value: function (value, ratio, id, index) {
+                            if (chartType == 'pie') {
+                                return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                            }
+                            else
+                                return value;
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function ResetSearchFilters() {
+        $('#cntResellers').html('0');
+        $('#hdnResellers').val('');
+        $('#cntUsers').html('0');
+        $('#hdnUsers').val('');
+        $('#cntSTCSubmissions').html('0');
+        $('#hdnSTCSubmission').val('');
+        $('#cntRAM').html('0');
+        $('#hdnRAM').val('');
+        $("#drdDelete").val(1);
+
+        //$('#txtFromDate').val('');
+        //$('#txtToDate').val('');
+
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+
+        $('#LstRAMAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstRAM");
+        });
+
+        $('#LstSTCSubmissionAssigned option').each(function () {
+            $(this).remove().appendTo("#LstSTCSubmission");
+        });
+
+        if ($("#ResellerID").length > 0) {
+            document.getElementById('ResellerID').style.pointerEvents = 'auto';
+            $('#ResellerID').css('opacity', '1');
+        }
+        if ($("#UserID").length > 0) {
+            document.getElementById('UserID').style.pointerEvents = 'auto';
+            $('#UserID').css('opacity', '1');
+        }
+        //if ($("#RAMID").length > 0) {
+        //    document.getElementById('RAMID').style.pointerEvents = 'auto';
+        //    $('#RAMID').css('opacity', '1');
+        //}
+
+        document.getElementById('STCsubmissionID').style.pointerEvents = 'auto';
+        $('#STCsubmissionID').css('opacity', '1');
+
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+
+    //function disableRAM() {
+    //    //disable solar company button
+    //    if ($('#RAMID').length > 0) {
+    //        if ($('#LstResellerAssignedUser option').length > 0 || $('#LstUsersAssignedUser option').length > 0) {
+    //            document.getElementById('RAMID').style.pointerEvents = 'none';
+    //            $('#RAMID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('RAMID').style.pointerEvents = 'auto';
+    //            $('#RAMID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+
+    //function disableSC() {
+    //    //disable solar company button
+    //    if ($('#UserID').length > 0) {
+    //        if ($('#LstResellerAssignedUser option').length > 0 || $('#LstRAMAssignedUser option').length > 0) {
+    //            document.getElementById('UserID').style.pointerEvents = 'none';
+    //            $('#UserID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('UserID').style.pointerEvents = 'auto';
+    //            $('#UserID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+
+    //function disableReseller() {
+    //    //disable solar company button
+    //    if ($('#ResellerID').length > 0) {
+    //        if ($('#LstUsersAssignedUser option').length > 0 || $('#LstRAMAssignedUser option').length > 0) {
+    //            document.getElementById('ResellerID').style.pointerEvents = 'none';
+    //            $('#ResellerID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('ResellerID').style.pointerEvents = 'auto';
+    //            $('#ResellerID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+
+    //function disableRAM() {
+    //    if ($('#ResellerID').length > 0) {
+    //        if ($('#LstUsersAssignedUser option').length > 0 || $('#LstRAMAssignedUser option').length > 0) {
+    //            document.getElementById('RAMID').style.pointerEvents = 'none';
+    //            $('#RAMID').css('opacity', '0.5');
+    //        }
+    //        else {
+    //            document.getElementById('RAMID').style.pointerEvents = 'auto';
+    //            $('#RAMID').css('opacity', '1');
+    //        }
+    //    }
+    //}
+
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 1px solid #ddd !important;
+    }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+
+    .group {
+        background-color: #f3f3f3 !important;
+        font-size: 13px;
+        color: #000 !important;
+        /*opacity: 0.7;*/
+    }
+
+    .subtotalSpace {
+        margin-left: 3%;
+    }
+</style>

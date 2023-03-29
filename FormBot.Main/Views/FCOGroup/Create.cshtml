@@ -1,0 +1,78 @@
+﻿@*@model FormBot.BAL.Service.FCOGroupBAL*@
+@model FormBot.Entity.FCOGroup
+@{
+    ViewBag.Title = "Create FCOGroup";
+    //Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+
+@using (Html.BeginForm("Create", "FCOGroup", FormMethod.Post, new { id = "FCOGroupDetails", enctype = "multipart/form-data" }))
+{
+    <div class="container-fluid">
+        @*<h1 class="title">Create FCOGroup</h1>*@
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @Html.Partial("_Details", Model)
+    </div>
+}
+@section Scripts
+    {
+    @*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+    <script src="~/Scripts/jquery.validate.min.js"></script>*@
+    <script src="~/Scripts/easyResponsiveTabs.js"></script>
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+    @*<script src="~/Scripts/bootstrap.min.js"></script>*@
+
+    <script type="text/javascript">
+        $(document).ready(function () { });
+        /* Select FCOuser from all list to added list */
+        $("#btnLtoR").click(function () {
+            $('#lstAttendee option:selected').each(function () {
+                $(this).remove().appendTo("#lstAssignedAttendee");
+            });
+        });
+
+        /* Remove selected FCOuser */
+        $("#btnRtoL").click(function () {
+            $('#lstAssignedAttendee option:selected').each(function () {
+                $(this).remove().appendTo("#lstAttendee");
+            });
+        });
+
+        $('#btnSubmit').click(function () {
+            var strAssignedAttendeeList = [];
+            $("#lstAssignedAttendee option").each(function (i) {
+                strAssignedAttendeeList.push($(this).val().trim());
+            });
+            $("#lstAssignedAttendee").val(strAssignedAttendeeList);
+        });
+
+        $('#btnCancel').click(function () {
+            window.location.href = '@Url.Action("Index", "FCOGroup")';
+        });
+
+        function validateExtraFields() {
+            //var selectedCount = $('#lstAssignedAttendee option').length;
+            //if (selectedCount == 0) {
+            //    $(".alert").hide();
+            //    $("#errorMsgRegion").html(closeButton + "Please select at least one users.");
+            //    $("#errorMsgRegion").show();
+            //    validateForm();
+            //    return false;
+            //}
+            //else {
+            //    $(".alert").hide();
+            //    return validateForm();
+            //    return true;
+            //}
+        }
+    </script>
+}

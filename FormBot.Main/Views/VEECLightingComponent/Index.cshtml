@@ -1,0 +1,336 @@
+﻿@using FormBot.Helper;
+@model FormBot.Entity.VEECLightingComponent
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@Html.AntiForgeryToken();
+@Html.ValidationSummary(true)
+
+<div class="title formLightingComponent" style="display: block;">
+    <h1>Document Template</h1>
+    <a href="#" id="addLightingComponentTemplate" class="btn primary pull-right icon-btn" title="Add Lighting Component File"><span class="sprite-img add_ic"></span> Add Lighting Component File</a>
+</div>
+<div id="lightingComponentTemplateList" class="formDocTemplate">
+   
+    <form class="form-block formDocTemplate" style="margin-top:10px;">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionLightingComponent" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionLightingComponent" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Lighting Component Name:</label>
+                <input type="text" id="txtLightingComponentTemplateName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearchLightingComponentTemplate').click()">
+            </div>
+        </div>
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearchLightingComponentTemplate" value="Search" class="primary search_ic" onclick="SearchLightingComponentTemplate();">
+            <div class="default btn icon-btn" onclick="ResetLightingComponentTemplate();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnResetLightingComponentTemplate" value="Reset" class="">
+            </div>
+        </div>
+    </form>
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+        <a href="#" onclick="DeleteLightingComponentTemplate()" class="primary pull-right" title="Delete Lighting Component Template">Delete Lighting Component Template</a>
+    </div>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="table-responsive">
+                <table id="datatableLightingComponentTemplate" class="table table-hover" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="background-image:none !important;"><input type="checkbox" id="chkAllLightingComponentTemplate" name="select_all"></th>
+                            <th><span>@Html.DisplayName("Lighting Component Name")</span></th>
+                            <th class="action"><span>@Html.DisplayName("Action")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+  
+</div>
+
+<div class="modal fade popupTemplateName" tabindex="-1" role="dialog" id="popupAddLightingComponentTemplate">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Template</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <form id="addLightingComponentTemplateForm">
+
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionAddLightingComponentTemplateTemplate" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+
+                        <div class="form-box">
+                            @Html.HiddenFor(m => m.SolarCompanyId)
+                            @Html.HiddenFor(m=>m.VEECLightingComponentId)
+                            <div class="clearfix">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.LightingComponentName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.LightingComponentName, new { @class = "form-control", @maxlength = "100" })
+                                    @Html.ValidationMessageFor(m => m.LightingComponentName)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top:0px !important;">
+                            <button type="button" class="btn primary save_ic icon-btn" onclick="addLightingComponentTemplate()"><span class="sprite-img save_ic"></span>Save</button>
+                            <button type="button" class="btn default cancel_ic" onclick="clearLightingComponentTemplate()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+
+<script>
+    
+    $(document).ready(function(){
+        $("#addLightingComponentTemplate").click(function(){
+            $("#VEECLightingComponentId").val('');
+            $("#LightingComponentName").val('')
+            $("#popupAddLightingComponentTemplate").modal({ backdrop: 'static', keyboard: false });
+        });
+    });
+    $('#datatableLightingComponentTemplate').DataTable({
+        iDisplayLength: 10,
+        lengthMenu:@ProjectConfiguration.GetPageSize,
+        language: {
+            sLengthMenu: "Page Size: _MENU_"
+        },
+        columns: [
+            { 'data': 'Id',
+                "orderable": false,
+                "render": function (data, type, full, meta) {
+                        if(full.SolarCompanyId == null)
+                        {
+                            if(@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3)
+                            {
+                                return '<input type="checkbox" id='+full.Id+'  >';
+                            }
+                            else
+                            {
+                                return '<input type="checkbox" id='+full.Id+' disabled=disabled>';
+                            }
+                        }
+                        else
+                        {
+                            return '<input type="checkbox" id='+full.Id+'  >';
+                        }
+                    }
+            },
+            { 
+                'data': 'LightingComponentName' ,
+              "orderable": true,
+              "render": function (data, type, full, meta) {
+                  if(full.LightingComponentName!=null){
+
+                      var editHref ="javascript:editLightingComponentTemplate('" + full.Id + "','"+full.LightingComponentName+"')";
+
+                        if(full.SolarCompanyId == null)
+                        {
+                            if(@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3)
+                            {
+                                return '<a href="#" onclick="'+editHref+'" style="text-decoration:none;">'+full.LightingComponentName+'</a>'
+                            }
+                            else
+                            {
+                                return '<a href="#" style="text-decoration:none;">'+full.LightingComponentName+'</a>'
+                            }
+                        }
+                        else
+                        {
+                            return '<a href="#" onclick="'+editHref+'" style="text-decoration:none;">'+full.LightingComponentName+'</a>'
+                        }
+                    }
+                    else{
+                        return '';
+                    }
+                },
+            },
+            {
+                'data': 'Id',
+                "render": function (data, type, full, meta) {
+                    var editHref ="javascript:OpenLightingComponent('" + full.Id + "')";
+                    var imgedit = 'background:url(../Images/edit-icon.png) no-repeat center; text-decoration:none;';
+                    var returnHTML =  '<a href="' + editHref + '" class="action edit" style="' + imgedit + '" title="Edit">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                    return returnHTML;
+                },
+                "orderable": false
+            }
+        ],
+        dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+        initComplete: function (settings, json) {
+            $('.grid-bottom span:first').attr('id', 'spanMain');
+            $("#spanMain span").html("");
+            $(".ellipsis").html("...");
+        },
+        bServerSide: true,
+        sAjaxSource: '@Url.Action("GetLightingComponentTemplateList", "VEECLightingComponent")',
+
+        "fnDrawCallback": function () {
+            chkCount=0;
+            $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+            $(".paging a.previous").html("&nbsp");
+            $(".paging a.next").html("&nbsp");
+            $('.grid-bottom span:first').attr('id', 'spanMain');
+            $("#spanMain span").html("");
+            $(".ellipsis").html("...");
+
+            if ($(".paging").find("span").length > 1) {
+                $("#datatable_length").show();
+            } else if ($("#datatableLightingComponentTemplate").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+            //--------To show display records from total records-------------------
+            var table = $('#datatableLightingComponentTemplate').DataTable();
+            var info = table.page.info();
+
+            if(info.recordsTotal==0){
+                document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> Document Template found';
+            }
+            else{
+                document.getElementById("numRecords").innerHTML = '<b>' + $('#datatableLightingComponentTemplate >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> Document Template found';
+            }
+            //------------------------------------------------------------------------------------------------------------------------------
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+        },
+        "fnServerParams": function (aoData) {
+            aoData.push({ "name": "solarCompanyIds", "value": $("#VEECLightingComponent_SolarCompanyId").val() });
+            aoData.push({ "name": "lightingComponentName", "value": $("#txtLightingComponentTemplateName").val() });
+        }
+    });
+    var tableDocTemplate = $('#datatableLightingComponentTemplate').DataTable();
+    function ResetLightingComponentTemplate(){
+        $("txtLightingComponentTemplateName").val('');
+        $('#datatableLightingComponentTemplate').dataTable().fnDraw();
+    }
+
+    function clearLightingComponentTemplate(){
+        $("#LightingComponentName").val('');
+    }
+
+    function addLightingComponentTemplate(){
+        if ($("#addLightingComponentTemplateForm").valid()) {
+
+            //Checking whether FormData is available in browser
+            if (window.FormData !== undefined) {
+
+                var veecLightingComponentId = $('#VEECLightingComponentId').val(),
+                veecLightingComponentName = $('#LightingComponentName').val();
+                $.ajax({
+                    url: '@Url.Action("SaveLightingComponentTemplate", "VEECLightingComponent")' +
+                        '?veecLightingComponentId=' + veecLightingComponentId +'&veecLightingComponentName=' + veecLightingComponentName ,
+                    type: "POST",
+                    contentType: false, // Not to set any content header
+                    success: function (response) {
+                        if (response.id) {
+                            $('#popupAddLightingComponentTemplate').modal('toggle');
+                            $("#datatableLightingComponentTemplate").dataTable().fnDraw();
+                            if($("#VEECLightingComponentId").val() == response.id)
+                                showSuccessMessageForLightingComponent("Document Template has been updated successfully.");
+                            else
+                                showSuccessMessageForLightingComponent("Document Template has been added successfully.");
+
+                            IsDocTemplateChange = false;
+                        }
+                        else {
+                            showErrorMessageForLightingComponent("Document Template has not been added.");
+                        }
+                    },
+                    error: function () {
+                        if($("#VEECLightingComponentId").val() > 0)
+                            showErrorMessageForLightingComponent("Document Template has not been updated.");
+                        else
+                            showErrorMessageForLightingComponent("Document Template has not been added.");
+                    }
+                });
+            }
+        }
+        else {
+            alert("FormData is not supported.");
+        }
+    }
+
+    function editLightingComponentTemplate(id,name){
+        $("#popupAddLightingComponentTemplate").modal({ backdrop: 'static', keyboard: false });
+        $("#LightingComponentName").val(name)
+        $("#VEECLightingComponentId").val(id);
+    }
+
+    function DeleteLightingComponentTemplate(){
+        var selectedRows=[];
+        $('#datatableLightingComponentTemplate tbody input[type="checkbox"]').each(function(){
+            if($(this).prop('checked')==true){
+                selectedRows.push($(this).attr('id'));
+            }
+        })
+        if(selectedRows!=null && selectedRows.length>0){
+            if (confirm('Are you sure you want to delete this record ?')) {
+                $.ajax(
+                   {
+                       url: '@Url.Action("DeleteLightingComponent", "VEECLightingComponent")',
+                       dataType: 'json',
+                       contentType: 'application/json; charset=utf-8',
+                       type: 'get',
+                       //data: { id: templateId},
+                       data: {deleteLightingComponentIds: JSON.stringify(selectedRows)},
+                       success: function (response) {
+                           if (response.status) {
+                               showSuccessMessageForLightingComponent("CheckList template has been deleted successfully.");
+                               $("#chkAll").prop('checked',false);
+                               $("#datatableLightingComponentTemplate").dataTable().fnDraw();
+                           }
+                           else{
+                               showErrorMessageForLightingComponent("CheckList template has not been deleted.")
+                           }
+                       },
+                       error: function () {
+                           showErrorMessage("CheckList template has not been deleted.");
+                       }
+                   });
+            }
+            else
+            {
+                if(selectedRows==null || selectedRows.length == 0)
+                    alert('Please select any check list template to remove.');
+            }
+        };
+    }
+    function showSuccessMessageForLightingComponent(message){
+        $(".alert").hide();
+        $("#errorMsgRegionLightingComponent").hide();
+        $("#successMsgRegionLightingComponent").html(closeButton + message);
+        $("#successMsgRegionLightingComponent").show();
+    }
+    function showErrorMessageForLightingComponent(message){
+        $(".alert").hide();
+        $("#successMsgRegionLightingComponent").hide();
+        $("#errorMsgRegionLightingComponent").html(closeButton + message);
+        $("#errorMsgRegionLightingComponent").show();
+    }
+
+    function ResetLightingComponentTemplate(){
+        $("#txtLightingComponentTemplateName").val('')
+    }
+
+    function OpenLightingComponent(id){
+        window.open('@Url.Action("OpenLightingComponent", "VEECLightingComponent")?id='+ id, '_blank');
+    }
+
+    function SearchLightingComponentTemplate(){
+        $("#datatableLightingComponentTemplate").dataTable().fnDraw();
+    }
+</script>

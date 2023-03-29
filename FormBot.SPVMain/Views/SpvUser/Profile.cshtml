@@ -1,0 +1,783 @@
+﻿@model FormBot.Entity.SpvUser
+@using FormBot.Entity;
+@using FormBot.Helper.Helper;
+@using FormBot.Helper;
+@using FormBot.SPVMain.Infrastructure;
+@{
+    /**/
+
+    ViewBag.Title = "Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@using (Html.BeginForm("Profile", "SpvUser", FormMethod.Post, new { id = "SpvUserDetails", enctype = "multipart/form-data" }))
+{
+    @Html.ValidationSummary(true)
+    <div class="container-fluid">
+        <h1 class="title">My Profile</h1>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @Html.HiddenFor(m => m.AspNetUserId)
+        @Html.HiddenFor(m => m.SpvUserId)
+        @Html.HiddenFor(m => m.SpvRoleId)
+        @Html.HiddenFor(m => m.SpvUserTypeId)
+
+        <div id="horizontalTab">
+            <ul class="resp-tabs-list">
+                <li id="t1" @if (Common.IsExistsInArray(new int[] { 2, 4 }, Model.SpvUserTypeId)) { <text> style='display:none;' </text> }>Personal Details</li>
+                <li id="t2" class="RA SCA SSC SE SC" @if (Common.IsExistsInArray(new int[] { 2, 4 }, Model.SpvUserTypeId)) { <text> style='display:none;' </text> }>Address Details</li>
+
+            </ul>
+            <div class="resp-tabs-container">
+
+                <div class="tab1">
+                    <!--Tab1 start here-->
+                    <div class="form-box">
+
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.FirstName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                                    @Html.ValidationMessageFor(m => m.FirstName)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.LastName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                                    @Html.ValidationMessageFor(m => m.LastName)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Email, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 3 })
+                                    @Html.ValidationMessageFor(m => m.Email)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Phone, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", @maxlength = 20, @tabindex = 4, onkeypress = "return isNumber(event);" })
+                                    @Html.ValidationMessageFor(m => m.Phone)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Mobile, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", @maxlength = 20, @tabindex = 5, onkeypress = "return isNumber(event);" })
+                                </div>
+                            </div>
+
+                            @*@if (((Model.UserId > 0 || Model.UserId == 0) && (Model.UserTypeID != 4 || Model.UserTypeID != 7)))
+                                {*@
+                            @if (ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "profile" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "myprofile" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "edit" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "create" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "view" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "viewdetail")
+                            {
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.UserName, new { @class = "control-label required", @id = "lblUserName" })
+                                        @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", @maxlength = 256, @tabindex = 6, @id = "UserName", @onblur = "checkExist(this,'user name')" })
+                                        @Html.ValidationMessageFor(m => m.UserName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Password, new { @class = "control-label required", @id = "lblPassword" })
+                                        @Html.PasswordFor(m => m.Password, new { id = "Password", @class = "form-control", @maxlength = 50, @tabindex = 7 })
+                                        @Html.ValidationMessageFor(m => m.Password)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-3 defaultFormBot ViewPassword chkActive viewDetail">
+                                    <div class="form-group">
+                                        <span class="control-label">Is Active</span>
+                                        <div class="checkbox-box">
+                                            @Html.CheckBoxFor(m => m.IsActive, new { @tabindex = 8 })
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="defaultFormBot ViewPassword chkActive viewDetail">
+                                    <div class="clearfix visible-lg-block"></div>
+                                </div>
+                            }
+
+
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3 ThemeProfileRA" style="display:none">
+                                <div class="form-group">
+                                    <label class="control-label">Theme:</label>
+                                    <div class="theme-colors">
+                                        <button id="green" onclick="changeTheme('green','1')" class="btn green btn-circle active" type="button" tabindex="9">&nbsp;</button>
+                                        <button id="blue" onclick="changeTheme('blue','2')" class="btn blue btn-circle" type="button" tabindex="10">&nbsp;</button>
+                                        <button id="pink" onclick="changeTheme('pink','3')" class="btn pink btn-circle" type="button" tabindex="11">&nbsp;</button>
+                                        <button id="skyblue" onclick="changeTheme('skyblue','4')" class="btn skyblue btn-circle" type="button" tabindex="12">&nbsp;</button>
+                                        <button id="yellow" onclick="changeTheme('yellow','5')" class="btn yellow btn-circle" type="button" tabindex="13">&nbsp;</button>
+                                        <button id="black" onclick="changeTheme('black','6')" class="btn black btn-circle" type="button" tabindex="14">&nbsp;</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="tab_bottomrow">
+
+                            <div class="RA SCA SSC SE SC" @if (Common.IsExistsInArray(new int[] { 2, 4 }, Model.SpvUserTypeId)) { <text> style='display:none;' </text> }>
+                                <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t2').click() : false;">Next</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab2" style='display:none;'>
+                    <!--Tab1 start here-->
+                    <div class="form-box">
+
+                        <div class="row">
+
+
+                            <div class="col-sm-6 col-md-3 ">
+                                <div>
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.AddressId, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", id = "AddressId" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-3" id="manufacturernametxtbox">
+                                <div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.ManufacturerName, new { @class = "control-label", @id = "lblManufacturerName" })
+                                        @Html.TextBoxFor(m => m.ManufacturerName, new { id = "ManufacturerName", @class = "form-control", @tabindex = 28 })
+                                        @Html.ValidationMessageFor(m => m.ManufacturerName)
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row DPA">
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.UnitTypeID, new { @class = "control-label", @id = "lblUnitTypeID" })
+                                    @Html.DropDownListFor(model => model.UnitTypeID, new List<SelectListItem>(), new { id = "UnitTypeId", @class = "form-control", @tabindex = 27 })
+                                    @Html.ValidationMessageFor(m => m.UnitTypeID)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.UnitNumber, new { @class = "control-label", @id = "lblUnitNumber" })
+                                    @Html.TextBoxFor(m => m.UnitNumber, new { id = "UnitNumber", @class = "form-control", @maxlength = 20, @tabindex = 28 })
+                                    @Html.ValidationMessageFor(m => m.UnitNumber)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.StreetNumber, new { @class = "control-label required", @id = "lblStreetNumber" })
+                                    @Html.TextBoxFor(m => m.StreetNumber, new { id = "StreetNumber", @class = "form-control", @maxlength = 20, @tabindex = 29 })
+                                    @Html.ValidationMessageFor(m => m.StreetNumber)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.StreetName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.StreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 30 })
+                                    @Html.ValidationMessageFor(m => m.StreetName)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row PDA">
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.PostalAddressID, new { @class = "control-label required" })
+                                    @Html.DropDownListFor(m => m.PostalAddressID, new List<SelectListItem>(), new { id = "PostalAddressID", @class = "form-control hdnPostalAddressID", @tabindex = 31 })
+                                    @Html.ValidationMessageFor(m => m.PostalAddressID)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 POID">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.PostalDeliveryNumber, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.PostalDeliveryNumber, new { id = "PostalDeliveryNumber", @class = "form-control", @maxlength = 50, @tabindex = 32 })
+                                    @Html.ValidationMessageFor(m => m.PostalDeliveryNumber)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="DPA">
+                                <div class="col-sm-3 POID">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.StreetTypeID, new List<SelectListItem>(), new { id = "StreetTypeId", @class = "form-control", @tabindex = 33 })
+                                        @Html.ValidationMessageFor(m => m.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3 ">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Town, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 34, id = "txtTown" })
+                                    @Html.ValidationMessageFor(m => m.Town)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 ">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.State, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.State, new { @class = "form-control", @maxlength = 20, @tabindex = 35, id = "txtState", @readonly = "readonly" })
+                                    @Html.ValidationMessageFor(m => m.State)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 ">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.PostCode, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 36, id = "txtPostCode" })
+                                    @Html.ValidationMessageFor(m => m.PostCode)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab_bottomrow">
+                            <div class="ProfileSCO">
+
+                                <a href="javascript:void(0)" tabindex="52" class="prev_btn default SCO SCOPro" style="padding-top:0px" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+
+                                <div class="btn primary icon-btn ViewPassword ViewBtn SignUp">
+                                    <span class="sprite-img save_ic"></span>
+                                    <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="54" onclick="return SaveUser();">
+                                </div>
+
+
+                                @*<input type="button" value="Cancel" id="btnCancelLast" class="default ViewPassword cancel_ic ViewBtn tab7btn SCA SSC SE SWH SCO" tabindex="55" onclick="DeleteDocumentFolderOnCancel()">*@
+                                @*<input type="button" value="Cancel" id="btnCancelLast" class="default ViewPassword cancel_ic ViewBtn tab7btn WS" tabindex="55" onclick="DeleteDocumentFolderOnCancel()">*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+<script src="~/Scripts/User/CommonRulesForUser.js"></script>
+<script src="~/Scripts/FormbotSpv.js"></script>
+
+<script type="text/javascript">
+    var activeTab = 't1';
+    var chkUserName = true;
+    var URLJobData = "/SpvUser/GetDataForStreetTypeUnitTypeDropdown";
+  //  var SpvUserTypeIdValue = $('#SpvUserTypeId').val();
+
+    function CheckShowMessages() {
+        var isResponse = true;
+        isResponse = showErrorMessages(chkUserName, "User with same user name already exists. Please try with different user name.");
+        return isResponse;
+    }
+    $('.resp-tabs-list li').click(function (e, c) {
+        var $this = $(this);
+        if ('@Model.SpvUserId' != 0) {
+            var SpvUserTypeIdValue = $('#SpvUserTypeId').val();
+            $("#Password").rules("add", {
+                required: false,
+
+            });
+            $('#lblPassword').removeClass("required");
+            if (SpvUserTypeIdValue == '3')
+                $('#manufacturernametxtbox').show();
+        }
+        isValid = $("#SpvUserDetails").valid();
+
+    });
+
+    $(document).ready(function () {
+        $('#manufacturernametxtbox').hide();
+        $('#horizontalTab').hide();
+        $('.DPA').show();
+        $('.PDA').hide();
+        $("#ManufacturerName").rules("add", {
+            required: false,
+        });
+        $('#lblPassword').removeClass("required");
+
+         addressID = @Model.AddressId;
+        POAddress(addressID);
+
+        var SpvUserTypeIdValue = $('#SpvUserTypeId').val();
+        if (SpvUserTypeIdValue == '2' || SpvUserTypeIdValue == '4' || SpvUserTypeIdValue == "") {
+            $('#horizontalTab').hide();
+        }
+        if (SpvUserTypeIdValue == '1' || SpvUserTypeIdValue == '3') {
+            $('#horizontalTab').show();
+        }
+        if (SpvUserTypeIdValue == '3')
+            $('#manufacturernametxtbox').show();
+        if (SpvUserTypeIdValue == '2' || SpvUserTypeIdValue == '4' || SpvUserTypeIdValue == '1' || SpvUserTypeIdValue == "")
+            $('#manufacturernametxtbox').hide();
+        
+        TownPostcodeAutoComplete($('#txtTown'), $('#txtState'), $('#txtPostCode'));
+        var dropDownData = [];
+            dropDownData.push(@*{ id: 'SolarCompanyId', value: '@Model.SolarCompanyId',key:"SolarCompany", hasSelect: true, callback: null, defaultText: null, proc: 'SolarCompany_BindDropDown', param: [], bText: 'CompanyName', bValue: 'SolarCompanyId' },*@
+                              { id: 'UnitTypeId', value: '@Model.UnitTypeID', key: "UnitType", hasSelect: true, callback: null, defaultText: null, proc: 'UnitType_BindDropdown', param: [], bText: 'UnitTypeName', bValue: 'UnitTypeID' },
+                              { id: 'StreetTypeId', value: '@Model.StreetTypeID', key: "StreetType", hasSelect: true, callback: null, defaultText: null, proc: 'StreetType_BindDropdown', param: [], bText: 'StreetTypeName', bValue: 'StreetTypeID' },
+                              { id: 'PostalAddressID', value: '@Model.PostalAddressID', key: "PostalAddress", hasSelect: true, callback: null, defaultText: null, proc: 'PostalAddress_BindDropdown', param: [], bText: 'PostalDeliveryType', bValue: 'PostalAddressID' });
+        dropDownData.bindDropdown();
+       // if ('@ProjectSession.UserTypeId' != '7') {
+            $('#horizontalTab').easyResponsiveTabs({
+                type: 'default', //Types: default, vertical, accordion
+                width: 'auto', //auto or any width like 600px
+                fit: true,   // 100% fit in a container
+                closed: 'accordion', // Start closed if in accordion view
+                activate: function (event) {
+                    // Callback function if tab is switched
+                    //addRules();
+                    addressValidation();
+                    var obj = [];
+                    $.each($("#FCOGroupId").parent().find('ul').find('li'), function (i, e) {
+                        if ($(this).attr("class") == "selected") {
+                            obj.push($(this).val());
+                        }
+                    });
+
+                    var $this = $(this);
+
+                    if ($("#FCOGroupId").is(":visible")) {
+                        if (isValid && obj.length > 0 && CheckShowMessages()) {
+                            //return  CheckShowMessages();
+                            $('#spanFCOGroup').hide();
+                            activeTab = $this.attr('id');
+                            $('.form-box').find('input:first').focus();
+                        }
+                        else {
+                            // e.preventDefault();
+                            $this.removeClass('resp-tab-active');
+                            $('.resp-tab-content-active').css('display', 'none').removeClass('resp-tab-content-active');
+                            $('#' + activeTab).addClass('resp-tab-active');
+                            $('.tab' + activeTab.replace('t', '')).addClass('resp-tab-content-active').css('display', 'block');
+                            if (obj.length > 0) {
+                                $('#spanFCOGroup').hide();
+                            }
+                            else {
+                                $('#spanFCOGroup').show();
+                            }
+                            CheckShowMessages();
+                            return false;
+                        }
+                    }
+                    else {
+                        if (isValid && CheckShowMessages()) {
+                            //return  CheckShowMessages();
+                            activeTab = $this.attr('id');
+                            $('.form-box').find('input:first').focus();
+                        }
+                        else {
+                            // e.preventDefault();
+                            $this.removeClass('resp-tab-active');
+                            $('.resp-tab-content-active').css('display', 'none').removeClass('resp-tab-content-active');
+                            $('#' + activeTab).addClass('resp-tab-active');
+                            $('.tab' + activeTab.replace('t', '')).addClass('resp-tab-content-active').css('display', 'block');
+                            CheckShowMessages();
+
+                            return false;
+                        }
+                    }
+                }
+            });
+       // }
+
+    });
+    function addressValidation() {
+        if ('@Model.SpvUserId' != 0) {
+            $("#Password").rules("add", {
+                required: false
+
+            });
+        }
+        $("#UnitTypeId").rules("add", {
+            required: false,
+        });
+        $("#UnitNumber").rules("add", {
+            required: false,
+        });
+        if ($("#UnitTypeId").val() == "" && $("#UnitNumber").val() == "") {
+            $('#lblUnitNumber').removeClass("required");
+            $('#lblUnitTypeID').removeClass("required");
+            $("#UnitNumber").rules("add", {
+                required: false,
+            });
+            $("#UnitTypeId").rules("add", {
+                required: false,
+            });
+            $("#UnitNumber").next("span").attr('class', 'field-validation-valid');
+            $('#lblStreetNumber').addClass("required");
+            $("#StreetNumber").rules("add", {
+                required: true,
+                messages: {
+                    required: "Street Number is required."
+                }
+            });
+        }
+
+        if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() != "") {
+            $('#lblStreetNumber').removeClass("required");
+            $("#StreetNumber").rules("add", {
+                required: false,
+            });
+            $('#lblUnitNumber').removeClass("required");
+            $('#lblUnitTypeID').removeClass("required");
+            $("#UnitNumber").rules("add", {
+                required: false,
+            });
+            $("#UnitTypeId").rules("add", {
+                required: false,
+            });
+        }
+
+        if ($("#UnitTypeId").val() > 0 && $("#UnitNumber").val() == "") {
+            $("#UnitNumber").rules("add", {
+                required: true,
+                messages: {
+                    required: "Unit Number is required."
+                }
+            });
+            $('#lblUnitNumber').addClass("required");
+            $('#lblStreetNumber').removeClass("required");
+            $("#StreetNumber").rules("add", {
+                required: false,
+            });
+        }
+        if ($("#UnitTypeId").val() == "" && $("#UnitNumber").val() != "") {
+            $('#lblUnitNumber').removeClass("required");
+            $('#lblUnitTypeID').removeClass("required");
+            $("#UnitNumber").rules("add", {
+                required: false,
+            });
+            $("#UnitTypeId").rules("add", {
+                required: false,
+            });
+            $('#lblStreetNumber').addClass("required");
+            $("#StreetNumber").rules("add", {
+                required: true,
+                messages: {
+                    required: "Street Number is required."
+                }
+            });
+        }
+
+        if ($('#IsWholeSaler').is(":checked") && $('#UserTypeId').val() == 2) {
+
+            $("#WholesalerUnitTypeID").rules("add", {
+                required: false,
+            });
+            $("#WholesalerUnitNumber").rules("add", {
+                required: false,
+            });
+            if ($("#WholesalerUnitTypeID").val() == "" && $("#WholesalerUnitNumber").val().length == 0) {
+                $('#lblWholesalerUnitNumber').removeClass("required");
+                $('#lblWholesalerUnitTypeID').removeClass("required");
+                $("#WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+                $("#WholesalerUnitNumber").next("span").attr('class', 'field-validation-valid');
+                $('#lblWholesalerStreetNumber').addClass("required");
+                $("#WholesalerStreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+
+            if ($("#WholesalerUnitTypeID").val() > 0 && $("#WholesalerUnitNumber").val().length != 0) {
+                $('#lblWholesalerStreetNumber').removeClass("required");
+                $("#WholesalerStreetNumber").rules("add", {
+                    required: false,
+                });
+                $('#lblWholesalerUnitNumber').removeClass("required");
+                $('#lblWholesalerUnitTypeID').removeClass("required");
+                $("#WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#WholesalerUnitTypeID").val() > 0 && $("#WholesalerUnitNumber").val().length == 0) {
+                $("#WholesalerUnitNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Unit Number is required."
+                    }
+                });
+                $('#lblWholesalerUnitNumber').addClass("required");
+                $('#lblWholesalerStreetNumber').removeClass("required");
+                $("#WholesalerStreetNumber").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#WholesalerUnitTypeID").val() == "" && $("#WholesalerUnitNumber").val().length != 0) {
+                $('#lblWholesalerUnitNumber').removeClass("required");
+                $('#lblWholesalerUnitTypeID').removeClass("required");
+                $("#WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+                $('#lblWholesalerStreetNumber').addClass("required");
+                $("#WholesalerStreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+        }
+    }
+    function validateForm() {
+      if ('@Model.SpvUserId' != 0) {
+            $("#Password").rules("add", {
+                required: false
+
+            });
+        }
+            //addRules();
+
+            if ($("#UserTypeId").val() == 4) {
+                $("#RAMId").val($("#hdnRAMID").val());
+            }
+
+            addressValidation();
+            var obj = [];
+        $.validator.unobtrusive.parse("#SpvUserDetails");
+
+            $.each($("#FCOGroupId").parent().find('ul').find('li'), function (i, e) {
+                if ($(this).attr("class") == "selected") {
+                    obj.push($(this).val());
+                }
+            });
+
+            if ($("#FCOGroupId").is(":visible")) {
+                if ($("#SpvUserDetails").valid()) {
+                    if (obj.length > 0) {
+                        $('#spanFCOGroup').hide();
+
+                        // return true;
+                    }
+                    else {
+                        $('#spanFCOGroup').show();
+
+                        return false;
+                    }
+                }
+                else {
+                    if (obj.length > 0) {
+                        $('#spanFCOGroup').hide();
+
+                    }
+                    else {
+                        $('#spanFCOGroup').show();
+
+                    }
+
+                    return false;
+                }
+            }
+            else {
+                if ($("#SpvUserDetails").valid() ) {
+                    return true;
+                }
+                else {
+
+                    return false;
+                }
+            }
+    }
+      function TownPostcodeAutoComplete(objTown, objState, objPostCode) {
+            objTown.autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest", "SpvUser")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            console.log(data1);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.location,
+                                        state: item.state,
+                                        postcode: item.postcode
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    objState.val(ui.item.state);
+                    objPostCode.val(ui.item.postcode);
+                }
+            });
+
+            objPostCode.autocomplete({
+                minLength: 3,
+                source: function (request, response) {
+                    $.ajax({
+                        type: 'GET',
+                        url: '@Url.Action("ProcessRequest", "SpvUser")',
+                        dataType: 'json',
+                        data: {
+                            excludePostBoxFlag: true,
+                            q: request.term
+                        },
+                        success: function (data) {
+                            var data1 = JSON.parse(data);
+                            if (data1.localities.locality instanceof Array)
+                                response($.map(data1.localities.locality, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                            else
+                                response($.map(data1.localities, function (item) {
+                                    return {
+                                        label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                        value: item.postcode,
+                                        state: item.state,
+                                        location: item.location
+                                    }
+                                }));
+                        }
+                    })
+                },
+                select: function (event, ui) {
+                    objState.val(ui.item.state);
+                    objTown.val(ui.item.location);
+                }
+            });
+    }
+    function SaveUser() {
+        addressValidation();
+        if ('@Model.SpvUserId' != 0) {
+            $("#Password").rules("add", {
+                required: false
+
+            });
+        }
+        var SpvUserTypeIdValue = $('#SpvUserTypeId').val();
+        if (SpvUserTypeIdValue == '3') {
+           $('#manufacturernametxtbox').show();
+            $('#ManufacturerName').attr('class', 'form-control valid');
+            if ($("#ManufacturerName").val() == "") {
+                $("#ManufacturerName").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Manufacturer name is required."
+                    }
+                });
+            }
+        }
+        else {
+            $("#ManufacturerName").rules("add", {
+                required: false,
+
+            });
+        }
+        var myform = $('#SpvUserDetails');
+        var disabled = myform.find(':input:disabled').removeAttr('disabled');
+
+
+        var serialized = myform.serialize();
+
+
+
+        var data = JSON.stringify($('#SpvUserDetails').serializeToJson());
+        disabled.attr('disabled', 'disabled');
+        data = JSON.parse(data);
+
+
+            isValid = $("#SpvUserDetails").valid();
+            if (isValid) {
+
+                $.ajax({
+                    url: '@Url.Action("Profile", "SpvUser")',
+                    type: "POST",
+                    dataType: "json",
+                    data:JSON.stringify(data),
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8s',
+                    success: function (result) {
+                        if (result == "true") {
+                            $("#t1").click();
+                            $("#errorMsgRegion").removeClass("alert-danger");
+                            $("#errorMsgRegion").addClass("alert-success");
+                            $("#errorMsgRegion").html(closeButton + "User profile details has been saved successfully.");
+                            $("#errorMsgRegion").show();
+                        }
+                        else {
+                            $("#errorMsgRegion").removeClass("alert-success");
+                            $("#errorMsgRegion").addClass("alert-danger");
+                            $("#errorMsgRegion").html(closeButton + result);
+                            $("#errorMsgRegion").show();
+                        }
+                    }
+                });
+                return false;
+            } else {
+                return false;
+            }
+    }
+    $("#AddressId").change(function () {
+        var addressId = $('#AddressId option:selected').val();
+        POAddress(addressId);
+    });
+    function POAddress(addressId) {
+
+        $(".POID").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+        if (addressId == 1) {
+            $('.DPA').show();
+            $('.PDA').hide();
+            $('#PostalAddressID').attr('class', 'form-control valid');
+            $('#PostalDeliveryNumber').attr('class', 'form-control valid');
+        }
+        else {
+            $('.DPA').hide();
+            $('.PDA').show();
+            $('#UnitTypeId').attr('class', 'form-control valid');
+            $('#UnitNumber').attr('class', 'form-control valid');
+            $('#StreetNumber').attr('class', 'form-control valid');
+            $('#StreetTypeId').attr('class', 'form-control valid');
+            $('#StreetName').attr('class', 'form-control valid');
+        }
+    }
+</script>
+

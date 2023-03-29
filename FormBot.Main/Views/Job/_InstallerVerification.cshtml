@@ -1,0 +1,112 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@using (Html.BeginForm("_InstallerVerification", "Job", FormMethod.Post, new { id = "CreateJob", enctype = "multipart/form-data" }))
+{
+    @Html.HiddenFor(m => m.BasicDetails.JobID)
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.Type, new { id = "hdnType" });
+    var jobtype = @Model.Type;
+    <div class="container-fluid">
+        <div class="title">
+            <div class="row">
+                <h1>Installer verification</h1>
+            </div>
+        </div>
+        <div class="container-fluid faq-block fix-width" style="max-width: 600px !important">
+
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(m => m.InstallerView.LastName, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.InstallerView.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 1 })
+                @Html.ValidationMessageFor(m => m.InstallerView.LastName)
+            </div>
+
+            @if (jobtype == "1")
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.InstallerView.CECAccreditationNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.InstallerView.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 2 })
+                    @Html.ValidationMessageFor(m => m.InstallerView.CECAccreditationNumber)
+                </div>
+            }
+            @if (jobtype == "2")
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.InstallerView.SWHLicenseNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.InstallerView.SWHLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 2 })
+                    @Html.ValidationMessageFor(m => m.InstallerView.SWHLicenseNumber)
+                </div>
+            }
+
+            <div class="form-group">
+                <input type="button" value="verify" class="login-btn primary" tabindex="3" id="btnVerify">
+            </div>
+
+        </div>
+    </div>
+}
+
+@section Scripts
+    {
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+       var themeId = '@(ViewData.ContainsKey("theme") ? ViewData["theme"] : "green")';
+            $('body').attr('id', themeId);
+
+
+    });
+
+    $("#btnVerify").click(function () {
+        var installerlastName = escape($("#InstallerView_LastName").val());
+        var installerCECNum = $("#InstallerView_CECAccreditationNumber").val();
+        var JobId = $("#BasicDetails_JobID").val();
+        var id = $("#Id").val();
+        var installerLicenceNum = $("#InstallerView_SWHLicenseNumber").val();
+        var JobTypeNew = $("#hdnType").val();
+        var url;
+
+        if ($("#CreateJob").valid() && JobId > 0) {
+            if (JobTypeNew == 2) {
+                url = '@Url.Action("_InstallerVerification", "Job")?installerlastName=' + installerlastName + '&Jobid=' + JobId + '&installerCECNum=' + null + '&installerLicenceNum=' + installerLicenceNum;
+            }
+            else {
+                url = '@Url.Action("_InstallerVerification", "Job")?installerlastName=' + installerlastName + '&Jobid=' + JobId + '&installerCECNum=' + installerCECNum + '&installerLicenceNum=' + null;
+            }
+            $.ajax(
+                      {
+                          url: url,
+                          contentType: 'application/json',
+                          method: 'post',
+                          success: function (data) {
+                              if (data == true) {
+                                  @*window.location.href = '@Url.Action("_InstallerSignature", "Job")?Id=' + id + '&Type=@Model.Type';*@
+                                   window.location.href = '@Url.Action("_InstallerSignature", "Job")?Id=' + id + '&Type=@Model.Type' + '&SMSOrMail=@Model.SMSOrMail' ;
+                              }
+                              else {
+                                  $("#errorMsgRegion").html(closeButton + "Please verify inserted installer details.");
+                                  $("#errorMsgRegion").show();
+                                  $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                  $('body').animate({ scrollTop: 0 }, 'slow');
+                              }
+                          },
+                      });
+        }
+    });
+
+    </script>
+}

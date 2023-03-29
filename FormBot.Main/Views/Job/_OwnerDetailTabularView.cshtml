@@ -1,0 +1,342 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@{
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+}
+
+<script type="text/javascript">
+    //Owner Detail
+    var modelOwnerSign = '@Model.BasicDetails.OwnerSignature';
+    var modelOwnerSignURL = '@Model.BasicDetails.OwnerSignature.Replace("\\", "/")' + "?" + new Date().getTime();
+    var modelOwnerPostalAddressID = '@Model.JobOwnerDetails.PostalAddressID';
+    var modelOwnerUnitTypeID = '@Model.JobOwnerDetails.UnitTypeID';
+    var modelOwnerStreetTypeID = '@Model.JobOwnerDetails.StreetTypeID';
+    var modelOwnerAddressID = '@Model.JobOwnerDetails.AddressID';
+    var modelOwnerCompanyName = '@Model.JobOwnerDetails.CompanyName';
+    var modelOwnerCompanyABN = '@Model.JobOwnerDetails.CompanyABN';
+    var modelOwnerStreetName = '@Model.JobOwnerDetails.StreetName';
+    var modelOwnerStreetNumber = '@Model.JobOwnerDetails.StreetNumber';
+    var modelOwnerTown = '@Model.JobOwnerDetails.Town';
+     var modelOwnerState = '@Model.JobOwnerDetails.State';
+    var modelOwnerPostCode = '@Model.JobOwnerDetails.PostCode';
+    var loginLink = "@FormBot.Helper.ProjectSession.LoginLink";
+    var actionMailForCollectSignature = '@Url.Action("MailForCollectSignature", "Job")';
+    var URLJobData = '@ProjectSession.LoginLink' + "Job/GetData";
+    var jobOwd_IsOwnerAddressValid = '@Model.JobOwnerDetails.IsOwnerAddressValid';
+    var urlGetCompanyABN = '@Url.Action("GetCompanyABN", "User")';
+    var signatureURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var actionProcessRequest = '@Url.Action("ProcessRequest","User")';
+    var showhistoryUrl = '@Url.Action("ShowFilteredJobHistory","Job")';
+    var urlUploadJobSignature = '@Url.Action("UploadJobSignature", "Job")';
+    var id = '@Model.Id';
+    var modelJobId = '@Model.JobID';
+
+    var modelIsOwnerRegisteredWithGST = '@Model.JobOwnerDetails.IsOwnerRegisteredWithGST.ToString().ToLower()';
+    var Model_JobId = @Model.JobID;
+    JobOwnerDetails_OwnerType_Glbl = '@Model.JobOwnerDetails.OwnerType';
+    var Model_OwnerSignature_Replace = '@Model.OwnerSignature.Replace("\\", "/")';
+    var GetSignatureFromVisitURL = '@Url.Action("GetSignatureFromVisit", "Job")';
+    var ProjectSession_UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var InstallerView_Mobile_Glbl = '@Model.InstallerView.Mobile',
+        InstallerView_FirstName_Glbl = '@Model.InstallerView.FirstName',
+        InstallerView_LastName_Glbl = '@Model.InstallerView.LastName',
+        InstallerView_Email_Glbl = '@Model.InstallerView.Email',
+        DesignerView_Mobile_Glbl = '@Model.DesignerView.Mobile',
+        DesignerView_FirstName_Glbl = '@Model.DesignerView.FirstName',
+        DesignerView_LastName_Glbl = '@Model.DesignerView.LastName',
+        DesignerView_Email_Glbl = '@Model.DesignerView.Email',
+        JobElectricians_Mobile_Glbl = '@Model.JobElectricians.Mobile',
+        JobElectricians_FirstName_Glbl = '@Model.JobElectricians.FirstName',
+        JobElectricians_LastName_Glbl = '@Model.JobElectricians.LastName',
+        JobElectricians_Email_Glbl = '@Model.JobElectricians.Email';
+    @*var JobInstallationDetails_PropertyType = '';
+    if ($("#JobInstallationDetails_PropertyType").val() != undefined && $("#JobInstallationDetails_PropertyType").val() != '') {
+        JobInstallationDetails_PropertyType = $("#JobInstallationDetails_PropertyType").val();
+    }
+    else {
+        JobInstallationDetails_PropertyType = '@Model.JobInstallationDetails.PropertyType'.toLowerCase();
+    }*@
+
+
+</script>
+
+<style>
+    #dvOwnerSignatureView {
+        margin-top: -20px;
+    }
+
+    #dvOwnerSignatureActions {
+        margin-top: 10px;
+    }
+</style>
+
+@Scripts.Render("~/bundles/jqueryval")
+<script src="~/Scripts/View/Job/_OwnerDetailTabularView.dev.js"></script>
+@*<script src="~/Scripts/View/Job/_OwnerDetailTabularView.min.js"></script>*@
+
+<!--Tab1 ========================================================================================-->
+<form id="frmOwnerDetail">
+    <div class="form-con-box">
+        <div class="part-50 bor-right">
+            <div class="sub-title">
+                <h4>Owner Details:</h4>
+            </div>
+            <div class="form-group">
+                @Html.HiddenFor(m => m.JobOwnerDetails.JobID)
+                @Html.LabelFor(m => m.JobOwnerDetails.OwnerType, new { @class = "control-label required" })
+                @Html.DropDownListFor(m => m.JobOwnerDetails.OwnerType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Individual", Value = "Individual" }, new SelectListItem() { Text = "Government body", Value = "Government body" }, new SelectListItem() { Text = "Corporate body", Value = "Corporate body" }, new SelectListItem() { Text = "Trustee", Value = "Trustee" } }, new { @class = "form-control", @tabindex = 16 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.OwnerType)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.CompanyABN, new { @class = "control-label required", @id = "OwnerCompanyABN" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 20 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.CompanyABN, "", new { id = "OwnerCompanyABNValidate" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.CompanyName, new { @class = "control-label", @id = "OwnerCompanyName" })
+                @*@Html.TextBoxFor(m => m.JobOwnerDetails.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 101, @autofocus = "autofocus" })*@
+                @Html.DropDownListFor(m => m.JobOwnerDetails.CompanyName, new SelectList((ViewBag.OwnerCompany) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", @tabindex = 21 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.CompanyName, "", new { id = "OwnerCompanyNameValidate" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.FirstName, new { @class = "control-label required", @id = "OwnerFirstName" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 18 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.FirstName, "", new { id = "OwnerFirstNameValidate" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.LastName, new { @class = "control-label required", @id = "OwnerLastName" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 19 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.LastName, "", new { id = "OwnerLastNameValidate" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.Email, new { @class = "control-label", @id = "OwnerEmail" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 20 })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.Email, "", new { id = "OwnerEmailValidate" })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.Phone, new { @class = "control-label required" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 21, onkeypress = "return isValidPhone(event,this);" })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.Phone)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobOwnerDetails.Mobile, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.JobOwnerDetails.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 22, onkeypress = "return isValidPhone(event,this);" })
+                @Html.ValidationMessageFor(m => m.JobOwnerDetails.Mobile)
+            </div>
+        </div>
+        <div class="part-50">
+            <div class="sub-title">
+                <h4>Owner Address:</h4>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label required">Postal Address Type :</label>
+                        @Html.DropDownListFor(m => m.JobOwnerDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control OwnerAddress", @tabindex = 24 })
+                    </div>
+                </div>
+                <div class="col-md-6 OwnerDPA">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.UnitTypeID, new { @class = "control-label", @id = "lblOwnerUnitTypeID" })
+                        @Html.DropDownListFor(model => model.JobOwnerDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 25 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitTypeID)
+                    </div>
+                </div>
+                <div class="col-md-6 OwnerPDA" style="display:none">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.PostalAddressID, new { @class = "control-label required" })
+                        @Html.DropDownListFor(model => model.JobOwnerDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 26 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalAddressID)
+                    </div>
+                </div>
+            </div>
+            <div class="row OwnerDPA">
+                <div class="col-md-6 ">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "control-label", @id = "lblOwnerUnitNumber" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 27 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitNumber)
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "control-label required", @id = "lblOwnerStreetNumber" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 28 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetNumber)
+                    </div>
+                </div>
+            </div>
+            <div class="row OwnerDPA">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.StreetName, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 29 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetName)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 OwnerDPA">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.StreetTypeID, new { @class = "control-label required" })
+                        @Html.DropDownListFor(model => model.JobOwnerDetails.StreetTypeID, new List<SelectListItem>
+                                (), new { @class = "form-control", @tabindex = 30 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetTypeID)
+                    </div>
+                </div>
+                <div class="col-md-6 OwnerPDA" style="display:none">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 31 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalDeliveryNumber)
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.Town, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 32 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.Town)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.State, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 34, @readonly = "readonly" })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.State)
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.PostCode, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 33 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostCode)
+                    </div>
+                </div>
+                <div class="alert" id="JobOwnerDetails_LocationValidation" style="display: none;color: #a94442;">
+                    "Please enter valid state,town and postcode."
+                </div>
+            </div>
+            <div class="row">
+
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @*<label class="control-label">Send Notification</label>*@
+                        @*<div style="display:inline-block">
+                                <input class="btn primary upload_ic" value="GET SIGNATURE" id="aGetOwnerSignature" type="button">
+                            </div>
+                            <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                                <a id="imgOwnerSignatureView" href="javascript:void(0)" style="display: none; margin-top: 7px; display: none; text-decoration: none; " tabindex="23">&nbsp; &nbsp; View Image</a>
+                                <span class="browse fileUpload btn default upload_sign" title="Upload Owner Signature" signtype="1" style="height:35px">
+                                    <input style="width:35px;height:35px;" id="uploadJobOwnerSign" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Owner Signature" typeofsignature="1">
+                                </span>
+                                <a class="delete" href="javascript:void(0);" onclick="clearSignature(1);" title="Clear Signature"></a>
+                            </div>*@
+                        <div style="display:inline-block" id="dvOwnerSignatureActions">
+                            <span class="fileUpload btn default upload_sign GetSignByUpload" title="Upload Owner Signature" signtype="2" style="background-color:transparent">
+                                <input id="uploadJobOwnerSign" type="file" accept="image/*" class="upload fileUpload" title="Upload Owner Signature" name="Upload Owner Signature" typeofsignature="1">
+                                <span class="icon-btn sprite-img browse-icon" style="margin:0px;"></span>
+                            </span>
+                            <a href="#" title="Populate from visit" class="icon-btn sprite-img signature-02 GetSignFromVisit" id="ownerGetSignFromVisit"></a>
+                            <a href="#" title="Get Owner Signature" class="icon-btn sprite-img signature-04" id="aGetOwnerSignature"></a>
+                        </div>
+                        <a id="imgOwnerSignatureView" href="javascript:void(0)" style="display: none; margin-top: 7px; display: none; text-decoration: none;">&nbsp; &nbsp; View Image</a>
+                    </div>
+                    <div class="form-border" id="dvOwnerSignatureView">
+                        <div>
+                            <div class="signechar-box scrollSignature" style="width:100%;"><img class="img-responsive" id="imgOwnerSign" alt=""></div>
+                        </div>
+                    </div>
+                    @*<div class="signechar-box scrollSignature"><img class="img-responsive" id="imgOwnerSign" alt=""></div>*@
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@* Signature pop up *@
+<div class="modal fade" tabindex="-1" id="mdlGetSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title">Get Signature</h4>
+                    </div>
+                    <div class="modal-body" id="divSignature">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSignaturePopup" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSignaturePopup" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Send To:</label>
+                            <div class="form-group">
+                                @if (@Model.BasicDetails.JobType == 1)
+                                {
+                                    <select class="form-control valid" id="drpSendMail">
+                                        <option value="1">Owner</option>
+                                        <option value="2">Installer</option>
+                                        <option value="3">Electrician</option>
+                                        <option value="4">Designer</option>
+                                    </select>
+                                }
+                                @if (@Model.BasicDetails.JobType == 2)
+                                {
+                                    <select class="form-control valid" id="drpSendMail">
+                                        <option value="1">Owner</option>
+                                        <option value="2">Installer</option>
+                                    </select>
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="radio-inline"><input type="radio" value="M" name="optType" checked>Mail</label>
+                            <label class="radio-inline"><input type="radio" value="S" name="optType">SMS</label>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="btnSendMail">Send</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*popup job Owner Signature*@
+<div class="modal fade" id="popupOwnerSign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupOwnerSign">
+                    <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div>
+                        <img id="imgOwnerSign" class="" style="display:inline;width:100%;height:100%;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

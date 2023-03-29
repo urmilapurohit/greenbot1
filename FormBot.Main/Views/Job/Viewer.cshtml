@@ -1,0 +1,477 @@
+﻿@model FormBot.Entity.Documents.DocumentCollectionView
+@{ Layout = null; }
+<style>
+    .pdfpage {
+        position: relative;
+        top: 0;
+        left: 0;
+        border: solid 1px black;
+        margin: 10px;
+    }
+
+        .pdfpage > canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .pdfpage > div {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+    .inputControl {
+        background: transparent;
+        border: 0px none;
+        position: absolute;
+        margin: auto;
+        font-size: 13px;
+        color: black !important;
+    }
+
+        .inputControl[type='checkbox'] {
+            margin: 0px;
+            width: 18px;
+            height: 18px;
+        }
+
+    .inputHint {
+        border: 1px solid #d8dadd;
+        /*opacity: 1;*/
+        background: #fff;
+        /*opacity: 1;
+        background: #ccc;*/
+        position: absolute;
+    }
+</style>
+
+<div class="container-fluid create-job">
+    @using (Html.BeginForm("Viewer", "Job", FormMethod.Post, new { id = "Viewer", enctype = "multipart/form-data" }))
+    {
+        @*<div class="title">
+                <h1 id="jobTitle">Document Viewer</h1>
+                <input type="submit" name="Submit" value="Save" autofocus class="primary save_ic pull-right " style="padding-bottom:10px;" id="btnSave" tabindex="10" >
+            </div>*@
+        <div>
+            @*<input type="submit" value="Save" id="btnSave" />*@
+            <input type="hidden" name="Data" id="pdfData" value="@Model.Data" />
+            <input type="hidden" name="PDFURL" id="PDFURL" value="@Model.PDFURL" />
+            <input type="hidden" name="PDFSource" id="PDFSource" value="@Model.PDFSource" />
+            <input type="hidden" name="JobId" id="JobId" value="@Model.JobId" />
+            <input type="hidden" name="DocId" id="DocId" value="@Model.DocId" />
+        </div>
+        <div>
+            <div id="viewer"></div>
+        </div>
+    }
+</div>
+<script src="~/Scripts/pdf/pdf.min.js"></script>
+@*<script src="~/Scripts/jquery-1.10.2.min.js"></script>*@
+<script src="~/Scripts/pdf/underscore.js"></script>
+<script>
+    //'use strict';
+    $(function () {
+        if ('@Model.PDFURL' != '') {
+            init('@Model.PDFURL');
+        }
+        else {
+            alert('File is not available.');
+            return false;
+        }
+    });
+
+    var pdfItemsStr = '@Html.Raw(Model.ParsedData)';
+        var pdfItems = [];
+        if (pdfItemsStr)
+            pdfItems = JSON.parse(pdfItemsStr);
+        var pdfDoc = null,
+            pageNum = 1,
+            pageRendering = false,
+            pageNumPending = null,
+            pageLeftPending = 0,
+            pageTopPending = 0,
+            pdfPageWidth = 0,
+            pdfPageHeight = 0,
+            pdfRotate = 0;
+        var formFields = {};
+        var div = document.getElementById('viewer');
+
+        /**
+       * Asynchronously downloads PDF.
+       */
+        function init(fileName) {
+            var path = fileName;
+            PDFJS.workerSrc = '@Url.Content("~/Scripts/pdf/pdf.worker.min.js")';
+            PDFJS.getDocument(path).then(function (pdfDoc_) {
+                pdfDoc = pdfDoc_;
+                // document.getElementById('page_count').textContent = pdfDoc.numPages;
+
+                for (var i = 1; (pdfDoc.numPages == 1 ? i <= pdfDoc.numPages : i < pdfDoc.numPages) ; i++) {
+                    // Initial/first page rendering
+                    renderPage(i, 0, 0, true);
+                }
+            });
+        }
+
+        function removeOptions(selectbox) {
+            var i;
+            for (i = selectbox.options.length - 1; i >= 0; i--) {
+                selectbox.remove(i);
+            }
+        }
+
+        function addSelectBoxForPageAcroFieldsToForm(page) {
+            return;
+            page.getAnnotations().then(
+                function (items) {
+                    var selectField = document.getElementById("selectField");
+                    removeOptions(selectField);
+                    var optionsHTML = [];
+                    if (items.length == 0) {
+                        optionsHTML.push("<option value=\"console.log('no fields clicked - doing nothing');\">No fields</option>");
+                    }
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        switch (item.subtype) {
+                            case 'Widget':
+
+                                if (item.fieldType != 'Tx' && item.fieldType != 'Btn' && item.fieldType != 'Ch') {
+                                    break;
+                                }
+                                var fieldName;
+                                if (item.fieldType == 'Tx') {
+                                    fieldName = 'Inputfield with key ' + item.fullName + ' (position: ' + item.rect + ')';
+                                }
+                                if (item.fieldType == 'Btn') {
+
+                                    if (item.fieldFlags & 32768) {
+                                        fieldName = 'Radiobutton with key ' + item.fullName + ' (position: ' + item.rect + ')';
+                                    } else if (item.fieldFlags & 65536) {
+                                        fieldName = 'Pushbutton with key ' + item.fullName + ' (position: ' + item.rect + ')';
+                                    } else {
+                                        fieldName = 'Checkbox with key ' + item.fullName + ' (position: ' + item.rect + ')';
+                                    }
+                                }
+                                if (item.fieldType == 'Ch') {
+                                    fieldName = 'Selectbox with key ' + item.fullName + ' (position: ' + item.rect + ')';
+                                }
+
+                                x = item.rect[0];
+                                if (pdfRotate == 90) {
+                                    y = pdfPageWidth - item.rect[1];
+                                }
+                                else if (pdfRotate == 0) {
+                                    y = pdfPageHeight - item.rect[1];
+                                }
+                                else {
+                                    //TODO: other rotates
+                                }
+                                optionsHTML.push("<option value=\"queueRenderPage(" + pageNum + "," + x + "," + y + ");\">" + fieldName + "</option>");
+                        }
+                    }
+                    selectField.innerHTML = optionsHTML.join('\n');
+                });
+        }
+        var screenWidth = $(window).width();
+        var screenHeight = $(window).height();
+        var maxwidth = 0;
+        var finalWidth = 0;
+        var finalHeight = 0;
+        function renderPage(pageNum, xOffset, yOffset, renderAcroFieldSelect) {
+            pageRendering = true;
+            // Using promise to fetch the page
+            pdfDoc.getPage(pageNum).then(function (page) {
+                var scale = 1.5;
+                var viewport = page.getViewport(scale);
+                var pageDisplayWidth = viewport.width;
+                var pageDisplayHeight = viewport.height;
+                if (maxwidth < viewport.width)
+                    maxwidth = viewport.width;
+                var pageDivHolder = document.createElement('div');
+                pageDivHolder.className = 'pdfpage';
+                pageDivHolder.style.width = (pageDisplayWidth + 1) + 'px';
+                pageDivHolder.style.height = (pageDisplayHeight + 5) + 'px';
+                div.appendChild(pageDivHolder);
+
+                // Prepare canvas using PDF page dimensions
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                canvas.width = pageDisplayWidth;
+                canvas.height = pageDisplayHeight;
+                pageDivHolder.appendChild(canvas);
+
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+
+                // Wait for rendering to finish
+                renderTask.promise.then(function () {
+                    if (renderAcroFieldSelect) {
+                        addSelectBoxForPageAcroFieldsToForm(page);
+                    }
+                    pageRendering = false;
+                    if (pageNumPending !== null) {
+                        // New page rendering is pending
+                        renderPage(pageNumPending, pageLeftPending, pageTopPending);
+                        pageNumPending = null;
+                        pageLeftPending = 0;
+                        pageTopPending = 0;
+                    }
+                });
+                // Prepare and populate form elements layer
+                var formDiv = document.createElement('div');
+                pageDivHolder.appendChild(formDiv);
+                setupForm(formDiv, page, viewport);
+                // Update page counters
+
+                if (screenWidth > 900) {
+                    if (finalWidth > 900) {
+                        finalWidth = 900;
+                    }
+                    else {
+                        if (finalWidth < pageDisplayWidth)
+                            finalWidth = pageDisplayWidth;
+                    }
+                }
+                else {
+                    finalWidth = 800;
+                }
+
+                finalHeight = screenHeight - 64;
+
+                //$("#popupViewerDoc").find('.modal-content').width(pageDisplayWidth);
+
+                $("#popupViewerDoc").find('.modal-dialog').width(finalWidth);
+                $("#popupViewerDoc").find('.modal-dialog').height(finalHeight);
+                $("#popupViewerDoc").find('.modal-dialog').css("overflow-x", 'scroll');
+                $("#popupViewerDoc").find('.modal-dialog').css("overflow-y", 'scroll');
+
+        //$("#popupViewerDoc").find('.modal-content').width(maxwidth);
+
+
+                if (pageNum >= pdfDoc.numPages) {
+                    document.getElementById('page_num').textContent = 1;
+                    return;
+                }
+                pageNum++;
+                queueRenderPage(pageNum, 0, 0, true);
+
+            });
+        }
+
+        function setupForm(div, content, viewport) {
+            function bindInputItem(input, item) {
+                if (input.name in formFields) {
+                    var value = formFields[input.name];
+                    if (input.type == 'checkbox') {
+                        input.checked = value;
+                    }
+                    else if (this.type == 'radio') { input.checked = value; }
+                    else if (!input.type || input.type == 'text') {
+                        input.value = value;
+                    }
+                }
+                input.onchange = function pageViewSetupInputOnBlur() {
+                    if (input.type == 'checkbox') {
+                        formFields[input.name] = input.checked;
+                    }
+                    else if (this.type == 'radio') { formFields[input.name] = input.checked; }
+                    else if (!input.type || input.type == 'text') {
+                        formFields[input.name] = input.value;
+                    }
+                };
+            }
+            function createElementWithStyle(tagName, item) {
+                var element = document.createElement(tagName);
+                var rect = PDFJS.Util.normalizeRect(
+                  viewport.convertToViewportRectangle(item.rect));
+                element.style.left = Math.floor(rect[0]) + 'px';
+                element.style.top = Math.floor(rect[1]) + 'px';
+                element.style.width = Math.ceil(rect[2] - rect[0]) + 'px';
+                element.style.height = Math.ceil(rect[3] - rect[1]) + 'px';
+                return element;
+            }
+            function assignFontStyle(element, item) {
+                var fontStyles = '';
+                if ('fontSize' in item) {
+                    fontStyles += 'font-size: ' + Math.round(item.fontSize *
+                                                             viewport.fontScale) + 'px;';
+                }
+                switch (item.textAlignment) {
+                    case 0:
+                        fontStyles += 'text-align: left;';
+                        break;
+                    case 1:
+                        fontStyles += 'text-align: center;';
+                        break;
+                    case 2:
+                        fontStyles += 'text-align: right;';
+                        break;
+                }
+                element.setAttribute('style', element.getAttribute('style') + fontStyles);
+            }
+
+            content.getAnnotations().then(function (items) {
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    switch (item.subtype) {
+                        case 'Widget':
+                            if (item.fieldType != 'Tx' && item.fieldType != 'Btn' &&
+                                item.fieldType != 'Ch') {
+                                break;
+                            }
+                            var inputDiv = createElementWithStyle('div', item);
+                            inputDiv.className = 'inputHint';
+                            div.appendChild(inputDiv);
+                            var input;
+                            //item.flags = getInheritableProperty(annotation, 'Ff') || 0;
+                            if (item.fieldType == 'Tx') {
+                                input = createElementWithStyle('input', item);
+                            }
+                            if (item.fieldType == 'Btn') {
+                                input = createElementWithStyle('input', item);
+                                if (item.fieldFlags & 32768) {
+                                    input.type = 'radio';
+                                    // radio button is not supported
+                                } else if (item.fieldFlags & 65536) {
+                                    input.type = 'button';
+                                    // pushbutton is not supported
+                                } else {
+                                    input.type = 'checkbox';
+                                }
+                            }
+                            if (item.fieldType == 'Ch') {
+                                input = createElementWithStyle('select', item);
+                                // select box is not supported
+                            }
+                            input.className = 'inputControl';
+                            if ((input.type == 'radio' || input.type == 'checkbox') && item.fullName) {
+                                $.each(item.fullName, function (i) {
+                                    if (i == (item.fullName.length - 1) && validation.isGlyphsNumber(this)) {
+                                    }
+                                    else
+                                        input.name += ((i > 0) ? "." : "") + this;
+                                });
+
+                                //for (var i = 0; i < item.fullName.length-1 ; i++)
+                                //{
+
+                                //}
+                            }
+                            else
+                                input.name = item.fullName.join(".");
+                            input.title = item.alternativeText;
+                            if (input.name.toLowerCase().indexOf('signature') > -1)
+                                $(input).hide();
+                            assignFontStyle(input, item);
+                            bindInputItem(input, item);
+                            div.appendChild(input);
+                            break;
+
+                    }
+
+                $("#popupViewerDoc").find(".modal-content").width(maxwidth);
+                setInputValuesAtInit();
+            });
+        }
+        /**
+         * If another page rendering in progress, waits until the rendering is
+         * finised. Otherwise, executes rendering immediately.
+         */
+        function queueRenderPage(num, xOffset, yOffset) {
+            if (pageRendering) {
+                pageNumPending = num;
+                pageLeftPending = xOffset;
+                pageTopPending = yOffset;
+            } else {
+                renderPage(num, xOffset, yOffset, false);
+            }
+        }
+        function getInheritableProperty(annotation, name) {
+            var item = annotation;
+            while (item && !item.has(name)) {
+                item = item.get('Parent');
+            }
+            if (!item)
+                return null;
+            return item.get(name);
+        }
+        //function getValues(name) {
+        //    var values = [];
+        //    $.each(pdfItems, function (k, data) {
+        //        if (data.FieldName == name) {
+        //            values = data.Value;
+        //            return;
+        //        }
+        //    });
+        //    return values;
+        //}
+
+        $(document).ready(function myfunction() {
+            $('#btnSave').click(function () {
+                $.each(pdfItems, function (k, data) {
+                    if ($('input[name="' + data.FieldName + '"]').length > 0) {
+                        if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()') {
+                        data.Value = $('input[name="' + data.FieldName + '"]').val();
+                    }
+                    else if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()') {
+                        data.Value = $('input[name="' + data.FieldName + '"]:checked').val() ? $('input[name="' + data.FieldName + '"]:checked').val() : '';
+                    }
+                    else if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.CHECK_BOX.GetHashCode()') {
+                        //if ($('input[name="' + data.FieldName + '"]').prop('checked'))
+                        //    data.Value = $('input[name="' + data.FieldName + '"]').val();
+                        //else
+                        //    data.Value = "";
+                        data.Value = $('input[name="' + data.FieldName + '"]:checked').val() ? $('input[name="' + data.FieldName + '"]:checked').val() : '';
+                    }
+                }
+            });
+            $('#pdfData').val(JSON.stringify(pdfItems));
+        });
+    });
+
+    var validation = {
+        isGlyphsNumber: function (str) {
+            var pattern = /^`+\d+$/;
+            return pattern.test(str);  // returns a boolean
+        }
+    };
+
+    //Own Function to set input values at Initialization time.
+    var setInputValuesAtInit = function () {
+        $.each(pdfItems, function (k, data) {
+            if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()') {
+                $('input[name="' + data.FieldName + '"]').val(data.Value);
+                data.PdfItemProperties && data.PdfItemProperties.MaxLength && $('input[name="' + data.FieldName + '"]').attr('maxLength', data.PdfItemProperties.MaxLength);
+            }
+            else if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()') {
+                var values = data.AvailableValues;
+                values = $.grep(values, function (e, index) {
+                    return e.toLowerCase() != 'off';
+                });
+                $.each($('input[name="' + data.FieldName + '"]'), function (i) {
+                    this.value = ((values.length - (i + 1)) > -1 && values.length - (i + 1) < values.length) ? values[values.length - (i + 1)] : '';
+                });
+                $('input[name="' + data.FieldName + '"]').filter('[value=' + data.Value + ']').prop('checked', true);
+            }
+            else if (data.Type.toString() == '@FormBot.Helper.SystemEnums.InputTypes.CHECK_BOX.GetHashCode()') {
+                var values = data.AvailableValues;
+                $.each($('input[name="' + data.FieldName + '"]'), function (i) {
+                    this.value = values[values.length - (i + 1)];
+                    if (data.Value == this.value)
+                        $(this).prop('checked', true);
+                });
+            }
+        });
+
+        $('input[type="checkbox"]').click(function () {
+            if ($(this).prop('checked'))
+                $('input[name="' + $(this).attr('name') + '"]').not($(this)).prop('checked', false);
+        });
+    };
+
+</script>

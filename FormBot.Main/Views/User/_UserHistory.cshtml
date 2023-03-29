@@ -1,0 +1,350 @@
+﻿@model FormBot.Entity.User
+<style>
+    .NotesType {
+        border: 0px;
+        outline: 0px;
+        background: none;
+        color: blue;
+        float: right;
+    }
+
+    .notesfunction {
+        display: inline-block;
+        margin-left: 10px;
+    }
+
+    #UserNotesSection ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+
+
+    /* Handle */
+    #UserNotesSection ::-webkit-scrollbar-thumb {
+        background: #d6d1d1;
+        border-radius: 10px;
+    }
+</style>
+<div class="row">
+
+    <div id="UserNotesSection" class="UserNotes col-sm-6" style="margin-top:30px;">
+        @*<div class="title" style="">
+                <h3>User History </h3>
+            </div>*@
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionHistoryNotes" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionHistoryNotes" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+            </div>
+        </div>
+        <div class="sub-title" style="margin-bottom:0px!important;border:0px!important">
+            <div class="row">
+                @if (Model.UserTypeID == 4 || Model.UserTypeID == 7)
+                {
+                    <p class="col-md-9" id="filteringForNotes">
+                        By
+                        <b>
+                            <select id="filter-notestype" style="width:125px;color:black;border:0px; outline:0px;"></select>
+                        </b>
+                        @*related to
+                            <b>
+                                <select id="relatedTofilter" class="" style="border:0px; outline:0px;color:black!important; width:50px;"></select>
+                                <select id="width_tmp_select" style="display:none;">
+                                    <option id="width_tmp_option"></option>
+                                </select>
+                            </b>*@
+                        Deleted
+                        <b>
+                            <select id="IsDeletedUserNote" style="border:0px; outline:0px; color:black!important; width:105px;">
+                                <option value="3">Not Deleted</option>
+                                <option value="2">Deleted</option>
+                                <option value="1">All</option>
+
+                            </select>
+                        </b>
+
+                        | <input class="important-note" type="checkbox" title="Starred Notes" id="FilterIsImportantNote" style="margin-top:0px!important; margin-right:5px;">
+
+
+                        |  @*<button type="button" id="refreshJobHistory" style="font-size:20px; border:0px; background:none;">&#8635;</button>*@
+                        <a href="#" id="refreshUserHistory" style="font-size:17px;color: #1d9f4e;" title="Refresh">
+                            @*<i class="fa fa-refresh" style="font-size:24px;color: #1d9f4e;"></i>*@
+                            <i class="glyphicon glyphicon-refresh" style="top:3px!important;"></i>
+                        </a>
+
+
+                    </p>
+                }
+
+                <div class="col-md-3" style="margin-top:-5px">
+                    <input type="text" id="UserHistorySearch" class="form-control" style="width:190px; border-radius:10px; float:right; border:1px solid #d8dadd" placeholder="Search">
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="details-block details-mag-0">
+
+                        <div id="usernotecontainer">
+
+                            <div class="" style="margin-bottom: 15px; " id="drag-row">
+                                <div class="" style="height:300px; overflow-y:auto; margin-top:10px;" id="showfiltereduserhistory"></div>
+                                @*@Html.Action("ShowFilteredHistory", "Job",new { jobID  = Model.BasicDetails.JobID, categoryID = 0, order ="DESC" , fromDate = "", toDate ="", pageIndex = 1 })*@
+                            </div>
+                            @*<div class="row">
+                                    <div id="bottom-panel" class="">
+                                        <div id="drag" style="text-align:center;"><img src="~/Images/dragbar.png" /></div>
+                                    </div>
+                                </div>*@
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="~/Content/font-awesome/css/all.min.css" crossorigin="anonymous" />
+<script>
+    var urlGetUserNotesType = '@Url.Action("GetUserNotesType","User")';
+    var urlSearchUserHistory = '@Url.Action("ShowFilteredUserHistory", "User")';
+    var urlGetAllUserList = '@Url.Action("GetAllUserList","User")';
+    var urlEditUserNote = '@Url.Action("EditUserNote","User")';
+    var urlDeleteUserNote = '@Url.Action("DeleteUserNote","User")';
+    var urlUserID = '@Model.UserId';
+    var userTypeId = '@Model.UserTypeID';
+    var urlpublishNote = '@Url.Action("PublishUserNote","User")';
+</script>
+@*$(document).ready(function () {
+        BindUserList();
+        bindnotestype();
+        searchuserhistory();
+    });
+
+
+    function bindnotestype() {
+        $.ajax({
+            type: 'GET',
+            url: urlGetUserNotesType,
+            dataType: 'json',
+            async: false,
+            data: {},
+            success: function (notestype) {
+                debugger;
+                $.each(notestype, function (i, res) {
+                    $("#filter-notestype").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                });
+                $("#filter-notestype").append('<option value="5">Warning</option>');
+
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Notestype list.' + ex);
+            }
+        });
+    }
+
+    function NotesTypeFilter() {
+        $.ajax({
+            type: 'GET',
+            url: urlGetUserNotesType,
+            dataType: 'json',
+            async: false,
+            data: {},
+            success: function (notestype) {
+                debugger;
+                $("#NotesType option").remove();
+                $.each(notestype, function (i, res) {
+                    $("#NotesType").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                });
+                $("#NotesType").append('<option value="5">Warning</option>');
+
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Notestype list.' + ex);
+            }
+        });
+    }
+
+    function searchuserhistory() {
+        debugger;
+        var HistoryCategory = $('#filter-notestype').val();
+        var IsImportant = document.getElementById("FilterIsImportantNote").checked;
+        setTimeout(function () {
+            $.ajax({
+                url: urlSearchUserHistory,
+                type: "GET",
+                data: { "UserID": '@Model.UserId', "CategoryID": HistoryCategory, "IsImportant": IsImportant },
+                cache: false,
+                async: false,
+                success: function (Data) {
+
+                    $("#showfiltereduserhistory").html($.parseHTML(Data));
+                    searchuserfilter();
+                }
+            });
+
+            $("#loading-image").hide();
+        }, 10);
+
+    }
+
+    function searchuserfilter() {
+        debugger;
+        var searchboxfilter = $("#UserHistorySearch").val();
+        var tagged = $("#relatedTofilter").val();
+        var searchfilter = "@@" + tagged;
+        var count = 0;
+        if (tagged == "0") {
+            $('#divCustom .history-box').each(function () {
+                if ($(this).text().search(new RegExp(searchboxfilter, "i")) < 0) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    $("#norecords").empty();
+                    count++;
+                }
+            });
+        }
+        else {
+            $('#divCustom .history-box').each(function () {
+                if (($(this).text().search(new RegExp(searchfilter, "i")) < 0) || ($(this).text().search(new RegExp(searchboxfilter, "i")) < 0)) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                    $("#norecords").empty();
+                    count++;
+                }
+            });
+        }
+        if (count > 0) {
+            $(".history-box").css(
+                "border-top", "1px solid #e3e3e3");
+        }
+        else {
+            $("#norecords").empty();
+            var norecords = "<div style='text-align:center;font-size:24px;margin-top:120px'>" + "No Record(s) Found." + "</div>";
+            $("#norecords").append(norecords);
+        }
+    }
+
+    function BindUserList() {
+        $.ajax({
+            type: 'GET',
+            url: urlGetAllUserList,
+            dataType: 'json',
+            async: false,
+            data: {},
+            success: function (userlist) {
+
+                $("#relatedTofilter").prepend('<option value="' + 0 + '"> All </option>')
+                $.each(userlist, function (i, res) {
+                    $("#relatedTofilter").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+
+                });
+
+
+            },
+            error: function (ex) {
+                alert('Failed to retrieve User list.' + ex);
+            }
+        });
+    }
+
+    $('#UserHistorySearch').on('keyup', function () {
+        debugger;
+        searchuserfilter();
+    });
+
+    $('#filter-notestype').on("change", function () {
+        searchuserhistory();
+    });
+
+    $('#refreshUserHistory').on("click", function () {
+        searchuserhistory();
+    });
+
+    $("#FilterIsImportantNote").change(function () {
+        debugger;
+        $('#UserHistorySearch').val("");
+        searchuserhistory();
+    });
+
+
+    $("#usernotecontainer").resizable({
+        minHeight: 300,
+        handles: 's',
+        alsoResize: '#showfiltereduserhistory'
+    });
+
+    $("#relatedTofilter").on("change", function () {
+        debugger;
+        searchuserfilter();
+        $("#width_tmp_option").html($('#relatedTofilter option:selected').text());
+        $(this).width($("#width_tmp_select").width());
+
+    });
+
+
+    function EditUserNote(Notes) {
+        debugger;
+        var Noteid = $(Notes).attr("data-usernoteid");
+        var UserID = urlUserID;
+        var IsWarningNote = $(Notes).attr("data-IsWarningNote");
+        $.ajax({
+            type: 'GET',
+            url: urlEditUserNote,
+            dataType: 'json',
+            async: false,
+            data: { NoteID: Noteid, UserID: UserID, IsWarningNote: IsWarningNote },
+            success: function (result) {
+                var fooCallback = function () {
+                    CKEDITOR.instances.contentusernoteeditor.focus();
+                    CKEDITOR.instances.contentusernoteeditor.insertHtml(result.Notes);
+                };
+                CKEDITOR.instances.contentusernoteeditor.setData("", fooCallback);
+                debugger;
+                NotesTypeFilter();
+                $("#NotesType").val(result.NotesType);
+                if (result.NotesType == "5") {
+                    $("#NotesType").prop("disabled", true);
+                }
+                else {
+                    $("#NotesType").prop("disabled", false);
+                    $("#NotesType option:last").remove();
+                }
+                $("#hiddenUserNoteID").val(Noteid);
+            }
+        })
+    }
+
+    function DeleteUserNote(Notes) {
+        var Noteid = $(Notes).attr("data-usernoteid");
+        var UserID = urlUserID;
+        var IsWarningNote = $(Notes).attr("data-IsWarningNote");
+        $.ajax({
+            type: 'GET',
+            url: urlDeleteUserNote,
+            dataType: 'json',
+            async: false,
+            data: { NoteID: Noteid, UserID: UserID, IsWarningNote: IsWarningNote },
+            success: function (result) {
+                if (result.status) {
+                    showSuccessMessageUserNotes(result.message);
+                    searchuserhistory();
+                }
+                else {
+                    showErrorMessageUserNotes(result.message);
+                }
+
+            },
+            error: function (ex) {
+                showErrorMessageUserNotes("Failed to delete Job Note")
+            }
+        });
+    }*@
+<script src="~/Scripts/User/UserHistory.min.js"></script>
+
+

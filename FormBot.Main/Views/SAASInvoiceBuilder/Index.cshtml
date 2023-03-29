@@ -1,0 +1,184 @@
+﻿@model FormBot.Entity.SAASInvoiceBuilder
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "BillingBuilder";
+}
+@Styles.Render("~/kendoCSS")
+
+<style>
+    .k-grid .k-group-col, .k-grid .k-hierarchy-col {
+        width: 5px;
+    }
+</style>
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">Billing Builder</h1>
+        </div>
+    </div>
+
+    <div class="joblisting_search">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">SAAS Users:</label>
+                    <input type="hidden" id="hdnresellerId" />
+                    <input type="hidden" id="hdnResellerIdForFilter" />
+                    <input type="text" id="SAASUserId" name="SAASUserId" class="form-control" maxlength="50" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">User Role: </label>
+                    @Html.DropDownList("ddlUserRoles", new List<SelectListItem>(), new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="col-sm-12" style="margin-top:10px;">
+                <div class="form-group">
+                    <input type="button" id="btnSearch" class="primary search_ic" value="Search" onclick="drawSAASInvoiceBuilderKendoGrid();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" class="" value="Reset">
+                    </div>
+
+                    @*<label class="control-label">IsArchive :</label>
+                        <div class="checkbox-box" style="display: inline-block;">
+                            <input data-val="true" id="IsIsArchive" name="IsArchive" tabindex="9" type="checkbox" value="true"><input name="IsArchive" type="hidden" value="false">
+                        </div>*@
+                </div>
+            </div>
+        </div>
+    </div>
+    <br />
+
+    <div class="grid_topbar mag-top-20">
+        <div class="row" style="margin-right: 0px !important;">
+            @if (ProjectSession.UserTypeId == 1)
+            {
+                <div class="col-ṣm-6 rigth-btn">
+                    <input type="button" id="btnCreateNewInvoice" class="primary" value="Create Invoice">
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="table-responsive kendo-grid">
+        <div id="datatable">
+        </div>
+    </div>
+
+    <div class="total-amount-rigth-btn">
+        <button id="btnSendToSAASInvoice" class="btn default pull-right send-ic" onclick="SendtoSaasInvoicesOptimized();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Send to SAAS Invoice">Send to SAAS Invoice</button>
+    </div>
+</div>
+
+<div class="modal fade" id="popupCreateNewInvoice" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:250px">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" id="btnpopupCreateNewInvoiceClose" class="close" data-dismiss="modal" aria-label="Close">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Create New Invoice</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div class="container-fluid">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        </div>
+                    </div>
+                    <div id="dvMonthWarning" class="row" style="display:none;">
+                        <div class="col-sm-6 col-md-4 col-lg-7">
+                            <label id="lblMonthWarning" style="color:red;"></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-4 col-lg-7">
+                            <div class="form-group">
+                                <label class="control-label">SAAS Users:</label>
+                                <select id="ddlPopSaasUsers" class="form-control" onchange="BindGlobalPricingTerms()"></select>
+                                <h5 id="ddlPopSaasUsersCheck" style="color: red;"></h5>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-5">
+                            <div class="form-group">
+                                <label class="control-label">Billable Term: </label>
+                                <select id="ddlPopTermCode" class="form-control" onchange="BindPrice(this)"></select>
+                                <h5 id="ddlPopTermCodeCheck" style="color: red;"></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-4 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label">Price: </label>
+                                <input type="text" id="txtpopPrice" name="Price" class="form-control" maxlength="50" autocomplete="off" readonly />
+                                <h5 id="txtpopPriceCheck" style="color: red;"></h5>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label">Month:</label>
+                                <select id="ddlPopMonth" class="form-control" onchange="BindQTY()"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 col-md-4 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label">Quantity: </label>
+                                <input type="text" id="txtpopQuantity" name="Quantity" class="form-control" maxlength="50" autocomplete="off" readonly />
+                                <h5 id="txtpopQuantityCheck" style="color: red;"></h5>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label">IsGST: </label>
+                                <div class="checkbox-box">
+                                    <input data-val="true" data-val-required="The Is Active: field is required." id="IspopGlobalGST" name="IspopGlobalGST" tabindex="8" type="checkbox" value="true"><input name="IsGlobalGST" type="hidden" value="false" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="form-group defaultFormBot tab_bottomrow">
+                        <input type="button" name="CreateInvoice" value="Create Invoice" class="primary save_ic" id="btnpopCreatInvoice" onclick="CreateNewInvoice()" tabindex="15">
+                        <button type="button" class="btn default cancel_ic" id="btnCancelCreateInvoicePopup">Cancel</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@Scripts.Render("~/bundles/SAASInvoiceBuilder")
+@*<script src="~/Scripts/View/SAASInvoiceBuilder.dev.js"></script>*@
+<script>
+    var UserTypeID = 1;
+    var urlSAASInvoiceBuilderIndex = '@Url.Action("GetSAASInvoiceBuilderList", "SAASInvoiceBuilder")',
+        urlSAASInvoiceBuilderIndexNew = '@Url.Action("GetSAASInvoiceBuilderListBasedOnTerms", "SAASInvoiceBuilder")',
+        urlSAASInvoiceBuilderDetail = '@Url.Action("GetSAASInvoiceBuilderDetail", "SAASInvoiceBuilder")',
+        urlSAASInvoiceBuilderDetailNew = '@Url.Action("GetSAASInvoiceBuilderDetailBasedOnTerms", "SAASInvoiceBuilder")',
+        urlSendToSAASInvoices = '@Url.Action("SendToSAASInvoices", "SAASInvoiceBuilder")',
+        urlSAASUsersList = '@Url.Action("/GetSAASForPricingManager/SAASInvoiceBuilder") ',
+        urlCreateNewInvoice = '@Url.Action("CreateNewInvoice", "SAASInvoiceBuilder")',
+        urlGetMonthAndQTYBasedOnTerms = '@Url.Action("GetMonthAndQTYBasedOnTerms", "SAASInvoiceBuilder")';
+
+    var GridConfig = JSON.parse('@Html.Raw(Json.Encode(((List<FormBot.Entity.KendoGrid.UserWiseGridConfiguration>)ProjectSession.UserWiseGridConfiguration).Where(m=>m.ViewPageId == SystemEnums.ViewPageId.SAASInvoiceView.GetHashCode())))')
+</script>

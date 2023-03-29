@@ -1,0 +1,359 @@
+﻿@model Tuple<FormBot.Entity.CreateJob>
+@using FormBot.Helper
+
+
+<h2 class="pv-system-title">PV System Check</h2>
+
+@if (Model.Item1.BasicDetails.JobType == 2)
+{
+    <div class="col-md-8 labelvalues">
+        <p>
+            <label>System brand :</label>
+            @Model.Item1.JobPanelDetails.Brand
+        </p>
+        <p>
+            <label>Model:</label>
+            @Model.Item1.JobPanelDetails.Model
+        </p>
+        <p>
+            <label>Tank serial:</label>
+            @Model.Item1.JobSystemDetails.SerialNumbers
+        </p>
+        <p>
+            <label>Tank size:</label>
+            @Model.Item1.JobSTCDetails.VolumetricCapacity
+        </p>
+        <p>
+            <label>No of Panels:</label>
+            @Model.Item1.JobSystemDetails.NoOfPanel
+        </p>
+        <p>
+            <label>Installation type:</label>
+            @Model.Item1.JobSystemDetails.InstallationType
+        </p>
+        @if (@Model.Item1.BasicDetails.InstallationDate != null)
+        {
+            <p>
+                <label>Installation date:</label>
+                @Model.Item1.BasicDetails.InstallationDate.Value.ToString(ProjectConfiguration.GetDateFormat.Replace('m', 'M'))
+
+            </p>
+        }
+    </div>
+}
+else
+{
+
+    <div class="col-md-8 labelvalues">
+        <p>
+            @{
+    int totalCount = @Model.Item1.lstJobPanelDetails.FindAll(m => m.IsDeleted == false).Count,
+            count = 1;
+            }
+            @if (totalCount > 0)
+            {
+                <label>PV MODULE (<span id="pvmoduleCount">1</span> of @totalCount): </label>
+                <span class="next-btn">
+                    <em class="previous-page" onclick="previousNext('pvmodule',1)" style="cursor:pointer"></em>
+                    <em class="next-page" onclick="previousNext('pvmodule',2)" style="cursor:pointer"></em>
+                </span>
+            }
+
+        </p>
+        <div id="pvmoduleList">
+            @foreach (var jobPanelDetails in Model.Item1.lstJobPanelDetails.FindAll(m => m.IsDeleted == false))
+            {
+                <div id="@Html.Raw("pvmodule" + count)">
+                    <p>
+                        <label>PV brand :</label>
+                        @jobPanelDetails.Brand
+                    </p>
+                    <p>
+                        <label>Model:</label>
+                        @jobPanelDetails.Model
+                    </p>
+                    <p>
+                        <label>No of Panels:</label>
+                        @jobPanelDetails.NoOfPanel
+                    </p>
+
+                </div>
+                count++;
+            }
+        </div>
+      
+        <p>
+            <label>Claimed System Output:</label>
+            @Model.Item1.JobSystemDetails.SystemSize
+        </p>
+        <p class="last-p">
+
+            @{int iPanelDetails = 0;
+            count = 1;
+            decimal panelOP = 0;
+            decimal totalACPower = 0;
+            foreach (var jobPanelDetails in Model.Item1.lstJobPanelDetails.FindAll(m => m.IsDeleted == false))
+            {
+                if (Model.Item1.lstPVModules.Count > 0)
+                {
+                    //id="@Html.Raw("pvmodule" + count)"
+                    <span id="@Html.Raw("pvmodulePanelOP" + count)">
+                        <label>Real Panel Output</label>
+                        @Html.Raw((Math.Round(Convert.ToDecimal(Convert.ToDecimal(jobPanelDetails.NoOfPanel * Model.Item1.lstPVModules[iPanelDetails].Wattage) / 1000), 4)) + "KW")
+                        (autocalculated please check watt)
+                    </span>
+
+                    panelOP += Convert.ToDecimal(jobPanelDetails.NoOfPanel * Model.Item1.lstPVModules[iPanelDetails].Wattage);
+                    iPanelDetails++;
+                    count++;
+                }
+            }
+            <label>Total Real Panel Output</label>
+                @Html.Raw((Math.Round(Convert.ToDecimal(@panelOP / 1000), 4)) + "kw");
+                @Html.Raw(" (autocalculated please check watt)")
+            }
+        </p>
+        @{if (Model.Item1.BasicDetails.JobType == 1) // 1= PVD jobtype
+        {
+
+            count = 1;
+            var inverterCount = Model.Item1.lstJobInverterDetails.FindAll(m => m.IsDeleted == false).Count;
+            totalCount = totalCount + inverterCount;
+            {
+                if (inverterCount > 0)
+                {
+                    <p>
+                        <label>INVERTER SYSTEM (<span id="insysCount">1</span> of @inverterCount):</label>
+                        <span class="next-btn">
+                            <em class="previous-page" onclick="previousNext('insys', 1)" style="cursor:pointer"></em>
+                            <em class="next-page" onclick="previousNext('insys', 2)" style="cursor:pointer"></em>
+                        </span>
+                    </p>
+                }
+            }
+
+            <div id="insysList">
+                @foreach (var jobInverterDetails in Model.Item1.lstJobInverterDetails.FindAll(m => m.IsDeleted == false))
+                {
+                    <div id="@Html.Raw("insys" + count)">
+                        <p>
+                            <label>Manufacturer:</label>
+                            @jobInverterDetails.Brand &amp; Model No.: @jobInverterDetails.Model &amp; Series: @jobInverterDetails.Series
+                        </p>
+                    </div>
+                    count++;
+                }
+                <p>
+                    <label>Total Output AC Power:</label>
+                    @{
+            if (Model.Item1.lstInverters != null)
+            {
+
+                foreach (var ListViewItem in Model.Item1.lstInverters)
+                {
+                    totalACPower += Convert.ToInt32(ListViewItem.AcPowerKW);
+                }
+            }
+                    }
+                    @Html.Raw(totalACPower + "kw")
+
+                </p>
+
+
+
+
+            </div>
+        }
+        }
+    </div>
+    <ul class="col-md-4 pv-system-panel">
+        @{ count = 1;
+         foreach (var pVModules in Model.Item1.lstPVModules)
+         {
+            <li id="@Html.Raw("lipvmodule" + count)">
+                <p>Panel Wattage (W)</p>
+                <h3 class="Waltage">
+                    <span id='@Html.Raw("panelWaltageSpan" + @count)'><sup>@count</sup>@pVModules.Wattage</span>
+                    @Html.TextBox("panelWaltageText" + count, @pVModules.Wattage, new { @style = "display:none;width:84px;", @maxlength = "6", @onkeypress = "return isInt(event);" })
+                    @Html.Hidden("hdnPVModuleId" + count, @pVModules.PVModuleId)
+                    <div class="action">
+                        <a href="javascript:void(0)" onclick="EditPanelWaltage(@count)" title="Edit" class="edit" id='@Html.Raw("panelWaltageEdit" + @count)'></a>
+                        <a href="javascript:void(0)" onclick="SavePanelWaltage(@count)" title="Save" class="save" id='@Html.Raw("panelWaltageSave" + @count)' style="display:none;"></a>
+                        <a href="javascript:void(0)" onclick="CancelPanelWaltage(@count)" title="Cancel" class="cancel" id='@Html.Raw("panelWaltageCancel" + @count)' style="display:none;"></a>
+                    </div>
+
+                </h3>
+
+            </li>
+             count++;
+         }
+        }
+        @if (Model.Item1.BasicDetails.JobType == 1) // 1= PVD jobtype
+        {
+            count = 1;
+            foreach (var inverters in Model.Item1.lstInverters)
+            {
+
+                <li id="@Html.Raw("liinsys" + count)">
+                    <p>
+                        Inverters Capacity
+                    </p>
+                    <h3 class="Waltage">
+                        <span>
+                            <sup>@count</sup>@inverters.AcPowerKW
+                        </span>
+                    </h3>
+
+                </li>
+                count++;
+            }
+        }
+    </ul>
+    <div class="col-sm-12">
+        <div class="error_msg">
+            @{
+        decimal cal = ((panelOP * 75) / 100);
+
+        if (totalACPower < cal)
+        {
+            @Html.Raw(" <img src=\"" + @FormBot.Helper.ProjectConfiguration.ProjectImagePath + "/images/ic-urgent.png\" alt=\"\"> The total inverter size output is below 75% of the total rated power output." +
+                            "Claimed output size does not match System Calculated output");
+        }
+
+            }
+        </div>
+    </div>
+}
+
+<script>
+
+    $(document).ready(function () {
+        $('[id^="pvmodule"]').hide();
+        $('[id^="insys"]').hide();
+        $('[id^="lipvmodule"]').hide();
+        $('[id^="liinsys"]').hide();
+
+        if ($('#pvmodule1'))
+            $('#pvmodule1').show();
+        if ($('#insys1'))
+            $('#insys1').show();
+        if ($('#lipvmodule1'))
+            $('#lipvmodule1').show();
+        if ($('#liinsys1'))
+            $('#liinsys1').show();
+        if ($('#pvmodulePanelOP1'))
+            $('#pvmodulePanelOP1').show();
+
+        showAllSTCdiv();
+    });
+
+    function previousNext(moduleName, move) {
+
+        var originalId = $('#' + moduleName + 'List div:visible').attr('id').replace(moduleName, "");
+        if (originalId != '') {
+            var id = '';
+            if (move == 1)
+                id = parseInt(originalId) - 1;
+            else if (move == 2)
+                id = parseInt(originalId) + 1;
+            $('[id^="' + moduleName + '"]').hide();
+            console.log("id == " + id);
+            console.log("move == " + move);
+            console.log("originalId == " + originalId);
+            console.log("pvmodule == " + $('#' + moduleName + id).length);
+            if ($('#' + moduleName + id).length > 0) {
+                $('[id^="' + moduleName + '"]').hide();
+                $('[id^="li' + moduleName + '"]').hide();
+                $('#' + moduleName + id).show();
+                $('#li' + moduleName + id).show();
+                $('#' + moduleName + 'Count').html(id);
+
+                if (moduleName == 'pvmodule') {
+                    $('#' + moduleName + 'PanelOP' + id).show();
+                }
+            }
+            else {
+                $('#' + moduleName + originalId).show();
+                $('#li' + moduleName + originalId).show();
+                $('#' + moduleName + 'Count').html(originalId);
+
+                if (moduleName == 'pvmodule') {
+                    $('#' + moduleName + 'PanelOP' + originalId).show();
+                }
+            }
+        }
+        showAllSTCdiv();
+    }
+
+    function showAllSTCdiv() {
+        $("#pvmoduleList").show();
+        $("#insysList").show();
+        $("#pvmoduleCount").show();
+        $("#insysCount").show();
+    }
+
+
+    function EditPanelWaltage(count) {
+        $("#panelWaltageEdit" + count).hide();
+        $("#panelWaltageSpan" + count).hide();
+
+        $("#panelWaltageSave" + count).show();
+        $("#panelWaltageCancel" + count).show();
+        $("#panelWaltageText" + count).show();
+
+    }
+    function CancelPanelWaltage(count) {
+        $("#panelWaltageEdit" + count).show();
+        $("#panelWaltageSpan" + count).show();
+
+        $("#panelWaltageSave" + count).hide();
+        $("#panelWaltageCancel" + count).hide();
+        $("#panelWaltageText" + count).hide();
+    }
+    function SavePanelWaltage(count) {
+       
+       
+      var url = '@Url.Action("UpdatePanelWaltage", "Job")';
+        var wattage = '', PVModuleId = '';
+        if ($("#panelWaltageText" + count))
+            wattage = $("#panelWaltageText" + count).val();
+        if(wattage !="")
+        {
+        if ($("#hdnPVModuleId" + count))
+            PVModuleId = $("#hdnPVModuleId" + count).val()
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: { PVModuleId: PVModuleId, wattage: wattage, jobID: '@Model.Item1.BasicDetails.JobID' },
+            cache: false,
+            success: function (success) {
+                if (success != '') {
+                    $("#pv-system-box").html(success);
+                }
+
+                CancelPanelWaltage(count);
+            },
+            error: function (success) {
+
+            }
+        });
+
+        }
+    else
+    {
+            alert('wattage is required.');
+    }
+      
+
+    }
+
+
+    function isInt(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+            return false;
+        }
+        return true;
+    }
+</script>

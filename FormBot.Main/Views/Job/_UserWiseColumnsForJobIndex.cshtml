@@ -1,0 +1,225 @@
+﻿@model IList<FormBot.Entity.Job.UserWiseColumns>
+@{
+    ViewBag.Title = "Edit Columns";
+    Layout = null;
+}
+@using FormBot.Helper;
+@Scripts.Render("~/bundles/jqueryval")
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionUserWiseColumns" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionUserWiseColumns" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="checklist-block job-com-box" id="ListOfUserWiseColumns">
+    <ul class="checklist niceScroll" id="userWiseColumnsList" style="max-height:500px;">
+        @if (Model != null && Model.Count > 0)
+        {
+            for (int i = 0; i < Model.Count; i++)
+            {
+                <li data-id="@Model[i].ID" data-columnid="@Model[i].ColumnID">
+                    <span class="draggable draggableCheckList" itemid="@Model[i].ID" data-order="@Model[i].OrderNumber"><img src='@Url.Content("~/images/sort-down.png")'></span>
+                    <span>
+                        <a>@Model[i].DisplayName</a>
+                    </span>
+                    <span class="action">
+                        <a class="up-row sprite-img" href="#" title=""></a>
+                        <a class="down-row sprite-img" href="#" title=""></a>
+                        @if (Model[i].ColumnID == 2)
+                        {
+                            <a class="delete sprite-img" disabled="true" title="Ref Number is mandatory column for JobList."></a>
+                        }
+                        else
+                        {
+                            <a class="delete sprite-img" href="#" title="Delete" onclick="DeleteUserWiseColumnsItem('@Model[i].ColumnID');"></a>
+                        }
+                    </span>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+<div id="divAddNewColumnTemplate" style="display:none;">
+    <li data-id="0" data-columnid="##ColumnID##">
+        <span class="draggable draggableCheckList" itemid="0" data-order="##OrderNumber##"><img src='@Url.Content("~/images/sort-down.png")'></span>
+        <span>
+            <a href="#">##DisplayName##</a>
+        </span>
+        <span class="action">
+            <a class="up-row sprite-img" href="#" title=""></a>
+            <a class="down-row sprite-img" href="#" title=""></a>
+            <a class="delete sprite-img" href="#" title="Delete" onclick="DeleteUserWiseColumnsItem('##ColumnID##');"></a>
+        </span>
+    </li>
+</div>
+<script type="text/javascript">
+    var MenuId = '@Model[0].MenuID';
+    var filterKendo;
+    $(document).ready(function () {
+        //$("#ListOfUserWiseColumns").sortable();
+        $(".checklist").sortable({
+            handle: '.draggableCheckList',
+            cancel: '.liAddColumn',
+            stop: function (event, ui) {
+                // new Index because the ui.item is the node and the visual element has been reordered
+                //updateIndex();
+            }
+        });
+
+        $('.checklist').on('click', 'a.up-row', function () {
+            var li = $(this).closest('li');
+            li.prev().before(li);
+        });
+
+        $('.checklist').on('click', 'a.down-row', function () {
+            var li = $(this).closest('li');
+            if (!li.next().hasClass('liAddColumn'))
+                li.next().after(li);
+        });
+
+        $('#btnSaveUserWiseColumns').unbind().click(function (e) {
+            $("#loading-image").css("display", "");
+            var arrColumns = [];
+            orderNo = 0;
+            $('ul#userWiseColumnsList li').each(function (i, item) {
+                orderNo = orderNo + 1;
+                var PageSize = 10;
+                if (GridConfig[0].IsKendoGrid) {
+                    PageSize = $("#datatable").data("kendoGrid").dataSource.pageSize();
+                } else {
+                    PageSize = $("#datatable").DataTable().page.info().length;
+                }
+                var Width = 0;
+                $.each(UserWiseColumnsData, function (k, data) {
+                    if (data.ColumnID == $(item).data('columnid')) {
+                        Width = data.Width;
+                        return false;
+                    }
+                })
+               arrColumns.push({ ID: $(item).data('id'), ColumnID: $(item).data('columnid'), OrderNumber: orderNo, Width: Width, PageSize: PageSize });
+            });
+            if (arrColumns.length > 0) {
+                $.ajax({
+                    url: "/Job/SaveUserWiseColumnsDetails",
+                    type: "POST",
+                    async: false,
+                    data: JSON.stringify({ columns: arrColumns, MenuId: MenuId }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (result) {
+                        if (result.status) {
+                            $("#txtSearchfor").val('');
+                            showSuccessMessageUserWiseColumns("Columns have been saved successfully.");
+                            $("#EditColumnsPopup").modal('hide');
+                            listColumns = result.ListColumnName;
+                            listColumnsWidth = result.ListColumnWidth;
+                            UserWiseColumnsData = result.JSUserColumnList;
+                            DefaultPageSize = result.PageSize;
+                            if (MenuId == '@SystemEnums.MenuId.JobView.GetHashCode()') {
+                                
+                                if (GridConfig[0].IsKendoGrid) {
+                                    filterKendo = $('#datatable').data('kendoGrid').dataSource.filter();
+                                    $('#datatable').kendoGrid('destroy').empty();
+
+                                } else {
+                                    $('#datatable').DataTable().destroy();
+                                    funTrHeadersDynamic(result.JSUserColumnList);
+                                }
+                                datatableInfo();
+                                drawJobIndex(filterKendo);
+                                 //$('#datatable').data('kendoGrid').dataSource.filter(filter);
+                                if (!GridConfig[0].IsKendoGrid) {
+                                    if ($('#btnLock').val() == "Lock") {
+                                        DisableAllColReorder();
+                                    }
+                                    if ($('#btnLock').val() == "Unlock") {
+                                        DataTableColResizeNotAll($('#trHeadersDynamic th').length);
+                                    }
+                                }
+                             } else if (MenuId == '@SystemEnums.MenuId.STCSubmissionView.GetHashCode()') {
+                                 filter = $('#datatable').data('kendoGrid').dataSource.filter()
+                                $('#datatable').kendoGrid('destroy').empty();
+                                STCSubmissionKendoIntialiize();
+                                drawSTCSubmissionKendoGrid(filter);
+                             } else if (MenuId == '@SystemEnums.MenuId.STCInvoiceView.GetHashCode()') {
+                                 filterKendo = $('#datatable').data('kendoGrid').dataSource.filter()
+                                $('#datatable').kendoGrid('destroy').empty();
+                                 STCInvoiceKendoIntialiize();
+                                 drawSTCInvoiceKendoGrid(filterKendo);
+                            }
+                        }
+                        else {
+                            showErrorMessageUserWiseColumns("Try again.");
+                        }
+                    },
+                    error: function (ex) {
+                        showErrorMessageUserWiseColumns("Try again. " + ex);
+                    },
+                });
+            }
+            else {
+                showErrorMessageUserWiseColumns("Add atleast one column.");
+            }
+            $("#loading-image").css("display", "none");
+        });
+
+        $('#btnCancelUserWiseColumns').unbind().click(function (e) {
+            $("#EditColumnsPopup").modal('hide');
+        });
+
+        $('#btnResetColumns').unbind().click(function (e) {
+            $("#loading-image").css("display", "");
+            if (confirm('Are you sure you want to reset default columns?')) {
+
+                $.get(urlResetDefaultColumns + "?MenuId=" + MenuId, function (data) {
+                    $('#EditColumnsView').empty();
+                    $('#EditColumnsView').append(data);
+                    fnNiceScroll();
+                    fnNiceScrollResize();
+                    SelectColumnBasedOnColumnList();
+                    $.get(urlGetUserWiseColumnsDetail + "?MenuId=" + MenuId, function (result) {
+                        listColumns = result.ListColumnName;
+                        listColumnsWidth = result.ListColumnWidth;
+                        UserWiseColumnsData = result.JSUserColumnList;
+                        DefaultPageSize = result.PageSize;
+                        if (MenuId == '@SystemEnums.MenuId.JobView.GetHashCode()') {
+                           
+                            if (GridConfig[0].IsKendoGrid) {
+                                filterKendo = $('#datatable').data('kendoGrid').dataSource.filter();
+                                $('#datatable').kendoGrid('destroy').empty();
+                            } else {
+                                $('#datatable').DataTable().destroy();
+                                funTrHeadersDynamic(result.JSUserColumnList);
+                            }
+                            datatableInfo();
+                            drawJobIndex(filterKendo);
+                            //$('#datatable').data('kendoGrid').dataSource.filter(filter);
+                            if (!GridConfig[0].IsKendoGrid) {
+                                if ($('#btnLock').val() == "Lock") {
+                                    DisableAllColReorder();
+                                }
+                                if ($('#btnLock').val() == "Unlock") {
+                                    DataTableColResizeNotAll($('#trHeadersDynamic th').length);
+                                }
+                            }
+                        } else if (MenuId == '@SystemEnums.MenuId.STCSubmissionView.GetHashCode()') {
+                            filter = $('#datatable').data('kendoGrid').dataSource.filter()
+                            $('#datatable').kendoGrid('destroy').empty();
+                            STCSubmissionKendoIntialiize();
+                            drawSTCSubmissionKendoGrid(filter);
+                        } else if (MenuId == '@SystemEnums.MenuId.STCInvoiceView.GetHashCode()') {
+                            filterKendo = $('#datatable').data('kendoGrid').dataSource.filter()
+                            $('#datatable').kendoGrid('destroy').empty();
+                            STCInvoiceKendoIntialiize();
+                            drawSTCInvoiceKendoGrid(filterKendo);
+                        }
+
+                    });
+                })
+            }
+            $("#loading-image").css("display", "none");
+        });
+    });
+
+</script>

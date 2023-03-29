@@ -1,0 +1,731 @@
+Return-path: <sandip.patel@tatvasoft.com>
+Envelope-to: badal.patel@tatvasoft.com
+Delivery-date: Tue, 14 Jun 2016 12:43:14 +0300
+Received: from [103.204.192.161] (port=59475 helo=PCI125)
+	by mail.tatvasoft.com with esmtpa (Exim 4.87)
+	(envelope-from <sandip.patel@tatvasoft.com>)
+	id 1bCksL-0007uM-4G; Tue, 14 Jun 2016 12:43:14 +0300
+From: "Sandip Patel" <sandip.patel@tatvasoft.com>
+To: "'Chandler, Philip'" <philip.chandler@mayflowercontrol.com>
+Cc: "'Attri, Vivek'" <Vivek.Attri@Mayflowercontrol.com>,
+	"'Badal Patel'" <badal.patel@tatvasoft.com>
+References: 
+In-Reply-To: 
+Subject: RE: Failed key change updates from sub master
+Date: Tue, 14 Jun 2016 15:14:01 +0530
+Message-ID: <001e01d1c621$48e93b00$dabbb100$@tatvasoft.com>
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	boundary="----=_NextPart_000_001F_01D1C64F.62AAC5D0"
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AdHBeEAYu8OH2USAT+S6vXsXOUJUtgEqLQig
+Content-Language: en-gb
+
+This is a multipart message in MIME format.
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_001_0020_01D1C64F.62AAC5D0"
+
+
+------=_NextPart_001_0020_01D1C64F.62AAC5D0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Apart from Confirm thing, here is the stuff we would like to discuss on
+priority if we would like to include it in point release. This is required
+to test complete iteration for 695 feature with real sub master hardware.
+See detailed explanation below.
+
+ 
+
+Kind Regards
+
+Sandip Patel
+
+Sr. Team Leader 
+
+TatvaSoft CMMI Maturity Level 3
+
+Skype Id:  tatvainfo_117
+
+Website:   <http://www.tatvasoft.com/> http://www.tatvasoft.com
+
+ 
+
+Follow us on: 
+
+ <https://www.linkedin.com/company/tatvasoft>
+<https://www.facebook.com/TatvaSoft>  <https://twitter.com/tatvasoft>
+<https://plus.google.com/+tatvasoft> 
+
+ 
+
+From: Sandip Patel [mailto:sandip.patel@tatvasoft.com] 
+Sent: 08 June 2016 17:47
+To: 'Chandler, Philip'
+Cc: 'Attri, Vivek'; 'Badal Patel'
+Subject: Failed key change updates from sub master
+
+ 
+
+Hello Phil,
+
+ 
+
+I am sharing my understanding about key change functionality of nodes in
+lighting network. Let's assume that there are two different zigbee networks
+set up nearer to each other for two different clients (i.e. Southampton and
+Hampshire). Zigbee network would be different for both the systems and hence
+Zigbee link key as well. Nodes at the edge of the network sometime tries to
+connect the other network and it may be failed to update their Zigbee link
+key because they do not belong to that network (i.e. nodes of Southampton
+tries to connect zigbee network of Hampshire and failed). Sub master
+provides this information through one of the sub master web service method.
+
+Refer following function in file
+$/Edison/Main/Source/Master/SubMasterWebService/SubMaster.asmx.cs
+
+public string Failed_NextLinkKey_Upgrade_Info(string Session_ID, string
+ILN_Node_List)
+
+        {
+
+            //string resp = (new
+SubMasterHeaderLogic(db)).ReportFailedLinkKeyUpgrade(Session_ID,
+ILN_Node_List);
+
+            string resp = "<NLK_Up_Fail><Status V='01'/></NLK_Up_Fail>";
+
+            SEC.Logging.Logger.LogInformation(String.Format("Sub Master
+called Failed_NextLinkKey_Upgrade_Info\nNode List:\n\n{0}\nResult:\n\n{1}",
+ILN_Node_List, resp), "SubMasterCall", "Sub Master " +
+Session_ID.Substring(0, 16));
+
+            return resp;                        
+
+        }
+
+ 
+
+This code was already there in the first copy of Master project we received
+from Mayflower and we didn't make any changes so far in this area. Please
+notice the commented line in above code. I think function is written to
+collect this information from sub master but it may not be functioning
+correctly or this part is yet to be tested and completed with real sub
+master hardware.
+
+ 
+
+We would like to know more about this.
+
+-          Any specific reason why that line is commented?
+
+-          What additional steps required to make it working with new sub
+master?
+
+-          Is there any change in the requirement (in terms of functionality
+related to new MKIII sub master)
+
+ 
+
+Using this information, I'll create work item to fix this part.
+
+ 
+
+Why we need this information?
+
+Feature 695
+<https://mayflowerdevelopment.visualstudio.com/DefaultCollection/Edison/_wor
+kitems/edit/695?fullScreen=false> : Client Segregation Enhancement
+
+As part above feature of Q3 iteration, we needed to collect some additional
+information provided by sub master (Failed key change). In this feature it's
+been assumed that sub master is already providing real address of nodes who
+failed to change their keys. To be able to test in real environment with
+real hardware, sub master must be able to provide failed key change
+information and sub master service must be recording this information in
+master database. Then only this feature would be working on LIVE (With real
+sub master).
+
+ 
+
+At the moment, this feature collects unprocessed data of
+ILMFailed_Link_Key_Upgrade table (If we insert test data manually in Master
+DB) in Master database and records a transaction history against sub master.
+To test complete iteration with real hardware, we need to make sub master
+service part working.
+
+Transaction history text: Failed Change Key for Node Real Address :
+000D-6F00-0036-65D8
+
+ 
+
+We can discuss further over Skype.
+
+ 
+
+Kind Regards
+
+Sandip Patel
+
+Sr. Team Leader 
+
+TatvaSoft CMMI Maturity Level 3
+
+Skype Id:  tatvainfo_117
+
+Website:   <http://www.tatvasoft.com/> http://www.tatvasoft.com
+
+ 
+
+Follow us on: 
+
+ <https://www.linkedin.com/company/tatvasoft>
+<https://www.facebook.com/TatvaSoft>  <https://twitter.com/tatvasoft>
+<https://plus.google.com/+tatvasoft> 
+
+ 
+
+
+------=_NextPart_001_0020_01D1C64F.62AAC5D0
+Content-Type: text/html;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
+xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
+xmlns=3D"http://www.w3.org/TR/REC-html40"><head><META =
+HTTP-EQUIV=3D"Content-Type" CONTENT=3D"text/html; =
+charset=3Dus-ascii"><meta name=3DGenerator content=3D"Microsoft Word 15 =
+(filtered medium)"><!--[if !mso]><style>v\:* =
+{behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style><![endif]--><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;}
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:"Microsoft Sans Serif";
+	panose-1:2 11 6 4 2 2 2 2 2 4;}
+@font-face
+	{font-family:Consolas;
+	panose-1:2 11 6 9 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:36.0pt;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+span.EmailStyle18
+	{mso-style-type:personal;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+span.EmailStyle19
+	{mso-style-type:personal-reply;
+	font-family:"Calibri","sans-serif";
+	color:#1F497D;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-size:10.0pt;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+/* List Definitions */
+@list l0
+	{mso-list-id:429131995;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1706214058 1384144230 67698691 67698693 67698689 =
+67698691 67698693 67698689 67698691 67698693;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:-;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Calibri","sans-serif";
+	mso-fareast-font-family:Calibri;
+	mso-bidi-font-family:"Times New Roman";}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l0:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US =
+link=3D"#0563C1" vlink=3D"#954F72"><div class=3DWordSection1><p =
+class=3DMsoNormal><span style=3D'color:#1F497D'>Apart from Confirm =
+thing, here is the stuff we would like to discuss on priority if we =
+would like to include it in point release. This is required to test =
+complete iteration for 695 feature with real sub master hardware. See =
+detailed explanation below.<o:p></o:p></span></p><p =
+class=3DMsoNormal><span =
+style=3D'color:#1F497D'><o:p>&nbsp;</o:p></span></p><div><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'>Kind =
+Regards<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sandip =
+Patel<o:p></o:p></span></b></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sr. Team Leader</span><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'> <o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'>TatvaSoft</span><span =
+style=3D'font-size:10.0pt;color:#1F497D;letter-spacing:.2pt'> CMMI =
+Maturity Level 3<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Skype =
+Id:</span></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'> =
+<b>&nbsp;</b>tatvainfo_117<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Website:</sp=
+an></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>&nbsp; =
+</span><span lang=3DEN-IN style=3D'color:#1F497D'><a =
+href=3D"http://www.tatvasoft.com/"><span lang=3DEN-US =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>http://www.t=
+atvasoft.com</span></a></span><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'><o:p></o:p><=
+/span></p><p class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p>&nbsp;</o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>Fo=
+llow us on: <o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><a =
+href=3D"https://www.linkedin.com/company/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"_x0000_i1032" =
+src=3D"cid:image001.png@01D1C64F.6124C210" alt=3D"linkedin icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://www.facebook.com/TatvaSoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D39 height=3D36 id=3D"_x0000_i1031" =
+src=3D"cid:image002.png@01D1C64F.6124C210" alt=3D"facebook icon - =
+clear"></span></a><a href=3D"https://twitter.com/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D40 height=3D36 id=3D"_x0000_i1030" =
+src=3D"cid:image003.png@01D1C64F.6124C210" alt=3D"twitter icon - =
+clear"></span></a><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://plus.google.com/+tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"_x0000_i1029" =
+src=3D"cid:image004.png@01D1C64F.6124C210" alt=3D"google+ icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p></o:p></span></p></div><p class=3DMsoNormal><span =
+style=3D'color:#1F497D'><o:p>&nbsp;</o:p></span></p><div><div =
+style=3D'border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0cm =
+0cm 0cm'><p class=3DMsoNormal><b>From:</b> Sandip Patel =
+[mailto:sandip.patel@tatvasoft.com] <br><b>Sent:</b> 08 June 2016 =
+17:47<br><b>To:</b> 'Chandler, Philip'<br><b>Cc:</b> 'Attri, Vivek'; =
+'Badal Patel'<br><b>Subject:</b> Failed key change updates from sub =
+master<o:p></o:p></p></div></div><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>Hello =
+Phil,<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>I am sharing my understanding about key change =
+functionality of nodes in lighting network. Let&#8217;s assume that =
+there are two different zigbee networks set up nearer to each other for =
+two different clients (i.e. Southampton and Hampshire). Zigbee network =
+would be different for both the systems and hence Zigbee link key as =
+well. Nodes at the edge of the network sometime tries to connect the =
+other network and it may be failed to update their Zigbee link key =
+because they do not belong to that network (i.e. nodes of Southampton =
+tries to connect zigbee network of Hampshire and failed). Sub master =
+provides this information through one of the sub master web service =
+method.<o:p></o:p></p><p class=3DMsoNormal>Refer following function in =
+file =
+$/Edison/Main/Source/Master/SubMasterWebService/SubMaster.asmx.cs<o:p></o=
+:p></p><p class=3DMsoNormal =
+style=3D'text-indent:36.0pt;text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>public</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>string</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> Failed_NextLinkKey_Upgrade_Info(</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>string</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> Session_ID, </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>string</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> ILN_Node_List)<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+{<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp; </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'>//string resp =3D (new =
+SubMasterHeaderLogic(db)).ReportFailedLinkKeyUpgrade(Session_ID, =
+ILN_Node_List);</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp; </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>string</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> resp =3D </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#A31515;background:wh=
+ite;mso-highlight:white'>&quot;&lt;NLK_Up_Fail&gt;&lt;Status =
+V=3D'01'/&gt;&lt;/NLK_Up_Fail&gt;&quot;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>;<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp; SEC.Logging.</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>Logger</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>.LogInformation(</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>String</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>.Format(</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#A31515;background:wh=
+ite;mso-highlight:white'>&quot;Sub Master called =
+Failed_NextLinkKey_Upgrade_Info\nNode =
+List:\n\n{0}\nResult:\n\n{1}&quot;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>, ILN_Node_List, resp), </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#A31515;background:wh=
+ite;mso-highlight:white'>&quot;SubMasterCall&quot;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>, </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#A31515;background:wh=
+ite;mso-highlight:white'>&quot;Sub Master &quot;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> + Session_ID.Substring(0, =
+16));<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp; </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>return</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> =
+resp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<=
+/span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'><o:p></o:p></s=
+pan></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>This code was already there in the first copy of =
+<b>Master</b> project we received from Mayflower and we didn&#8217;t =
+make any changes so far in this area. Please notice the commented line =
+in above code. I think function is written to collect this information =
+from sub master but it may not be functioning correctly or this part is =
+yet to be tested and completed with real sub master =
+hardware.<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>We would like to know more about =
+this.<o:p></o:p></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo2'><![if =
+!supportLists]><span style=3D'mso-list:Ignore'>-<span =
+style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span><![endif]>Any specific reason why that line is =
+commented?<o:p></o:p></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo2'><![if =
+!supportLists]><span style=3D'mso-list:Ignore'>-<span =
+style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span><![endif]>What additional steps required to make it =
+working with new sub master?<o:p></o:p></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo2'><![if =
+!supportLists]><span style=3D'mso-list:Ignore'>-<span =
+style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span><![endif]>Is there any change in the requirement (in terms =
+of functionality related to new MKIII sub master)<o:p></o:p></p><p =
+class=3DMsoNormal><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'><o:p>&nbsp;</o=
+:p></span></p><p class=3DMsoNormal>Using this information, I&#8217;ll =
+create work item to fix this part.<o:p></o:p></p><p =
+class=3DMsoNormal><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'><o:p>&nbsp;</o=
+:p></span></p><p class=3DMsoNormal><b>Why we need this =
+information?<o:p></o:p></b></p><p class=3DMsoNormal><a =
+href=3D"https://mayflowerdevelopment.visualstudio.com/DefaultCollection/E=
+dison/_workitems/edit/695?fullScreen=3Dfalse" target=3D"_blank">Feature =
+695</a>: Client Segregation Enhancement<o:p></o:p></p><p =
+class=3DMsoNormal>As part above feature of Q3 iteration, we needed to =
+collect some additional information provided by sub master (Failed key =
+change). In this feature it&#8217;s been assumed that sub master is =
+already providing real address of nodes who failed to change their keys. =
+To be able to test in real environment with real hardware, sub master =
+must be able to provide failed key change information and sub master =
+service must be recording this information in master database. Then only =
+this feature would be working on LIVE (With real sub =
+master).<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>At the moment, this feature collects unprocessed data =
+of <b>ILMFailed_Link_Key_Upgrade</b> table (If we insert test data =
+manually in Master DB) in Master database and records a transaction =
+history against sub master. To test complete iteration with real =
+hardware, we need to make sub master service part =
+working.<o:p></o:p></p><p class=3DMsoNormal>Transaction history text: =
+<i>Failed Change Key for Node Real Address : =
+000D-6F00-0036-65D8<o:p></o:p></i></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'><o:p>&nbsp;</o:p></span></p><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'>We can discuss further over =
+Skype.<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'><o:p>&nbsp;</o:p></span></p><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'>Kind =
+Regards<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sandip =
+Patel<o:p></o:p></span></b></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sr. Team Leader</span><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'> <o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'>TatvaSoft</span><span =
+style=3D'font-size:10.0pt;color:#1F497D;letter-spacing:.2pt'> CMMI =
+Maturity Level 3<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Skype =
+Id:</span></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'> =
+<b>&nbsp;</b>tatvainfo_117<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Website:</sp=
+an></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>&nbsp; =
+</span><span lang=3DEN-IN><a href=3D"http://www.tatvasoft.com/"><span =
+lang=3DEN-US =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>http://www.t=
+atvasoft.com</span></a></span><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'><o:p></o:p><=
+/span></p><p class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p>&nbsp;</o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>Fo=
+llow us on: <o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><a =
+href=3D"https://www.linkedin.com/company/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"Picture_x0020_1" =
+src=3D"cid:image001.png@01D1C64F.6124C210" alt=3D"linkedin icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://www.facebook.com/TatvaSoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D39 height=3D36 id=3D"Picture_x0020_2" =
+src=3D"cid:image002.png@01D1C64F.6124C210" alt=3D"facebook icon - =
+clear"></span></a><a href=3D"https://twitter.com/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D40 height=3D36 id=3D"Picture_x0020_3" =
+src=3D"cid:image003.png@01D1C64F.6124C210" alt=3D"twitter icon - =
+clear"></span></a><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://plus.google.com/+tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"Picture_x0020_4" =
+src=3D"cid:image004.png@01D1C64F.6124C210" alt=3D"google+ icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p></o:p></span></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p></div></body></html>
+------=_NextPart_001_0020_01D1C64F.62AAC5D0--
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0
+Content-Type: image/png;
+	name="image001.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image001.png@01D1C64F.6124C210>
+
+iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAMAAADW3miqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADDUExURWtra3Z2dnFxcWZmZnJycm9vb3d3d3Bw
+cGhoaH5+fnNzc5ycnJ+fn5iYmJOTk56enoWFhZKSko+Pj5WVlbq6ura2tr+/v7i4uKOjo6Ghoa+v
+r7Ozs7Gxsa6urtra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2N3d3cbGxtHR0cfH
+x/Dw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+/v7+3t7fj4+P7+/vn5+ezs7Pb29ubm5v//
+/5JhBesAAAFTSURBVDjLrZRpU4MwEIarq1att4A3RzkrttxHq9L8/18lJCFcwcEZ3w+Q3XkmLJs3
+O0ONNrKiCqKgKvIGdTSrF56vLfUgjFAUBvpS9T0OFEtG0konhhT3odS0su4XUGaZaQeKbAcN5dhR
+C0rtFeJpZacNZDqIL8dkUGyhMVkxhTyJ1PwwO3jvQ5nkEcg3SOIQYDHYyvAJpNH+HAFcDKBEw1Du
+0vjj8nE7rMrNK0iXaRiG4e6zfHyVfdsxSNYrSAloeAxwtQWAp+cTgPn1N8kGSgVJRQ86Baz5HmcL
+qYKEqAfBzcvrWfm6xdlIqCAR9aC78iyKcwDqD5G701sV3JeL1k6DmjC0qCFS0+DvuhD5O9YnPkT6
+xDrOh0jH2dlxIXp2zAVcqHZB7SeemJ8mOXOax1G6Hrkt6/SP927aDZ42C/BUUZup4vKnSnc+5SPz
+6Tf9H/QDPI4PIB7DN/wAAAAASUVORK5CYII=
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0
+Content-Type: image/png;
+	name="image002.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image002.png@01D1C64F.6124C210>
+
+iVBORw0KGgoAAAANSUhEUgAAACcAAAAkCAMAAAA96dOpAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACKUExURWtra2ZmZmhoaGxsbG9vb2dnZ4yMjIOD
+g4WFhY+Pj5ycnLq6ura2tr+/v9ra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2MbG
+xsfHx/Dw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+Xl5enp6e/v7+Tk5OLi4vb29vj4+P//
+/xnm0gMAAAE/SURBVDjLrZRpU4MwEIZB7YEQrnC3hEKDpdb8/79n0bDZEOh0HN9PzPLMZm9LYB39
+IHQ9Nwz8o9Blqc+aRTFtTq1oTw2NQ1Yvcx1JzujHOSHdAsfTrJ891Wcpn3NtXghTRd7qHM9LsaQy
+5xqXIm/l1rLvkh5TzHWZwtIX21acyDrF1QSlsLM1ric1cCxB5RiZ191+OxkSBlyE6vYxchdcx2ji
+hgqZr+jNX1WD5Kj/kPOp5IIGbJ8sGLmiKFRmTSA5cgPbmz0pBtuNSM6F5ogNcAxsrSs5T8UC2OZL
+GT3Tn+PsR8px3oXpD8V3T97IF+JD+S5xkK9WP7peP60fdL0fWn8NTvVXmxeDQ/OC52/O4fnD8zzn
+8Dzj/Zhx+n4IfljZtwP/0/4+fQ+evi8/9ypU96pavVf6/RvW799D/Tf3DUHX0SHdaHbnAAAAAElF
+TkSuQmCC
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0
+Content-Type: image/png;
+	name="image003.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image003.png@01D1C64F.6124C210>
+
+iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAMAAADM4ogkAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD8UExURXFxcWtra3p6enx8fGZmZmpqam5ubmho
+aHR0dG9vb2lpaXNzc3t7e21tbWxsbGdnZ3d3d3Z2do6Ojo+Pj4WFhY2NjZKSkp6enoSEhIiIiIGB
+gZiYmIKCgpSUlJGRkbq6ura2tr+/v6CgoLW1taKiory8vLKysrOzs7S0tLu7u6mpqdra2svLy8DA
+wMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2N3d3cbGxsTExN7e3sfHx/Dw8Pz8/ODg4Orq6vX1
+9fv7++jo6PPz8/39/evr6/T09PLy8vj4+OPj4/b29vf39+/v7+bm5v7+/vr6+uzs7O7u7vHx8f//
+/2szI4QAAAGHSURBVDjLrZRnc4JAEIbRYDS99wIYNYUi1RIFBCEkhphy//+/RODOO1AcJpP307H7
+zN2yjQIpDXlBZFhGFPhh2gEo4mxaUlu2Rw5wRrbcFi0zB3Q5ZUx4xgrnLgM9VfMzr/ma6i2Ajm6A
+RRm6kwE9vQOWqaN7aVA1wHIZagp0NZAnzSVAk/NzQZ8zMWgpifEFeYM6VTrsekZ0m2JhUEry91p+
+S7jJGj1ThTp6j/IpzcGwl/g/6PX+NDrc0bGqx/3oqxciUObhy1WaPonOpwlIt2MzLyNQsGFoZ5G3
+3GieQ/AzttoCArlJwtmtGk1qA0bMIZCBdZqUUhx9AavLIJBFWblPgw/QzGZvBNNH8u3Nr+yNKEYA
+nrYIsAGyMc7/GnxvY64WQCP+a5THmUbsJeR2npEN5xFVZqaf1i68rzu34cqgWstX13uwePUAz460
+2D1B82a/VDm45UKiz8juKdyPhTu8+MwAb5AzhQPvj3NdfFMU3z3xNhPxNuvlb7P0fgxX7MeV+n/w
+F5blh09uPDHJAAAAAElFTkSuQmCC
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0
+Content-Type: image/png;
+	name="image004.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image004.png@01D1C64F.6124C210>
+
+iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAMAAADW3miqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEjUExURWpqamZmZmhoaHp6en9/f21tbXh4eGdn
+Z3FxcW9vb3V1dXZ2dm5ubnR0dHd3d3x8fGlpaWtra4mJiZKSkoyMjIeHh5qamoODg5iYmIqKipmZ
+mY2NjZGRkZaWlo+Pj56enpubm7q6ura2tr+/v6CgoLOzs66urry8vKampri4uKOjo6WlpbKysr29
+vaGhoa2traSkpNra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2MPDw8LCwtfX18bG
+xsfHx8jIyNnZ2cTExNTU1M7Oztzc3NDQ0PDw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+Li
+4u7u7u/v7+Pj4/Ly8vr6+vb29vT09Ozs7Onp6ebm5v7+/uXl5f///1jAeM0AAAG/SURBVDjLrZRp
+U8IwEIa7RS3eB3ifUA/As9wFVPCGQkvRghe6//9X2JC0pFocnHE/ZJvMk2T37WYF5KyqJFORaCSV
+VKr8MgruV01LZ7L1ho56o57NpLSaD2TIuSa3uZmTje+QmVdb6LWWmjc9kF4o4k8rFnQOMgsl9LNS
+wexD+SL6WzHvQoaKg0w1GFSTnZgfdxcEEAOhJzLZ2yPRyzUKaTnGnI9YaATggs7298mY0yiUZvq0
+xQN7vITRDgc10z3IKrODYlAhbgyuUI/H4wthe0AsWwTKKgxahChxS/Z9z4lEYmTZHhCVLIGSdQat
+wGoPEmkeh73rsJ4kkPzCoGsJzhE7wSPkoReZQBHdEeVmXArFJg7QA+kRAkX70j23j2HSrYNX6qPe
+k4gsIKW9mtOT3Jjsk5SbKYATfheLyc3ubW06lrk9FeGEh2h2jk7vwfUG8XeiZHEQ1clRfAO6LC24
+5yCquPPvBNDo8oXEvRX275wqmIHND+I/tviYnCpg9fQgQFj97D6Etrns3HpyKrN7Njs3H9gp+Vbm
+cDWOZmXAa6mYf3x3w73g4XpBr6uk+l2l7N9VvP3JGtCffrH/g74Amoqoq9ahs3gAAAAASUVORK5C
+YII=
+
+------=_NextPart_000_001F_01D1C64F.62AAC5D0--
+

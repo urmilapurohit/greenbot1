@@ -1,0 +1,335 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@*<div class="sub-title">
+   
+    <ul class="option-list" style="margin-bottom:10px">
+        
+        <li>
+           
+            <a href="javascript:void(0)" title="Restore" onclick="lnkRestore_click()" id="lnkRestore">Restore selected photos</a>
+        </li>
+
+    </ul>
+</div>*@
+
+<div class="row">
+    <div class="visit-list col-sm-6" id="divVisitList_">
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            @if (Model.chkPhotosAll != null && Model.chkPhotosAll.chkJobPhotos != null)
+            {
+                for (int i = 0; i < Model.chkPhotosAll.chkJobPhotos.Count; i++)
+                {
+                    <div class="panel" id="pnlMain@(i)" data-isdeleted="@Model.chkPhotosAll.chkJobPhotos[i].IsDeleted" data-jobschedulingid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+
+                        @if (Model.chkPhotosAll.chkJobPhotos[i].IsDeleted)
+                        {
+                            <div class="visit">
+                                <div class="panel-heading submission-add deleteJobVisit visitParent" role="photo-tab" id="headingAssets@(i+"_")">
+                                    <span class="deleteInfo" title="Visit item has been deleted">&nbsp;</span>
+                                    <input type="checkbox" class="visit-list-check" data-UniqueVisistID="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-jobscid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+                                    <a role="button" data-toggle="collapse" data-name="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-parent="#accordion" href="#collapseAssets@(i+"_")" aria-expanded="false" aria-controls="collapseAssets@(i+"_")">
+                                        <i class="sprite-img folder-icon"></i>
+                                        <span>@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID</span>
+                                        <i class="sprite-img arrow-icon"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="visit">
+                                <div class="panel-heading submission-add visitParent" role="photo-tab" id="headingAssets@(i+"_")">
+                                    @if (Model.chkPhotosAll.chkJobPhotos[i].IsDefaultSubmission)
+                                    {
+                                        <span class="submission">STC Submission<i class="sprite-img submission-icon"></i></span>
+                                    }
+                                    <input type="checkbox" class="visit-list-check" data-UniqueVisistID="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-jobscid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+                                    <a role="button" data-toggle="collapse" data-name="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-parent="#accordion" href="#collapseAssets@(i+"_")" aria-expanded="false" aria-controls="collapseAssets@(i+"_")">
+                                        <i class="sprite-img folder-icon"></i>
+                                        <span>@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID</span>
+                                        <i class="sprite-img arrow-icon"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                        }
+
+                        <div id="collapseAssets@(i+"_")" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssets@(i+"_")">
+
+                            <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+
+                                @for (int k = 0; k < Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem.Count; k++)
+                                {
+
+                                    <div class="panel">
+                                        <div class="panel-heading" role="photo-subtab" id="headingpanel-01@(k)">
+                                            <input type="checkbox" class="visit-list-check parentInput" data-jobscid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId" data-cid="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].VisitCheckListItemId" data-folder="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].FolderName" data-ct="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].CheckListClassTypeId" data-loc="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].PDFLocationId" data-nm="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].CaptureUploadImagePDFName">
+
+
+
+
+
+                                            <a role="button" style="@(Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].Isdeleted? "color:red" : "")" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial@(k + Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].VisitCheckListItemId)" data-name="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].FolderName" aria-expanded="false" aria-controls="panel-serial@(k + Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].VisitCheckListItemId)">
+                                                @Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].FolderName (<span class="color-text totalCount">@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].VisitedCount</span><span class="color-text">/@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].TotalCount</span>)
+                                            </a>
+                                        </div>
+                                        <div class="photo">
+                                            <div id="panel-serial@(k + Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].VisitCheckListItemId)" class="panel-collapse collapse in" role="photo-subtab" aria-labelledby="headingpanel-01@(k)">
+                                                <ul class="panel-body">
+                                                    @for (int j = 0; j < Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto.Count; j++)
+                                                    {
+                                                        <li data-path="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].Path" data-vclid="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].VisitCheckListPhotoId" data-vsid="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].VisitSignatureId">
+                                                            <input type="checkbox" class="visit-list-check" data-vclid="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].VisitCheckListPhotoId" value="@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].VisitCheckListPhotoId">
+                                                            <span onclick="imagediv('@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath, Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].Path)')" style="cursor:pointer" id="activeimg">@Model.chkPhotosAll.chkJobPhotos[i].lstVisitCheckListItem[k].lstCheckListPhoto[j].Name</span>
+
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            }
+            <div class="panel pdf-generated ref" id="pnlReference">
+                <div class="panel-heading submission-add" role="photo-tab" id="headingReference">
+                    <input type="checkbox" class="visit-list-check pdf-generated-get-details ref" data-UniqueVisistID="Reference Photos" data-jobscid="0">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseReference1" aria-expanded="false" aria-controls="collapseReference1">
+                        @*<span>VISIT  170304005</span>*@
+                        <i class="sprite-img folder-icon"></i>
+                        <span>Reference Photos</span>
+                        <i class="sprite-img arrow-icon"></i>
+                    </a>
+                </div>
+
+
+                <div id="collapseReference1" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingReference">
+                    <div class="photo">
+                        <ul class="panel-body" id="ulPreference">
+                            @if (Model.chkPhotosAll != null && Model.chkPhotosAll.ReferencePhotos != null)
+                            {
+                                for (int j = 0; j < Model.chkPhotosAll.ReferencePhotos.Count; j++)
+                                {
+                            <li data-path="@Model.chkPhotosAll.ReferencePhotos[j].Path" data-vclid="@Model.chkPhotosAll.ReferencePhotos[j].VisitCheckListPhotoId" data-vsid="@Model.chkPhotosAll.ReferencePhotos[j].VisitSignatureId">
+                                <input type="checkbox" class="visit-list-check" data-vclid="@Model.chkPhotosAll.ReferencePhotos[j].VisitCheckListPhotoId" value="@Model.chkPhotosAll.ReferencePhotos[j].VisitCheckListPhotoId">
+                                @*<a data-lightbox="property" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.ReferencePhotos[j].Path)" title="">@Model.chkPhotosAll.ReferencePhotos[j].Name</a>*@
+                                <span onclick="imagediv('@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.ReferencePhotos[j].Path)')" style="cursor:pointer" id="activeimg">@Model.chkPhotosAll.ReferencePhotos[j].Name</span>
+                            </li>
+                                }
+                            }
+                            else
+                            {
+                                <li id="liNoData">No Data Found.</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel pdf-generated def" id="pnlMainDefault">
+                <div class="panel-heading submission-add visitParent" role="photo-tab" id="headingAssetsDefault">
+                    @if (Model.chkPhotosAll == null || Model.chkPhotosAll.chkJobPhotos == null || (Model.chkPhotosAll.chkJobPhotos.Where(a => a.IsDeleted == false).Count() == 0))
+                    {
+                        <span class="submission">STC Submission<i class="sprite-img submission-icon"></i></span>
+                    }
+                    <input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos" data-jobscid="@Model.chkPhotosAll.jobId">
+                    <a role="button" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseAssetsInstallation1" aria-expanded="false" aria-controls="collapseAssetsInstallation1">
+                        <i class="sprite-img folder-icon"></i>
+                        <span>Default Photos</span>
+                        <i class="sprite-img arrow-icon"></i>
+                    </a>
+                </div>
+                <div id="collapseAssetsInstallation1" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+                    <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+                        <div class="panel">
+                            <div class="panel-heading" role="photo-subtab" id="headingpanel-02-Install">
+                                <input type="checkbox" class="visit-list-check parentInput defaultPanel" data-type="2">
+                                <a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial-Installation1" data-name="Installation Photos" aria-expanded="false" aria-controls="panel-serial-Installation1">
+                                    Installation Photos
+                                </a>
+                            </div>
+                            <div id="panel-serial-Installation1" class="panel-collapse collapse in" role="photo-subtab" aria-labelledby="headingpanel-02-Install">
+                                <ul class="panel-body photo">
+                                    @if (Model.chkPhotosAll != null && Model.chkPhotosAll.InstallationPhotos != null)
+                                    {
+                                        for (int j = 0; j < Model.chkPhotosAll.InstallationPhotos.Count; j++)
+                                        {
+                                    <li data-path="@Model.chkPhotosAll.InstallationPhotos[j].Path" data-vclid="@Model.chkPhotosAll.InstallationPhotos[j].VisitCheckListPhotoId" data-vsid="@Model.chkPhotosAll.InstallationPhotos[j].VisitSignatureId">
+                                        <input type="checkbox" class="visit-list-check" data-vclid="@Model.chkPhotosAll.InstallationPhotos[j].VisitCheckListPhotoId" value="@Model.chkPhotosAll.InstallationPhotos[j].VisitCheckListPhotoId">
+                                        @*<a data-lightbox="property" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.InstallationPhotos[j].Path)" title=" ">@Model.chkPhotosAll.InstallationPhotos[j].Name</a>*@
+                                        @*<a data-date="@Model.chkPhotosAll.InstallationPhotos[j].CreatedDate" data-lat="@Model.chkPhotosAll.InstallationPhotos[j].Latitude" data-lon="@Model.chkPhotosAll.InstallationPhotos[j].Longitude" data-lightbox="property" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.InstallationPhotos[j].Path)" title=" ">@Model.chkPhotosAll.InstallationPhotos[j].Name</a>*@
+                                        <span onclick="imagediv('@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.InstallationPhotos[j].Path)')" style="cursor:pointer" id="activeimg">@Model.chkPhotosAll.InstallationPhotos[j].Name</span>
+                                    </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="panel ">
+                            <div class="panel-heading" role="photo-subtab" id="headingpanel-02-Serial">
+                                <input type="checkbox" class="visit-list-check parentInput defaultPanel" data-type="1">
+                                <a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial-Serial1" data-name="Serial Photos" aria-expanded="false" aria-controls="panel-serial-Serial1">
+                                    Serial Photos
+                                </a>
+                            </div>
+                            <div id="panel-serial-Serial1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingpanel-02-Serial">
+                                <ul class="panel-body photo">
+                                    @if (Model.chkPhotosAll != null && Model.chkPhotosAll.SerialPhotos != null)
+                                    {
+                                        for (int j = 0; j < Model.chkPhotosAll.SerialPhotos.Count; j++)
+                                        {
+                                    <li data-path="@Model.chkPhotosAll.SerialPhotos[j].Path" data-vclid="@Model.chkPhotosAll.SerialPhotos[j].VisitCheckListPhotoId" data-vsid="@Model.chkPhotosAll.SerialPhotos[j].VisitSignatureId">
+                                        <input type="checkbox" class="visit-list-check" data-vclid="@Model.chkPhotosAll.SerialPhotos[j].VisitCheckListPhotoId" value="@Model.chkPhotosAll.SerialPhotos[j].VisitCheckListPhotoId">
+                                        @*<a data-lightbox="property" href='@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.SerialPhotos[j].Path)' title=" ">@Model.chkPhotosAll.SerialPhotos[j].Name</a>*@
+                                        <span onclick="imagediv('@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath,Model.chkPhotosAll.SerialPhotos[j].Path)')" style="cursor:pointer" id="activeimg">@Model.chkPhotosAll.SerialPhotos[j].Name</span>
+                                    </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <div class="col-sm-6" id="imgdisplay">
+        <img src="" style="max-width:100%" />
+
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6" style="text-align:center">
+        <button type="button" id="lnkRestore" class="btn primary icon-btn" onclick="lnkRestore_click()">
+            Select Folder For Restore
+        </button>
+    </div>
+
+</div>
+@*<div class="modal fade" id="restoreChecklistItmes">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button id="closbtn" type="button" class="close"  aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"> Restore Checklist items </h4>
+                </div>
+                <div class="modal-body" id="restoreChecklistItmesdata">
+
+
+                </div>
+            </div>
+        </div>
+    </div>*@
+<script>
+    function imagediv(path) {
+        debugger
+      //  $("#activeimg").css("color","red");
+        //fileExtension = path.substr((path.lastIndexOf('.') + 1));
+
+        //if (fileExtension == "HEIC" | fileExtension == "heic") {
+        //    fileExtension = "jpg";
+        //}
+        //newpath = path.replace(path.substr((path.lastIndexOf('.') + 1)),fileExtension)
+        $("#imgdisplay img").attr("src", path);
+        $("#imgdisplay img").attr("alt", " Image is not available..");
+    }
+    @*function lnkRestore_click() {
+        $("#divVisitList input:checkbox:checked").each(function () {
+            alert("Id: " + $(this).attr("data-jobscid") + " Value: " + $(this).val());
+        });
+        
+         var urlRestoreChecklistItems = '@Url.Action("RestoreChecklistItems", "Job")?visitId=';
+        $.get(function (data) {
+            $('#restoreChecklistItmesdata').empty();
+            $('#restoreChecklistItmesdata').append(data);
+            $('#restoreChecklistItmes').modal({ backdrop: 'static', keyboard: false });
+        });
+    }*@
+
+    @*function lnkRestore_click() {
+        debugger
+        var $checkedInput = $('#divVisitList_').find('.visit-list-check:checked').add();
+
+        if ($checkedInput.length != 1) {
+            alert("Please select one active parent.");
+            return false;
+        }
+        var jobScId = $checkedInput.data('jobscid');
+
+        var urlRestoreChecklistItems = '@Url.Action("RestoreCheckListItem", "Job")?jobScId=';
+
+        $.get(urlRestoreChecklistItems + jobScId ,function (data) {
+            $('#restoreChecklistItmesdata').empty();
+            $('#restoreChecklistItmesdata').append(data);
+            $('#restoreChecklistItmes').modal({ backdrop: 'static', keyboard: false });
+        });
+        return false;
+
+    }*@
+
+    function lnkRestore_click () {
+       
+       // var $checkedInput = $('.visit').find('.visit-list-check:checked').map(function () { return this.value; }).get().join(',');
+        var $checkedInput = $('.visit').find('.visit-list-check:checked').add();
+       var jobScId = $checkedInput.data('jobscid');
+        var $checkedItems = $('.photo').find('.visit-list-check:checked').add();
+       
+
+        if ($checkedItems.length == 0) {
+            alert("Please select one checklist item for restore.");
+            return false;
+        }
+
+       // var urlRestoreChecklistItems = '@Url.Action("RestoreCheckListItem", "Job")?jobScId=' + jobScId;
+        var urlRestoreChecklistItems = '@Url.Action("RestoreCheckListItem", "Job")?jobId=' + jobid;
+          
+            var options = {
+                "backdrop": "static",
+                keyboard: true
+            };
+            $.ajax({
+                type: "GET",
+                url: urlRestoreChecklistItems,
+                contentType: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (data) {
+                    $('#restoreChecklistItmesdata').html(data);
+                    $('#restoreChecklistItmes').modal(options);
+                    $('#restoreChecklistItmes').modal('show');
+                    $('#mdlChecklistItmes').modal('hide');
+                },
+                error: function () {
+                    alert("Content load failed.");
+                }
+            });
+        
+        
+    }
+    $('#divVisitList_ .panel-heading input[type=checkbox]').change(function () {
+        debugger
+
+        $(this).closest('.panel').find('[type=checkbox]').prop('checked', this.checked);
+
+        if ($(this).closest('[id*=pnlMain]').find('[id*=accordion]').find('.panel-heading').find('input[type=checkbox]').length == $(this).closest('[id*=pnlMain]').find('[id*=accordion]').find('.panel-heading').find('input[type=checkbox]:checked').length) {
+            if ($(this).closest('[id*=pnlMain]').find('[id*=accordion]').find('.panel-heading').find('input[type=checkbox]').length != 0)
+                $(this).closest('[id*=pnlMain]').find('[id*=headingAssets]').find('[type=checkbox]').prop('checked', 'checked');
+        }
+        else {
+            $(this).closest('[id*=pnlMain]').find('[id*=headingAssets]').find('[type=checkbox]').removeAttr('checked');
+        }
+
+    });
+
+</script>

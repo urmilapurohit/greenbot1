@@ -1,0 +1,141 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "Edit User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int temUserTypeId = FormBot.Helper.ProjectSession.UserTypeId;
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<style type="text/css">
+    .SumoSelect > .optWrapper > .options > li label {
+        font-weight: normal;
+    }
+
+    .subtitle {
+        border-left: 1px solid #dadada;
+        color: #666666;
+        font-size: 16px;
+        margin-left: 10px;
+        padding: 2px 10px;
+    }
+</style>
+@using (Html.BeginForm("Edit", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+{
+    <div class="container-fluid message-page">
+        <div class="title">
+            <h1>Edit User </h1><span class="subtitle">@Model.FirstName @Model.LastName</span>
+            <a href="@Url.Action("index", "User" )" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.UserTypeID, new { @class = "control-label" })
+                    @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "UserTypeId", @class = "form-control", })
+                    @Html.ValidationMessageFor(m => m.UserTypeID)
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3 SCA RAM RAMdrp RAMCreate" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 6, 7, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.PreviousResellerID)
+                    @Html.LabelFor(m => m.ResellerID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerID", @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ResellerID)
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3 SCO SCdrp SC SCACreate" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 4, 5, 6, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.PreviousSolarCompanyId)
+                    @Html.LabelFor(m => m.SolarCompanyId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.SolarCompanyId)
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.PreviousRoleID)
+                    @Html.LabelFor(m => m.RoleID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.RoleID)
+                </div>
+            </div>
+            <div class="col-sm-3 RA FCO" @if (Common.IsExistsInArray(new int[] { 1, 4, 5, 6, 7, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.FCOGroupId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.lstFCOGroup1, new SelectList(Model.lstFCOGroup1, "FCOGroupId", "GroupName"), new { @multiple = "multiple", @placeholder = "Select", @class = "SlectBox", id = "FCOGroupId" })
+                    <span id="spanFCOGroup" style="display: none; color:#b94a48">FCO Group is required.</span>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <div>
+                    <label class="control-label">Created By :</label>
+                </div>
+                <label class="control-label" style="padding-top:5px"><b>@Model.Created</b> @Model.DisplayDate</label>
+            </div>
+        </div>
+        @Html.HiddenFor(m => m.AspNetUserId)
+        @Html.HiddenFor(m => m.UserId)
+        @Html.HiddenFor(m => m.UserTypeID)
+        @Html.HiddenFor(m => m.CreatedDate)
+        @Html.HiddenFor(m => m.Signature)
+        @Html.HiddenFor(m => m.SESelfie)
+        @*@Html.HiddenFor(m => m.ResellerID)
+            @Html.HiddenFor(m => m.SolarCompanyId)*@
+        @Html.HiddenFor(m => m.IsFirstLogin)
+        @Html.HiddenFor(m => m.Theme)
+        @Html.HiddenFor(m => m.Logo)
+        @Html.Partial("_Details", Model)
+        @*Hide for users except SCA and SE@Html.Partial("_UserNotes", Model)*@
+        @*@Html.Partial("_UserHistory", Model)*@
+    </div>
+}
+@section Scripts
+    {
+    <script type="text/javascript">
+        var pageType = 'edit';
+        var resellerID='@Model.ResellerID';
+        var userID ='@Model.UserId';
+        var USERID =@Model.UserId;
+        var logoWidth = 0, logoHeight = 0, SRCSign;
+        var sessionUserTypeID = '@temUserTypeId';
+        var getSCAURL = '@Url.Action("GetSolarCompany", "SolarCompany")';
+        var getResellerURL = '@Url.Action("GetReseller", "Reseller")';
+        var getFCOGroupURL = '@Url.Action("GetFCOGroup", "FCOGroup")';
+        var modelFCOGroupId = @Model.FCOGroupId;
+        var model = @Html.Raw(Json.Encode(Model));
+        var getRoleURL1 = '@Url.Action("GetRole", "Role", new { id = 1 })';
+        var getRoleURL2 = '@Url.Action("GetRole", "Role", new { id = 2 })';
+        var getRoleURL3 = '@Url.Action("GetRole", "Role", new { id = 3 })';
+        var getRoleURL4 = '@Url.Action("GetRole", "Role", new { id = 4 })';
+        var getRoleURL5 = '@Url.Action("GetRole", "Role", new { id = 5 })';
+        var getRoleURL6 = '@Url.Action("GetRole", "Role", new { id = 6 })';
+        var getRoleURL7 = '@Url.Action("GetRole", "Role", new { id = 7 })';
+        var getRoleURL8 = '@Url.Action("GetRole", "Role", new { id = 8 })';
+        var getRoleURL9 = '@Url.Action("GetRole", "Role", new { id = 9 })';
+        var getRoleURL10 = '@Url.Action("GetRole", "Role", new { id = 10 })';
+        var wholesalerIsPostalAddress = '@Model.WholesalerIsPostalAddress';
+        var wholesalerCompanyABN = '@Model.WholesalerCompanyABN';
+        var wholesalerCompanyName = '@Model.WholesalerCompanyName';
+        var getUserIndexURL = '@Url.Action("Index","User")';
+        var saveMaskingValueURL = '@Url.Action("SaveMaskingValue", "User")';
+        var InvoicerIsPostalAddress = @Model.InvoicerAddressID;
+    </script>
+    <link href="~/Content/dropdownliststyle.css" rel="stylesheet" />
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @Scripts.Render("~/bundles/UserEdit")
+    <script src="~/Scripts/User/Edit.dev.js"></script>
+    <script>
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+         var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    </script>
+}

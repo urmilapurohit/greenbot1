@@ -1,0 +1,461 @@
+﻿@model List<FormBot.Entity.Job.JobHistory>
+@using FormBot.Helper
+@{
+    ViewBag.Title = "SSC";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid sca_dashboard">
+    <div class="title">
+        <h1>Dashboard</h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-lg-3">
+            <!-- ===Reports Summary======================================= -->
+            @*<div class="reports-summary">
+                <h3 class="sca-heding">Reports Summary</h3>
+                <div class="chart-block">
+                    <center><h3 class="Chart-header">Job Chart</h3></center>
+                    <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                        <div id="dvJobchart" style="height: 400px; width: 100%;"></div>
+                    </div>
+                    @if (ProjectSession.UserTypeId == 6)
+                    {
+                        <center><h3 class="Chart-header">Invoice Chart</h3></center>
+                        <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                            <div id="dvInvoiceChart" style="height: 400px; width: 100%;"></div>
+                        </div>
+                    }
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Installation :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NewInstallation" })" title="New Installation">New Installation<span>@ViewBag.NewInstallationCount</span></a></li>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "InProgress" })" title="In Progress">In Progress<span>@ViewBag.InProgressCount</span></a></li>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "InstallationCompleted" })" title="Installation Completed">Installation Completed<span>@ViewBag.InstallationCompletedCount</span></a></li>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "Cancellations" })" title="Cancellations">Cancellations<span>@ViewBag.CancellationsCount</span></a></li>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "Complete" })" title="Complete">Complete<span>@ViewBag.CompleteCount</span></a></li>
+                    </ul>
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Invoicing :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NotYetInvoiced" })" title="Not Yet Invoiced">Not Yet Invoiced<span>@ViewBag.NotYetInvoiced</span></a></li>
+                    </ul>
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Solar Electrician :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToSolarElectrician", "Dashboard", new { status = "SERequestPending" })" title="Request Pending">Request Pending<span>@ViewBag.SERequestPending</span></a></li>
+                    </ul>
+                </div>
+            </div>*@
+
+            <!-- ===quick-links======================== -->
+
+            <div class="quick-links">
+                <h3 class="sca-heding">Quick Links</h3>
+                <ul>
+                    <li id="dSEList"><a href="@Url.Action("SE", "User")" title="Solar Electrician List"><span class="icon"><img src="~/images/Solar-Electrician-List.png" alt=""></span>Solar Electrician List</a></li>
+                    @if (ProjectSession.UserTypeId == 6) {
+                        <li id="dUserList"><a href="@Url.Action("Index", "User")" title="User List"><span class="icon"><img src="~/images/User-List.png" alt=""></span>User List</a></li>
+                    }
+                    @if (ProjectSession.UserTypeId == 6)
+                    {
+                        <li id="dJobScheduling"><a href="@Url.Action("JobSchedulingDetail", "JobScheduling")" title="Schedule Electrician"><span class="icon"><img src="~/images/ic-cal.png" alt=""></span>Schedule Electrician</a></li>
+                    }
+                    <li id="dReport"><a href="@Url.Action("Index", "FormBotReport")" title="Reports"><span class="icon"><img src="~/images/Reports.png" alt=""></span>Reports</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+
+        <div class="col-md-8 col-lg-9">
+            <div class="news-feed">
+                <h3 class="sca-heding">News Feed<p class="pull-right">Last 30 Days Data</p></h3>
+                <div class="history-filter-div">
+                    <span style="font-weight:bold;">Displaying </span>
+                    <select id="historyCategories">
+                        <option value="0">All Activity</option>
+                        <option value="1">General</option>
+                        <option value="2">Interaction</option>
+                        <option value="3">Statuses</option>
+                        <option value="4">Notifications</option>
+                        <option value="5">Invoicing</option>
+                        <option value="6">Documents</option>
+                        <option value="7">Scheduling</option>
+                    </select>
+                </div>
+                <hr />
+                <div id="dvHistoryList" style="overflow-y:auto">
+                </div>
+            </div>
+            @if (ProjectSession.UserTypeId == 6) { 
+                <div>
+                    <h3 class="sca-heding">NEW JOBS REQUESTS</h3>
+                    <div id="divNewJobsRequest">
+                        @Html.Partial("_NewRequestJobs", new List<FormBot.Entity.Dashboard.DashboardJobList>())
+                    </div>
+                </div>
+            }
+            
+        </div>
+
+
+    </div>
+</div>
+
+<style>
+    hr {
+        margin: 10px 30px 10px 30px;
+    }
+
+    #dvHistoryList {
+        height: 500px;
+        overflow-y: scroll;
+    }
+
+    .status-block {
+        background-color: #fff;
+        padding: 0px;
+        /*display: table;*/
+        margin: 10px;
+    }
+
+    .blue-title {
+        color: #1b94da;
+    }
+
+    .stc-amount-block {
+        padding: 20px;
+    }
+
+        .stc-amount-block ul li.active, .stc-amount-block ul li:hover, .stc-amount-block ul li:focus {
+            background-color: green;
+        }
+
+    .history-filter-div {
+        padding: 17px 0px 0px 10px;
+    }
+
+    #historyCategories {
+        border: 0;
+        color: green;
+        font-weight: bold;
+    }
+
+    .chart-block {
+        padding: 15px;
+    }
+
+    .Chart-header {
+        font-size: 16px;
+        text-transform: uppercase;
+        line-height: 20px;
+        padding: 10px 15px;
+        font-family: 'OpenSansBold';
+    }
+
+    #mCSB_1_scrollbar_vertical{
+        display:none !important;
+    }
+</style>
+
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script>
+
+    var pageIndex = 0;
+    var pageSize = 10;
+    var IsLast = false;
+    var count = 0;
+    var IsProcessOn = 0;
+
+    $(document).ready(function () {
+        $("#loading-image").show();
+        pageIndex = 1;
+        GetNewsFeed(1, 10);
+        //ShowJobDetailChart();
+        //ShowInvoiceChart();
+        $("#loading-image").hide();
+
+        //Job Scheduling
+        if ($('#JobScheduling').length > 0)
+            $('#dJobScheduling').show();
+        else
+            $('#dJobScheduling').hide();
+
+        //SE List
+        if ($('#CreateSolarElectrician').length > 0)
+            $('#dSEList').show();
+        else
+            $('#dSEList').hide();
+
+        //User List
+        if ($('#ViewUser').length > 0)
+            $('#dUserList').show();
+        else
+            $('#dUserList').hide();
+
+        //Report
+        if ($('#GreenBotReport').length > 0)
+            $('#dReport').show();
+        else
+            $('#dReport').hide();
+
+        if ($('#JobScheduling').length == 0 && $('#CreateSolarElectrician').length == 0 && $('#ViewUser').length == 0 && $('#GreenBotReport').length == 0)
+            $(".quick-links").hide();
+        else
+            $(".quick-links").show();
+
+        // load news feed on scroll 
+        $("#dvHistoryList").on("scroll", function (e) {
+            if (IsLast == false) {
+                if (pageIndex == 1 && count > 0 && IsProcessOn == 1) {
+                    count = 0;
+                    return false;
+                }
+                IsProcessOn = 1
+                var $o = $(e.currentTarget);
+                if ($o[0].scrollHeight - $o.scrollTop() <= $("#dvHistoryList").height()) {
+                    if (isNaN(pageIndex)) {
+                        pageIndex = 1;
+                    } else { pageIndex = pageIndex + 1; }
+                    count = pageIndex;
+                    GetNewsFeed(pageIndex, pageSize);
+                }
+            }
+        });
+        
+    });
+
+    function GetNewsFeed(pageIndex, pageSize) {
+        var categoryID = 0;
+        var startDate = new Date();
+        var endDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format("YYYY-MM-DD");
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        $.ajax({
+            url: '@Url.Action("GetNewsFeed", "Dashboard")',
+            method: 'GET',
+            data: { categoryID: categoryID, from: fDate, to: tDate, pageIndex: pageIndex, pageSize: pageSize },
+            cache: false,
+            async: false,
+            success: function (Data) {
+                if (Data.indexOf("No Record(s) Found.") > -1) {
+                    IsLast = true;
+                    if ($("#dvHistoryList").html() == '') {
+                        $("#dvHistoryList").html(Data);
+                    }
+                }
+                else {
+                    if (pageIndex == "1") {
+                        $("#dvHistoryList").append(Data);
+                    }
+                    else {
+                        //if ($("#divCustom li").length == 0) {
+                        //    //$("#dvHistoryList").append(Data);
+                        //}
+                        //else {
+                        $("#divCustom div").append(Data);
+                        //reloadCustomScrollbar();
+                        //}
+                    }
+                    //$('#divCustom').mCustomScrollbar();
+                }
+                IsProcessOn = 0;
+                $("#loading-image").hide();
+                //$("#dvHistoryList").html($.parseHTML(Data));
+            }
+        });
+    }
+
+    
+    $('#historyCategories').change(function () {
+        var categoryID = this.value;
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format("YYYY-MM-DD");
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        $.ajax({
+            url: '@Url.Action("GetNewsFeed", "Dashboard")',
+            method: 'GET',
+            data: { categoryID: categoryID, from: fDate, to: tDate },
+            cache: false,
+            async: false,
+            success: function (Data) {
+                $("#dvHistoryList").html($.parseHTML(Data));
+            }
+        });
+    });
+
+    function ShowJobDetailChart() {
+        $.ajax({
+            url: '@Url.Action("GetJobStatusDetailReportsList", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: '{DeletedFilter:2,hdnSTCSubmissionStatusAssigned:"10,14,22,17",hdnPreapprovalStatusAssigned:"1,2,3,4,5",hdnConnectionStatusAssigned:"6,7,8,9"}',
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                if (result.lstJobDetailsRecord != null && result.lstJobDetailsRecord.length > 0) {
+                    var chartType = 'bar';
+                    var groupedData = {};
+                    var xAxis = ['xAxis'];
+                    var data1 = ['PreApproval'];
+                    var data2 = ['Connection'];
+                    var data3 = ['STCSubmission'];
+                    var data4 = ['TotalJob'];
+                    var resultData = [];
+                    //for (var i = 0; i < result.lstJobDetailsRecord.length; i++) {
+                    if (result.lstJobDetailsRecord.length > 0) {
+                        var item = result.lstJobDetailsRecord[0];
+                        var xax = @ProjectSession.UserTypeId==6?item.CompanyName:item.UserName
+                        xAxis.push(xax);
+                        data1.push(item.PreApproval);
+                        data2.push(item.Connection);
+                        data3.push(item.STCsubmission);
+                        data4.push(item.TotalJob);
+                    }
+                    resultData.push(xAxis);
+                    resultData.push(data1);
+                    resultData.push(data2);
+                    resultData.push(data3);
+                    resultData.push(data4);
+                    BindChart('dvJobchart', resultData, xAxis, chartType);
+                }
+                else {
+                    $('#dvJobchart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                }
+            },
+            error: function (e) {
+            }
+        });
+        return false;
+    }
+    function ShowInvoiceChart() {
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+
+        var data = {
+            StartDate: fDate,
+            EndDate: tDate,
+            InvoiceType: "1",
+            InvoiceMode: "3",
+            hdnFormBotStatusAssignedUser: "1,2,3,4"
+        };
+
+        $.ajax({
+            url: '@Url.Action("GetInvoiceReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(data),
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                if (result != "") {
+                    result = $.parseJSON(result);
+                    var chartType = 'bar';
+                    var groupedData = {};
+                    var xAxis = ['xAxis', 'Invoice Status'];
+                    var data1 = ['Paid', result[0].PaidInFull];
+                    var data2 = ['Partial', result[0].TotalPartialPayment];
+                    var data3 = ['PartialPaid', result[0].PartialPaidPayment];
+                    var data4 = ['Outstanding', result[0].Outstanding];
+                    var dataGroup = ['Partial', 'PartialPaid'];
+                    var chartType = $('#drdChartType').val();
+                    var resultData = [];
+                    resultData.push(xAxis);
+                    resultData.push(data1);
+                    resultData.push(data2);
+                    resultData.push(data3);
+                    resultData.push(data4);
+                    BindChart('dvInvoiceChart', resultData, xAxis, chartType);
+                }
+                else {
+                    $('#dvInvoiceChart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                }
+            },
+            error: function (e) {
+
+            }
+        });
+        return false;
+    }
+    //charts
+    function BindChart(element, result, xAxis, chartType) {
+        var chartdiv = c3.generate({
+            bindto: '#' + element,
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+                //, groups: [dataGroup]
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if (chartType == 'pie') {
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    function DownloadDocument(e) {
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+        var FolderName = $(e).attr("data-folder");
+        var FileName = $(e).attr("data-name");
+        window.location.href = BaseURL + 'ViewDownloadFileForStc/Job?FileName=' + FileName + '&FolderName=' + FolderName;
+    }
+</script>

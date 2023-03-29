@@ -1,0 +1,1052 @@
+﻿@model FormBot.Entity.Documents.DocumentCollectionView
+@using FormBot.Helper
+<style>
+    .pdfpage {
+        position: relative;
+        top: 0;
+        left: 0;
+        /*border: solid 1px black;*/
+        /*margin: 10px;*/
+    }
+
+    div.inputHint > [id*="jSignature"], .jSignature {
+        text-align: center;
+        height: 100% !important;
+        background-color: rgb(221,228,255) !important;
+    }
+
+    #noSigntext {
+        width: 100%;
+        height: 100%;
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    #jSignature > .jSignature {
+        height: 150px !important;
+        width: 100% !important;
+        background-color: rgb(255,255,255) !important;
+    }
+
+    .pdfpage > canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .pdfpage > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .pdfpage > .inputControl {
+        background-color: rgb(221,228,255) !important;
+    }
+
+    .inputControl {
+        background: transparent;
+        border: 0px none;
+        position: absolute;
+        margin: auto;
+        font-size: 13px;
+        color: black;
+    }
+
+        .inputControl[type='checkbox'] {
+            margin: 0px;
+            width: 18px;
+            height: 18px;
+        }
+
+    .inputHint {
+        border: 1px solid #d8dadd;
+        /*opacity: 1;*/
+        background: #ffffff;
+        /*opacity: 1;
+        background: #ccc;*/
+        position: absolute;
+    }
+
+    .pdfpage [type="checkbox"] {
+        display: none;
+    }
+
+        .pdfpage [type="checkbox"] + label {
+            display: inline-block;
+            border: 1px solid gray;
+            background-color: rgb(221, 228, 255);
+            max-width: 100px !important;
+        }
+
+        .pdfpage [type="checkbox"]:checked + label:before {
+            content: "\2713";
+            text-align: center;
+        }
+
+    .signature-status {
+        border-radius: 50%;
+        width: 2%;
+        height: auto;
+        padding-top: 2%;
+    }
+
+    .red {
+        background-color: red;
+    }
+
+    .image {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        object-fit: fill;
+    }
+
+    .lnk-btnonpage {
+        color: #287de9;
+        font-size: 14px;
+        font-weight: 700;
+        float: right;
+        margin-top: 4px;
+        cursor: pointer;
+        padding-right: 20px;
+    }
+</style>
+
+<script>
+    var urlSaveDocument = '@Url.Action("_Viewer", "Job")';
+    var pdfItemsStr = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Data))';
+    var pdfWorkerJsPath = '@Url.Content("~/Scripts/pdf/pdf.worker.min.js")';
+    var texthashCode = '@FormBot.Helper.SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()';
+    var buttonhashCode = '@FormBot.Helper.SystemEnums.InputTypes.BUTTON.GetHashCode()';
+    var radiohashCode = '@FormBot.Helper.SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()';
+    var checkhashCode = '@FormBot.Helper.SystemEnums.InputTypes.CHECK_BOX.GetHashCode()';
+    var getCaptureSignDetail = '@Url.Action("GetCaptureUserSignDetail", "Job")';
+
+    var url_GetDocumentSpecificAllLogByDocumentId = '@Url.Action("GetDocumentSpecificAllLogByDocumentId", "DocumentSignatureRequest")';
+    var url_DocumentSignatureStatusOverJobDocumentid = '@Url.Action("GetDocumentSignatureStatusOverJobDocumentid", "DocumentSignatureRequest")';
+    //var url_SendMessage = '@Url.Action("AddMessageWithDocumentMapped", "DocumentSignatureRequest")';
+    var signDetail = [];
+    var TotalCount = 0;
+</script>
+
+@*<script src="~/Scripts/View/Job/CommonDocViewer.dev.js"></script>*@
+<script src="@Url.Content("~/Scripts/View/Job/CommonDocNewViewerTabular.min.js")"></script>
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<script src="@Url.Content("~/Scripts/pdf/pdf.min.js")"></script>
+<script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>
+<input type="hidden" value="@ViewBag.type" id="type" />
+<input type="hidden" value="" id="doc-jobId" />
+@using (Html.BeginForm("Viewer", "Job", FormMethod.Post, new { id = "formViewer", enctype = "multipart/form-data", style = "background-color:white;" }))
+{
+
+    <div class="col-sm-12" style="background-color: #f0f0f0;">
+        <div class="form-group pull-left popup-btn-group">
+            <select id="zoom-dropdown" style="height:25px;font-size:14px; margin-right:5px;">
+                <option value="25">25%</option>
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100" selected>100%</option>
+                <option value="125">125%</option>
+                <option value="150">150%</option>
+            </select>
+            <a href="javascript:void(0);" id="zoom-in-icon"><img src="~/Images/Document/zoom-in.svg" height="20" width="20" /></a>
+            <a href="javascript:void(0);" id="zoom-out-icon"><img src="~/Images/Document/zoom-out.svg" height="20" width="20" /></a>
+
+        </div>
+
+
+        <div class="form-group pull-right popup-btn-group">
+            <a class="btn default cancel_ic line-height-33" data-dismiss="modal" aria-label="Close" onclick="generateDocumentFromPopup(false);">Cancel</a>
+            <button type="button" class="btn border-btn" id="btnSaveDoc">Save Document</button>
+            <button type="button" class="btn primary icon-btn" id="btnSendRequestforSign"><span class="sprite-img signature_ic"></span>Send For Signature</button>
+        </div>
+    </div>
+    <div class="row">
+
+    </div>
+    <div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionViewer" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionViewer" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <input type="hidden" name="Data" id="pdfData" value="@Model.Data" />
+        <input type="hidden" name="PDFURL" id="PDFURL" value="@Model.PDFURL" />
+        <input type="hidden" name="PDFSource" id="PDFSource" value="@Model.PDFSource" />
+        <input type="hidden" name="JobId" id="JobId" value="@Model.JobId" />
+        <input type="hidden" name="DocId" id="DocId" value="@Model.DocId" />
+        <input type="hidden" name="JobDocumentId" id="jobDocId" value="@Model.JobDocId" />
+    </div>
+    <div id="viewer">
+
+    </div>
+    <div style="background-color: #ebebeb;padding: 1%;padding-bottom: 5%;">
+        <div class="pageing-block" style="margin-bottom: 5px;position: relative;width:25%">
+            <div class="pageping">
+                <a href="javascript:void(0);" id="previous-page" class="page-icon" style=""></a>
+                page <input type="text" id="current-page" value="1"> of <span id="total-page">13</span>
+                <a href="javascript:void(0);" id="next-page" class="page-icon" style=""></a>
+            </div>
+            <div>
+                <select class="form-control" id="document-paging" style="display: none;">
+                    <option value="0">View Pages as scrolling</option>
+                    <option value="1">View pages one by one</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-sm-4 popup-btn-group">
+                <select id="zoom-dropdown1" style="height:25px;font-size:14px; margin-right:5px;">
+                    <option value="25">25%</option>
+                    <option value="50">50%</option>
+                    <option value="75">75%</option>
+                    <option value="100" selected>100%</option>
+                    <option value="125">125%</option>
+                    <option value="150">150%</option>
+                </select>
+                <a href="javascript:void(0);" id="zoom-in-icon1"><img src="~/Images/Document/zoom-in.svg" height="20" width="20" /></a>
+                <a href="javascript:void(0);" id="zoom-out-icon1"><img src="~/Images/Document/zoom-out.svg" height="20" width="20" /></a>
+
+                @*<div class="pageing-block" style="display: inline !important; position: relative !important; background: transparent; visibility:hidden;">
+                    <a href="javascript:void(0);" id="forward-icon"><img src="~/Images/icons8-forward-32.png" height="20" width="20" /></a>
+                    <a href="javascript:void(0);" id="backwards-icon"><img src="~/Images/icons8-backwards-32.png" height="20" width="20" /></a>
+                </div>*@
+            </div>
+            <div class="col-sm-8">
+                <a class="link-btn lnk-btnonpage generate-document-data-populate-with-signature" href="#" onclick="generateDocumentFromPopup(true);">Repopulate Data With Signature</a>
+                <a class="link-btn lnk-btnonpage generate-document-data-populate-without-signature" href="#" onclick="generateDocumentFromPopup(false);">Repopulate Data</a>
+                <a class="link-btn lnk-btnonpage" data-toggle="modal" data-target="#document-histroy-popup">+ See Document History</a>
+            </div>
+        </div>
+    </div>
+    if (ViewBag.PageFrom != "SignatureRequest")
+    {
+        @*<div class="col-md-6 pull-left">*@
+        <div class="right-parth" style="position:relative !important; width:100% !important; padding-right:0px !important;">
+            <div class="signature-users clearfix">
+                <div class="title-block">
+                    Signature
+                    <input type="checkbox" class="checkall" />
+                </div>
+                <ul></ul>
+            </div>
+            <div class="sr-custom-message">
+                <div class="title-block">
+                    Custom Message
+                </div>
+
+                <textarea id="custom-message" class="form-control" maxlength="1000" rows="5"></textarea>
+                <span class="custom-message-char-count pull-right"></span>
+            </div>
+        </div>
+        <div class="document-status" style="position: relative;">
+            Document Status : @Html.Raw(ViewBag.DocumentStatusMessage)
+        </div>
+        @*</div>*@
+
+    }
+
+}
+
+<script>
+    $(function () {
+        @*$(".message-listing").load('@(Url.Action("GetAllDocumentMessages", "DocumentSignatureRequest"))?JobDocumentId=' + @Model.JobDocId);*@
+        //MessageBlockRefresh();
+        //$(".documents-history").load(url_GetDocumentSpecificAllLogByDocumentId + "?JobDocID=@Model.JobDocId&DocName=" + encodeURIComponent(JobDocumentName));
+        DocumentLogsBind();
+
+         if ($(".signature-users ul .no-record").length > 0) {
+             $("#btnSendRequestforSign").hide();
+            }
+            else {
+                if (@ViewBag.SentEmailStatus > 0) {
+                    $("#btnSendRequestforSign").hide();
+                }
+        }
+
+        $('#jSignature').jSignature({ 'lineWidth ': 4 });
+        $("#loading-image").hide();
+        if ('@Html.Raw(Model.PDFURL)' != '') {
+            $("#errorMsgRegionDocViewer").hide();
+            $('#onpagedivViewer').show();
+            init('@Html.Raw(Model.PDFURL)?h=@DateTime.Now.Ticks');
+            //$('#onpageViewerDoc').modal({ backdrop: 'static', keyboard: false });
+        }
+        else {
+            $('#errorMsgRegionDocViewer').show();
+            //$('#onpagedivViewer').empty();
+            //$('#onpagedivViewer').hide();
+            return;
+        }
+        $('#btnSaveSign').unbind().click(function () {            
+            if ($('#signatureSend').valid()) {
+                var Firstname = $('[name="Item2.Firstname"]').val();
+                var Lastname = $('[name="Item2.Lastname"]').val();
+                var num = $('[name="Item2.mobileNumber"]').val();
+                var email = $('[name="Item2.Email"]').val();
+                var index = signDetail.findIndex(signature => signature.Fieldname == $('#' + clickSignId).attr('name'))
+                //If Draw Option Selected for Signature
+                if ($('[name="signType"]:checked').val() == 'D') {
+                    var sign = $('#jSignature').jSignature('getData', 'base30')
+                    if (index != -1) {
+                        signDetail[index].Firstname = Firstname;
+                        signDetail[index].Lastname = Lastname;
+                        signDetail[index].mobileNumber = num;
+                        signDetail[index].Fieldname = $('#' + clickSignId).attr('name');
+                        signDetail[index].signString = sign.join(",");
+                        signDetail[index].Email = email;
+                    } else {
+                        var obj = {};
+                        obj.Firstname = Firstname;
+                        obj.Lastname = Lastname;
+                        obj.mobileNumber = num;
+                        obj.Fieldname = $('#' + clickSignId).attr('name');
+                        obj.jobDocId = $('#jobDocId').val();
+                        obj.signString = sign.join(",");
+                        obj.Email = email;
+                        signDetail.push(obj);
+                    }
+                    $('#popupSignature').modal('hide')
+                    var name = $('#' + clickSignId).attr('name');
+                    for (var i = 0; i < $('[name="' + name + '"]').length; i++) {
+                        var id = $('[name="' + name + '"]')[i].id
+                        if (sign[1] == "") {
+                            $('#' + id).jSignature('reset')
+                            document.getElementById(id).children[1].getContext('2d').clearRect(0, 0, 720, 150);
+                        }
+                        else {
+                            $('#' + id).find('#noSigntext').hide();
+                            $('#' + id).find('canvas.jSignature').show();
+                            document.getElementById(id).children[1].getContext('2d').restore();
+                            document.getElementById(id).children[1].getContext('2d').clearRect(0, 0, 720, 150);
+                            if ($('#' + id).attr('scale') == "" || $('#' + id).attr('scale') == undefined) {
+                                var height = $('#' + id).height() / 150;
+                                var width = $('#' + id).width() / 720;
+                                document.getElementById(id).children[1].getContext('2d').scale(width, height);
+                                $('#' + id).attr("scale", height + "," + width);
+                            }
+                            $('#' + id).jSignature('setData', 'data:' + sign.join(","));
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['lineWidth'] = 4;
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['readOnly'] = true;
+                            $('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#' + id).find("canvas.jSignature").add($('#' + id).filter("canvas.jSignature")).data("jSignature.this").settings['data']);
+                        }
+
+                    }
+                }
+
+            }
+        });
+
+        var IsSignatureFieldExist = true;
+        var jobdocIdfojob=@Model.JobDocId;
+        var JsonData = {
+            JobDocumentId: jobdocIdfojob
+        };
+        $.ajax({
+            type: "POST",
+            url: url_DocumentSignatureStatusOverJobDocumentid,
+            data: JSON.stringify(JsonData),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (dataResult) {                
+                var RequestedUserSelectPopupId = "SendMailDocumentSignatureRequest";
+                if (dataResult != "") {
+                    if (dataResult.UsersTypeWiseData != "" && dataResult.UsersTypeWiseData != null) {
+                        data = dataResult.UserEmailStatusData;
+                        listDocumentOption = dataResult.DocumentDetails;
+                        UserTypeWiesDocumentData = dataResult.UsersTypeWiseData[0];
+                        if (UserTypeWiesDocumentData != null) {
+                            $("#doc-jobId").val(UserTypeWiesDocumentData.JobId);
+                            if (UserTypeWiesDocumentData.InstallerSignatureStatus != "NA") {
+                                var DocumentOption = jQuery.grep(listDocumentOption, function (n, i) {
+                                    return (n.Type == @SystemEnums.TypeOfSignature.Installer.GetHashCode());
+                                });
+                                SetUserDataForSignaturePopup(data.InstallerFirstName + " " + data.InstallerLastName, data.InstallerEmail, UserTypeWiesDocumentData.InstallerSignatureStatus, "Installer", data.InstallerFirstName, data.InstallerLastName, @SystemEnums.TypeOfSignature.Installer.GetHashCode(), data.BulkUploadDocumentSignatureId, DocumentOption);
+                            }
+                            if (UserTypeWiesDocumentData.DesignerSignatureStatus != "NA") {
+                                var DocumentOption = jQuery.grep(listDocumentOption, function (n, i) {
+                                    return (n.Type == @SystemEnums.TypeOfSignature.Designer.GetHashCode());
+                                });
+                                SetUserDataForSignaturePopup(data.DesignerFirstName + " " + data.DesignerLastName, data.DesignerEmail, UserTypeWiesDocumentData.DesignerSignatureStatus, "Designer", data.DesignerFirstName, data.DesignerLastName,@SystemEnums.TypeOfSignature.Designer.GetHashCode(), data.BulkUploadDocumentSignatureId, DocumentOption);
+                            }
+                            if (UserTypeWiesDocumentData.ElectricianSignatureStatus != "NA") {
+                                var DocumentOption = jQuery.grep(listDocumentOption, function (n, i) {
+                                    return (n.Type == @SystemEnums.TypeOfSignature.Electrician.GetHashCode());
+                                });
+                                SetUserDataForSignaturePopup(data.ElectricianFirstName + " " + data.ElectricianLastName, data.ElectricianEmail, UserTypeWiesDocumentData.ElectricianSignatureStatus, "Electrician", data.ElectricianFirstName, data.ElectricianLastName,@SystemEnums.TypeOfSignature.Electrician.GetHashCode(), data.BulkUploadDocumentSignatureId, DocumentOption);
+                            }
+                            if (UserTypeWiesDocumentData.HomeOwnerSignatureStatus != "NA") {
+                                var DocumentOption = jQuery.grep(listDocumentOption, function (n, i) {
+                                    return (n.Type == @SystemEnums.TypeOfSignature.Home_Owner.GetHashCode());
+                                });
+                                SetUserDataForSignaturePopup(data.HomeOwnerFirstName + " " + data.HomeOwnerLastName, data.HomeOwnerEmail, UserTypeWiesDocumentData.HomeOwnerSignatureStatus, "HomeOwner", data.HomeOwnerFirstName, data.HomeOwnerLastName,@SystemEnums.TypeOfSignature.Home_Owner.GetHashCode(), data.BulkUploadDocumentSignatureId, DocumentOption);
+                            }
+                            if (UserTypeWiesDocumentData.SolarCompanySignatureStatus != "NA") {
+                                var DocumentOption = jQuery.grep(listDocumentOption, function (n, i) {
+                                    return (n.Type == @SystemEnums.TypeOfSignature.SolarCompnay.GetHashCode());
+                                });
+                                SetUserDataForSignaturePopup(data.SolarCompanyFirstName + " " + data.SolarCompanyLastName, data.SolarCompanyEmail, UserTypeWiesDocumentData.SolarCompanySignatureStatus, "SolarCompany", data.SolarCompanyFirstName, data.SolarCompanyLastName,@SystemEnums.TypeOfSignature.SolarCompnay.GetHashCode(), data.BulkUploadDocumentSignatureId, DocumentOption);
+                            }
+                            if (UserTypeWiesDocumentData.InstallerSignatureStatus == "NA"
+                                && UserTypeWiesDocumentData.DesignerSignatureStatus == "NA"
+                                && UserTypeWiesDocumentData.ElectricianSignatureStatus == "NA"
+                                && UserTypeWiesDocumentData.HomeOwnerSignatureStatus == "NA"
+                                && UserTypeWiesDocumentData.SolarCompanySignatureStatus == "NA"
+                            )
+                            IsSignatureFieldExist = false;
+                        }
+                        else {
+                            IsSignatureFieldExist = false;
+                        }
+                        if (DocumentOption != null) {
+                            if (DocumentOption.length > 0) {
+                                //Already send request.
+                                if (DocumentOption != undefined) {
+
+                                    var DataResult = 0;
+                                    $(DocumentOption).each(function (value, text) {
+                                        if (value.FirstName != null || value.LastName != null || value.Email != null)
+                                            DataResult++;
+                                    });
+
+                                    if (DataResult > 0) {
+                                        //$(".popup-btn-group").html("");
+                                        $(".popup-btn-group").hide();
+                                    }
+                                }
+                                //else {
+                                //    $("#btnSendRequest").hide();
+                                //    $(".checkall").hide();
+                                //}
+                                $("#custom-message").val(DocumentOption[0].CustomMessage);
+                                ShowCustomMessageCharCountShow();
+                            }
+                            if ($(".signature-users ul .disable").length == $(".signature-users ul li").length)
+                                $(".popup-btn-group").hide();
+                        }
+                        else {
+
+                            $(".popup-btn-group").show();
+                        }
+
+                    }
+                }
+                else {
+                    IsSignatureFieldExist = false;
+                }
+                if (IsSignatureFieldExist == false) {
+                    if ('@Html.Raw(Model.PDFURL)' != '') {
+                        //alert("Signature field not found in this document.");
+                        $(".signature-users ul").append("<li class='no-record'>No Signature found.</li>");
+                        //$("#btnSendRequest").hide();
+                        $(".sr-custom-message").hide();
+                        $(".checkall").hide();
+                        $(".document-status").hide();
+                        $(".generate-document-data-populate-with-signature").hide();
+                        $(".generate-document-data-populate-without-signature").hide();
+                    }
+                }
+                if ($(".signature-users ul li[class='Installer']").length == 0) {
+                    $(".same-as-installer").hide();
+                }
+            },
+            error: function () {
+                IsSignatureFieldExist = false;
+            }
+        });
+
+        $(".btn-edit-email").click(function () {
+            var li = $(this).closest("li");
+            li.find(".btn-save-email").css("display", "inline-block");
+            li.find(".btn-cancel-email").css("display", "inline-block");
+            li.find(".btn-edit-email").css("display", "none");
+            li.find(".email-id").css("display", "none");
+
+            li.find(".txtemail").css("display", "inline-block");
+            li.find(".txtemail").val(li.find(".email-id").html());
+
+        });
+        //$(".btn-save-email").click(function () {
+        //    var li = $(this).closest("li");
+        //    li.find(".btn-save-email").css("display", "none");
+        //    li.find(".btn-cancel-email").css("display", "none");
+        //    li.find(".btn-edit-email").css("display", "inline-block");
+        //    li.find(".email-id").css("display", "inline-block");
+
+        //    li.find(".email-id").html(li.find(".txtemail").val());
+        //    li.find(".txtemail").css("display", "none");
+
+        //});
+        $(".btn-cancel-email").click(function () {
+            var li = $(this).closest("li");
+            li.find(".btn-save-email").css("display", "none");
+            li.find(".btn-cancel-email").css("display", "none");
+            li.find(".btn-edit-email").css("display", "inline-block");
+            li.find(".email-id").css("display", "inline-block");
+
+            li.find(".txtemail").val('');
+            li.find(".txtemail").css("display", "none");
+
+        });
+
+        $("#btnSendRequestforSign").click(function () {            
+            //$(this).unbind('click');
+            $("#btnSendRequestforSign").attr("disabled", "disabled");
+            var JsonDataArray = [];
+            var jobdocIdforsend=@Model.JobDocId;
+            if ($(".signature-users ul li").length > 0) {
+                $(".signature-users ul li").each(function () {
+                    if ($(this).find(".txtemail").val() != '' && $(this).find(".txtemail").val() != null && $(this).find(".txtemail").val() != 'null' && $(this).find(".txtemail").val() != undefined) {
+                        JsonDataArray.push({
+                            Type: $(this).find(".name").attr("data-type")
+                            , BulkUploadDocumentSignatureId: $(this).find(".name").attr("data-BulkUploadDocumentSignatureId")
+                            , Email: $(this).find(".txtemail").val()
+                            , SendCopy: $(this).find(".send-copy input").prop("checked")
+                            , SameAsInstaller: $(this).find(".same-as-installer").length > 0 ? $(this).find(".same-as-installer input").prop("checked") : false
+                            , FirstName: $(this).find(".name").attr("data-firstname")
+                            , LastName: $(this).find(".name").attr("data-lastname")
+                            , JobDocId: jobdocIdforsend
+                            , JobId: parseInt($("#doc-jobId").val())
+                        });
+                    }
+                });
+            }
+            if (JsonDataArray.length > 0) {
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("SendEmailForSignatureRequest", "DocumentSignatureRequest")",
+                    data: JSON.stringify({ lstDocumentSignatureOption: JsonDataArray, CustomMessage: $("#custom-message").val() }),
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        JsonDataArray = [];
+                        if (data == true) {
+                            showMessage1("Request send successfully.", false);
+                            $(".job-document-@Model.JobDocId").find(".document-signature-send-request").addClass("document-status-orange");
+                            $(".signature-users ul li .btn-edit-email").hide();
+                            //$(".popup-btn-group").html('');
+                            $("#btnSendRequestforSign").hide();
+                            SearchHistory();
+                        }
+                        else
+                            showMessage1("Request not send successfully.", false);
+                        DocumentLogsBind();
+                        $("#viewer").getNiceScroll().resize();
+                    },
+                    error: function (data) {
+                        JsonDataArray = [];
+                        showMessage1("Request not send successfully.", false);
+                        DocumentLogsBind();
+                        $("#btnSendRequestforSign").removeAttr("disabled", "disabled");
+                        $("#viewer").getNiceScroll().resize();
+                    }
+                });
+            }
+            console.log(JsonDataArray);
+        });
+        $(".checkall").click(function () {
+            $(".signature-users ul li:not(.disable) .send-copy input:checkbox").prop('checked', this.checked);
+        });
+        $('.signature-users ul li:not(.disable) .send-copy input:checkbox').change(function () {
+            //uncheck "select all", if one of the listed checkbox item is unchecked
+            if (false == $(this).prop("checked")) { //if this item is unchecked
+                $(".checkall").prop('checked', false); //change "select all" checked status to false
+            }
+            //check "select all" if all checkbox items are checked
+            if ($('.signature-users ul li:not(.disable) .send-copy input[type="checkbox"]:checked').length == $('.signature-users ul li:not(.disable) .send-copy input:checkbox').length) {
+                $(".checkall").prop('checked', true);
+            }
+        });
+        setTimeout(function () {
+            SetViewerMaxHeight();
+            $("#viewer").niceScroll({
+                cursorcolor: "#c1c1c1",
+                background: "#f2f2f2",
+                cursorwidth: 8,
+                cursorborder: "none",
+                cursorborderradius: 0,
+                autohidemode: true,
+                bouncescroll: false,
+                horizrailenabled: true,
+                railvalign: "bottom"
+            });
+            $("#zoom-in-icon").click(function () {
+                var zoom = $("#zoom-dropdown").val().trim('%');
+                var newZoom = (parseInt(zoom) + 25) / 100;
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                $("#zoom-dropdown").val(newZoom * 100);
+                $("#zoom-dropdown1").val(newZoom * 100);
+                if ((newZoom * 100) == 150) {
+                    $("#zoom-in-icon").addClass("disabled");
+                    $("#zoom-out-icon").removeClass("disabled");
+                } else {
+                    $("#zoom-in-icon").removeClass("disabled");
+                    $("#zoom-out-icon").removeClass("disabled");
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#zoom-out-icon").click(function () {
+                var zoom = $("#zoom-dropdown").val().trim('%');
+                var newZoom = (parseInt(zoom) - 25) / 100;
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                $("#zoom-dropdown").val(newZoom * 100);
+                $("#zoom-dropdown1").val(newZoom * 100);
+                if ((newZoom * 100) == 25) {
+                    $("#zoom-out-icon").addClass("disabled");
+                    $("#zoom-in-icon").removeClass("disabled");
+                } else {
+                    $("#zoom-out-icon").removeClass("disabled");
+                    $("#zoom-in-icon").removeClass("disabled");
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#zoom-dropdown").change(function () {
+                var zoom = $("#zoom-dropdown").val().trim('%');
+                var newZoom = parseInt(zoom) / 100;
+                $("#zoom-dropdown1").val(newZoom * 100);
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                if ((zoom) == 150) {
+                    $("#zoom-in-icon").addClass("disabled")
+                } else {
+                    $("#zoom-in-icon").removeClass("disabled")
+                }
+                if (zoom == 25) {
+                    $("#zoom-out-icon").addClass("disabled")
+                } else {
+                    $("#zoom-out-icon").removeClass("disabled")
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#zoom-in-icon1").click(function () {
+                var zoom = $("#zoom-dropdown1").val().trim('%');
+                var newZoom = (parseInt(zoom) + 25) / 100;
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                $("#zoom-dropdown1").val(newZoom * 100);
+                $("#zoom-dropdown").val(newZoom * 100);
+                if ((newZoom * 100) == 150) {
+                    $("#zoom-in-icon1").addClass("disabled");
+                    $("#zoom-out-icon1").removeClass("disabled");
+                } else {
+                    $("#zoom-in-icon1").removeClass("disabled");
+                    $("#zoom-out-icon1").removeClass("disabled");
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#zoom-out-icon1").click(function () {
+                var zoom = $("#zoom-dropdown1").val().trim('%');
+                var newZoom = (parseInt(zoom) - 25) / 100;
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                $("#zoom-dropdown1").val(newZoom * 100);
+                $("#zoom-dropdown").val(newZoom * 100);
+                if ((newZoom * 100) == 25) {
+                    $("#zoom-out-icon1").addClass("disabled");
+                    $("#zoom-in-icon1").removeClass("disabled");
+                } else {
+                    $("#zoom-out-icon1").removeClass("disabled");
+                    $("#zoom-in-icon1").removeClass("disabled");
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#zoom-dropdown1").change(function () {
+                var zoom = $("#zoom-dropdown1").val().trim('%');
+                var newZoom = parseInt(zoom) / 100;
+                $("#zoom-dropdown").val(newZoom * 100);
+                $("#viewer .pdfpage").css("transform", "scale(" + newZoom + ")");
+                $("#viewer .pdfpage").css("transform-origin", "top left");
+                if ((zoom) == 150) {
+                    $("#zoom-in-icon1").addClass("disabled")
+                } else {
+                    $("#zoom-in-icon1").removeClass("disabled")
+                }
+                if (zoom == 25) {
+                    $("#zoom-out-icon1").addClass("disabled")
+                } else {
+                    $("#zoom-out-icon1").removeClass("disabled")
+                }
+                $("#viewer").getNiceScroll().resize();
+            });
+            $("#viewer").onPositionChanged(function () { $("#viewer").getNiceScroll().resize(); });
+        }, 500);
+        ShowCustomMessageCharCountShow();
+        $('#custom-message').keyup(function () {
+            ShowCustomMessageCharCountShow();
+        });
+        //$('#onpageViewerDoc').on('hidden.bs.modal', function () {
+        //    $("#errorMsgRegion1").hide();
+        //    $("#successMsgRegion1").hide();
+        //    $(".popup-btn-group").show();
+        //    $("#divViewer").html("");
+        //    $("#btnSendRequest").removeAttr("disabled", "disabled");
+        //    $("#onpageViewerDoc .nicescroll-rails").remove();
+        //    $("#btnSendRequest").unbind('click');
+        //});
+        $('#popupViewerDoc').on('shown.bs.modal', function (e) {
+            DocumentLogsBind();
+            if ($(".signature-users ul .no-record").length > 0) {
+                $("#btnSendRequestforSign").hide();
+            }
+            else {
+                if (@ViewBag.SentEmailStatus > 0) {
+                    $("#btnSendRequestforSign").hide();
+                }
+            }
+        });
+    });
+    $(window).resize(function () {
+        $("#viewer").getNiceScroll().resize();
+        SetViewerMaxHeight();
+    });
+    function SetViewerMaxHeight() {
+        /*$("#viewer").css("max-height", ($(window).height()) + "px");*/
+        $("#viewer").css("min-width", (($(window).width() / 2) - 110) + "px");
+        $("#onpagedivViewer").css("min-width", (($(window).width() / 2)-100) + "px");
+        //$("#viewer").css("max-height", (($(window).width()) / 2 - 130) + "px");
+    }
+    function ShowCustomMessageCharCountShow() {        
+        var text_max = parseInt($('#custom-message').attr("maxlength"));
+            var text_length = $('#custom-message').val().length;
+        var text_remaining = text_max - text_length;
+        $('.custom-message-char-count').html(text_remaining + '/' + text_max + ' Characters');
+    }
+    function SetUserDataForSignaturePopup(Name, Email, IsSign, PreFix, firstName = "", lastName = "", type = 0, BulkUploadDocumentSignatureId = 0, DocumentOption) {        
+        var html = '';
+        var disableClass = "";
+        if (firstName == null && lastName == null && Email == null)
+            disableClass = "disable";
+        html = '<li class="'+ disableClass + ' ' + PreFix + (IsSign == "True" ? ' active' : '') + '">'
+                + '<div class="heading-block">'
+                    + '<h5 class="usertype">' + PreFix + '</h5>'
+                    + '<div class="checkbox">'
+                    + '<label class="send-copy">'
+                    + '<input onchange="' + ($(".popup-btn-group").is(":visible") ? 'SendCopyUpdateForDocumentUser(this,' + BulkUploadDocumentSignatureId + ',' + type + ');' : '') + '" type="checkbox" ' + (DocumentOption.length > 0 ? (DocumentOption[0].SendCopy == true ? (disableClass == "" ? 'checked' : '') : '') : (disableClass == "" ? 'checked' : '')) + ' />'
+                        + 'Send Copy'
+                    + '</label>';
+        if (PreFix == "Designer" || PreFix == "Electrician") {
+            html += '<label class="same-as-installer">'
+                        + '<input type="checkbox" ' + (DocumentOption.length > 0 ? (DocumentOption[0].SameAsInstaller == true ? 'checked' : '') : '') +' />'
+                        + 'Same as installer'
+                    + '</label>';
+        }
+
+        html +=  '</div>'
+            + '</div>'
+            + '<p class="name" data-bulkuploaddocumentsignatureid="' + BulkUploadDocumentSignatureId + '" data-type="' + type + '" data-firstname="' + firstName + '" data-lastname="' + lastName + '">' + Name +'</p>'
+            + '<div class="doc-title-sign">'
+                + '<div class="pdf-input remove-icon">'
+                    + '<span class="email-id">' + Email + '</span>'
+                    + '<input type="text" style="display:none;" class="form-control txtemail valid" value="' + Email + '" />'
+                    + ((DocumentOption.length == 0 && firstName != null && lastName != null && Email != null) ?
+                        '<a href="javascript:void(0)" title="Save" class="icon-btn sprite-img save_ic btn-save-email" onclick="DocUserEmailChange(this);" style="display: none;"></a>'
+                        + '<a href="javascript:void(0)" title="Cancel" class="icon-btn cancel_ic btn-cancel-email" style="display: none;"></a>'
+                        + '<a href="javascript:void(0)" title="Edit" class="edit-link btn-edit-email" style="display: inline-block;">'
+                        + '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 469.331 469.331" style="enable-background:new 0 0 469.331 469.331;" xml:space="preserve" width="16px" height="16px"><g>'
+                            + '<path d="M438.931,30.403c-40.4-40.5-106.1-40.5-146.5,0l-268.6,268.5c-2.1,2.1-3.4,4.8-3.8,7.7l-19.9,147.4   c-0.6,4.2,0.9,8.4,3.8,11.3c2.5,2.5,6,4,9.5,4c0.6,0,1.2,0,1.8-0.1l88.8-12c7.4-1,12.6-7.8,11.6-15.2c-1-7.4-7.8-12.6-15.2-11.6   l-71.2,9.6l13.9-102.8l108.2,108.2c2.5,2.5,6,4,9.5,4s7-1.4,9.5-4l268.6-268.5c19.6-19.6,30.4-45.6,30.4-73.3   S458.531,49.903,438.931,30.403z M297.631,63.403l45.1,45.1l-245.1,245.1l-45.1-45.1L297.631,63.403z M160.931,416.803l-44.1-44.1   l245.1-245.1l44.1,44.1L160.931,416.803z M424.831,152.403l-107.9-107.9c13.7-11.3,30.8-17.5,48.8-17.5c20.5,0,39.7,8,54.2,22.4   s22.4,33.7,22.4,54.2C442.331,121.703,436.131,138.703,424.831,152.403z" fill="#1c964d" /></g>'
+                        + '</svg>'
+                        + '</a>'
+                    : '')
+                + '</div>'
+            + '</div>'
+        + '</li>';
+
+
+
+
+        //var html = "<li>";
+        //html += "<div class='usertype text-primary'>" + PreFix + "</div>";
+        //html += "<div class='signature-status " + (IsSign == "True" ? "green" : "red") +"'></div>"
+        //html += "<div class='name' data-BulkUploadDocumentSignatureId='" + BulkUploadDocumentSignatureId +"' data-type='" + type +"' data-firstname='" + firstName + "' data-lastname='" + lastName + "'>";
+        //html += Name;
+        //html += "</div>"
+        //html += "<div class='email'>";
+        //html += "&lt;" + Email + "&gt;";
+        //html += "</div>";
+        //html += "<div class='send-copy'><input type='checkbox' " + (DocumentOption.length > 0 ? (DocumentOption[0].SendCopy == true ? "checked" : "") : "") + " /> Send Copy</div>"
+        //if (PreFix == "Designer" || PreFix == "Electrician") {
+        //    html += "<div class='same-as-installer'><input type='checkbox' " + (DocumentOption.length > 0 ? (DocumentOption[0].SameAsInstaller == true ? "checked" : "") : "") + " /> Sane As Installer</div>"
+        //}
+
+        //html += "<input type='text' value='" + Email + "' class='hide txtemail' />";
+        //html += "<img class='check-icon hide' src='/Images/check.svg' width='25' />";
+        //html += "<img class='edit-icon' src='/Images/edit.svg' width='20' />";
+        //html += "</li>";
+        $(".signature-users ul").append(html);
+    }
+    function SendUserSignatureUrl(type) {        
+        var Firstname = $('[name="Item2.Firstname"]').val();
+        var Lastname = $('[name="Item2.Lastname"]').val();
+        var num = $('[name="Item2.mobileNumber"]').val();
+        var email = $('[name="Item2.Email"]').val();
+        //If SMS Option Selected for Signature
+        if (Firstname != "" && Lastname != "" && num != "") {
+            var smsLink = loginLink + "Job/_CaptureUserSignature";
+            var smsUrl = '<a href="' + smsLink + '">' + smsLink + '</a>';
+            $.ajax(
+            {
+                url: '@Url.Action("CaptureUserSignature", "Job")',
+                data: { SmsUrl: smsUrl, smsLink: smsLink, mobile: num, fieldName: $('#' + clickSignId).attr('name'), jobDocId: $('#jobDocId').val(), Firstname: Firstname, Lastname: Lastname, Type: type, Email: email },
+                contentType: 'application/json',
+                method: 'get',
+                success: function (data) {
+                    if (data.status == true) {
+                        $(".alert").hide();
+                        var msg = (type == "0" ? "SMS" : "Email") + "has been sent successfully."
+                        $("#successMsgRegionSendSms").html(closeButton + msg);
+                        $("#successMsgRegionSendSms").show();
+                        return true;
+                    }
+                    else {
+                        $(".alert").hide();
+                        $("#errorMsgRegionSendSms").html(closeButton + data.errormsg);
+                        $("#errorMsgRegionSendSms").show();
+                    }
+                }
+            });
+        }
+    }
+    @*function SendMessage() {
+        if (ValidationMessageBox()) {
+            var JsonData = {
+                JobDocId: @Model.JobDocId,
+                Message: $("#txtMessage").val(),
+                type: $("#type").val(),
+                GroupId: '@ViewBag.DocumentGroupId',
+                JobId: $("#doc-jobId").val()
+            };
+            $.ajax({
+                type: "POST",
+                url: url_SendMessage,
+                data: JSON.stringify(JsonData),
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    if (data.status == true) {
+                        $("#successMsgRegion").html(closeButton + data.Message);
+                        $("#successMsgRegion").show();
+                        $("#successMsgRegion").fadeOut(6000);
+                        $("#txtMessage").val("");
+                        $("#errorMsgRegion").html("");
+                        $("#errorMsgRegion").hide();
+
+                    }
+                    else {
+                        $("#errorMsgRegion").html(closeButton + data.Message);
+                        $("#errorMsgRegion").show();
+                        $("#successMsgRegion").html("");
+                        $("#successMsgRegion").hide();
+                    }
+                    MessageBlockRefresh();
+                },
+                error: function (data) {
+                    $("#errorMsgRegion").html(closeButton + "Message not send.");
+                    $("#errorMsgRegion").show();
+                }
+            });
+        }
+    }*@
+    //function ValidationMessageBox() {
+    //    if ($("#txtMessage").val() == '') {
+    //        $("#txtMessage").css("border-color", "red");
+    //        return false;
+    //    }
+    //    else {
+    //        $("#txtMessage").css("border-color", "");
+    //        return true;
+    //    }
+    //}
+    @*function MessageBlockRefresh() {
+        $(".message-listing").load('@(Url.Action("GetAllDocumentMessages", "DocumentSignatureRequest"))?JobDocumentId=' + @Model.JobDocId);
+    }*@
+    function DocUserEmailChange(btn) {        
+        var JsonData = {
+            type: parseInt($(btn).parent("div").parent("div").parent("li").find(".name").attr("data-type")),
+            BulkUploadDocumentSignatureId: parseInt($(btn).parent("div").parent("div").parent("li").find(".name").attr("data-BulkUploadDocumentSignatureId")),
+            Email: $(btn).prev(".txtemail").val(),
+            OldEmail: $(btn).parent("div").parent("div").parent("li").find(".email-id").html()
+        };
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("UpdateDocumentEmail", "DocumentSignatureRequest")",
+            data: JSON.stringify(JsonData),
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data == 1) {
+                    DocumentLogsBind();
+                    ChangesTextBoxToLabelForDocumentUserEmail(btn);
+                }
+                else {
+                    alert("Not update email.");
+                }
+            },
+            error: function (data) {
+                alert("Not update email.");
+            }
+        });
+    }
+    function ChangesTextBoxToLabelForDocumentUserEmail(btn) {        
+        var li = $(btn).closest("li");
+        li.find(".btn-save-email").css("display", "none");
+        li.find(".btn-cancel-email").css("display", "none");
+        li.find(".btn-edit-email").css("display", "inline-block");
+        li.find(".email-id").css("display", "inline-block");
+
+        li.find(".email-id").html(li.find(".txtemail").val());
+        li.find(".txtemail").css("display", "none");
+    }
+    function SendCopyUpdateForDocumentUser(checkbox, BulkUploadDocumentSignatureId, type) {        
+        var JsonData = {
+            BulkUploadDocumentSignatureId: BulkUploadDocumentSignatureId,
+            Type: type,
+            Value: $(checkbox).prop("checked")
+        }
+        $.ajax({
+            type: "POST",
+            url: "@Url.Action("UpdateDocumentUserSendCopyDetails", "DocumentSignatureRequest")",
+            data: JSON.stringify(JsonData),
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data == 1) {
+                    DocumentLogsBind();
+                }
+                else {
+                    alert("Not update send copy details.");
+                }
+            },
+            error: function (data) {
+                alert("Not update send copy details.");
+            }
+        });
+    }
+    function DocumentLogsBind() {
+        $(".documents-history").load(url_GetDocumentSpecificAllLogByDocumentId + "?JobDocID=@Model.JobDocId&DocName=" + encodeURIComponent(JobDocumentName));
+    }
+    function generateDocumentFromPopup(WithSign) {        
+        var data = $("#onpageViewerDoc").data("data");
+        var hdnIsUpload = $("#onpageViewerDoc").attr("data-hdnIsUpload");
+        if (eJobId) {
+            var isValid = true;
+            if (isValid) {
+                $("#loading-image").show();
+                $.ajaxSetup({ async: true, cache: false });
+                $.get(urlGenerateDocument + "?id=" + eJobId + "&documentId=" + 0 + "&stage=" + data.Stage + "&state=" + "" + "&provName=" + "" + "&name=" + encodeURIComponent(data.Path) + "&isDeleteFirst=" + hdnIsUpload + "&isClassic=false" + "&jobDocumentId=" + data.JobDocumentId + "&WithSign=" + WithSign, "", function (data) {
+                    $(".alert").hide();
+                    var visible = "successMsgRegion1";
+                    var inVisible = "successMsgRegion1";
+                    $("#" + inVisible).hide();
+                    $("#" + visible).html(closeButton + "Document has been generated successfully.");
+                    $("#" + visible).show();
+                    data = $("#onpageViewerDoc").data("data");
+                    $('#onpagedivViewer').load(url_OnPageViewer + "?jobid=" + eJobId + "&docId=" + 0 + "&isClassic=false" + "&jobDocumentPath=" + encodeURIComponent(data.Path) + "&jobDocumentId=" + data.JobDocumentId);
+                    $("#viewer").getNiceScroll().resize();
+                });
+            }
+        }
+    }
+
+    pdfItemsStr = pdfItemsStr.replace(/\\/g, '/').replace(/\/"/g, '\\"');
+    var pdfItems = [];
+    if (pdfItemsStr)
+        pdfItems = JSON.parse(pdfItemsStr);
+    var pdfDoc = null,
+        pageNum = 1,
+        pageRendering = false,
+        pageNumPending = null,
+        pageLeftPending = 0,
+        pageTopPending = 0,
+        pdfPageWidth = 0,
+        pdfPageHeight = 0,
+        pdfRotate = 0;
+    var formFields = {};
+    var div = document.getElementById('viewer');
+
+    var base64;
+    $('#btnSaveDoc').click(function () {
+        if (pdfItems != null) {
+            $.each(pdfItems, function (k, data) {
+                if ($('input[name="' + data.FieldName + '"]') || $('div[name="' + data.FieldName + '"]').length > 0) {
+                    if (data.Type.toString() == texthashCode || data.Type.toString() == buttonhashCode) {
+
+                        if (data.IsImageField && data.Base64 == "") {
+                            data.Value = $('div[name="' + data.FieldName + '"]').find(".image").attr('src');
+                            data.Base64 = $('div[name="' + data.FieldName + '"]').find(".image").attr('src');
+                        }
+                        else if (data.Value.includes("base64")) {
+
+                        }
+                        else if (data.Value.includes("jsignature")) {
+                            datapair = $('div[name="' + data.FieldName + '"]').jSignature("getData", "base30");
+                            if (datapair != undefined) {
+                                if (Array.isArray(datapair)) {
+                                    data.Value = datapair.join(",");
+                                    data.Base64 = $('div[name="' + data.FieldName + '"]').jSignature("getData", "image").join(",");
+                                }
+
+                            }
+
+                        }
+                        else if (data.IsTextArea) {
+                            data.Value = $.trim($('textarea[name="' + data.FieldName + '"]').val());
+                        } else {
+                            data.Value = $.trim($('input[name="' + data.FieldName + '"]').val());
+                        }
+
+                    }
+                    else if (data.Type.toString() == radiohashCode) {
+                        data.Value = $('input[name="' + data.FieldName + '"]:checked').val() ? $('input[name="' + data.FieldName + '"]:checked').val() : '';
+                    }
+                    else if (data.Type.toString() == checkhashCode) {
+                        //if ($('input[name="' + data.FieldName + '"]').prop('checked'))
+                        //    data.Value = $('input[name="' + data.FieldName + '"]').val();
+                        //else
+                        //    data.Value = "";
+                        //data.Value = $('input[name="' + data.FieldName + '"]:checked').val() ? $('input[name="' + data.FieldName + '"]:checked').val() : '';
+                        data.Value = $('input[name="' + data.FieldName + '"]').val() ? $('input[name="' + data.FieldName + '"]').val() : '';
+                    }
+                }
+            });
+        }
+
+        var obj = {};
+        obj.Data = JSON.stringify(pdfItems);
+        obj.PDFURL = $('#PDFURL').val();
+        obj.PDFSource = $('#PDFSource').val();
+        obj.JobId = $('#JobId').val();
+        obj.DocId = $('#DocId').val();
+        obj.JobDocId = $("#jobDocId").val();
+        obj.Base64 = base64;
+        var data = JSON.stringify({ documentCollectionView: obj, lstCaptureUserSign: signDetail });
+        $.ajax({
+            url: urlSaveDocument,
+            type: "POST",
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8', // Not to set any content header
+            processData: false, // Not to process data
+            data: data,
+            success: function (result) {
+                showMessage1("Document has been saved successfully.", false);
+                signDetail.map(signature => signature.IsSave = true);
+                SearchHistory();
+            },
+            error: function (result) {
+                showMessage1("Document has not been saved.", true);
+            }
+
+        });
+        return false;
+        // $('#pdfData').val(JSON.stringify(pdfItems));
+    });
+
+    function showMessage1(msg, isError) {
+        $(".alert").hide();
+        var visible = isError ? "errorMsgRegion11" : "successMsgRegion11";
+        var inVisible = isError ? "successMsgRegion11" : "errorMsgRegion11";
+        $("#" + inVisible).hide();
+        $("#" + visible).html(closeButton + msg);
+        $("#" + visible).show();
+    }
+</script>

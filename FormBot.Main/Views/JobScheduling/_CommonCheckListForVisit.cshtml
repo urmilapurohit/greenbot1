@@ -1,0 +1,95 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+<div class="modal fade popupTemplateName" tabindex="-1" role="dialog" id="popupAddTemplate">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title">Template</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <form id="addTemplateForm">
+
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionAddTemplate" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+
+                        <div class="form-box">
+                            @Html.HiddenFor(m => m.checkListTemplate.CheckListTemplateId)
+                            @Html.HiddenFor(m => m.checkListTemplate.CopyOfCheckListTemplateId)
+                            @Html.HiddenFor(m => m.checkListTemplate.DeleteDefaultItemId)
+                            @Html.HiddenFor(m => m.checkListTemplate.SolarCompanyId)
+                            <input type="hidden" id="isSaveAsNewTemp" />
+                            <div class="clearfix">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.checkListTemplate.CheckListTemplateName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.checkListTemplate.CheckListTemplateName, new { @class = "form-control", @maxlength = "100" })
+                                    @Html.ValidationMessageFor(m => m.checkListTemplate.CheckListTemplateName)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top:0px !important;">
+                            <button type="button" class="btn primary save_ic" onclick="addTemplate()">Save</button>
+                            <button type="button" class="btn default cancel_ic" onclick="clearTemplate()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade popupCheckListItem" tabindex="-1" role="dialog" id="popupCheckListItem">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Check List Item</h4>
+            </div>
+            <div class="modal-body create-job">
+                <form id="checkListItemForm"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#checkListTemplate_SolarCompanyId").val('@ProjectSession.SolarCompanyId');
+    });
+
+    function OpenCheckListItemPopup(templateId, isTemplateChange) {        
+        CommonOpenCheckListItemPopup(templateId, false, $("#JobSchedulingID").val(), isTemplateChange);
+    }
+    function TempCheckListTemplateItemAdd(checkListTemplateId, isAddVisit, jobId, jobType) {
+        var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+        var jobSchedulingId = $("#JobSchedulingID").val() > 0 ? $("#JobSchedulingID").val() : 0;
+        $.ajax(
+              {
+                  url: '@Url.Action("TempCheckListTemplateItemAdd", "CheckListItem")',
+                  dataType: 'json',
+                  contentType: 'application/json; charset=utf-8',
+                  type: 'get',
+                  async: false,
+                  data: { checkListTemplateId: checkListTemplateId, tempJobSchedulingId: tempJobSchedulingId, jobSchedulingId: jobSchedulingId, jobId: jobId },
+                  success: function (response) {
+                      
+                      if (response.status) {
+
+                          if (response.visitCheckListItemIds) {
+                              visitCheckListItemIds = [];
+                              visitCheckListItemIds = response.visitCheckListItemIds.split(',');
+                          }
+
+                          CommonOpenCheckListItemPopup(checkListTemplateId, "false", jobSchedulingId, true, tempJobSchedulingId, jobId, isAddVisit, jobType);
+                      }
+                  },
+                  error: function () {
+                      showErrorMessageItem("CheckList item has not been deleted.");
+                  }
+              });
+    }
+</script>

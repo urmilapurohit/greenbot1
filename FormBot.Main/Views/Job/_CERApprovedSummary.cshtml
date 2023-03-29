@@ -1,0 +1,404 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper
+@{
+    int currentJobStatus = 0;
+    if (ViewBag.CurrentSTCJobStatus != null)
+    {
+        currentJobStatus = ViewBag.CurrentSTCJobStatus;
+    }
+}
+<style>
+    .LiSettlementCERApproved {
+        cursor: pointer;
+    }
+
+    .settlement-contain-box1 {
+        padding: 10px;
+        background-color: #ececec;
+        min-height: 400px;
+    }
+
+    .settlement-term .table {
+        border: none;
+    }
+</style>
+@if (Model != null)
+{
+    <div class="settlement-term">
+        <h3 class="sca-heding">CER APPROVED INVOICE SUMMARY</h3>
+        @if (!Model.HaveNotCustomPrice)
+        {
+            <div class="stc-amount-block settlement-contain-box">
+
+                <h4 class="stc-title">Total STCs In CER Approved Holdings: <b id="stcAmountHeaderCERApproved">0</b> STCs</h4>
+                <ul class="SettlementTermsCERApproved Processing-time" style="margin-bottom:15px;">
+                    @if (!string.IsNullOrEmpty(Convert.ToString(Model.CERApproved)))
+                    {
+                        <li class="LiSettlementCERApproved" id="CERApproved" data-interval="0" data-price="@Model.CERApproved" data-settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.CERApproved.GetHashCode()">
+                            <span class="time" style="min-height:0px">CER Approved</span>
+                            <span class="price">$@Model.CERApproved</span>
+                            @if (!string.IsNullOrEmpty(Model.LastUpdated))
+                            {
+                                <span class="price">Last updated : @Model.LastUpdated</span>
+                            }
+                        </li>
+                    }
+                </ul>
+
+                <p style="margin-bottom:10px;">
+                    <span>Filter : </span><a href="#" id="aApproved" class="text">Approved (<span id="approvedCount">0</span>)</a><a id="aPending" href="#"> | Pending Approval (<span id="pendingCount">0</span>)</a>
+                </p>
+
+                @if (Model.IsGridView)
+                {
+                    <div class="row">
+                        <div id="grid" class="col-xs-12 popupgrid">
+                            <div class="table-responsive" style="max-height:350px; overflow-y:scroll;">
+                                <table id="datatable2" class="table table-hover" style="width:100% !important;">
+                                    <thead>
+                                        <tr>
+                                            <th class="checkbox-col" style="background-image: none !important;"><input type="checkbox" id="chkAllCERApproved" name="select_all" checked></th>
+                                            <th><span>@Html.DisplayName("Ref No-OwnerName")</span></th>
+                                            <th><span>@Html.DisplayName("STC Price")</span></th>
+                                            <th><span>@Html.DisplayName("STC Status")</span></th>
+                                            <th><span>@Html.DisplayName("Installation Date")</span></th>
+                                            <th><span>@Html.DisplayName("STC")</span></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div class="total-amount-block">
+                                <div class="total-amount"><lable>Jobs Selected : <b id="lbljobsSelectedCERApproved"></b></lable></div>
+                                <div class="total-amount"><lable>No. Of STCs Selected : <b id="lblTotalSTCSelectedCERApproved">0</b></lable></div>
+                                <div class="total-amount"><lable>Total STC Value : <b style="margin-left:0px;">$</b><b id="lblTotalSTCValueCERApproved"></b></lable></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+            if (!Model.IsGridView)
+            {
+                <h2 class="stc-value">STC VALUE: $<span id="spancalculatedSTCCERApproved"></span></h2>
+            }
+            if ((ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 1) && (Model.IsShowInDashboard == true) && (Model.IsSubmissionScreen != 1) &&
+                         currentJobStatus != 0 && (currentJobStatus == FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                      || currentJobStatus == FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                      || currentJobStatus == FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()))
+            {
+                <div class="text-center" style="display:table;margin-left:auto; margin-right:auto;">
+                    <input type="button" value="INVOICE FOR SELECTED STCs" class="primary trade-btn center-box" onclick="SendSTCInvoice();">
+                </div>
+            }
+        }
+
+    </div>
+    @Html.Hidden("hdnstcAmount", Model.STCAmount)
+}
+<script type="text/javascript">
+    var chkCount2 = 0;
+
+    var isApproved = 1;
+
+    $(document).ready(function () {
+
+        $("#aApproved").click(function(e){
+            isApproved = 1;
+            $("#datatable2").dataTable().fnDraw();
+            e.preventDefault();
+        });
+
+        $("#aPending").click(function(e){
+            isApproved = 0;
+            $("#datatable2").dataTable().fnDraw();
+            e.preventDefault();
+        });
+
+        ID = '@ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower()' == "bindjobstcpriceview" ? 0 : '@ProjectSession.SolarCompanyId';
+        $(".LiSettlementCERApproved").click(function () {
+            $(".LiSettlementCERApproved").removeClass("active");
+            $(this).addClass("active");
+            var calculatedSTC = parseFloat($("#lblTotalSTCSelectedCERApproved").text()) * parseFloat($(this).data("price"));
+            if ('@Model.IsGridView.ToString().ToLower()' == "false") {
+                $("#spancalculatedSTCCERApproved").text(parseFloat(@Model.STCAmount * parseFloat($(this).data("price"))).toFixed(2));
+            }
+            $("#lblTotalSTCValueCERApproved").html(parseFloat(calculatedSTC).toFixed(2))
+        });
+        if ('@Model.IsGridView.ToString().ToLower()' == "true") {
+            $('#datatable2').DataTable({
+                "bPaginate": false,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_",
+                },
+
+                "aaSorting": [],
+
+                columns: [
+                    {
+                        'data': 'Id',
+                        "className": "checkbox-col",
+                        "orderable": false,
+                        "render": function (data, type, full, meta) {
+                            return '<input type="checkbox" JobId="' + full.JobID + '" id="chk_' + full.JobID + '" STCSettlementTerm="'+full.STCSettlementTerm+'" IsInvoiced="'+full.IsInvoiced+'" Status="'+full.Status+'" STCJobDetailsID="'+full.STCJobDetailsID+'" IsGst="'+full.IsGst+'" TaxRate="'+full.TaxRate+'" checked>';
+                        }
+                    },
+                        { 'data': 'RefNumberOwnerName' },
+
+                        //{ 'data': 'STCPrice' },
+                        { 'data': 'STCPrice',
+                            "render": function (data, type, full, meta) {
+                                if(full.IsGst){
+                                    return parseFloat(data).toFixed(2)+' +GST';
+                                }
+                                else{
+                                    return parseFloat(data).toFixed(2);
+                                }
+                            }
+                        },
+
+                        { 'data': 'Status' },
+
+                        {
+                            'data': 'InstallationDate',
+                            "render": function (data, type, full, meta) {
+                                return ConvertToDateWithFormat(data, '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+
+                       {
+                           'data': 'STC',
+                           "render": function (data, type, full, meta) {
+                               return '<lable class="clsLabelCERApproved">' + full.STC + '</lable>';
+                           }
+                       }
+                ],
+
+                dom: "",
+
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetJobListForCERApprovedJobs", "Job")',
+                "fnDrawCallback": function (e) {
+                    if(e.json.aaData.length > 0)
+                    {
+                        $("#approvedCount").html(e.json.aaData[0].ApprovedJobsCount);
+                        $("#pendingCount").html(e.json.aaData[0].PendingJobsCount);
+                        $("#stcAmountHeaderCERApproved").html(e.json.aaData[0].TotalSTCCount);
+                    }
+                    else
+                    {
+                        $("#approvedCount").html(0);
+                        $("#pendingCount").html(0);
+                        $("#stcAmountHeaderCERApproved").html(0);
+                    }
+                    DatatablecallBack();
+                },
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "jobids", "value": '@Model.jobIDS' });
+                    aoData.push({ "name": "solarCompanyId", "value": ID });
+                    aoData.push({ "name": "isApproved", "value": isApproved });
+
+                }
+            });
+        }
+
+        $(".LiSettlementCERApproved:first").click();
+
+        $('#chkAllCERApproved').on('click', function () {
+            if($("#datatable2").find(".dataTables_empty").length == 0){
+                var table1 = $('#datatable2').DataTable();
+                var rows = table1.rows({ 'search': 'applied' }).nodes();
+
+                var isChecked = this.checked;
+
+                $('#datatable2').find('input[type="checkbox"]').each(function(){
+                    $(this).prop('checked', isChecked);
+                });
+
+                //$('#datatable2 input[type="checkbox"]', rows).prop('checked', this.checked);
+
+                chkCount2 = this.checked ? $('#datatable2 >tbody >tr').length : 0;
+
+                $("#lbljobsSelectedCERApproved").html(chkCount2 + '/' + chkCount2);
+
+                if (this.checked) {
+                    var tSTC = 0;
+                    var totalPrice = 0;
+                    var price = parseFloat($("ul.SettlementTermsCERApproved").find('li.active').data("price"));
+
+                    $('#datatable2 tbody input[type="checkbox"]').each(function () {
+                        var gst = $(this).attr('IsGST');
+                        var taxRate = $(this).attr('taxrate');
+                        var cSTC = ($(this).parent().parent().find('.clsLabelCERApproved').text() == '' || $(this).parent().parent().find('.clsLabelCERApproved').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabelCERApproved').text();
+                        tSTC = (parseFloat(tSTC) + parseFloat(cSTC));
+
+                        if(gst && gst.toString().toLowerCase() == "true" && taxRate && taxRate > 0)
+                            totalPrice = totalPrice + ((price + (taxRate / 100)) * parseFloat(cSTC));
+                        else
+                            totalPrice = totalPrice + (price * parseFloat(cSTC));
+                    });
+
+                    $("#lblTotalSTCSelectedCERApproved").html(tSTC);
+                    //var calculatedSTC = parseFloat(tSTC) * parseFloat($("ul.SettlementTermsCERApproved").find('li.active').data("price"));
+                    //$("#lblTotalSTCValueCERApproved").html(parseFloat(calculatedSTC).toFixed(2))
+                    $("#lblTotalSTCValueCERApproved").html(totalPrice);
+                }
+                else {
+                    $("#lbljobsSelectedCERApproved").html('0/0');
+                    $("#lblTotalSTCSelectedCERApproved").html(0);
+                    $("#lblTotalSTCValueCERApproved").html(0)
+                }
+            }
+        });
+
+        $('#datatable2 tbody').on('change', 'input[type="checkbox"]', function () {
+
+            var price = parseFloat($("ul.SettlementTermsCERApproved").find('li.active').data("price"));
+            var gst = $(this).attr('IsGST');
+            var taxRate = $(this).attr('taxrate');
+
+            if (this.checked) {
+                chkCount2++;
+                if (chkCount2 == $('#datatable2 >tbody >tr').length) {
+                    $('#chkAllCERApproved').prop('checked', this.checked)
+                }
+                $("#lbljobsSelectedCERApproved").html(chkCount2 + '/' + $('#datatable2 >tbody >tr').length);
+                var cSTC = ($(this).parent().parent().find('.clsLabelCERApproved').text() == '' || $(this).parent().parent().find('.clsLabelCERApproved').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabelCERApproved').text();
+                var tSTC = $("#lblTotalSTCSelectedCERApproved").html();
+                $("#lblTotalSTCSelectedCERApproved").html(parseFloat(cSTC) + parseFloat(tSTC));
+
+                if(gst && gst.toString().toLowerCase() == "true" && taxRate && taxRate > 0)
+                    price = ((price + (taxRate / 100)) * parseFloat(cSTC));
+                else
+                    price = price * parseFloat(cSTC);
+
+                $("#lblTotalSTCValueCERApproved").html(parseFloat(parseFloat($("#lblTotalSTCValueCERApproved").html()) + price ).toFixed(2));
+            }
+            else {
+                chkCount2--;
+                $("#lbljobsSelectedCERApproved").html(chkCount2 + '/' + $('#datatable2 >tbody >tr').length);
+                $('#chkAllCERApproved').prop('checked', this.checked)
+                var cSTC = ($(this).parent().parent().find('.clsLabelCERApproved').text() == '' || $(this).parent().parent().find('.clsLabelCERApproved').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabelCERApproved').text();
+                var tSTC = $("#lblTotalSTCSelectedCERApproved").html();
+                $("#lblTotalSTCSelectedCERApproved").html(parseFloat(tSTC) - parseFloat(cSTC));
+
+                if(gst && gst.toString().toLowerCase() == "true" && taxRate && taxRate > 0)
+                    price = ((price + (taxRate / 100)) * parseFloat(cSTC));
+                else
+                    price = price * parseFloat(cSTC);
+
+                $("#lblTotalSTCValueCERApproved").html(parseFloat(parseFloat($("#lblTotalSTCValueCERApproved").html()) - price).toFixed(2));
+            }
+        });
+
+    });
+
+
+    function SendSTCInvoice(){
+        selectedRows=[];
+        var IsSuccess = true;
+        $('#datatable2 tbody input[type="checkbox"]').each(function(){
+            if($(this).prop('checked')==true){
+
+                var IsInvoiced = $(this).attr('IsInvoiced');
+                var status = $(this).attr('Status');
+
+                if(status.toString().toLowerCase() != 'cer approved' ){
+                    alert("Can't generate STCInvoice On Approval STC record")
+                    IsSuccess = false;
+                }
+                if(IsInvoiced.toString().toLowerCase() == "true"){
+                    alert("STCInvoice has been already generated for this job.")
+                    IsSuccess = false;
+                }
+                else{
+                    var STCJobDetailsID=$(this).attr('STCJobDetailsID');
+                    var STCTerm=$(this).attr('STCSettlementTerm');
+                    var jobid = $(this).attr("JobId");
+                    selectedRows.push(STCJobDetailsID+'_'+STCTerm+"_"+jobid);
+                }
+            }
+        })
+
+        if(IsSuccess){
+            if(selectedRows!=null && selectedRows.length>0){
+
+                $.ajax({
+                    url: '@Url.Action("GenerateSTCInvoiceForSelectedJobs", "STCInvoice")',
+                    type: "POST",
+                    data: JSON.stringify({ resellerId:'@ProjectSession.ResellerId', jobs: selectedRows.join(',') ,isstcinvoice: 1,solarCompanyId : '@ProjectSession.SolarCompanyId' }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+
+                        if (data && data.status == false) {
+                            if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception') {
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(data.error.toLowerCase() == 'sessiontimeout')
+                                window.location.href = '@Url.Action("Logout", "Account")';
+                        }
+                        if (data.success) {
+                            var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+                            $(".alert").hide();
+                            $("#successMsgRegion").html(closeButton + "Invoice is generated successfully for selected jobs.");
+                            $("#successMsgRegion").show();
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            $("#datatable2").dataTable().fnDraw();
+                        }
+                    },
+                    error: function(data){
+                        alert('error');
+                    }
+                });
+            }
+            else{
+                alert('Please select any record to generate STC Invoice.');
+            }
+        }
+    }
+
+    function DatatablecallBack() {
+
+        $("#lbljobsSelectedCERApproved").html('0/0');
+        $("#lblTotalSTCSelectedCERApproved").html(0);
+        if($("#datatable2").find(".dataTables_empty").length == 1){
+            document.getElementById("chkAllCERApproved").checked = false;
+        }
+        else
+            document.getElementById("chkAllCERApproved").checked = true;
+
+        if ($('#chkAllCERApproved').prop('checked') == true) {
+            chkCount2 = $('#datatable2 >tbody >tr').length;
+            $("#lbljobsSelectedCERApproved").html(chkCount2 + '/' + chkCount2);
+            var tSTC = 0;
+            var price = parseFloat($("ul.SettlementTermsCERApproved").find('li.active').data("price"));
+            var totalPrice = 0;
+
+            $('#datatable2 tbody input[type="checkbox"]').each(function () {
+                var gst = $(this).attr('IsGST');
+                var taxRate = $(this).attr('taxrate');
+                var cSTC = ($(this).parent().parent().find('.clsLabelCERApproved').text() == '' || $(this).parent().parent().find('.clsLabelCERApproved').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabelCERApproved').text();
+                tSTC = (parseFloat(tSTC) + parseFloat(cSTC));
+                if(gst && gst.toString().toLowerCase() == "true" && taxRate && taxRate > 0)
+                    totalPrice = totalPrice + ((price + (taxRate / 100)) * parseFloat(cSTC));
+                else
+                    totalPrice = totalPrice + (price * parseFloat(cSTC));
+            });
+
+            $("#lblTotalSTCSelectedCERApproved").html(tSTC);
+            //$("#stcAmountHeaderCERApproved").html(parseFloat(tSTC).toFixed(2));
+            //$("#lblTotalSTCValueCERApproved").html(parseFloat(tSTC) * parseFloat($("ul.SettlementTermsCERApproved").find('li.active').data("price")));
+            $("#lblTotalSTCValueCERApproved").html(totalPrice);
+        }
+        else {
+            chkCount2 = 0;
+            $("#lbljobsSelectedCERApproved").html('0/0');
+            //$("#stcAmountHeaderCERApproved").html(parseFloat(0).toFixed(2));
+            $("#lblTotalSTCSelectedCERApproved").html(parseFloat(0).toFixed(2));
+        }
+        $(".popupgrid-bottom").hide();
+        $("#datatable2_length").hide();
+    }
+
+</script>

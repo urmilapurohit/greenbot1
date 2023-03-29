@@ -1,0 +1,403 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+<style type="text/css">
+    .calculus-input {
+        max-width: 200px;
+        position: relative;
+        display: inline-block;
+    }
+
+        .calculus-input .input-group-addon {
+            padding: 8px;
+            width: auto;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+</style>
+@Html.Hidden("OldPanelDetails")
+@Html.Hidden("NewPanelDetails")
+@Html.Hidden("OldInverterDetails")
+@Html.Hidden("NewInverterDetails")
+<div class="sub-title">
+    <h4>System Details</h4>
+</div>
+<div class="details-block details-mag-0">
+    <p class="form-inline gridPVD">
+        <label>System Size (KW) : </label>
+        @Html.Hidden("OldSystemSize", Model.JobSystemDetails.SystemSize)
+        @Html.TextBoxFor(m => m.JobSystemDetails.SystemSize, new { @class = "form-control ", @maxlength = 7, @onkeypress = "return isDecimal(event,10,3,this);", @onchange = "return showPnlInvoiceElecBillOver60kw();" })
+    </p>
+    <div class="form-inline gridPVD">
+        <label>STC Value :</label>
+        @Html.Hidden("OldStcValue", Model.JobSystemDetails.CalculatedSTC)
+        <div class="calculus-input">
+            @Html.TextBoxFor(m => m.JobSystemDetails.CalculatedSTC, new { @class = "form-control " })
+            <span class="input-group-addon">
+                <a id="btnCalculatedSTC" onclick="CalculateSTC()" style="cursor:pointer" class="ic-calculator sprite-img"></a>
+            </span>
+        </div>
+    </div>
+    <p class="gridPVD"><span id="spanJobSystemDetails_CalculatedSTC" class="" style="color: #b94a48;display:none"></span></p>
+    <div class="form-inline gridSWH">
+        <label>STC Value :</label>
+        <div class="calculus-input">
+            @Html.TextBoxFor(m => m.JobSystemDetails.CalculatedSTCForSWH, new { @class = "form-control " })
+            @*<span class="input-group-addon"><button type="button" id="btnCalculatedSTC" onclick="CalculateSTC()" >
+                    <img src='@Url.Content("~/images/ic-calculator.png")' alt="" title="Calculate STC"></button>
+                </span>*@
+            <span class="input-group-addon">
+                <a id="btnCalculatedSTC" onclick="CalculateSTC()" style="cursor:pointer" class="ic-calculator sprite-img"></a>
+            </span>
+        </div>
+    </div>
+    <p class="gridSWH"><span id="spanJobSystemDetails_CalculatedSTCForSWH" class="" style="color: #b94a48;display:none"></span></p>
+
+    <p><strong>Total Panels :</strong> <span id="JobSystemDetails_NoOfPanel">@Model.JobSystemDetails.NoOfPanel</span> </p>
+    <span id="JobSystemDetails_NoOfInverter" hidden>@Model.JobSystemDetails.NoOfInverter</span>
+    @*@if (Model.UserType != 2 && Model.UserType != 5)
+        {*@
+    <p class="btn-group">
+        <button type="button" class="btn primary icon-btn gridSWH" id="btnSystemBrandAdd">
+            <span class="sprite-img add_ic"></span> Add System Brand
+        </button>
+        <button type="button" class="btn primary icon-btn gridPVD" id="btnBatteryManufactureAdd">
+            <span class="sprite-img add_ic"></span> Add Battery Manufacturer
+        </button>
+        <button type="button" class="btn primary icon-btn gridPVD" id="btnInverterBrandAdd">
+            <span class="sprite-img add_ic"></span> Add Inverter Brand
+        </button>
+        <button type="button" class="btn primary icon-btn gridPVD" id="btnPanelBrandadd">
+            <span class="sprite-img add_ic"></span> Add Panel Brand
+        </button>
+    </p>
+    @*}*@
+</div>
+<div id="grid">
+    <div class="table-responsive gridPVD">
+        <table id="Paneldatatable" class="table table-hover">
+            <thead>
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    <tr>
+                        <th width="40%">@Html.DisplayName("Brand")</th>
+                        <th width="40%">@Html.DisplayName("Model")</th>
+                        <th width="7%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="7%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="7%">#</th>
+                        @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                        {
+                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                        }
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th width="40%">@Html.DisplayName("Brand")</th>
+                        <th width="40%">@Html.DisplayName("Model")</th>
+                        <th width="7%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="7%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="7%">#</th>
+                        <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                    </tr>
+                }
+            </thead>
+            <tbody id="tblPanel">
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    if (Model.lstJobPanelDetails != null)
+                    {
+                        foreach (var lstUserDocument in Model.lstJobPanelDetails)
+                        {
+                            <tr id=@lstUserDocument.JobPanelID>
+                                <td class="@lstUserDocument.Brand" width="40%" style="text-align:left">@lstUserDocument.Brand</td>
+                                <td class="@lstUserDocument.Model" width="40%">@lstUserDocument.Model</td>
+                                <td class="@lstUserDocument.CECApprovedDate" width="7%">@lstUserDocument.CECApprovedDate</td>
+                                <td class="@lstUserDocument.ExpiryDate" width="7%">@lstUserDocument.ExpiryDate</td>
+                                <td class="@lstUserDocument.NoOfPanel" width="7%">@lstUserDocument.NoOfPanel</td>
+                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                                {
+                                    <td class="action" id="tdAction" width="15%" data-supplier="@lstUserDocument.Supplier" rowid="@lstUserDocument.JobPanelID">
+                                        <a class="edit sprite-img" title="Edit" id="signEdit" href="javascript:void(0)" style="cursor: pointer" onclick="editPanel(@lstUserDocument.JobPanelID)"></a>&nbsp;&nbsp;
+                                        <a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeletePanelFromGrid(@lstUserDocument.JobPanelID)"></a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-responsive gridPVD">
+        <table id="Inverterdatatable" class="table table-hover">
+            <thead>
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    <tr>
+                        <th width="30%">@Html.DisplayName("Brand")</th>
+                        <th width="28%">@Html.DisplayName("Series")</th>
+                        <th width="28%">@Html.DisplayName("Model")</th>
+                        <th width="5%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="5%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="5%">@Html.DisplayName("#")</th>
+                        @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                        {
+                            <th class="action" id="tdAction" width="5%">@Html.DisplayName("Action")</th>
+                        }
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th width="30%">@Html.DisplayName("Brand")</th>
+                        <th width="28%">@Html.DisplayName("Series")</th>
+                        <th width="28%">@Html.DisplayName("Model")</th>
+                        <th width="5%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="5%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="5%">@Html.DisplayName("#")</th>
+                        <th class="action" id="tdAction" width="5%">@Html.DisplayName("Action")</th>
+                    </tr>
+                }
+            </thead>
+            <tbody id="tblInverter">
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    if (Model.lstJobInverterDetails != null)
+                    {
+                        foreach (var lstJobInverterDetails in Model.lstJobInverterDetails)
+                        {
+                            <tr id=@lstJobInverterDetails.JobInverterID>
+                                <td class="@lstJobInverterDetails.Brand" width="30%" style="text-align:left">@lstJobInverterDetails.Brand</td>
+                                <td class="@lstJobInverterDetails.Series" width="28%">@lstJobInverterDetails.Series</td>
+                                <td class="@lstJobInverterDetails.Model" width="28%">@lstJobInverterDetails.Model</td>
+                                <td class="@lstJobInverterDetails.CECApprovedDate" width="5%">@lstJobInverterDetails.CECApprovedDate</td>
+                                <td class="@lstJobInverterDetails.ExpiryDate" width="5%">@lstJobInverterDetails.ExpiryDate</td>
+                                <td class="@lstJobInverterDetails.NoOfInverter" width="5%">@lstJobInverterDetails.NoOfInverter</td>
+                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                                {
+                                    <td class="action" rowid=@lstJobInverterDetails.JobInverterID id="tdAction" width="5%">
+                                        <a class="edit sprite-img" title="Edit" id="signEdit" style="cursor: pointer" href="javascript:void(0)" onclick="editInverter(@lstJobInverterDetails.JobInverterID)"></a>&nbsp;&nbsp;
+                                        <a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeleteInverterFromGrid(@lstJobInverterDetails.JobInverterID)"></a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-responsive gridPVD">
+        <table id="BatteryManufacturerdatatable" class="table table-hover">
+            <thead>
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    <tr>
+                        <th width="35%">@Html.DisplayName("Manufacturer")</th>
+                        <th width="25%">@Html.DisplayName("Model Number")</th>
+                        @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                        {
+                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                        }
+                    </tr>
+                }
+            </thead>
+            <tbody id="tblBatteryManufacturer">
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    if (Model.lstJobBatteryManufacturer != null)
+                    {
+                        foreach (var lstJobBattery in Model.lstJobBatteryManufacturer)
+                        {
+                            <tr id=@lstJobBattery.JobBatteryManufacturerId>
+                                <td class="@lstJobBattery.Manufacturer" width="35%" style="text-align:left">@lstJobBattery.Manufacturer</td>
+                                <td class="@lstJobBattery.ModelNumber" width="25%">@lstJobBattery.ModelNumber</td>
+                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                                {
+                                    <td class="action" rowid=@lstJobBattery.JobBatteryManufacturerId id="tdAction" width="15%">
+                                        <a class="edit sprite-img" title="Edit" id="signEdit" style="cursor: pointer" href="javascript:void(0)" onclick="editBatteryManufacturer(@lstJobBattery.JobBatteryManufacturerId)"></a>&nbsp;&nbsp;
+                                        <a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeleteBatteryManufacturerFromGrid(@lstJobBattery.JobBatteryManufacturerId)"></a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="table-responsive gridSWH">
+        <table id="Systemdatatable" class="table table-hover">
+            <thead>
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    <tr>
+                        <th width="40%">@Html.DisplayName("Brand")</th>
+                        <th width="35%">@Html.DisplayName("Model")</th>
+                        <th width="10%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="10%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="10%">#</th>
+                        @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                        {
+                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                        }
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <th width="40%">@Html.DisplayName("Brand ")</th>
+                        <th width="35%">@Html.DisplayName("Model")</th>
+                        <th width="10%">@Html.DisplayName("ApprovedDate")</th>
+                        <th width="10%">@Html.DisplayName("ExpiryDate")</th>
+                        <th width="10%">#</th>
+                        <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                    </tr>
+                }
+            </thead>
+            <tbody id="tblSystem">
+                @if (Model.BasicDetails.JobID != 0)
+                {
+                    if (Model.lstJobPanelDetails != null)
+                    {
+                        foreach (var lstUserDocument in Model.lstJobPanelDetails)
+                        {
+                            <tr id=@lstUserDocument.JobPanelID>
+                                <td class="@lstUserDocument.Brand" width="40%" style="text-align:left">@lstUserDocument.Brand</td>
+                                <td class="@lstUserDocument.Model" width="35%">@lstUserDocument.Model</td>
+                                <td class="@lstUserDocument.CECApprovedDate" width="10%">@lstUserDocument.CECApprovedDate</td>
+                                <td class="@lstUserDocument.ExpiryDate" width="10%">@lstUserDocument.ExpiryDate</td>
+                                <td class="@lstUserDocument.NoOfPanel" width="10%">@lstUserDocument.NoOfPanel</td>
+                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1 || Model.UserType == 2 || Model.UserType == 5)
+                                {
+                                    <td class="action" rowid="@lstUserDocument.JobPanelID" data-supplier="@lstUserDocument.Supplier" id="tdAction" width="15%">
+                                        <a class="edit sprite-img" title="Edit" id="signEdit" href="javascript:void(0)" style="cursor: pointer" onclick="editSystem(@lstUserDocument.JobPanelID)"></a>&nbsp;&nbsp;
+                                        <a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeleteSystemFromGrid(@lstUserDocument.JobPanelID)"></a>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    var panelBrandList = [];
+    var panelModelList = [];
+    var PanelXml = [];
+    var OldPanelXml = [];
+    var OldInverterXml = [];
+    var InverterXml = [];
+    var inverterBrandList = [];
+    var inverterSeriesList = [];
+    var inverterModelList = [];
+    var systemBrandList = [];
+    var systemModelList = [];
+    var systemXml = [];
+    var batteryManufacturerList = [];
+    var batteryModelList = [];
+    var batteryXml = [];
+    var BasicDetails_JobType = @Model.BasicDetails.JobType,
+        ProjectConfiguration_GetDateFormat = '@ProjectConfiguration.GetDateFormat',
+        urlCalculateSTC = '@Url.Action("CalculateSTC", "Job")',
+        urlCalculateSWHSTC = '@Url.Action("CalculateSWHSTC", "Job")',
+        urlCheckDuplicateSerialNumbers = '@Url.Action("CheckDuplicateSerialNumbers", "Job")',
+        urlGetPanelBrand = '@Url.Action("GetPanelBrand", "Job")?Mode=',
+        urlGetPanelModel = '@Url.Action("GetPanelModel", "Job")?Mode=',
+        urlGetInverterModel = '@Url.Action("GetInverterModel", "Job")?Mode=Series&Search=',
+        urlGetInverterSeries = '@Url.Action("GetInverterSeries", "Job")?Mode=Model&Search=',
+        urlGetInverterBrand = '@Url.Action("GetInverterBrand", "Job")?Mode=Manufacturer&Search=';
+    urlGetBatteryManufacturer = '@Url.Action("GetBatteryManufacturer", "Job")';
+    urlGetBatteryModel = '@Url.Action("GetBatteryModel", "Job")?manufacturer=';
+    urlgetStartEndDateForPanel = '@Url.Action("GetStartEndDateForPanel","Job")';
+     urlgetStartEndDateForInverter = '@Url.Action("GetStartEndDateForInverter", "Job")';
+    urlgetStartEndDateForSWHBrandModel = '@Url.Action("GetStartEndDateForSWHBrandModel", "Job")';    
+</script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#btnPanelBrandadd").click(function () {
+            ClearPanelModelBrand();
+            $('#popupboxPanelBrand').modal({ backdrop: 'static', keyboard: false });
+            MakePanelModelNumDisabled();
+            BindPanelModel('', BasicDetails_JobType, 'Model', null, '');
+            // BindPanelBrand('', BasicDetails_JobType, 'Brand', null, '');
+        });
+
+        $("#btnInverterBrandAdd").click(function () {
+            ClearInverterModelBrand();
+            $('#popupboxInverterBrand').modal({ backdrop: 'static', keyboard: false });
+            MakeInverterModelSeriesDisabled();
+            BindInverterModel('');
+            //BindInverterBrand('', '');
+        });
+
+        $("#btnBatteryManufactureAdd").click(function () {
+            ClearBatteryManufacturer();
+            $('#popupboxBatteryManufacturer').modal({ backdrop: 'static', keyboard: false });
+            MakeBatteryModelNumberDisabled();
+            BindBatteryManufacturer();
+        });
+
+        $("#btnSystemBrandAdd").click(function () {
+            ClearSystemModelBrand();
+            $('#popupboxSystemBrand').modal({ backdrop: 'static', keyboard: false });
+            MakeSystemModelSeriesDisabled();
+            BindSystemModel('', BasicDetails_JobType, 'Model', null, '');
+            // BindSystemBrand('', BasicDetails_JobType, 'Brand', null, '');
+        });
+        ShowHideSWHPVDField();
+    });
+    function ShowHideSWHPVDField() {
+        //PVD job
+        if (modelBasicJobType == '1') {
+            $(".gridPVD").show();
+            $(".gridSWH").hide();
+            FillDropDownOfPanelBrandModel();
+            FillDropDownOfInverterBrandModel();
+            FillDropDownOfBatteryManufacturerModel();
+            $("#TypeOfConnection,#JobSTCDetails_TypeOfConnection,#SystemMountingType,#JobSTCDetails_SystemMountingType").show();
+            $("#DeemingPeriod,#JobSTCDetails_DeemingPeriod,#InstallerID,#BasicDetails_InstallerID,#DesignerID,#BasicDetails_DesignerID").show();
+            $("#NMI,#JobInstallationDetails_NMI,#InstallingNewPanel,#InstallingNewPanel,#InstallingNewPanel,#JobInstallationDetails_InstallingNewPanel,#MeterNumber,#JobInstallationDetails_MeterNumber,#PhaseProperty,#JobInstallationDetails_PhaseProperty,#ElectricityProviderID,#JobInstallationDetails_ElectricityProviderID,#ExistingSystem1,#JobInstallationDetails_ExistingSystem").show();
+            $(".lblPVD").show();
+            $("#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").show();
+            $('.addInfo').removeClass('col-md-12');
+            $('.addInfo').addClass('col-md-6');
+            $("#MultipleSGUAddress").html("Is there more than one SGU at this address?:");
+            $("#CertificateCreated").html("Are you creating certificates for a system that has previously been failed by the Clean Energy Regulator?:");
+            $("#divVolumetricCapacity").hide();
+            $("#divStatutoryDeclarations").hide();
+            $("#divSecondhandWaterHeater").hide();
+            var insatallerid = modelBasicInstallerID || 0;
+            var eleParam = [{ JobID: $("#BasicDetails_JobID").val(), solarCompanyId: $("#BasicDetails_SolarCompanyId").val() }];
+            var installerParam = [{ isInstaller: true, existUserId: insatallerid, solarCompanyId: $("#BasicDetails_SolarCompanyId").val(), jobId: jobId }];
+            dropDownData.push({ id: 'JobElectricians_InstallerID', key: "", value: insatallerid, hasSelect: true, callback: null, defaultText: null, proc: 'InstallerDesignerEle', param: installerParam, bText: 'Text', bValue: 'Value' });
+            $("#jobSSCID").show();
+        }
+        //SWH job
+        else if (modelBasicJobType == '2') {
+            $(".gridSWH").show();
+            $(".gridPVD").hide();
+            FillDropDownOfSystemBrandModel();
+            $("#TypeOfConnection,#JobSTCDetails_TypeOfConnection,#SystemMountingType,#JobSTCDetails_SystemMountingType").hide();
+            $("#DeemingPeriod,#JobSTCDetails_DeemingPeriod,#InstallerID,#BasicDetails_InstallerID,#DesignerID,#BasicDetails_DesignerID").hide();
+            $("#NMI,#JobInstallationDetails_NMI,#InstallingNewPanel,#InstallingNewPanel,#InstallingNewPanel,#JobInstallationDetails_InstallingNewPanel,#MeterNumber,#JobInstallationDetails_MeterNumber,#PhaseProperty,#JobInstallationDetails_PhaseProperty,#ElectricityProviderID,#JobInstallationDetails_ElectricityProviderID,#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").hide();
+            $(".lblPVD").hide();
+            $("#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").hide();
+            $('.addInfo').removeClass('col-md-6');
+            $('.addInfo').addClass('col-md-12');
+            $("#MultipleSGUAddress").html("Is there more than one SWH/ASHP at this address:");
+            $("#CertificateCreated").html("Creating certificates for previously failed SWH:");
+            $("#divVolumetricCapacity").show();
+            if (modelSTCVolumetricCapacity == 'Yes') {
+                $("#divStatutoryDeclarations").show();
+            }
+            $("#divSecondhandWaterHeater").show();
+            $("#jobSSCID").hide();
+        }
+    }
+</script>
+@*<script src="~/Scripts/View/Job/_JobSystemDetails.dev.js"></script>*@

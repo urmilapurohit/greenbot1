@@ -1,0 +1,322 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+<script src="~/Scripts/Calendar/moment.min.js"></script>
+@{
+    Layout = null;
+}
+
+@{
+    ////Todo
+    bool isAddEditJobScheduling = false;
+    bool isDeleteJobScheduling = false;
+    bool isJobSchedulingView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteJobScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView) { isJobSchedulingView = true; }
+        });
+    }
+}
+
+<div class="alert alert-success alert-dismissible" role="alert" id="alertAssignTime" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+@if (Model.JobID != 0)
+{
+    <div class="documents-block">
+        <h4 class="hed scheduling-title">
+            <span>Scheduling</span>
+            @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+            {
+                if (isAddEditJobScheduling)
+                {
+                    <button type="button" class="btn primary ic_plus" id="btnAddVisit" style="background-position: 4px 6px;">Add Visits</button>
+                }
+            }
+        </h4>
+        <ul class="media-list scheduling-list">
+            @if (Model.lstJobSchedule != null && Model.lstJobSchedule.Count > 0)
+            {
+                foreach (var lstJobSchedule in @Model.lstJobSchedule)
+                {
+                    <li class="media" id=@lstJobSchedule.JobSchedulingID>
+                        <div class="media-left">
+                            <div class="date-box">
+                                <div class="month">@lstJobSchedule.Month</div>
+                                <div class="date">@lstJobSchedule.Date</div>
+                                <div class="year">@lstJobSchedule.Year</div>
+                            </div>
+                        </div>
+                        <div class="media-body">
+                            <div class="edit-box">
+                                @if (isAddEditJobScheduling)
+                                {
+                                    <a class="edit" href="#" title="Edit" onclick="showJobSchedulingDetail(@lstJobSchedule.JobSchedulingID)"></a>
+                                }
+                                @if (isJobSchedulingView && !isAddEditJobScheduling)
+                                {
+                                    @*<img src="~/Images/view-icon.png" onclick="showJobSchedulingDetail(@lstJobSchedule.JobSchedulingID)" style="margin-bottom: 20px" />*@
+                                    <img src="~/Images/view-icon.png" onclick="showJobSchedulingDetail(@lstJobSchedule.JobSchedulingID)" style="margin-bottom: 20px;cursor:pointer" title="View" />
+
+                                }
+
+                                @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                                {
+                                    if (isDeleteJobScheduling)
+                                    {
+                                        <a class="delete" href="#" title="Delete" onclick="DeleteJobScheduling(@lstJobSchedule.JobSchedulingID, @lstJobSchedule.UserId)"></a>
+                                    }
+                                }
+                            </div>
+                            <p><span class="volkan" title="Volkan Erbroy">@lstJobSchedule.UserName</span><span class="fix-up">@lstJobSchedule.StatusName</span> <span class="time">@lstJobSchedule.time</span> </p>
+                            <p class="text">@lstJobSchedule.Detail</p>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+}
+<div class="modal fade add-visits" tabindex="-1" id="popUpJobDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="jobScheduling">
+                    @Html.HiddenFor(m => m.JobSchedulingID)
+                    @Html.HiddenFor(m => m.Status)
+                    @Html.Partial("~/views/JobScheduling/_SchedulePopup.cshtml", Model)
+                    <div class="modal-footer">
+                        @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                        {
+                            if (isAddEditJobScheduling)
+                            {
+                                <button type="button" class="btn primary icon-btn" id="saveJobSchedule"><span class="sprite-img save_ic"></span>Save</button>
+                            }
+
+                        }
+                        <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="notification">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Notification</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <h5 class="notification">Already assign maximum job to this same electrician.Are you sure you want to continue?</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesNotification" isAutoScheduleVisit="false">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noNotification">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<script type="text/javascript">
+
+
+    $(function () {
+        var isIE = window.ActiveXObject || "ActiveXObject" in window;
+        if (isIE) {
+            $('.modal').removeClass('fade');
+        }
+    });
+    $(document).ready(function () {
+
+
+        //$("#yesNotification").click(function () {
+        //    var data = $("#alertAssignTime").data('dragData');
+        //    var response = SaveScheduleOnDropAndInsertEdit(data.startDate, data.startTime, data.endDate, data.endTime, data.label, data.detail, data.userId, data.jobId, data.jobSchedulingID, true, data.status, data.isDrop);
+        //    $("#notification").modal('hide');
+        //    //if (!response) {
+        //    //    ui.draggable.animate(ui.draggable.data().origPosition, "slow");
+        //    //    return;
+        //    //}
+        //});
+
+        //$("#noNotification").click(function () {
+        //    $("#notification").modal('hide');
+        //    //ui.draggable.animate(ui.draggable.data().origPosition, "slow");
+        //    //return;
+        //});
+
+        if ($('.modal-backdrop').length > 0) {
+            $('.modal-backdrop').remove();
+        }
+
+        //$('#loading-image2').hide();
+        if ($("#loading-image1").data('msg')) {
+            showSuccessMessage($("#loading-image1").data('msg'));
+        }
+        $("#loading-image1").hide();
+        $("#btnAddVisit").click(function () {
+            
+            $("#JobSchedulingID").val(0);
+            $("#UserId").val('');
+
+            $("#popUpJobDetail").modal({ backdrop: 'static', keyboard: false });
+            $("#popUpJobDetail").find('input[type=text]').each(function () {
+                $(this).val('');
+                $(this).attr('class', 'form-control valid');
+            });
+            $("#popUpJobDetail").find('.field-validation-error').attr('class', 'field-validation-valid');
+            $("#popUpJobDetail").find('Select').each(function () {
+
+                $(this).find('option:first').attr('selected', 'selected');
+            });
+
+            $("#popUpJobDetail").find('textarea').each(function () {
+                $(this).val('');
+            });
+            var jobID = '@Model.JobID';
+            $("#JobID").val(jobID);
+            $("#JobID").attr("disabled", "disabled");
+
+        });
+
+
+
+
+    })
+    function DeleteJobScheduling(jobSchedulingID, userId) {
+        DeleteJobSchedulingDetail(jobSchedulingID, userId);
+    }
+
+    function ResponseDelete(responseID) {
+        if (responseID && responseID > 0) {
+            var strEmailConfigureMsg = '';
+            //Email configuration not required
+            if ('@ProjectSession.IsUserEmailAccountConfigured' == 'False') {
+                strEmailConfigureMsg = '(Can not send mail because email account is not configured)';
+            }
+
+            message = "Job schedule has been deleted successfully. " + strEmailConfigureMsg;
+            $("#loading-image1").data('msg', message);
+            $("#loading-image1").show();
+            $('#divSchedulingEdit').load('@Url.Action("JobSchedulingDetail","JobScheduling")?id=' + jobIDForScheduling);
+
+        }
+        else {
+            message = "Job schedule has not been deleted."
+            showErrorMessage(message);
+        }
+    }
+
+    function ResponseShowJobSchedulingDetail(response) {
+        var jobID = '@Model.JobID';
+        $("#JobID").val(jobID);
+        $("#JobID").attr("disabled", "disabled");
+
+    }
+
+    function showJobSchedulingDetail(jobSchedulingID) {
+        $("#loading-image").css("display", "");
+        setTimeout(function () {
+            FillJobSchedulingDetail(jobSchedulingID);
+        }, 500);
+
+    }
+    //function ResponseSaveScheduleOnDropAndInsertEdit(responseID, responseData) {
+    function ResponseSaveScheduleOnDropAndInsertEdit(response, responseID, responseData, isDrop) {
+        
+        var ret = false;
+        if (responseID > 0) {
+            message = "Job schedule has been saved successfully."
+
+            $("#notification").modal('hide');
+            $("#popUpJobDetail").modal('hide');
+            //showSuccessMessage(message);
+            $.ajaxSetup({ cache: false });
+            $("#loading-image1").data('msg', message);
+            //$("#loading-image1").show();
+            setTimeout(function () {
+
+                $('#divSchedulingEdit').load('@Url.Action("JobSchedulingDetail","JobScheduling")?id=' + jobIDForScheduling);
+            }, 100);
+
+        }
+
+        else if (parseInt(response) == -1) {
+            $("#notification").modal();
+        }
+        else if (parseInt(responseID) == 0) {
+            message = responseData;
+            showErrorMessage(message);
+            $("#notification").modal('hide');
+        }
+        else {
+            message = "Job Schedule has not been saved."
+            showErrorMessage(message);
+            $("#notification").modal('hide');
+        }
+        return ret;
+    }
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForPopUp").html(message);
+        $("#errorMsgRegionForPopUp").show();
+
+    }
+
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").html(message);
+        $("#successMsgRegion").show();
+
+
+    }
+
+
+</script>
+
+
+@Scripts.Render("~/bundles/jqueryval")
+
+

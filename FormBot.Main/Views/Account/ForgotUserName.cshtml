@@ -1,0 +1,88 @@
+﻿@model FormBot.Main.Models.ForgotViewModel
+@using FormBot.Helper
+@{
+    ViewBag.Title = "Forgot your username?";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<div id="loading-image" class="loadingOverlay loading-image" style="display: none;"><img src="/images/loader.gif" alt="loading..." align="middle"></div>
+<div id="login">
+    <div class="panel login-panel forgotPass">
+        <div class="col-md-5 col-sm-5 loginleft">
+            <div class="panel-heading">
+                <div class="logo">
+                    <a href="#">
+                        @if (ProjectSession.Logo == "Images/logo.png")
+                        {
+                            <img src="~/Images/login_logo.png" alt="" id="imgLogo">
+                        }
+                        else
+                        {
+                            <img src='@Url.Content(ProjectSession.UploadedDocumentPath + "UserDocuments" + "/" + ProjectSession.Logo)' al alt="" id="imgLogo" />
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7 col-sm-7 loginright">
+            <div id="msgSection">
+                @Html.RenderMessages()
+            </div>
+            @using (Html.BeginForm("ForgotUserName", "Account", FormMethod.Post, new { @class = "loginform", role = "form" }))
+            {
+                <h1 class="title">Forgot UserName</h1>
+
+
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @placeholder = "Email Id", @autofocus = true, @tabindex = "1" })
+                    @Html.ValidationMessageFor(m => m.Email)
+                </div>
+                <div class="form-group">
+                    <div class="fup">
+                        <a href="@Model.ResellerUrl" style="text-decoration:none;cursor:pointer;" id="backLogin">Back to Login</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input type="submit" class="login-btn primary" value="Send Email" tabindex="2" id="send-email" />
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script type="text/javascript">
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize';
+        var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+        $(document).ready(function () {
+
+            if ('@FormBot.Helper.ProjectSession.LoginCompanyName' != null) {
+                if ('@ProjectSession.Logo' != null && '@ProjectSession.Logo' != '') {
+                    if ('@ProjectSession.Logo' == 'Images/logo.png') {
+                        $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + 'Images/login_logo.png'));
+                    }
+                    else {
+                        var proofDocumentURL = UploadedDocumentPath;
+                        var logo = '@ProjectSession.Logo';
+                        var SRC = proofDocumentURL + 'UserDocuments' + '/' + logo;
+                        $('#imgLogo').attr('src', SRC);
+                    }
+                    $('body').attr('id', '@ProjectSession.Theme');
+                }
+            }
+
+            $("#send-email").click(function () {
+                $("#loading-image").show();
+            })
+        });
+
+    </script>
+}

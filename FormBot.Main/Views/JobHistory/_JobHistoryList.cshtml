@@ -1,0 +1,408 @@
+﻿@model List<FormBot.Entity.Job.JobHistory>
+<style>
+    /*.IconsEditDelete {
+        display: none !important;
+    }*/
+    a.disabledLink {
+        pointer-events: none !important;
+        cursor: default;
+    }
+    .blue-title {
+        color: #1b94da;
+    }
+    .history-block {
+        display: block;
+        background-color: #fff;
+        margin: 15px
+    }
+
+    .history-block > :first-child {
+        border-top: 1px solid #e3e3e3
+    }
+
+    .history-box {
+        border-width: 0 0 1px 0;
+        border-style: solid;
+        border-color: #eaeaea;
+        /*padding: 15px 30px;*/
+        padding: 25px 30px 25px 40px;
+        position: relative
+    }
+
+        .history-box:hover .border-icon {
+            -webkit-animation-duration: 1.2s;
+            animation-duration: 1.2s;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both
+        }
+
+    .history-box:hover .border-icon {
+        -webkit-animation-name: bounceInDown;
+        animation-name: bounceInDown
+    }
+
+    .history-box p {
+        margin-bottom: 5px
+    }
+
+    .history-box label {
+        font-size: 13px;
+        font-weight: 400;
+        color: #474747;
+        line-height: 16px;
+        font-family: OpenSansSemibold
+    }
+
+        .history-box a {
+            color: #1b94da;
+            font-size: 13px;
+            line-height: 16px;
+            /*pointer-events: none;*/
+        }
+        
+
+    .history-box .list li {
+        display: inline;
+        font-size: 13px;
+        margin-right: 5px;
+        margin-bottom: 10px
+    }
+
+        .history-box .list li > span {
+            color: #474747
+        }
+
+    .history-box .attachment-ber {
+        padding: 0
+    }
+
+    .history-box ol {
+        list-style: decimal !important;
+        padding: 0 40px !important;
+        margin: 13px 0 !important;
+    }
+
+    .history-box ul {
+        list-style: disc !important;
+        padding: 0 40px !important;
+        margin: 13px 0 !important;
+    }
+
+    .history-box ol li {
+        list-style-type: decimal !important;
+    }
+
+    .history-box ul li {
+        list-style-type: disc !important;
+    }
+
+    .history-box em {
+        font-style: italic !important;
+    }
+
+        .history-box blockquote {
+            font-style: italic;
+            font-family: Georgia, Times, "Times New Roman", serif;
+            border-style: solid;
+            border-color: #ccc;
+            border-left-width: 5px;
+            padding-left: 20px;
+            padding-right: 8px;
+        }
+
+    input#FilterIsImportantNote {
+        line-height:inherit;
+    }
+
+    .tagged-users {
+        color: #4493d0;
+        text-decoration: underline;
+    }
+
+    .history-box .created-date {
+        float:right;
+    }
+    #divCustom .history-block{
+        margin:0px !important;
+    }
+    .newHistoryView{
+        color:#777;
+    }
+    .newHistoryView .border-icon {
+        vertical-align: middle;
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        left: -6px;
+        top: auto !important;
+        border-radius: 25%;
+        background-repeat: no-repeat;
+        background-position: center center;
+        outline: 1px solid transparent
+    }
+    span.notesfunction{
+        display:inline-block;
+    }
+</style>
+
+
+@if (ViewBag.AllTagsShow == 1 || ViewBag.AllTagsShow == null)
+{
+    <div class="col-sm-12 newHistoryView">
+        <div id="divCustom">
+            <div class="history-block" id="divHistoryList">
+                @ListLoad()
+            </div>
+            <div id="norecords"></div>
+        </div>
+        <script>
+                    //function reloadCustomScrollbar() {
+                    //    //$('#divCustom').mCustomScrollbar();
+                    //}
+                    //reloadCustomScrollbar();
+        </script>
+    </div>
+}
+else
+{
+    @ListLoad()
+}
+
+@helper ListLoad()
+{
+if (Model.Count() > 0)
+{
+    foreach (var item in Model)
+    {
+        string categoryClass = string.Empty;
+        switch (item.CategoryID)
+        {
+
+            //case 34:
+            //    categoryClass = "traded-status";
+            //    break;
+            //case 27:
+            //case 28:
+            //case 29:
+            //case 30:
+            //case 36:
+            //case 59:
+            //    categoryClass = "stc-status";
+            //    break;
+            //case 10:
+            //case 11:
+            //case 12:
+            //case 13:
+            //case 14:
+            //    categoryClass = "scheduling-status";
+            //    break;
+            //case 15:
+            //case 16:
+            //case 17:
+            //case 18:
+            //case 25:
+            //case 26:
+            //    categoryClass = "documents-status";
+            //    break;
+            //case 3:
+            //case 4:
+            //case 5:
+            //    categoryClass = "notes-status";
+            //    break;
+            //case 6:
+            //case 33:
+            //case 1:
+            //case 2:
+            //case 7:
+            //case 8:
+            //case 9:
+            //case 23:
+            //case 24:
+            //case 19:
+            //case 20:
+            //case 21:
+            //case 22:
+            //    categoryClass = "stage-status";
+            //    break;
+            //case 31:
+            //case 32:
+            //    categoryClass = "signature-status";
+            //    break;
+            //case 40:
+            //case 41:
+            //case 42:
+            //case 43:
+            //case 44:
+            //case 45:
+            //case 46:
+            //case 47:
+            //case 54:
+            //    categoryClass = "spvlogs-status";
+            //    break;
+
+
+            case 1:
+            case 2:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
+            case 32:
+            case 34:
+            case 36:
+            case 37:
+            case 38:
+            case 48:
+            case 49:
+            case 62:
+            case 63:
+            case 71:
+            case 72:
+            case 73:
+            case 74:
+            case 79:
+            case 82:
+            case 83:
+            case 84:
+                categoryClass = "stage-status";
+                break;
+            case 3:
+            case 64:
+            case 65:
+            case 76:
+            case 77:
+                categoryClass = "notes-status";
+                break;
+            case 4:
+                categoryClass = "message-status";
+                break;
+            case 26:
+            case 35:
+                categoryClass = "traded-status";
+                break;
+            case 28:
+            case 29:
+            case 33:
+                categoryClass = "stc-status";
+                break;
+            case 9:
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+            case 67:
+                categoryClass = "scheduling-status";
+                break;
+            case 14:
+            case 15:
+            case 16:
+            case 17:
+            case 24:
+            case 25:
+            case 50:
+            case 51:
+            case 68:
+            case 69:
+            case 70:
+            case 78:
+            case 81:
+                categoryClass = "documents-status";
+                break;
+            case 30:
+            case 31:
+                categoryClass = "signature-status";
+                break;
+            case 39:
+            case 40:
+            case 41:
+            case 42:
+            case 43:
+            case 44:
+            case 45:
+            case 46:
+            case 47:
+            case 52:
+            case 54:
+            case 75:
+                categoryClass = "spvlogs-status";
+                break;
+            case 27:
+            case 53:
+            case 55:
+            case 56:
+            case 57:
+            case 58:
+            case 59:
+            case 60:
+            case 61:
+            case 80:
+                categoryClass = "invoice-status";
+                break;
+        }
+            <li class="history-box @categoryClass @item.strNotesTypeValue" data-NoteId="@item.NoteId" >
+                <span class="border-icon fas" title="@item.HistoryCategory" style="font-size:30px;"></span>
+                
+                <p>
+                    @*<a href="@Url.Action("Index", "Job")?id=@item.JobIdEncoded" class="blue-title"><b>@item.RefNumber&nbsp;-&nbsp;</b></a>*@
+                    @if (item.CategoryID != 18 && item.CategoryID != 69 && item.CategoryID!=70 && item.CategoryID!=31)
+        {
+                        <b class="blue-title" title="@item.Modifier">@item.Modifier </b>
+    } 
+                    <span class="created-date" style="margin-left:10px">@item.CreateDate</span>
+                    @Html.Raw(item.HistoryMessage)
+                </p>
+            </li>
+        }
+    }
+}
+            
+<style>
+
+    .traded-status .border-icon {
+        /*background-image: url(../Images/trade-icon_new.png);*/
+background-size: contain;
+    }
+
+    .stc-status .border-icon {
+        /*background-image: url(../Images/stcStatusIcon.png);*/
+background-size: contain;
+    }
+
+    .scheduling-status .border-icon {
+        /*background-image: url(../Images/scheduling_new.png);*/
+background-size: contain;
+    }
+
+    .documents-status .border-icon {
+        /*background-image: url(../Images/documentIcon.png);*/
+        background-size: contain;
+    }
+
+    .notes-status .border-icon {
+        /*background-image: url(../Images/notesIcon.png);*/
+    background-size: contain;
+    }
+
+    .stage-status .border-icon {
+        /*background-image: url(../Images/stagestatus_new.png);*/
+    background-size: contain;
+    }
+    .signature-status .border-icon {
+        /*background-image: url(../Images/signature_new.png);*/
+        background-size: contain;
+    }
+    .spvlogs-status .border-icon {
+        /*background-image: url(../Images/spvLogs.png);*/
+        background-size: contain;
+    }
+    .invoice-status .border-icon {
+        /*background-image: url(../Images/InvoiceLogs.png);*/
+        background-size: contain;
+    }
+</style>

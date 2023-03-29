@@ -1,0 +1,170 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="CONBit" value="10" id="CONBit" />
+<input type="hidden" name="minSCA" value="1" id="minSCA" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstConnectionStatus, new MultiSelectList(Model.LstConnectionStatus, "Value", "Text"), new { id = "LstConnection", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.LstConnectionStatusAssigned, new MultiSelectList(Model.LstConnectionStatusAssigned, "Value", "Text"), new { id = "LstConnectionAssigned", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnConnectionStatusAssigned, new { id = "hdnConnection" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnUserSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnCancelConnection" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SCA", function () {
+        if (parseInt($('#CONBit').val()) == 0) {
+            $('#LstConnection option:selected').each(function () {
+                $(this).remove().appendTo("#LstConnectionAssigned");
+            });
+            $('#AvailableConnection').html($('#LstConnectionAssigned option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstConnection option:selected').length + $('#LstConnectionAssigned option').length) <= parseInt($('#CONBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstConnectionAssigned option').length < parseInt($('#CONBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstConnection option:selected').each(function () {
+                        $(this).remove().appendTo("#LstConnectionAssigned");
+                    });
+                    $('#AvailableConnection').html($('#LstConnectionAssigned option').length);
+                }
+                if (($('#LstConnectionAssigned option').length == parseInt($('#CONBit').val()))) {
+                    $('#btnLtoR_SCA').css('opacity', '0.5');
+                    $('#btnLtoR_SCA').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SCA').css('opacity', '1');
+                    $('#btnLtoR_SCA').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_SCA", function () {
+        $('#LstConnectionAssigned option:selected').each(function () {
+            $(this).remove().appendTo("#LstConnection");
+        });
+        $('#AvailableConnection').html($('#LstConnectionAssigned option').length);
+        if (($('#LstConnectionAssigned option').length < parseInt($('#CONBit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+    });
+
+    //$(document).on("click", "#closeConnection", function () {
+    //    $('#popupConnection').modal('hide');
+    //    $('#cntConnections').html($('#LstConnectionAssigned option').length);
+    //});
+
+    $(document).on("click", "#btnUserSave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstConnectionAssigned option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minSCA').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() > 0 && $('#LstConnectionAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        if (($('#LstConnectionAssigned option').length <= parseInt($('#CONBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() == 1 && $('#LstConnectionAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnConnection").val(strAssignedAttendeeList);
+        $('#cntConnections').html($('#LstConnectionAssigned option').length);
+        $('#popupConnection').modal('hide');
+    });
+
+    $(document).on("click", "#btnCancelConnection", function () {
+        $('#LstConnectionAssigned option').each(function () {
+            $(this).remove().appendTo("#LstConnection");
+        });
+        $("#hdnConnection").val('');
+        $('#AvailableConnection').html($('#LstConnectionAssigned option').length);
+        if (($('#LstConnectionAssigned option').length < parseInt($('#CONBit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+    });
+
+    $(document).on("click", "#closeConnection", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstConnectionAssigned option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minSCA').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() > 0 && $('#LstConnectionAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        if (($('#LstConnectionAssigned option').length <= parseInt($('#CONBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() == 1 && $('#LstConnectionAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnConnection").val(strAssignedAttendeeList);
+        $('#cntConnections').html($('#LstConnectionAssigned option').length);
+        $('#popupConnection').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

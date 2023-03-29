@@ -1,0 +1,264 @@
+﻿@using FormBot.SPVMain.Infrastructure
+@using FormBot.Helper
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title></title>
+    <link rel="shortcut icon" href="@Url.Content("~/Images/favicon.ico")" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/CommonJS")
+    @Scripts.Render("~/bundles/modernizr")
+    <script src="~/Scripts/View/Shared/_Layout.dev.js"></script>
+    <style type="text/css">
+        .hd-top .logo {
+            /*max-width: 200px;*/
+            max-width: 100%;
+            height: 60px;
+            overflow: hidden;
+        }
+
+        .hd-top .logo img {
+                margin-top: 5px;
+                /*margin-left: 15px;*/
+                /*height: 60px;*/
+            }
+
+        .disableMenu ul {
+            pointer-events: none;
+        }
+
+        .ui-helper-hidden-accessible {
+            border: 0;
+            clip: rect(0 0 0 0);
+            height: 1px;
+            margin: -1px;
+            overflow: hidden;
+            padding: 0;
+            position: absolute;
+            width: 1px;
+        }
+
+        .autocompleteChangeUser {
+            z-index: 10000 !important;
+        }
+
+        #navigation .menu ul {
+            display: none;
+        }
+
+        #navigation .menu li:hover > ul {
+            display: block;
+        }
+    </style>
+</head>
+<body id="green">
+    <div id="wrapper">
+        <header id="header">
+            <div class="hd-top">
+                <div class="container-fluid">
+                    <div class="logo">
+                        <a href="#" title="Greenbot">
+                            <img src="@Url.Content("~/Images/logo.png")" alt="Greenbot" id="imgLogo" style="height:40px !important;" />
+                        </a>
+                    </div>
+                    <div class="userlinks col-sm-6">
+                        <div class="dropdown pull-right">
+                            <a class="dropdown-toggle username" href="#" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                <p>@ProjectSession.LoggedInName</p>
+                                @*<p>Jhanvi SPV</p>*@
+                                <span class="caret sprite-img"></span>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                <li>
+                                    <a href="@Url.Action("Profile", "SpvUser", new {area="" })" title="Profile">
+                                        <i class="profile-icon sprite-img"></i>Profile
+                                    </a>
+                                </li>
+                                <li><a href="@Url.Action("Logout", "Account", new { area=""})" class="logout" title="Logout"><i class="icon logout-icon sprite-img"></i>Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    @if (ProjectSession.UserTypeId == 1 || ProjectSession.IsUserFSA == true)
+                    {
+                        <a class="user-select form-inline" href="javascript:void(0);" title="Change User" style="color:white;top:24px;right:270px;" onclick="ChangeUserLink();">Change User</a>
+                    }
+                </div>
+            </div>
+
+            <nav id="navigation" class="disableMenu">
+                <a class="menu-toggle" href="#">
+                    <i class="menu-icon">
+                        <span class="line1"></span>
+                        <span class="line2"></span>
+                        <span class="line3"></span>
+                    </i>
+                </a>
+                @if (ProjectSession.DynamicSpvMenuBinding != null)
+                {
+                    @Html.Raw(ProjectSession.DynamicSpvMenuBinding)
+                }
+                else
+                {
+                    @Html.DynamicSpvMenuBinding()
+                }
+            </nav>
+        </header>
+        <section id="content">
+            <div id="loading-image" class="loadingOverlay loading-image" style="display: none;"><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>
+            <div id="loading-image1" class="loadingOverlay loading-image" style="display: none;"><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>
+            @RenderBody()
+
+            <div class="modal fade" id="popupboxChangeUser" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+                <div class="vertical-alignment-helper">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxChangeUser"></button>
+                                <h4 class="modal-title" id="myModalLabel">Change User</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <div class="form-group">
+                                        <label class="control-label">User Type :</label>
+                                        <select class="form-control" id="UserTypeIdFSA" name="UserType"></select>
+                                    </div>
+                                </div>
+                                @*<div class="col-sm-6 col-md-4 col-lg-3 resellerDropdown" style="display:none">
+                                    <div class="form-group">
+                                        <label class="control-label">Reseller :</label>
+                                        <input type="hidden" id="hdnResellerId" />
+                                        <input type="text" id="searchReseller" name="searchReseller" class="form-control" maxlength="50" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3 solarCompanyDropdown" style="display:none">
+                                    <div class="form-group">
+                                        <label class="control-label">Soalr Company :</label>
+                                        <input type="hidden" id="hdnSolarCompanyIdFSA" />
+                                        <input type="text" id="searchSolarCompanyFSA" name="searchSolarCompanyFSA" class="form-control" maxlength="50" />
+                                    </div>
+                                </div>*@
+                                <div class="col-sm-6 col-md-4 col-lg-3 userDropdown">
+                                    <div class="form-group">
+                                        <label class="control-label">User :</label>
+                                        <input type="hidden" id="hdnUserId" />
+                                        <input type="text" id="searchUser" name="searchUser" class="form-control" maxlength="50" />
+                                    </div>
+                                </div>
+                                @*<div class="col-sm-4 userDropdown">
+                                <label>User :</label>
+                                <div class="dropdown pull-right">
+                                    <select class="form-control" id="UserFSA" name="Users"></select>
+                                </div>
+                            </div>*@
+                                @*<div class="user-select form-inline">
+                                <div class="form-group">
+                                    <label class="control-label">User Type :</label>
+                                    <select class="form-control input-sm selectpicker" id="UserTypeIdFSA" name="UserType"></select>
+                                </div>
+                                <div class="form-group userDropdown">
+                                    <label class="control-label">User :</label>
+                                    <select class="form-control input-sm selectpicker" id="UserFSA" name="Users"></select>
+                                </div>
+                            </div>*@
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" id="saveChangeUser"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" id="resetChangeUser"><span class="sprite-img reset_ic"></span>Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+    <footer id="footer">
+        <div class="content-wrapper">
+            <p class="copyright">Copyright &copy; 2019 Emerging Energy</p>
+            <a href="../TermsAndConditions/SCA" target="_blank">Terms and conditions</a>
+        </div>
+    </footer>
+    @RenderSection("scripts", required: false)
+    <script type="text/javascript">
+        var ProjectSession_Logo = '@ProjectSession.Logo',
+        Sessiontimeout = @ProjectConfiguration.Sessiontimeout;
+        var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+        var ProjectSession_SystemUserType = '@ProjectSession.SystemUserType',
+        ProjectSession_UserTypeId = '@ProjectSession.UserTypeId',
+        ProjectSession_IsUserFSA = '@ProjectSession.IsUserFSA',
+        ProjectSession_LoggedInUserId = '@ProjectSession.LoggedInUserId',
+       ProjectSession_SystemUsersOfUserType= '@ProjectSession.SystemUsersOfUserType'
+        function FillDropDown(id, url, value, hasSelect, callback, defaultText) {
+            $.ajax(
+                {
+                    url: url,
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    method: 'get',
+                    cache: false,
+                    success: function (success) {
+                        var options = '';
+                        if (hasSelect == true) {
+                            if (defaultText == undefined || defaultText == null)
+                                defaultText = 'Select';
+
+                            options = "<option value=''>" + defaultText + "</option>";
+                        }
+
+                        $.each(success, function (i, val) {
+                            options += '<option value = "' + val.Value + '" >' + val.Text + '</option>'
+                        });
+
+                        $("#" + id).html(options);
+
+                        if (value && value != '' && value != 0) {
+                            $("#" + id).val(value);
+                        }
+
+                        if ($('#' + id).attr('selval') && $('#' + id).attr('selval') > 0) {
+                            $("#" + id).val($('#' + id).attr('selval'));
+                        }
+
+                        if ($("#" + id).selectpicker != undefined) {
+                            $("#" + id).selectpicker('refresh');
+                        }
+
+                        if (callback != undefined) {
+                            callback();
+                            //setDropDownWidth(id);
+                        }
+                    }
+                });
+        }
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+    </script>
+</body>
+</html>

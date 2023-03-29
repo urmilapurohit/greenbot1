@@ -1,0 +1,786 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+<script src="~/Scripts/Calendar/moment.min.js"></script>
+<script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+
+<style type="text/css">
+    textarea {
+        resize: none;
+    }
+
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }
+
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .modal {
+        z-index: 9999 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+</style>
+
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+@Html.HiddenFor(m => m.JobSchedulingID)
+@Html.HiddenFor(m => m.Status)
+
+@Html.HiddenFor(m => m.TempJobSchedulingId)
+@Html.HiddenFor(m => m.IsClassic)
+@Html.HiddenFor(m => m.IsFromCalendarView)
+@Html.HiddenFor(m => m.JobType)
+
+@{
+    Layout = null;
+}
+
+@{
+    //bool isAddEditJobScheduling = Convert.ToBoolean(@Session["SE_isAddEditJobScheduling"]);
+    //bool isDeleteJobScheduling = Convert.ToBoolean(@Session["SE_isAddEditJobScheduling"]);
+    //bool isJobSchedulingView = Convert.ToBoolean(@Session["SE_isAddEditJobScheduling"]);
+
+
+    bool isAddEditJobScheduling = false;
+    bool isDeleteJobScheduling = false;
+    bool isJobSchedulingView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteJobScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView) { isJobSchedulingView = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteJobScheduling = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView) { isJobSchedulingView = true; }
+            });
+        }
+    }
+}
+<div id="divVisitGridView">
+    @*@Html.Partial("~/Views/JobScheduling/_VisitGridView.cshtml", Model)*@
+    <div class="alert alert-success alert-dismissible" role="alert" id="alertAssignTime" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="job-com-box">
+        <div class="sub-title">
+            <h4>
+                Schedule an installer :<span id="VisitHeader"></span>
+            </h4>
+            @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                 Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+            {
+                if (isAddEditJobScheduling && !(Model.lstJobSchedule.Count > 0))
+                {
+                    <div class="title-btn">
+                        <button type="button" class="btn primary icon-btn" id="btnAddVisit">
+                            <span class="sprite-img add_ic"></span>Add a Visit
+                        </button>
+                    </div> }
+                else
+                {
+                    <div class="title-btn">
+                        <button type="button" class="btn primary icon-btn" id="btnAddVisit" style="display:none;">
+                            <span class="sprite-img add_ic"></span>Add a Visit
+                        </button>
+                    </div>}
+            }
+        </div>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionJobVisit" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionJobVisit" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <div class="panel-group" role="tablist" aria-multiselectable="true" id="jobVisitDetail" visitcount="@Model.lstJobSchedule.Count">
+
+            @if (Model.lstJobSchedule != null && Model.lstJobSchedule.Count > 0)
+            {
+                foreach (var lstJobSchedule in Model.lstJobSchedule)
+                {
+                    <div class="panel" name="JobSchedule" data-panelid="@lstJobSchedule.JobSchedulingID">
+                        <div class="schedule-heading panel-heading" id="headingOne">
+                            <div class="visit-id">
+                                <label>Visit ID :</label>
+                                <span class="color-text">@lstJobSchedule.UniqueVisitID</span>
+                            </div>
+                            <div>
+                                <label>Electrician :</label>
+                                <span class="color-text">@lstJobSchedule.UserName</span>
+                            </div>
+                            <div>
+                                <label>Visit Status :</label>
+                                @if (lstJobSchedule.VisitStatus == 1)
+                                {<span class="color-text clsVisitStatus">Open</span>}
+                                else
+                                {
+                                    <span class="color-text clsVisitStatus">Completed</span>}
+                            </div>
+                            <div class="panel-title">
+                                <ul class="schedule-option">
+                                    <li>
+                                        <a class="expand-btn" data-toggle="collapse" data-parent="#schedule" href="#@lstJobSchedule.JobSchedulingID" aria-expanded="true" aria-controls="collapseOne">
+                                            <span class="icon expand-view sprite-img">
+                                                @*<img src='@Url.Content("~/images/expand-view.png")' alt="">*@
+                                            </span>Expand View
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <span class="icon">
+
+                                            @if (lstJobSchedule.IsDefaultSubmission == true)
+                                            {
+                                                <input class="visit-list-check" type="checkbox" id="visitDefaultSubmission" jobid="@lstJobSchedule.JobID" jobschedulingid="@lstJobSchedule.JobSchedulingID" checked="checked"> }
+                                            else
+                                            {
+                                                <input class="visit-list-check" type="checkbox" id="visitDefaultSubmission" jobid="@lstJobSchedule.JobID" jobschedulingid="@lstJobSchedule.JobSchedulingID">}
+                                        </span>Default Submission
+                                    </li>
+                                    <li>
+
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Actions <span class="caret"></span>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-right" id="visitAction">
+                                                @if (isAddEditJobScheduling)
+                                                {
+                                                    <li>
+                                                        <a href="#" title="Edit" onclick="showJobSchedulingDetail(@lstJobSchedule.JobSchedulingID,event)">Edit</a>
+                                                    </li>
+                                                }
+                                                @if (isJobSchedulingView && !isAddEditJobScheduling)
+                                                {
+                                                    <li>
+                                                        <a href="#" title="View" onclick="showJobSchedulingDetail(@lstJobSchedule.JobSchedulingID,event)">View</a>
+                                                    </li>
+                                                }
+                                                @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                     Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                     Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                     Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                     Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                     Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId)
+                                                {
+                                                    if (isDeleteJobScheduling)
+                                                    {
+                                                        <li>
+                                                            <a href="#" title="Delete" onclick="DeleteJobScheduling(@lstJobSchedule.JobSchedulingID, @lstJobSchedule.UserId,event)">Delete</a>
+                                                        </li>
+                                                    }
+                                                }
+                                                <li>
+                                                    <a href="#" title="View Signatures" onclick="ViewVisitSignature(@lstJobSchedule.JobSchedulingID,event)">View Signatures</a>
+                                                </li>
+
+                                                <li class="loose-credits">
+                                                    <span class="enabled-box">
+                                                        <label class="switch">
+
+                                                            @if (lstJobSchedule.VisitStatus == 1)
+                                                            {
+                                                                <input type="checkbox" jobscedulingid="@lstJobSchedule.JobSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus" onclick="VisitStatusChange(this)"> }
+                                                            else
+                                                            {
+                                                                <input type="checkbox" jobscedulingid="@lstJobSchedule.JobSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus" checked="" onclick="VisitStatusChange(this)">}
+
+                                                            <div class="slider-round">
+                                                                <span class="slider-text enabled">Open</span>
+                                                                <span class="slider-text disabled">Completed</span>
+                                                            </div>
+                                                            @*@if (lstJobSchedule.VisitStatus == 1)
+                                                                {
+                                                                    <div class="slider-round">
+                                                                        <span class="slider-text enabled">Open</span>
+                                                                        <span class="slider-text disabled">Completed </span>
+                                                                    </div>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="slider-round">
+                                                                        <span class="slider-text enabled">Completed</span>
+                                                                        <span class="slider-text disabled">Open</span>
+                                                                    </div>
+                                                                }*@
+                                                            @*<input type="checkbox" jobscedulingid="@lstJobSchedule.JobSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus">
+                                                                <div class="slider-round">
+                                                                    @if (lstJobSchedule.VisitStatus == 1)
+                                                                    {
+                                                                        <span class="slider-text enabled">Open</span>
+                                                                        <span class="slider-text disabled">Completed </span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="slider-text enabled">Completed</span>
+                                                                        <span class="slider-text disabled">Open </span>
+                                                                    }
+                                                                </div>*@
+                                                        </label>
+                                                    </span>
+                                                </li>
+
+                                                <li>
+                                                    <a href="#" title="Populate Signatures" onclick="PopulateSignature(@lstJobSchedule.JobID,@lstJobSchedule.JobSchedulingID,event)">Populate Signatures</a>
+                                                </li>
+                                                <li>
+                                                    @if (lstJobSchedule.VisitStatus == 1)
+                                                    {
+                                                        <a href="#" title="Request Job Data" onclick="RequestJobData(@lstJobSchedule.JobID,@lstJobSchedule.JobSchedulingID,event)">Request Job Data</a>}
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="panel-collapse collapse" id="@lstJobSchedule.JobSchedulingID" role="tabpanel" aria-labelledby="headingOne">
+
+                            <div class="row schedule-installer">
+                                <div class="col-md-6">
+                                    <ul class="visiter-details">
+                                        <li>
+                                            <span class="icon sprite-img inverter-icon">
+                                                @*<img src='@Url.Content("~/images/inverter.png")' alt="">*@
+                                            </span>
+                                            <strong>@lstJobSchedule.Label </strong><br>
+                                            @lstJobSchedule.Detail
+                                        </li>
+                                        <li>
+                                            <span class="icon sprite-img date-icon">
+                                                @*<img src='@Url.Content("~/images/date-icon.png")' alt="">*@
+                                            </span>
+                                            <p><strong>Electrician : </strong>@lstJobSchedule.UserName</p>
+                                            <p><strong>Start Date : </strong>@lstJobSchedule.strVisitStartDate</p>
+                                        </li>
+
+                                        @if (lstJobSchedule.CheckListTemplateId > 0)
+                                        {
+                                            <li>
+                                                <span class="icon sprite-img checklist">
+                                                    @*<img src='@Url.Content("~/images/checklist.png")' alt="">*@
+                                                </span>
+                                                <strong>@lstJobSchedule.CheckListTemplateName : </strong>(@lstJobSchedule.TotalCompletedItemCount/@lstJobSchedule.TotalItemCount Completed)
+                                            </li>
+                                        }
+
+                                    </ul>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="visit-notes mCustomScrollbar">
+                                        <div class="nots-status">
+                                            <span class="icon sprite-img visit-notes-icon">
+                                                @*<img src='@Url.Content("~/images/visit-notes.png")' alt="">*@
+                                            </span>
+                                            <strong>Visit Notes:</strong> (@Model.lstJobNotes.Count New  Notes Available)
+                                        </div>
+
+                                        <div class="nots-list">
+                                            <ul id="jobNotesUL">
+                                                @if (Model.lstJobNotes != null && Model.lstJobNotes.Count > 0)
+                                                {
+                                                    int noteCount = 0;
+                                                    for (int c = 0; c < Model.lstJobNotes.Count; c++)
+                                                    {
+                                                        if (Model.lstJobNotes[c].JobSchedulingId == lstJobSchedule.JobSchedulingID)
+                                                        {
+                                                            <li number="@(++noteCount)">
+                                                                <p>@Model.lstJobNotes[c].Notes</p>
+                                                                <p class="date">@Model.lstJobNotes[c].Created   @Model.lstJobNotes[c].strCreatedDate</p>
+                                                            </li>
+                                                        }
+                                                    }
+                                                }
+                                            </ul>
+                                            @*@if (Model.lstJobNotes != null && Model.lstJobNotes.Count > 2)*@
+                                            @if (Model.lstJobNotes != null && Model.lstJobNotes.AsEnumerable().Where(a => a.JobSchedulingId == lstJobSchedule.JobSchedulingID).ToList().Count > 2)
+                                            {
+                                                <a href="#" title="View Now" id="viewMoreNotes" isshowmore="0" style="margin-left:10px;">Show More Notes</a>}
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="visit-completed" status="@lstJobSchedule.VisitStatus" id="@lstJobSchedule.JobSchedulingID">
+                                <p class="completed-status" id="displayStatus">
+                                    <strong>Visit Status : </strong>
+                                    <span id="openStatus">Open</span>
+                                    <span id="completedStatus" style="display:none;">Completed</span>
+                                    @*@if (lstJobSchedule.VisitStatus == 1)
+                                        {
+                                            <span id="openStatus">Open</span>
+                                        }
+                                        else
+                                        {
+                                            <span id="completedStatus">Completed</span>
+                                        }*@
+                                </p>
+                                <p id="displayCompletedDate"><strong>Complete Date : </strong><span>@lstJobSchedule.strCompletedDate</span></p>
+                                @*@if (lstJobSchedule.VisitStatus == 2)
+                                    {
+                                        <p id="displayCompletedDate"><strong>Complete Date : </strong>@lstJobSchedule.strCompletedDate</p>
+                                    }*@
+                            </div>
+                        </div>
+                    </div>}
+            }
+        </div>
+
+    </div>
+</div>
+<div class="modal fade add-visits" tabindex="-1" id="notification" style="z-index:10000 !important">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form id="jv">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Notification</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <h5 class="notification">Already assign maximum job to this same electrician.Are you sure you want to continue?</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesNotification" isAutoScheduleVisit="false">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noNotification">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="popUpJobDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="jobScheduling">
+                    @Html.HiddenFor(m => m.JobSchedulingID)
+                    @Html.HiddenFor(m => m.Status)
+                    @*@Html.Partial("~/views/JobScheduling/_SchedulePopup.cshtml", Model)*@
+                    <div class="modal-header">
+                        @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+                        <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                        <h4 class="modal-title">Job Schedule</h4>
+                    </div>
+                    <div class="modal-body">
+                        @*<span class="field-validation-error" id="errorSpan"><span id="errorMsg"></span></span>*@
+                        <div class="alert alert-success alert-dismissible visitPopupMsg" role="alert" id="successMsgRegionAddEditItem" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-danger alert-dismissible visitPopupMsg" role="alert" id="errorMsgRegionForPopUp" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            <button type="button" class="close sprite-img" aria-label="Close"></button>
+                        </div>
+                        <div class="form-box">
+                            <div class="row">
+
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.visitStartDate, new { @class = "control-label required" })
+                                        <div class="input-group">
+                                            @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                              Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                              Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                              Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                              Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                            {
+                                                @Html.TextBoxFor(m => m.visitStartDate, new { @class = "form-control  required date-pick", @placeholder = "From", @readonly = "readonly" })
+                                            }
+                                            else
+                                            {
+                                                @Html.TextBoxFor(m => m.visitStartDate, new { @class = "form-control required date-pick", @placeholder = "From", @disabled = "disabled" })
+                                            }
+                                            <span class="input-group-addon sprite-img date-picker"></span>
+
+                                            @Html.ValidationMessageFor(m => m.visitStartDate)
+                                            @*<input type="text" placeholder="From" id="visitStartDate" class="form-control" name="visitStartDate">*@
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="control-label inv">&nbsp;</label>
+                                        <div class="input-group">
+                                            @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                            {
+                                                @Html.TextBoxFor(m => m.visitStartTime, new { @class = "form-control required", @placeholder = "Time" })
+                                            }
+                                            else
+                                            {
+                                                @Html.TextBoxFor(m => m.visitStartTime, new { @class = "form-control required", @placeholder = "Time", @disabled = "disabled" })
+                                            }
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-time"></span>
+                                            </span>
+                                            @Html.ValidationMessageFor(m => m.visitStartTime)
+                                            @*<input type='text' class="form-control" placeholder="Time" id="visitStartTime" name="visitStartTime" />*@
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.visitEndDate, new { @class = "control-label" })
+                                        <div class="input-group">
+                                            @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                            {
+                                                @Html.TextBoxFor(m => m.visitEndDate, new { @class = "form-control  date-pick", @placeholder = "To", @readonly = "readonly" })
+                                            }
+                                            else
+                                            {
+                                                @Html.TextBoxFor(m => m.visitEndDate, new { @class = "form-control  date-pick", @placeholder = "To", @disabled = "disabled" })
+                                            }
+                                            <span class="input-group-addon sprite-img date-picker"></span>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="control-label inv">&nbsp;</label>
+                                        <div class="input-group">
+                                            @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                            {
+                                                @Html.TextBoxFor(m => m.visitEndTime, new { @class = "form-control", @placeholder = "Time" })
+                                            }
+                                            else
+                                            {
+                                                @Html.TextBoxFor(m => m.visitEndTime, new { @class = "form-control", @placeholder = "Time", @disabled = "disabled" })
+                                            }
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-time"></span>
+                                            </span>
+                                            @*@Html.ValidationMessageFor(m => m.visitEndTime)*@
+                                            @*<input type='text' class="form-control" placeholder="Time" id="visitEndTime" name="visitEndTime" disabled="disabled"/>*@
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.RefNumber, new { @class = "control-label" })
+                                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                        {
+                                            @Html.TextBoxFor(m => m.RefNumber, new { @class = "form-control", @maxlength = 300 })
+                                        }
+                                        else
+                                        {
+                                            @Html.TextBoxFor(m => m.RefNumber, new { @class = "form-control", @maxlength = 300, @disabled = "disabled" })
+                                        }
+
+                                        @*<input type="text" class="form-control" id="Label" maxlength="50" name="Label">*@
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Detail, new { @class = "control-label" })
+                                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                        {
+                                            @Html.TextAreaFor(m => m.Detail, new { @class = "form-control", @maxlength = 4000 })
+                                        }
+                                        else
+                                        {
+                                            @Html.TextAreaFor(m => m.Detail, new { @class = "form-control", @maxlength = 4000, @disabled = "disabled" })
+                                        }
+                                        @*<textarea class="form-control" id="Detail" rows="5" maxlength="250" name="Detail"></textarea>*@
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.UserId, new { @class = "control-label required" })
+                                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                        {
+                                            @*@Html.DropDownList("SolarElectrician", null, "Select", new { id = "UserId", @class = "form-control required" })*@
+                                            @*@Html.DropDownList("SolarElectrician", Model.lstjobs, "Select", new { id = "UserId", @class = "form-control required" })*@
+                                            @Html.DropDownListFor(m => m.UserId, new SelectList(Model.solarElectrician, "UserId", "Name"), "Select", new { id = "UserId", @class = "form-control required" })
+                                        }
+                                        else
+                                        {
+                                            @*@Html.DropDownList("SolarElectrician", null, "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })*@
+                                            @*@Html.DropDownList("SolarElectrician", Model.lstjobs, "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })*@
+                                            @Html.DropDownListFor(m => m.UserId, new SelectList(Model.solarElectrician, "UserId", "Name"), "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })
+                                        }
+                                        @Html.ValidationMessage("UserId")
+
+                                        @*@Html.LabelFor(m => m.ElectricianID, new { @class = "control-label" })
+                                            @Html.DropDownListFor(model => model.ElectricianID, new List<SelectListItem>(), new { id = "ElectricianID", @class = "form-control" })
+                                            @Html.ValidationMessageFor(m => m.ElectricianID)*@
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobID, new { @class = "control-label required" })
+                                        @*@Html.LabelFor(m => m.JobID, new { @class = "control-label" })
+                                            @Html.DropDownListFor(model => model.JobID, new List<SelectListItem>(), new { id = "JobID", @class = "form-control" })
+                                            @Html.ValidationMessageFor(m => m.JobID)*@
+                                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditJobScheduling)
+                                        {
+                                            @*@Html.DropDownList("Job", null, "Select", new { id = "JobID", @class = "form-control required" })*@
+                                            @Html.DropDownListFor(m => m.JobID, new SelectList(Model.job, "JobID", "RefNumber"), "Select", new { id = "JobID", @class = "form-control required" })
+                                        }
+                                        else
+                                        {
+                                            @*@Html.DropDownList("Job", null, "Select", new { id = "JobID", @class = "form-control required", @disabled = "disabled" })*@
+                                            @Html.DropDownListFor(m => m.JobID, new SelectList(Model.job, "JobID", "RefNumber"), "Select", new { id = "JobID", @class = "form-control required", @disabled = "disabled" })
+                                        }
+                                        @Html.ValidationMessage("JobID")
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+                @if (Model.IsCheckListView)
+                {
+                    <div id="checkListTemplateForm" style="padding:15px"></div>
+                }
+                <div class="modal-footer">
+                    @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                    {
+                        if (isAddEditJobScheduling)
+                        {
+                            <button type="button" class="btn primary icon-btn" id="saveJobSchedule"><span class="sprite-img save_ic"></span>Save</button>
+                        }
+
+                    }
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade view-signature" id="popupboxViewSignature" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title" id="myModalLabel">View Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOwnerSignature">Owner Signature:</label>
+                            <div class="signechar-box"><img id="imgOwnerSignature" width="50px" height="50px" /></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewInstallerSignature">Installer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgInstallerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewDesignerSignature">Designer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgDesignerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewElectricianSignature">Electrician Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgElectricianSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOtherSignature">Other Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgOtherSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxPopulateSignature" tabindex="-1" role="dialog">
+    <div>
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title" id="myModalLabel">Populate Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <input class="checkbox" type="hidden" id="hdnJobSchedulingId" />
+                    <ul class="populate-signature" id="jobDocumentPopulate"></ul>
+                </div>
+                <div class="modal-footer" style="border-top:0px !important;">
+                    <button type="button" class="btn primary save_ic" onclick="SaveSignatureToDocument()">Save</button>
+                    <button type="button" class="btn default cancel_ic" onclick="ClearSignatureToDocument()">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.Partial("~/views/JobScheduling/_CommonCheckListForVisit.cshtml", Model)
+@Html.Partial("~/Views/CheckListItem/_CommonCheckListMethod.cshtml")
+
+@*@Scripts.Render("~/bundles/jqueryval")*@
+
+<script type="text/javascript">
+    var isCheckListView = '@Model.IsCheckListView.ToString().ToLower()';
+    var urlReloadSectionOnVisitSave = '@Url.Action("ReloadSectionOnVisitSave", "Job")';
+    var visitJobId = '@Model.VisitJobId';
+    var sessionIsUserEmailAccountConfigured = '@ProjectSession.IsUserEmailAccountConfigured';
+    var sessionMakeVisitAsDefaultSubmission = '@Url.Action("MakeVisitAsDefaultSubmission", "JobScheduling")';
+    var changeVisitStatus = '@Url.Action("ChangeVisitStatus", "JobScheduling")';
+    var urlLogout = '@Url.Action("Logout", "Account")';
+    var urlGetCheckListDocument = '@Url.Action("GetCheckListDocument", "Job")';
+    var urlRequestJobData = '@Url.Action("RequestJobData", "Job")';
+    var urlSaveSignatureToDocument = '@Url.Action("SaveSignatureToDocument", "Job")';
+    var urlViewVisitSignature = '@Url.Action("ViewVisitSignature", "Job")';
+    var sessionUploadedDocPath = '@ProjectSession.UploadedDocumentPath';
+    var urlGenerateRandomNumber = '@Url.Action("GenerateRandomNumber", "JobScheduling")';
+    var modelDefaultTemplateId = '@Model.DefaultTemplateId';
+    var showhistoryUrl = '@Url.Action("ShowFilteredJobHistory","Job")';
+    var FormBot_HelperDateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var DateFormat = '@ProjectConfiguration.GetDateFormat';
+    var urlJobSchedulingDetail = '@Url.Action("JobSchedulingDetail", "JobScheduling")';
+    var urlJobSchedulingDetailById = '@Url.Action("JobSchedulingDetailById", "JobScheduling")?jobSchedulingID=';
+    var IsFromCalendarView_Glbl = '@Model.IsFromCalendarView.ToString().ToLower()';
+    var urlGetSolarElectricianForJobType = '@Url.Action("GetSolarElectricianForJobType", "JobScheduling")?JobType=';
+    var urlGetJobsForJobType = '@Url.Action("GetJobsForJobType", "JobScheduling")?JobType=';
+    var urlDeleteJobSchedule = '@Url.Action("DeleteJobSchedule", "JobScheduling")?jobSchedulingID=';
+    var urlGetCheckListItemByTemplateId = '@Url.Action("GetCheckListItemByTemplateId", "CheckListItem")?id=';
+</script>
+
+<script src="~/Scripts/View/Job/_SchedulingTabular.dev.js"></script>
+
+@Scripts.Render("~/bundles/JobModularSubViews?v=" + ProjectConfiguration.ScriptVersion)

@@ -1,0 +1,660 @@
+﻿@*@model FormBot.Entity.CreateVEEC
+    @using FormBot.Helper
+    <div id="jobNewScreen">
+        <div class="container-fluid create-job-details">
+            <div class="row">
+                <div class="title">
+                    <span>
+                        <h1 id="jobTitle">
+                            @Model.VEECDetail.RefNumber
+                            @if (ProjectSession.UserTypeId == 1)
+                            {
+                                <span style="font-size: 25px;border-left: none;margin-left: 0;">(@Model.VEECDetail.VEECId)</span>
+                            }
+                            <span id="jobHeader" class="jobHeader">Header</span><span class="jobHeader" style="margin-left:0px !important">PV SOLAR</span>
+                        </h1>
+                    </span>
+                    <span><a class="back-btn pull-right" title="Back" id="btnBackNew" href="#"><img alt="" src='@Url.Content("~/images/back-icon.png")'>Back</a></span>
+                </div>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <ul class="create-job-menu clearfix">
+                    <li class="active"><a href="#" title="Job Details">Job Details</a></li>
+                    <li id="aDocuments">
+                        <a href="javascript:void(0);" title="Documents" style="text-decoration:none;">Documents & Photos</a>
+                    </li>
+                    <li id="aScheduling">
+                        <a href="javascript:void(0);" title="Scheduling" style="text-decoration:none;">Scheduling</a>
+                    </li>
+                    <li id="aCalculation">
+                        <a href="javascript:void(0);" title="Calculation" style="text-decoration:none;">Calculation</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group pull-right">
+                    <input type="button" value="Save Job" class="primary" id="btnSaveVEECJob">
+                    <input type="button" value="Cancel" class="default">
+                    <a href="#" title="print" class="icon-btn" id="btnJobPrint"><img src='@Url.Content("~/images/print-b.png")' alt="print"></a>
+                    <a href="#" id="aSwitch" title="Switch between Tabular and Modular View anytime. Try it now" class="icon-btn"><img src='@Url.Content("~/images/comparer-icon.png")' alt="Switch between Tabular and Modular View anytime. Try it now"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div id="createJobView">
+                    @Html.Partial("_ViewAndEditVEEC")
+                </div>
+            <div id="createJobNotes" style="display:none;margin-top:25px;">
+            </div>
+            <div id="createJobMessage" style="display: none;">
+            </div>
+            <div id="invoice" style="display: none; margin-top: 25px;">
+
+            </div>
+            <div id="invoiceDetail" style="display: none; margin-top: 25px;">
+                <link href="~/Content/InvoiceDetail.css" rel="stylesheet" />
+
+                <div id="invoiceDetailList" style="display: block;">
+
+                </div>
+
+            </div>
+            <div id="history" style="display:none;">
+            </div>
+            <div id="EmailConversation" style="display: none;">
+
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/Scripts/FormBot.js")
+    <script src="~/Scripts/jquery.fileupload.js"></script>*@
+
+
+@model FormBot.Entity.VEECList
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "Index";
+}
+
+@{
+    bool isAdd = false, isEdit = false, isDelete = false;
+    ////Todo
+    bool isAssignSSC = false, isAssignSCO = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSSC.GetHashCode()) { isAssignSSC = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAdd.GetHashCode()) { isAdd = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEdit.GetHashCode()) { isEdit = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSCO.GetHashCode()) { isAssignSCO = true; }
+        });
+    }
+}
+<input id="IsWholeSaler" type="hidden" name="IsWholeSaler">
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <h1>VEEC</h1>
+        @if (isAdd)
+        {
+            if (Model.UserTypeID == 8)
+            {
+                if (!ProjectSession.IsSubContractor)
+                {
+                    <a href="@Url.Action("create","job")" class="primary pull-right ic_plus">Create New Job</a>
+                }
+            }
+            else
+            {
+                <a href="@Url.Action("create","job")" class="primary pull-right ic_plus">Create New Job</a>
+            }
+        }
+        @*<a href="#" id="aSwitch" title="Switch between Dynamic Search Job Index and Static Search Job Index" class="icon-btn pull-right" style="margin: 0 15px 0 0;"><img src='@Url.Content("~/images/comparer-icon.png")' alt="Switch between Dynamic Search Job Index and Static Search Job Index"></a>*@
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    @*@if (Model.UserTypeID != 7 || Model.UserTypeID != 9 || Model.UserTypeID != 10)
+        {
+            <div class="stages">
+                <span class="stage_title">Show Stage:</span>
+                <ul>
+                    <li id="jobstage_0" style="cursor:pointer; background-color: #686868;" onclick="SetStageId('0');">Show All<strong>(@Model.lstJobStages.Sum(t => t.jobCount
+                                                                                                                                  ))</strong></li>
+                    @foreach (var stage in Model.lstJobStages)
+                    {
+                        <li id="jobstage_@stage.JobStageId" style="cursor:pointer; background-color: #bdbdbd;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<strong>(@stage.jobCount)</strong></li>
+                    }
+                </ul>
+            </div>
+        }*@
+
+    <form class="form-block" style="margin-top:10px;">
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                    @*@Html.Partial("_GetResellerAndSolarcompany", null, new ViewDataDictionary
+                        {
+                            {"IsReseller" , "true" },
+                            {"IsSolarCompany" , "false"},
+                            {"ResellerId" , "ResellerId"},
+                            {"ResellerCustomClass" , ""},
+                            {"ResellerControlName" , "ResellerId"},
+                            {"ResellerIsVelidate" , "false"},
+                            {"ResellerVelidationMessage" , "The ResellerId field is required."},
+                            {"SolarCompanyId" , "searchSolarCompany"},
+                            {"SolarCompanyCustomClass" , ""},
+                            {"SolarCompanyControlName" , "searchSolarCompany"},
+                            {"SolarCompanyIsVelidate" , "false"},
+                            {"SolarCompanyVelidationMessage" , "The SolarCompanyId field is required."},
+                            {"SolarCompanyIdHiddenField" , ""}
+                        })*@
+                </div>
+            </div>
+        }
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5 || Model.UserTypeID == 6)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Solar Company:</label>
+                    <input type="hidden" id="hdnsolarCompanyid" />
+                    <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    @*@Html.Partial("_GetResellerAndSolarcompany", null, new ViewDataDictionary
+                        {
+                            {"IsReseller" , "false" },
+                            {"IsSolarCompany" , "true"},
+                            {"ResellerId" , "ResellerId"},
+                            {"ResellerCustomClass" , ""},
+                            {"ResellerControlName" , "ResellerId"},
+                            {"ResellerIsVelidate" , "false"},
+                            {"ResellerVelidationMessage" , "The ResellerId field is required."},
+                            {"SolarCompanyId" , "searchSolarCompany"},
+                            {"SolarCompanyCustomClass" , ""},
+                            {"SolarCompanyControlName" , "searchSolarCompany"},
+                            {"SolarCompanyIsVelidate" , "false"},
+                            {"SolarCompanyVelidationMessage" , "The SolarCompanyId field is required."},
+                            {"SolarCompanyIdHiddenField" , "hdnsolarCompanyid"}
+                        })*@
+
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Search:</label>
+                @Html.DropDownList("JobScheduleType", null, "Select", new { id = "JobScheduleTypeId", @class = "form-control" })
+            </div>
+        </div>
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Job Type:</label>
+                    @Html.DropDownList("JobType", null, "Select", new { id = "JobTypeId", @class = "form-control" })
+                </div>
+            </div>*@
+
+        @*<div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Job Priority:</label>
+                    @Html.DropDownList("JobPriority", null, "Select", new { id = "JobPriorityId", @class = "form-control" })
+                </div>
+            </div>*@
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Search for:</label>
+                <input type="text" id="txtSearchfor" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">VEEC Created Date:</label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDate" readonly="readonly" placeholder="From" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="input-group">
+                        <input type="text" id="txtToDate" readonly="readonly" placeholder="To" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Commencement Date : </label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDateCommencement" readonly="readonly" placeholder="From" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="input-group">
+                        <input type="text" id="txtToDateCommencement" readonly="readonly" placeholder="To" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Activity Date : </label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDateActivity" readonly="readonly" placeholder="From" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="input-group">
+                        <input type="text" id="txtToDateActivity" readonly="readonly" placeholder="To" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*@if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+            {
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="checkbox mag-top"><label><input type="checkbox" name="IsActive" id="chkIsArchive" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()"><span></span>Is Archive</label></div>
+                </div>
+            }*@
+
+        <div class="form-group col-xs-12">
+            @*<p class="searchlink" id="searchlink" style="width:100px;"><a id="searchBasicAdvance" href="javascript:void(0);">Advance Search</a></p>*@
+            @*<div class="checkboxgroup" style="display:none; margin-top:0px;">
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkJobRef" value="" checked="checked"><span></span>Job ref</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkJobDescription" value="" checked="checked"><span></span>Job Description</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkJobAddress" value="" checked="checked"><span></span>Job Address</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkClient" value="" checked="checked"><span></span>Client</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkStaff" value=""><span></span>Staff</label></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkInvoiced" value="" checked="checked"><span></span> Has Been Invoiced</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkNotInvoiced" value="" checked="checked"><span></span>Not Yet Invoiced</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkReadyToTrade" value="" checked="checked"><span></span> Ready To Trade</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkNotReadyToTrade" value="" checked="checked"><span></span>Not Ready To Trade</label></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkTraded" value="" checked="checked"><span></span>Traded</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkNotTraded" value="" checked="checked"><span></span>Not Traded</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkPreApprovalNotBeenApproved" value="" checked="checked"><span></span>PreApproval Not Been Approved</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkPreApprovalApproved" value="" checked="checked"><span></span>PreApproval Approved</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkConnectionCompleted" value="" checked="checked"><span></span>Connection Completed</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkConnectionNotCompleted" value="" checked="checked"><span></span>Connection Not Completed</label></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkACT" value="" checked="checked"><span></span>ACT</label></div>
+                            <div class="checkbox"><label><input type="checkbox" id="chkWA" value="" checked="checked"><span></span>WA</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkNSW" value="" checked="checked"><span></span>NSW</label></div>
+                            <div class="checkbox"><label><input type="checkbox" id="chkVIC" value="" checked="checked"><span></span>VIC</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkNT" value="" checked="checked"><span></span>NT</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkQLD" value="" checked="checked"><span></span>QLD</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkSA" value="" checked="checked"><span></span>SA</label></div>
+                        </div>
+                        <div class="col-md-2 col-sm-4">
+                            <div class="checkbox"><label><input type="checkbox" id="chkTAS" value="" checked="checked"><span></span>TAS</label></div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label">Pre Approval Status:</label>
+                                @Html.DropDownListFor(m => m.PreApprovalStatusId, new SelectList(Model.lstPreApproval, "PreApprovalStatusId", "PreApprovalStatusName"), "Select", new { id = "PreApprovalStatusId", @class = "form-control" })
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-sm-4">
+                            <div class="form-group">
+                                <label class="control-label">Connection Status:</label>
+                                @Html.DropDownListFor(m => m.ConnectionStatusId, new SelectList(Model.lstConnection, "ConnectionStatusId", "ConnectionStatusName"), "Select", new { id = "ConnectionStatusId", @class = "form-control" })
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchVEEC();">
+            <div class="btn default icon-btn" onclick="ResetSearchFilters(true);">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Clear">
+            </div>
+        </div>
+    </form>
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+        <input type="button" id="btnGetUniqueID" value="btnGetUniqueID" class="primary search_ic pull-right" onclick="GetVEECIdFromVeecPortal();">
+    </div>
+    @*@if (Model.UserTypeID == 8)
+        {
+            if (!ProjectSession.IsSubContractor)
+            {
+                <div class="grid_topbar">
+                    <p class="job_result" id="numRecords"></p>
+                    <div class="take_action">
+                        @if (isDelete)
+                        {
+                            <text>
+                                <a href="#" class="delete_selected" data-toggle="tooltip" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" data-placement="top" title="Delete Selected" onclick="DeleteSelectedJobs();"></a>
+                            </text>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+
+            <div class="grid_topbar mag-top-20">
+                <div class="row">
+                    <div class="col-xs-8">
+                        <div class="form-group col-xs-6" style="padding-left:0;">
+                            @Html.DropDownListFor(model => model.JobStageID, new List<SelectListItem>(), new { id = "JobStageID", @class = "form-control" })
+                        </div>
+                        <a href="javascript:void(0);" onclick="BulkChangeJobStage();" style="margin-right:0; margin-right:30px;" class="primary payment-status--h-ic" title="Bulk Change Job Stage">Bulk Change Job Stage</a>
+                    </div>
+                    <div class="col-xs-4 text-right">
+                        <div class="take_action">
+                            @if (isDelete)
+                            {
+                                <text>
+                                    <a href="#" class="delete_selected" data-toggle="tooltip" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" data-placement="top" title="Delete Selected" onclick="DeleteSelectedJobs();"></a>
+                                </text>
+                            }
+                            @if (isAssignSCO)
+                            {
+                                <text>
+                                    <input type="button" id="btnBulkAssign" class="primary assign_ic" value="Assign SCO" onclick="AssignSCO();" />
+                                </text>
+                            }
+                        </div>
+                        <a href="javascript:void(0);" onclick="ImportProductDetails();" style="margin-right:0; margin-right:30px;" class="primary payment-status--h-ic pull-right">Import Product Details</a>
+                    </div>
+                </div>
+            </div>
+
+        }*@
+
+
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            @*<th width="1%" style="white-space:nowrap; width:45px;"><span>@Html.DisplayName("Priority")</span></th>*@
+                            <th width="15%"><span>@Html.DisplayName("Ref Number")</span></th>
+                            <th width="15%"><span>@Html.DisplayName("Client")</span></th>
+                            <th width="15%"><span>@Html.DisplayName("Job Address ")</span></th>
+                            <th width="15%"><span>@Html.DisplayName("Created Date")</span></th>
+                            <th width="15%"><span>@Html.DisplayName("Commencement Date")</span></th>
+                            <th width="15%"><span>@Html.DisplayName("Activity Date")</span></th>
+                            <th width="5%" style="background-image: none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.UserTypeID == 4 || Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+    {
+        <div class="totalrow">
+            <p>Total STC Selected for Trade:&nbsp;&nbsp;<b><span id="btotalTradedSTC">0</span></b></p><a href="javascript:void(0);" class="primary trade_ic" onclick="LoadStc()">Trade STCs</a>
+        </div>
+    }
+
+</div>
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnAssignSSCClose">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Assign Job to SSC</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @Html.HiddenFor(m => m.SSCJobID)
+                    @Html.Action("_AssignJobSSC", "AssignJobToSCO")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="SCOpopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnAssignSCOClose">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Assign Job to SCO</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @Html.Action("AssignSCO", "AssignJobToSCO")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #grid .table-responsive td:first-child {
+        white-space: nowrap;
+        width: 45px;
+    }
+</style>
+
+<script src="~/Scripts/View/VEEC/VEECIndex.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+
+@section scripts{
+
+    <script>
+
+
+        var chkCount=0;
+        var selectedRows = [];
+        var SelectedStageId = 0;
+        var solarCompanyList = [];
+        //var Ntraded = 2;
+        var toggleId;
+        var urlGetJobListUserWiseColumns = '@Url.Action("GetJobListUserWiseColumns", "VEEC")';
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var JobStage = '@TempData["JobStage"]';
+        var UserTypeID = '@Model.UserTypeID';
+        var urlGetSSCUser = '@Url.Action("GetSSCUser", "AssignJobToSCO")';
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+        var ResellerId = @ProjectSession.ResellerId;
+        var urlGetAssignedSolarCompanyToRAM = '@Url.Action("GetAssignedSolarCompanyToRAM","RAMSolarCompany")';
+        var urlGetRequestedSolarCompanyToSSC = '@Url.Action("GetRequestedSolarCompanyToSSC","SolarCompany")';
+        var NotYetInvoicedDashboardStatus = '@TempData["NotYetInvoicedDashboardStatus"]';
+        var PageSize = @ProjectConfiguration.GetPageSize;
+
+        var urlIndex = '@Url.Action("Index", "VEEC")?id=';
+
+        var isAssignSSC = '@isAssignSSC.ToString().ToLower()';
+        var IsSSCReseller = '@ProjectSession.IsSSCReseller.ToString().ToLower()';
+        @*var urlGetJobList = '@Url.Action("GetJobList", "Job")';*@
+
+        var urlGetVEECList = '@Url.Action("GetVEECList", "VEEC")';
+
+        var urlLogout = '@Url.Action("Logout", "Account")';
+        var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+        var urlGetJobStageCount =  '@Url.Action("GetJobStageCount", "Job")';
+        var urlDeleteSelectedJobs = '@Url.Action("DeleteSelectedJobs", "Job")';
+        var urlGetSSCUserByJbID = '@Url.Action("GetSSCUserByJbID", "AssignJobToSCO")';
+        var urlGetSSCID = '@Url.Action("GetSSCID", "AssignJobToSCO")';
+        var urlSaveJobToSSC = '@Url.Action("SaveJobToSSC", "AssignJobToSCO")';
+        var urlRemoveSSCRequest = '@Url.Action("RemoveSSCRequest", "AssignJobToSCO")';
+        var urlBindJobSTCPriceView = '@Url.Action("BindJobSTCPriceView", "Job", new { area = "" })';
+        var urlAcceptRejectJobToSSC = '@Url.Action("AcceptRejectJobToSSC", "Job")';
+        var urlCancelRemovalRequest = '@Url.Action("CancelRemovalRequest", "JOb")';
+        var urlBulkChangeJobStage = '@Url.Action("BulkChangeJobStage", "Job")';
+        var urlGetJobStages = '@Url.Action("GetJobStages", "Job")';
+        var IsSubContractor = '@ProjectSession.IsSubContractor.ToString().ToLower()';
+        var urlCheckIsWholeSaler_ByResellerId = '@Url.Action("CheckIsWholeSaler_ByResellerId", "SolarCompany")?id=';
+
+
+
+
+        @*function SetVeecParamsFromLocalStorage() {
+            if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3){
+                $("#ResellerId").val(localStorage.getItem('VEECList_ResellerId'));
+            }
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==2 || '@Model.UserTypeID'==3 || '@Model.UserTypeID'==5 || '@Model.UserTypeID'==6){
+                if (localStorage.getItem('searchSolarCompany') == "") {
+                    $("#searchSolarCompany").val("");
+                }
+                else {
+                    $("#searchSolarCompany").val(localStorage.getItem('searchSolarCompany'));
+                }
+
+                $.each(solarCompanyList, function (key, value) {
+
+                    if (value.value == localStorage.getItem('JobList_SolarCompanyId')) {
+
+                        $("#searchSolarCompany").val(value.text);
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('JobList_SolarCompanyId'));
+                    }
+                });
+            }
+        }*@
+        function ResetVeecSearchFilters() {
+            if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3){
+                localStorage.setItem('ResellerId', 0);
+                document.getElementById("ResellerId").selectedIndex = 0;
+            }
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==2 || '@Model.UserTypeID'==3 || '@Model.UserTypeID'==5 || '@Model.UserTypeID'==6){
+                localStorage.setItem('searchSolarCompany','');
+                $("#searchSolarCompany").val("");
+            }
+            SetParamsFromLocalStorage();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function GetVEECIdFromVeecPortal(){
+            $.ajax({
+                url: '@Url.Action("UpdateVeec", "VEEC")',
+                type: "POST",
+                async: false,
+                data:JSON.stringify({veecPortalId : 8}),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                }
+            });
+        }
+
+    </script>
+
+
+}
+
+<div class="modal fade stc-status newemail-modal" id="StcModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="@Url.Content("~/Images/close-btn.png")"></button>
+                <div class="title">
+                    <h1>STC Status</h1>
+                </div>
+                <!-- Modal Header End-->
+                <div class="modal-body">
+                    <div id="SettleMentBlock">
+                    </div>
+                    <!-- Current Status End-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .ui-state-focus {
+        width: 100%;
+    }
+</style>

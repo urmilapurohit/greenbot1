@@ -1,0 +1,189 @@
+﻿@model FormBot.Entity.Job.JobSCAandRA
+<div class="container-fluid" id="ChangeSCAandRA">
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Change SCA and RA</h1>
+        </div>
+    </div>
+    <div id="message-section" style="margin-top:15px;">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+        </div>
+    <form id="changeSCAandRAform" class="form-block" style="margin-top:15px;">
+        <div class="row" style="padding-left:15px;padding-right:15px;">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    @Html.ValidationMessageFor(model => model.ResellerID)
+                    @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ChangedResellerID", @class = "form-control" })
+
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label">SolarCompany:</label>
+                    @Html.ValidationMessageFor(model => model.SolarComapnyID)
+                    @Html.DropDownListFor(model => model.SolarComapnyID, new List<SelectListItem>(), new { id = "ChangedSolarCompanyID", @class = "form-control" })
+
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+
+                    <label class="control-label">JobIDs:</label>
+                    @Html.ValidationMessageFor(model => model.JobIDs)
+                    @Html.EditorFor(model => model.JobIDs, new { htmlAttributes = new { id = "ChangedJobIDs", @class = "form-control", pattern = "" } })
+
+                    @*<input type="text" id="jobids" class="form-control" />*@
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+    <div class="clearfix">
+
+        <input type="submit" id="btnSaveSCAandRA" value="Save" class="primary" onclick="ChangeSCAandRA();">
+        <input type="button" id="btnClearSCAandRA" value="Clear" class="default">
+    </div>
+
+
+</div>
+@*<script src="~/Scripts/jquery-1.11.0.min.js"></script>*@
+<script>
+    $(document).ready(function () {        
+        checkinputforJobID();
+        BindResellerforChange();
+    });
+
+    $("#btnClearSCAandRA").click(function () {
+        ClearSCAandRA();
+    });
+    //function FillDropDown(id, url, value, hasSelect, callback, defaultText) {
+    //    $.ajax(
+    //        {
+    //            url: url,
+    //            contentType: 'application/json',
+    //            dataType: 'json',
+    //            method: 'get',
+    //            cache: false,
+    //            success: function (success) {
+    //                var options = '';
+    //                if (hasSelect == true) {
+    //                    if (defaultText == undefined || defaultText == null)
+    //                        defaultText = 'Select';
+
+    //                    options = "<option value=''>" + defaultText + "</option>";
+    //                }
+
+    //                $.each(success, function (i, val) {
+    //                    options += '<option value = "' + val.Value + '" >' + val.Text + '</option>'
+    //                });
+
+    //                $("#" + id).html(options);
+
+    //                if (value && value != '' && value != 0) {
+    //                    $("#" + id).val(value);
+    //                }
+
+    //                if ($('#' + id).attr('selval') && $('#' + id).attr('selval') > 0) {
+    //                    $("#" + id).val($('#' + id).attr('selval'));
+    //                }
+
+    //                if ($("#" + id).selectpicker != undefined) {
+    //                    $("#" + id).selectpicker('refresh');
+    //                }
+
+    //                if (callback != undefined) {
+    //                    callback();
+    //                    //setDropDownWidth(id);
+    //                }
+    //            }
+    //        });
+    //}
+
+    function BindResellerforChange() {
+        $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetReseller", "Reseller")',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (reseller) {
+                        $("#ChangedResellerID").append('<option value="">' + "Select" + '</option>');
+                        $.each(reseller, function (i, res) {                                
+                                $("#ChangedResellerID").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                            });
+                        if ($("#ChangedResellerID").val() > 0) {
+                                //BindSolarCompany(document.getElementById("ResellerIDJobSetting").value);
+                                FillDropDown('ChangedSolarCompanyID', '@Url.Action("GetSolarCompanyByResellerId", "Job")?id=' + $('#ChangedResellerID').val(), 0, true, null);
+                            }
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Resellers.' + ex);
+                    }
+                });
+    }
+
+    $("#ChangedResellerID").change(function () {
+        FillDropDown('ChangedSolarCompanyID', '@Url.Action("GetSolarCompanyByResellerId", "Job")?id=' + $('#ChangedResellerID').val(), 0, true, null);
+    });
+
+    function ChangeSCAandRA() {        
+        var ResellerID = $("#ChangedResellerID").val();
+        var SolarCompanyID = $("#ChangedSolarCompanyID").val();
+        var JobIDs = $("#ChangedJobIDs").val();
+        $.ajax({
+            type: 'post',
+            url: '@Url.Action("ChangeSCAandRAByJobID","Job")',
+            dataType: 'json',
+            data: { ResellerID: ResellerID, SolarCompanyID: SolarCompanyID, JobIDs: JobIDs },
+            async: false,
+            success: function (result) {
+                if (result.status) {
+                    
+                    showSuccessMessage("SCA and RA changed successfully.");
+                    if (result.InvalidJobs != "") {
+                        showErrorMessage(result.InvalidJobs + " JobID does not exist");
+                    }
+                }
+                else {
+                    showErrorMessage("Something went wrong in SCA and RA changed.");
+                }
+            },
+            error: function () {
+                //alert("SCA and RA changed failed");
+            }
+        });
+    }
+
+    function checkinputforJobID() {
+        var input = document.getElementById("ChangedJobIDs");
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/[^0-9 \,]/, '');
+        });
+    }
+
+    function ClearSCAandRA() {        
+        $("#ChangedResellerID").val("");
+        $("#ChangedSolarCompanyID").val("");
+        $("#ChangedJobIDs").val("");
+        FillDropDown('ChangedSolarCompanyID', '@Url.Action("GetSolarCompanyByResellerId", "Job")?id=' + $('#ChangedResellerID').val(), 0, true, null);
+    }
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+    }
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegion").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+    }
+</script>

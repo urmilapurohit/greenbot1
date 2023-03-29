@@ -1,0 +1,861 @@
+﻿@model FormBot.Entity.Settings.Settings
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Settings";
+}
+
+<style type="text/css">
+    .fileUpload {
+        margin: 0px !important;
+    }
+
+    .input-validation-error {
+        border: 1px solid #b94a48 !important;
+    }
+
+    .checkBoxSetting {
+        float: left;
+        width: auto !important;
+    }
+
+    .formLabel {
+        margin-bottom: 0px !important;
+    }
+
+    .settingsMargin {
+        margin-bottom: 0px !important;
+    }
+
+    .txtArea {
+        resize: none;
+    }
+</style>
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid create-job">
+
+    <div class="title">
+        <h1>Invoice Setting</h1>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    @*<div id="horizontalTab">
+            <ul class="resp-tabs-list">
+                <li id="t1" class="resp-tab-item resp-tab-active">Xero Invoicing</li>
+            </ul>
+            <div class="resp-tabs-container">
+                <div class="tab1">
+
+                </div>
+            </div>
+        </div>*@
+
+    <form id="settingsForm" class="form-block" style="margin-top:10px;">
+
+        @Html.HiddenFor(m => m.SettingsId)
+        @Html.HiddenFor(m => m.UserId)
+        @Html.HiddenFor(m => m.OldLogo)
+
+
+        <div class="col-sm-6 col-md-4 col-lg-4">
+            <div class="form-group">
+                @Html.LabelFor(m => m.InvoiceDueDateId, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.InvoiceDueDateId, new SelectList(Model.lstInvoiceDueDate, "Id", "Name"), "Select", new { id = "InvoiceDueDateId", @class = "form-control required" })
+                @Html.ValidationMessageFor(m => m.InvoiceDueDateId)
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-4">
+            <div class="form-group">
+                @Html.LabelFor(m => m.InvoiceFooter, new { @class = "control-label" })
+                @Html.TextAreaFor(m => m.InvoiceFooter, new { @class = "form-control txtArea", @maxlength = 500 })
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-4">
+            <div class="form-group">
+                <div class="row">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Logo, new { @class = "control-label" })
+                            @*<input type="hidden" id="Logo" value="@Model.Logo" />*@
+                            @Html.HiddenFor(m => m.Logo)
+                            <div class="input-group">
+                                <div class="fileUpload primary upload_ic" id="divLogoUpload">
+                                    <span>Upload</span>
+                                    <input id="uploadBtnLogoSetting" type="file" class="upload fileUpload" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="form-group">
+                            <label class="control-label inv">&nbsp;</label>
+                            <div class="input-group">
+                                <table class="uf ">
+                                    <tr>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgViewLogo" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12 chkboxlist">
+            <div>@Html.LabelFor(m => m.IsJobDescription)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsJobDescription, new { @class = "form-control" })
+                    When a job is invoiced the text in the job description field will be added to the invoice. Use with caution.
+                </label>
+            </div>
+
+            <div>@Html.LabelFor(m => m.IsJobAddress)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsJobAddress, new { @class = "form-control" })
+                    When a job is invoiced the text in the job address fields will be added to the invoice.
+                </label>
+            </div>
+
+            <div>@Html.LabelFor(m => m.IsJobDate)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsJobDate, new { @class = "form-control" })
+                    When a job is invoiced the date of the job will be added to the invoice.
+                </label>
+            </div>
+
+            <div>@Html.LabelFor(m => m.IsName)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsName, new { @class = "form-control" })
+                    When a job is invoiced the title of the job will be added to the invoice.
+                </label>
+            </div>
+
+            <div>@Html.LabelFor(m => m.IsClient)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsClient, new { @class = "form-control" })
+                    Display both text elements on each charge invoiced. If unticked, only the charge description will be displayed.
+                </label>
+            </div>
+
+            <div>@Html.LabelFor(m => m.IsTitle)</div>
+            <div class="checkbox">
+                <label>
+                    @Html.CheckBoxFor(m => m.IsTitle, new { @class = "form-control" })
+                    When a job with a billing client is invoiced, display the job's client on the invoice.
+                </label>
+            </div>
+        </div>
+
+        @if (ProjectSession.UserTypeId != 2 && ProjectSession.UserTypeId != 5)
+        {
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <div class="form-group">
+                    @Html.RadioButtonFor(m => m.IsXeroAccount, "True") Xero
+                    @Html.RadioButtonFor(m => m.IsXeroAccount, "False") GreenBot
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.PartCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.PartCode, new { @class = "form-control required", @maxlength = 50 })
+                    @Html.ValidationMessageFor(m => m.PartCode)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.PartName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.PartName, new { @class = "form-control required", @maxlength = 100 })
+                    @Html.ValidationMessageFor(m => m.PartName)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.PartTax, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.PartTax, new { @class = "form-control required", @maxlength = 13, onkeypress = "return isDecimal(event, 8, 2, this)" })
+                    @Html.ValidationMessageFor(m => m.PartTax)
+                </div>
+            </div>
+
+            <div class="clearfix visible-lg-block"></div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.PaymentCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.PaymentCode, new { @class = "form-control required", @maxlength = 50 })
+                    @Html.ValidationMessageFor(m => m.PaymentCode)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.PaymentName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.PaymentName, new { @class = "form-control required", @maxlength = 100 })
+                    @Html.ValidationMessageFor(m => m.PaymentName)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 FormbotAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ChargeTax, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.ChargeTax, new { @class = "form-control required", @maxlength = 13, onkeypress = "return isDecimal(event, 8, 2, this)" })
+                    @Html.ValidationMessageFor(m => m.ChargeTax)
+                </div>
+            </div>
+
+
+            <div class="col-sm-6 col-md-4 col-lg-4 XeroAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.XeroAccountCodeId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.XeroAccountCodeId, new SelectList(Model.lstXeroAccountCodeId, "Id", "Name"), "Select", new { id = "XeroAccountCodeId", @class = "form-control required" })
+                    @Html.ValidationMessageFor(m => m.XeroAccountCodeId)
+
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4 XeroAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.XeroPartsCodeId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.XeroPartsCodeId, new SelectList(Model.lstXeroPartsCodeId, "Id", "Name"), "Select", new { id = "XeroPartsCodeId", @class = "form-control required" })
+                    @Html.ValidationMessageFor(m => m.XeroPartsCodeId)
+                    @Html.HiddenFor(m => m.PartAccountTax)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 XeroAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.XeroChargeCodeId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.XeroChargeCodeId, new SelectList(Model.lstXeroChargesCodeId, "Id", "Name"), "Select", new { id = "XeroChargesCodeId", @class = "form-control required" })
+                    @Html.ValidationMessageFor(m => m.XeroChargeCodeId)
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-4 XeroAccount">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.XeroPaymentsCodeId, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.XeroPaymentsCodeId, new SelectList(Model.lstXeroPaymentsCodeId, "Id", "Name"), "Select", new { id = "XeroPaymentsCodeId", @class = "form-control required" })
+                    @Html.ValidationMessageFor(m => m.XeroPaymentsCodeId)
+                </div>
+            </div>
+
+            @*<div class="clearfix visible-lg-block"></div>
+
+                <div class="col-sm-6 col-md-4 col-lg-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.PartTax, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.PartTax, new { @class = "form-control required", @maxlength = 13, onkeypress = "return isDecimal(event, 8, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.PartTax)
+                    </div>
+                </div>*@
+
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.IsTaxInclusive, new { @class = "control-label" })
+                    @Html.CheckBoxFor(m => m.IsTaxInclusive, new { @class = "form-control" })
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.TaxRate, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.TaxRate, new { @class = "form-control", @maxlength = 13, onkeypress = "return isDecimal(event, 8, 2, this)" })
+                    @*@Html.ValidationMessageFor(m => m.TaxRate)*@
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-12 col-md-12 col-lg-12">
+            <div class="form-group" style="float:right;">
+                <button type="button" class="btn primary icon-btn" id="saveSetting"><span class="sprite-img save_ic"></span>Save</button>
+            </div>
+        </div>
+
+
+    </form>
+
+    @if (ProjectSession.UserTypeId != 2 && ProjectSession.UserTypeId != 5)
+    {
+        <div class="text-right XeroAccount"><a href="#" onclick="SyncAccount();" style="margin-right:0; margin-bottom:10px;" class="primary pull-right ic_plus" title="Sync Job Parts">Sync Account</a></div>
+
+        <div class="XeroAccount" id="accountDiv">
+            @Html.Partial("_Account", new FormBot.Entity.Settings.XeroAccount())
+        </div>
+    }
+
+
+</div>
+
+<div class="modal fade" id="popupboxlogo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupboxlogo">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Logo</h4>
+            </div>
+            <div class="modal-body fixheight">
+                <div class="form-border">
+                    <div>
+                        <img src="@Model.Logo" id="imgLG" class="" style="display:block;margin:auto;" />
+                    </div>
+                </div>
+                <div class="modal-footer"><p class="remove_ic" onclick="deleteLogoImage1('imgLG');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+
+    @Scripts.Render("~/datatableJs")
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+
+
+    <script type="text/javascript">
+
+        var USERID =@Model.UserId;
+        var BaseURL= '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+        var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+        var maxsize = Math.round(documentSizeLimit);
+        var logoSizeLimit = '@FormBot.Helper.ProjectSession.MaxLogoSize' / 1024000;
+        var maxLogoSize = Math.round(logoSizeLimit);
+        var url = BaseURL + 'Upload/User';
+        var logoWidth = 0, logoHeight = 0;
+        var SRC;
+
+        $(document).ready(function () {
+
+
+            $("#XeroPartsCodeId").change(function (e) {
+                var selectedTax = $("#XeroPartsCodeId option:selected").text().split(' ');
+                var length = selectedTax.length;
+                var tax =  selectedTax[length-1].replace('%','');
+                $("#PartAccountTax").val(tax);
+            });
+
+            //alert($("#Logo").val());
+
+            @*@if(TempData["SyncMsg"]!=null && TempData["SyncMsg"]!="")
+            {
+                <text>
+                      showSuccessMessage("Account has been sync successfully.");
+                </text>
+            }*@
+
+            @*if('@Model.SyncValue' == 1)
+        {
+            showSuccessMessage("Account has been sync successfully.");
+        }*@
+
+            if('@TempData["SyncMsg"]' !=null && '@TempData["SyncMsg"]'!='')
+            {
+                showSuccessMessage("Account has been synced successfully.");
+            }
+
+            setTimeout(function () {
+                $("#InvoiceDueDateId").focus();
+            }, 100);
+
+            if('@Model.Logo' !=null && '@Model.Logo'!='')
+            {
+                var SignName = '@Model.Logo';
+                var guid = USERID;
+                var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                 SRC = imagePath + "/" + SignName;
+                 $('#imgLG').attr('src', SRC);
+                $('#imgLG').attr('class',SignName);
+
+                $('#imgViewLogo').show();
+            }
+
+            $('[name=IsXeroAccount][value=@Model.IsXeroAccount]').prop('checked',true);
+
+            $("input[name='IsXeroAccount']").change(function () {
+                removeValidationError();
+                if($(this).val() == "True")
+                    resetFormBotAccount();
+                else
+                    resetXeroAccount();
+            });
+
+            //$("input[name='IsTaxInclusive']").change(function () {
+            //    if(!$('#IsTaxInclusive').is(":checked"))
+            //    {
+            //        $("#settingsForm").find("input[name='TaxRate']").attr('class', 'form-control valid');
+            //        $("span[data-valmsg-for='TaxRate']").attr('class', 'field-validation-valid');
+            //        $("#TaxRate").val('');
+            //        $('.TaxRateDiv').hide();
+            //    }
+            //    else
+            //        $('.TaxRateDiv').show();
+            //});
+
+            if('@Model.IsXeroAccount' == 'True')
+            {
+                $(".FormbotAccount").hide();
+                $(".XeroAccount").show();
+            }
+            else
+            {
+                $(".XeroAccount").hide();
+                $(".FormbotAccount").show();
+            }
+
+            @*if('@Model.IsTaxInclusive')
+                $('.TaxRateDiv').show();
+            else
+                $('.TaxRateDiv').hide();*@
+
+            Array.prototype.pushArray = function() {
+                var toPush = this.concat.apply([], arguments);
+                for (var i = 0, len = toPush.length; i < len; ++i) {
+                    this.push(toPush[i]);
+                }
+            };
+            $.fn.serializeToJson = function () {
+                var $form = $(this[0]);
+
+                var items = $form.serializeArray();
+
+                var returnObj = {};
+                var nestedObjectNames = [];
+
+                $.each(items, function (i, item) {
+                    //Split nested objects and assign properties
+                    //You may want to make this recursive - currently only works one step deep, but that's all I need
+                    if (item.name.indexOf('.') != -1) {
+                        var nameArray = item.name.split('.');
+                        if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                            nestedObjectNames.push(nameArray[0]);
+                        }
+                        var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                        if (!tempObj[nameArray[1]]) {
+                            tempObj[nameArray[1]] = item.value;
+                        }
+                        returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                    } else if (!returnObj[item.name]) {
+                        returnObj[item.name] = item.value;
+                    }
+                });
+
+                return returnObj;
+            };
+
+            $("#saveSetting").click(function () {
+                if ($("#settingsForm").valid()) {
+                    
+                    var fileName = $("[name='Signature']").val();
+                    if(fileName && fileName!='' && fileName!=null)
+                        $("#Logo").val(fileName);
+
+                    var json = {};
+
+                    var data =JSON.stringify($('form').serializeToJson());
+
+                    $.ajax(
+                    {
+                        url: '@Url.Action("Settings", "Settings")',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8', // Not to set any content header
+                        type: 'post',
+                        data: data,
+                        success: function (response) {
+                            if (response.status && response.status.toString().indexOf('#') < 0 && response.status > 0) {
+                                $("#SettingsId").val(response.status);
+                                $("#OldLogo").val(response.logo);
+                                showSuccessMessage("Invoice settings has been saved successfully.");
+                            }
+                            else
+                            {
+                                var msg;
+                                if(response.status.toString().indexOf('#') > 0)
+                                    msg  = response.status.split('#')[1];
+                                else
+                                    msg = "Invoice settings has not been saved.";
+
+                                showErrorMessage(msg);
+                            }
+                        },
+                        error: function () {
+                            showErrorMessage("Invoice settings has not been saved.");
+                        }
+                    });
+                }
+            });
+        });
+
+        //logo upload
+        $('#uploadBtnLogoSetting').fileupload({
+            url: url,
+            dataType: 'json',
+            done: function (e, data) {
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                var UploadFailedFilesName = [];
+                UploadFailedFilesName.length = 0;
+                //formbot start
+                for (var i = 0; i < data.result.length; i++) {
+
+                    if (data.result[i].Status == true) {
+
+                        var guid = USERID;
+                        var signName = $('#imgLG').attr('class');
+                        $("[name='Signature']").each(function () {
+                            $(this).remove();
+                        });
+                        if (signName != null && signName != "") {
+                            DeleteFileFromLogoOnUpload1(signName, guid,'@Model.Logo');
+                        }
+                        var proofDocumentURL = UploadedDocumentPath;
+                        var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                         SRC = imagePath + "/" + data.result[i].FileName;
+                         $('#imgLG').attr('src', SRC);
+                        $('#imgLG').attr('class', data.result[i].FileName);
+
+                        $('#imgViewLogo').show();
+
+                        $('<input type="hidden">').attr({
+                            name: 'Signature',
+                            value: data.result[i].FileName,
+                            id: data.result[i].FileName,
+                        }).appendTo('form');
+
+                    }
+                    else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                        UploadFailedFilesName.push(data.result[i].FileName);
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName);
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+                    showErrorMessage(UploadFailedFiles.length + " " + "File has not been uploaded.");
+                }
+                if (UploadFailedFilesName.length > 0) {
+                    showErrorMessage(UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+                }
+                if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0) {
+                    showSuccessMessage("File has been uploaded successfully.");
+                }
+            },
+
+            progressall: function (e, data) {
+            },
+
+            singleFileUploads: false,
+            send: function (e, data) {
+                var documentType = data.files[0].type.split("/");
+                var mimeType = documentType[0];
+                if (data.files.length == 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].name.length > 50) {
+                            showErrorMessage("Please upload small filename.");
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        }
+                    }
+                }
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt(MaxLogoSize)) {
+                            showErrorMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxLogoSize + "MB");
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt(MaxLogoSize)) {
+                        showErrorMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxLogoSize + "MB");
+                        return false;
+                    }
+                }
+                if (mimeType != "image") {
+                    showErrorMessage("Please upload a file with .jpg , .jpeg or .png extension.");
+                    $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                    $('body').animate({ scrollTop: 0 }, 'slow');
+                    return false;
+                }
+                $(".alert").hide();
+                $("#errorMsgRegion").html("");
+                $("#errorMsgRegion").hide();
+                return true;
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: USERID,
+                    id: USERID,
+                }).appendTo('form');
+                return true;
+            },
+            formData: { userId: USERID },
+            change: function (e, data) {
+                $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+            }
+        }).prop('disabled', !$.support.fileInput)
+    .parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+        $('#imgViewLogo').click(function () {
+
+            $("#loading-image").css("display","");
+            var SRCNew = SRC;
+            $('#imgLG').attr('src', SRCNew).load(function() 
+            { 
+                logoWidth=this.width; 
+                logoHeight=this.height;
+
+                $('#popupboxlogo').modal({ backdrop: 'static', keyboard: false });
+                if($(window).height() <= logoHeight)
+                {
+                    //$("#imgLG").height($(window).height() - 205);
+
+                    $("#imgLG").closest('div').height($(window).height() - 205);
+                    $("#imgLG").closest('div').css('overflow-y', 'scroll');
+                    $("#imgLG").height(logoHeight);
+                }
+                else
+                {
+                    $("#imgLG").height(logoHeight);
+                    $("#imgLG").closest('div').removeAttr('style');
+                }
+
+                if(screen.width <= logoWidth || logoWidth >= screen.width - 250)
+                {
+                    //$("#imgLG").width(screen.width - 10);
+                    //$(".modal-dialog").width(screen.width - 10);
+
+                    $('#popupboxlogo').find(".modal-dialog").width(screen.width - 250);
+                    $("#imgLG").width(logoWidth);
+                }
+                else
+                {
+                    $("#imgLG").width(logoWidth);
+                    $(".modal-dialog").width(logoWidth);
+                }
+
+                $("#loading-image").css("display","none");
+            });
+
+            $("#imgLG").unbind("error");
+            $('#imgLG').attr('src', SRC).error(function() 
+            {                 
+                alert('Image does not exist.');
+                $("#loading-image").css("display","none");
+            });
+        });
+
+        $("#btnClosepopupboxlogo").click(function(){
+            $('#popupboxlogo').modal('toggle');
+        });
+
+        function resetXeroAccount() {
+            $(".FormbotAccount").show();
+            $(".XeroAccount").hide();
+            $("#XeroPartsCodeId").val('');
+            $("#XeroPaymentsCodeId").val('');
+            $("#XeroAccountCodeId").val('');
+            $("#XeroChargesCodeId").val('');
+        }
+
+        function resetFormBotAccount() {
+            $(".FormbotAccount").hide();
+            $(".XeroAccount").show();
+            $("#PartCode").val('');
+            $("#PartName").val('');
+            $("#PartTax").val(0);
+            $("#PaymentCode").val('');
+            $("#PaymentName").val('');
+            $("#ChargeTax").val(0);
+        }
+
+        function removeValidationError() {
+            $("#settingsForm").find('input[type=text]').each(function () {
+                $(this).attr('class', 'form-control valid');
+            });
+            $("#settingsForm").find('Select').each(function () {
+                $(this).attr('class', 'form-control valid');
+            });
+
+            $("#settingsForm").find('.field-validation-error').attr('class', 'field-validation-valid');
+        }
+
+        function showErrorMessage(message) {
+            $(".alert").hide();
+            $("#successMsgRegion").hide();
+            $("#errorMsgRegion").html(closeButton + message);
+            $("#errorMsgRegion").show();
+
+        }
+
+        function showSuccessMessage(message) {
+            $(".alert").hide();
+            $("#errorMsgRegion").hide();
+            $("#successMsgRegion").html(closeButton + message);
+            $("#successMsgRegion").show();
+
+        }
+
+
+        function DeleteFileFromLogoOnUpload1(fileNames, guid, oldLogo) {
+            $.ajax(
+                {
+                    //url: BaseURL + 'DeleteLogoFromFolder/',
+                    url:'@Url.Action("DeleteLogoFromFolderSettings", "Settings")',
+                    data: { fileName: fileNames, FolderName: guid, OldLogo: oldLogo },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function (data) {
+
+                    },
+                });
+        }
+
+        function deleteLogoImage1(imageId) {
+            var fileDelete = $('#imgLG').attr('class');
+            var settingsId = $("#SettingsId").val();
+            var BaseURL= '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Settings/';
+            var Oldlogo = '@Model.Logo';
+
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax(
+               {
+                   url:'@Url.Action("DeleteLogoFromFolderSettings", "Settings")',
+                   data: { fileName: fileDelete,FolderName :USERID,OldLogo: Oldlogo},
+                   contentType: 'application/json',
+                   method: 'get',
+                   success: function () {
+                       var sign = $('#imgLG').attr('class');
+                       $("[name='Signature']").each(function () {
+                           $(this).remove();
+                       });
+                       $("[name='Logo']").each(function () {
+                           $(this).remove();
+                       });
+                       $('#imgLG').removeAttr('src');
+                       $('#imgLG').removeAttr('class');
+                       $('#popupboxlogo').modal('hide');
+                       $("#imgViewLogo").hide();
+
+                       showSuccessMessage("File has been deleted successfully.");
+
+                       //$(".alert").hide();
+                       //$("#successMsgRegion").html(closeButton + "File has been Deleted successfully.");
+                       //$("#successMsgRegion").show();
+                       //$("#successMsgRegion").fadeOut(3000);
+
+                       return false;
+                   }
+               });
+            }
+        }
+
+        function SyncAccount(){
+            $.ajax(
+            {
+                url: '@Url.Action("SyncAccount", "Settings")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                //async: false,
+                success: function (response) {
+                    if (response && response.status == false) {
+                        if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'invalid_grant') {
+                            window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                        }
+                        else if(response.error.toLowerCase() == 'sessiontimeout')
+                            window.location.href = '@Url.Action("Logout", "Account")';
+                        else if (response.error)
+                            showErrorMessage(response.error);
+                        else
+                            showErrorMessage("Account has not been synced.");
+                    }
+                    else {
+                        window.location.href ='@Url.Action("Settings", "Settings")';
+                        //window.location.reload();
+                        //showSuccessMessage("Account has been sync successfully.");
+                    }
+                },
+                error: function (response) {
+                    showErrorMessage("Account has not been synced.");
+                }
+            });
+        }
+
+        @*function SyncAccount(){
+            $.ajax(
+                {
+                    url: '@Url.Action("SetCallBackURL", "XeroConnect")',
+                    data: { callBackURL: "Settings/Settings"},
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    type: 'get',
+                    success: function (response) {
+                        if (response && response.status == true) {
+                            $.ajax(
+                                  {
+                                      url: '@Url.Action("SyncAccount", "Settings")',
+                                      dataType: 'json',
+                                      contentType: 'application/json; charset=utf-8',
+                                      type: 'get',
+                                      async: false,
+                                      success: function (response) {
+                                          if (response && response.status == false) {
+                                              if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'exception of type "xero.api.example.applications.public.renewtokenexception" was thrown.') {
+                                                  window.location.href ='@Url.Action("Connect", "XeroConnect")';
+                                              }
+                                          }
+                                          else {
+                                              window.location.reload();
+                                              showSuccessMessage("Account has been sync successfully.");
+                                          }
+                                      },
+                                      error: function (response) {
+                                          showErrorMessage("Account has not been sync.");
+                                      }
+                                  });
+                        }
+                    },
+                    error: function (response) {
+                        showErrorMessage("Account has not been sync.");
+                    }
+                });
+        }*@
+
+    </script>
+}

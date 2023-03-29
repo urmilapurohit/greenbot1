@@ -1,0 +1,549 @@
+﻿@model FormBot.Main.Models.JobDocumentSignatureModels
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "EditGroup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    #datatableSendEmailJobList .view {
+        height: 25px;
+        width: 25px;
+        vertical-align: middle;
+    }
+    .display-none{
+        display:none;
+    }
+</style>
+<link href="~/Content/style.css" rel="stylesheet" />
+<script src="/Scripts/jSignature.dev.js"></script>
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+<div class="container-fluid create-job">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionDocumentSignatureRequest" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionDocumentSignatureRequest" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="title formGroupName">
+        <h1>Group Name : @Model.GroupName</h1>
+        <a href='@Url.Action("Index", "DocumentSignatureRequest", new { id = Url.RequestContext.RouteData.Values["id"] })' title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+    </div>
+    <div class="grid_topbar formSendEmail">
+        <p class="job_result" id="numRecordsSendEmail"></p>
+        <a href="#" id="btnsendemail" class="primary pull-right mail_ic marg-r-0" title="Send Email">Send Email</a>
+        <a href="#" id="btnaddjobs" class="primary pull-right btn icon-btn" title="Add Jobs" onclick="PopupToggle('popupShowJobForGroup');"><span class="sprite-img add_ic"></span>  Add Jobs</a>
+        <a href="#" id="btndeletejobs" class="primary pull-right btn delete_ic" title="Delete Jobs">Delete Jobs from group</a>
+        <div class="fileUpload btn default import-ic pull-right" id="divImportCSV" title="Import CSV" style="margin-right:5px;">
+            <span>Import CSV</span>
+            <input id="importCSV" type="file" class="upload fileUpload" title="Import CSV" name="Import CSV" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+        </div>
+    </div>
+    <div class="formSendEmail">
+        <div id="grid" class="SendEmailListing">
+            <div class="table-responsive">
+                <table id="datatableSendEmailJobList" class="table table-hover datatableSendEmailJobList">
+                    <thead>
+                        <tr>
+                            <th style="background-image:none !important;"><input type="checkbox" id="chkAll-addedJob" name="select_all"></th>
+                            <th><span>@Html.DisplayName("Job Id")</span></th>
+                            <th><span>@Html.DisplayName("PVDSWH Code")</span></th>
+                            <th><span>@Html.DisplayName("Job Ref Number")</span></th>
+                            <th><span>@Html.DisplayName("Company Name")</span></th>
+                            <th><span>@Html.DisplayName("Designer Sign")</span></th>
+                            <th><span>@Html.DisplayName("Installer Sign")</span></th>
+                            <th><span>@Html.DisplayName("Electrician Sign")</span></th>
+                            <th><span>@Html.DisplayName("Home Owner Sign")</span></th>
+                            <th><span>@Html.DisplayName("Solar Company Sign")</span></th>
+                            <th><span>@Html.DisplayName("Sent Email")</span></th>
+                            <th><span>@Html.DisplayName("Doc Preview")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.Partial("_JobListingPopup", Model)
+<div class="modal fade popupSendEmailForBulkSignature" tabindex="-1" role="dialog" id="popupSendEmailForBulkSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Choose email template for send signature</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <form id="addGroupNameForm">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorSendEmailForBulkSignature" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="form-box">
+                            <div class="form-inline">
+                                <div class="form-group" style="margin-bottom:15px;">
+                                    <label class="control-label" style="margin-top:8px; float:left;">Select Email template</label>
+                                    <div class="col-md-6">
+                                        <select id="lstEmailTemplate" class="form-control"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Index","EmailTemplate")" class="display-none" id="createNewEmailTemplate">Create new template</a>
+                        </div>
+                        <div class="modal-footer" style="border-top:0px !important;">
+                            <a href="#" id="sendEmail" class="primary mail_ic" title="Send Email" onclick="sendEmailForSignatureRequest()">Send</a>
+                            <button type="button" class="display-none btn default cancel_ic" onclick="FillDropDown('lstEmailTemplate', urlGetEmailTemplateList, null, true, null);" id="refreshEmailtemplate">Refresh</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade popupInstaller" tabindex="-1" role="dialog" id="popupViewerDoc">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Document Viewer</h4>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="save pull-right " style="padding-bottom:10px;">*@
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="primary save_ic pull-right " style="padding-bottom:10px;">*@
+
+                    <a class="pull-right save_ic sprite-img" style=" margin 0px 10px 0 0; background-position:-2px -209px; width:22px; height:22px;" title="Save" id="btnSave" href="javascript:void(0);">
+
+                    </a>
+                </div>
+                <div class="modal-body" style="padding:0px">
+                    <div id="divViewer"></div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+<div class="modal fade popupSignature" tabindex="-1" id="popupSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content signatureDocument">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Draw Signature</h4>
+                </div>
+                <div class="modal-body" style="overflow:auto !important">
+                    <form id="signatureSend">
+                        <div class="form-group">
+                            <label class="radio-inline"><input type="radio" value="D" name="signType" checked> Draw </label>
+                            <label class="radio-inline"><input type="radio" value="M" name="signType"> Mobile/Email </label>
+                        </div>
+                        <div class="form-box">
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSendSms" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSendSms" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Firstname, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Firstname, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsFirstname" })
+                                @Html.ValidationMessageFor(m => m.Firstname)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Lastname, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Lastname, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsLastname" })
+                                @Html.ValidationMessageFor(m => m.Lastname)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.mobileNumber, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.mobileNumber, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsMobileNo" })
+                                @Html.ValidationMessageFor(m => m.mobileNumber)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Email, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsEmail" })
+                                @Html.ValidationMessageFor(m => m.Email)
+                            </div>
+
+                        </div>
+                    </form>
+                    <div id="jSignature" style="opacity: 0.8; border: 1px dotted rgb(0, 0, 0) !important;" onchange="jobSignChange()"></div>
+                    </br>
+                    <div id="captureSignDetail">
+                        <label>Sign Capture By : </label></br>
+                        <label>Name : <span id="signCaptureName"></span></label></br>
+                        <label>Mobile Number : <span id="signCaptureMobile"></span></label></br>
+                        <label>Email : <span id="signCaptureEmail"></span></label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="button" value="Save" class="primary" id="btnSaveSign">
+                    <div class="btn-group" role="group" id="btnSendSignatureUrl">
+                        <a href="javascript:void(0);" style="margin-right:0; margin-top:10px;margin-right:10px;color:#383838 !important;" class="btn default dropdown-toggle pull-right export-ic" title="Send Signature Url" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Send<span class="caret" style="margin-left: 10px;"></span></a>
+                        <ul class="dropdown-menu" id="SaveJob" style="min-width:96%;text-align:center;">
+                            <li><a href="javascript:void(0)" onclick="SendUserSignatureUrl(0);">Mobile</a></li>
+                            <li><a href="javascript:void(0)" onclick="SendUserSignatureUrl(1);">Email</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        url_Viewer = '@Url.Action("_Viewer","Job")';
+        $('#datatableSendEmailJobList').DataTable({
+            iDisplayLength: 10,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+            columns: [
+                {
+                    'data': null,
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        return '<input type="checkbox" data-sendemailstatus="' + full.SentEmailStatus + '" class="chkRow ' + (full.SentEmailStatus == 2 ? ' PendingEmailSent' : (full.SentEmailStatus == 1 ? ' DataInComleted' : (full.SentEmailStatus == 3 ? ' AlreadySent' : '' ))) +'" id=' + full.JobId + '  >';
+                    }
+                },
+                {
+                    'data': 'JobId',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        return '<span class="select-jobid-forsending-request">' + full.JobId + '</span>';
+                    }
+                },
+                {
+                    'data': 'PVDSWHCode',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        return '<span class="select-pvdswhcode-forsending-request">' + full.PVDSWHCode + '</span>';
+                    }
+                },
+                {
+                    'data': 'JobRefNumber',
+                    "orderable": true,
+                    "render": function (data, type, full, meta) { return full.JobRefNumber; }
+                },
+                {
+                    'data': 'CompanyName',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) { return full.CompanyName; }
+                },
+                {
+                    'data': 'DesignerSignatureStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.DesignerSignatureStatus == "True")
+                            return '<span id="DesignerSignatureStatus" style="font-weight: bold;color: Green;">Yes</span>'
+                        else if (full.DesignerSignatureStatus == "False")
+                            return '<span id="DesignerSignatureStatus" style="font-weight: bold;color: Red;">No</span>'
+                        else
+                            return '<span id="DesignerSignatureStatus" style="font-weight: bold;">NA</span>'
+                    }
+                },
+                {
+                    'data': 'InstallerSignatureStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.InstallerSignatureStatus == "True")
+                            return '<span id="InstallerSignatureStatus" style="font-weight: bold;color: Green;">Yes</span>'
+                        else if (full.InstallerSignatureStatus == "False")
+                            return '<span id="InstallerSignatureStatus" style="font-weight: bold;color: Red;">No</span>'
+                        else
+                            return '<span id="InstallerSignatureStatus" style="font-weight: bold;">NA</span>'
+                    }
+                },
+                {
+                    'data': 'ElectricianSignatureStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.ElectricianSignatureStatus == "True")
+                            return '<span id="ElectricianSignatureStatus" style="font-weight: bold;color: Green;">Yes</span>'
+                        else if (full.ElectricianSignatureStatus == "False")
+                            return '<span id="ElectricianSignatureStatus" style="font-weight: bold;color: Red;">No</span>'
+                        else
+                            return '<span id="ElectricianSignatureStatus" style="font-weight: bold;">NA</span>'
+                    }
+                },
+                {
+                    'data': 'HomeOwnerSignatureStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.HomeOwnerSignatureStatus == "True")
+                            return '<span id="HomeOwnerSignatureStatus" style="font-weight: bold;color: Green;">Yes</span>'
+                        else if (full.HomeOwnerSignatureStatus == "False")
+                            return '<span id="HomeOwnerSignatureStatus" style="font-weight: bold;color: Red;">No</span>'
+                        else
+                            return '<span id="HomeOwnerSignatureStatus" style="font-weight: bold;">NA</span>'
+                    }
+                },
+                {
+                    'data': 'SolarCompanySignatureStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.SolarCompanySignatureStatus == "True")
+                            return '<span id="SolarCompanySignatureStatus" style="font-weight: bold;color: Green;">Yes</span>'
+                        else if (full.SolarCompanySignatureStatus == "False")
+                            return '<span id="SolarCompanySignatureStatus" style="font-weight: bold;color: Red;">No</span>'
+                        else
+                            return '<span id="SolarCompanySignatureStatus" style="font-weight: bold;">NA</span>'
+                    }
+                },
+                {
+                    'data': 'SentEmailStatus',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        if (full.SentEmailStatus == 3)
+                            return '<img src="../Images/ar_green.png"/>'
+                        else if (full.SentEmailStatus == 2)
+                            return '<img src="../Images/ic_ReadyToTrade.png"/>'
+                        else
+                            return '<img src="../Images/ic_reject.png"/>'
+                    }
+                },
+                {
+                    'data': 'DocView',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        //function viewDocument(id,jobDocumentId,eJobId,DocPath) {
+                        if (full.JobDocumentId > 0) {
+                            if (full.JobDocumentPath != "") {
+                                var params = "'" + full.DocumentId + "','" + full.JobDocumentId + "','" + full.JobId + "','DocViewer-" + full.JobDocumentId + "'";
+                                return '<a class="view sprite-img"' + ' Id="DocViewer-' + full.JobDocumentId +'" data-path="' + full.JobDocumentPath +'" href="' + "javascript:void(0);" + '"onclick="' + "viewDocument(" + params + ");" + '" title="View">'
+                                //return "<a class='view sprite-img' href='javascript:void(0);' onclick="viewDocument('" + full.DocumentId + "','" + full.JobDocumentId + "','" + full.JobId + "','" + full.JobDocumentPath + "');' title='View'></a>";
+                            } else {
+                                return "";
+                            }
+                        }
+                        else {
+                            return "";
+                        }
+                    }
+                }
+
+            ],
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetBulkJobListForSendEmail", "DocumentSignatureRequest")',
+            "fnDrawCallback": function () {
+                $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+                if ($(".paging").find("span").length > 1) {
+                    $("#datatable_length").show();
+                } else if ($("#datatableSendEmailJobList").find("tr").length > 11) { $("#datatable_length").show(); } else { $("#datatable_length").hide(); }
+                var table = $('#datatableSendEmailJobList').DataTable();
+                var info = table.page.info();
+                if (info.recordsTotal == 0) {
+                    document.getElementById("numRecordsSendEmail").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal + '</b>  Document group are found';
+                }
+                else {
+                    document.getElementById("numRecordsSendEmail").innerHTML = '<b>' + this.fnSettings().json.iTotalRecords + '</b>  of  <b>' + this.fnSettings().fnRecordsTotal() + '</b>  Document group are found';
+                }
+                $('[data-toggle="tooltip"]').tooltip();
+                $("#datatableSendEmailJobList .chkRow").change(function () {
+                    AllCheckboxIsCheckedOrNot();
+                });
+                //if ($("#datatableSendEmailJobList img[src^='../Images/ic_reject.png'").length == $("#datatableSendEmailJobList img").length) {
+                //    $("#btnsendemail").prop("disabled", true);
+                //}
+                //else {
+                //    $("#btnsendemail").prop("disabled", false);
+                //}
+            },
+            "fnServerParams": function (aoData) {
+                aoData.push({ "name": "bulkUploadDocumentGroupId", "value": @Model.GroupId });
+            }
+        });
+        $("#btndeletejobs").click(function () {
+            if ($("#datatableSendEmailJobList").find('.chkRow:checked').length == 0) {
+                alert("Please select any Jobs to remove.")
+            }
+            else {
+                var JobId = "";
+                $("#datatableSendEmailJobList").find('.chkRow:checked').each(function () {
+                    JobId = JobId + $(this).attr('id') + ",";
+                });
+                JobId = JobId.replace(/,\s*$/, "");
+                if (confirm('Are you sure you want to delete this record ?')) {
+                    $.ajax(
+                    {
+                        url: '@Url.Action("DeleteJobInGroup", "DocumentSignatureRequest")',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        type: 'POST',
+                        data: JSON.stringify({ bulkDocumentGroupId: @Model.GroupId, JobId: JobId }),
+                        success: function (response) {
+                            if (response.status) {
+                                $("#datatableSendEmailJobList").dataTable().fnDraw();
+                                showSuccessMessageForDocumentSignatureRequest("job delete successfully");
+                            }
+                            else {
+                                showErrorMessageForDocumentSignatureRequest("Job not delete");
+                            }
+                            $("#chkAll-addedJob").prop('checked', false);
+                        },
+                        error: function () {
+                            showErrorMessageForDocumentSignatureRequest("Jobs are not deleted.");
+                        }
+                    });
+                }
+            }
+        });
+        $("#chkAll-addedJob").click(function () {
+            $('#datatableSendEmailJobList .chkRow').not(this).prop('checked', this.checked);
+        });
+        $("#btnsendemail").click(function () {
+            if ($("#datatableSendEmailJobList").find('.chkRow:checked').length == 0) {
+                alert("please select atleast one job");
+                return;
+            }
+            if ($("#datatableSendEmailJobList").find('.chkRow.AlreadySent:checked').length == $("#datatableSendEmailJobList").find('.chkRow:checked').length) {
+                alert("Emails are already sent.");
+                return;
+            }
+            else if (($("#datatableSendEmailJobList").find('.chkRow.DataInComleted:checked').length == $("#datatableSendEmailJobList").find('.chkRow:checked').length) || (($("#datatableSendEmailJobList").find('.chkRow.AlreadySent:checked').length + $("#datatableSendEmailJobList").find('.chkRow.DataInComleted:checked').length) == $("#datatableSendEmailJobList").find('.chkRow:checked').length)) {
+                alert("Please add emailId for who user required signature.");
+                return;
+            }
+            $("#popupSendEmailForBulkSignature").modal({ backdrop: 'static', keyboard: false });
+            FillDropDown('lstEmailTemplate', urlGetEmailTemplateList, null, true, DropDownValueBind);
+        });
+         $('#importCSV').fileupload({
+
+                url: '@Url.Action("ImportJobsInGroupsrtCSV", "DocumentSignatureRequest")',
+                dataType: 'json',
+                add: function (e, data) {
+                    data.formData = { BulkUploadDocumentGroupId: @Model.GroupId };
+                    data.submit();
+                },
+                done: function (e, data) {
+                    if(data.result.status)
+                    {
+                        $("#datatableSendEmailJobList").dataTable().fnDraw();
+                        showSuccessMessageForDocumentSignatureRequest("CSV File has been imported successfully.");
+                    }
+                    else
+                    {
+                        if(data.result.error)
+                            showErrorMessage(data.result.error);
+                        else
+                            showErrorMessageForDocumentSignatureRequest("CSV File has not been imported.");
+                    }
+
+                },
+
+                progressall: function (e, data) {
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+
+                    var mimeType =  data.files[0].type;
+                    if (!(mimeType == "text/csv" ||  mimeType == "application/csv" || mimeType == "csv" ||  mimeType == "text/x-csv" ||  mimeType == "application/x-csv" ||  mimeType == "text/x-comma-separated-values" ||
+                        mimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || mimeType == "application/vnd.ms-excel" || mimeType == "text/comma-separated-values" || mimeType == "")) {
+                        showErrorMessageForDocumentSignatureRequest("Please upload a file with .csv extension.");
+                        return false;
+                    } else if (CheckSpecialCharInFileName(data.files[0].name)) {
+                        showErrorMessageForDocumentSignatureRequest("Please upload file that not conatain<> ^ [].");
+                        return false;
+                    }
+                    $(".alert").hide();
+                    $('<input type="hidden">').attr({
+                        name: 'Guid',
+                        value: USERID,
+                        id: USERID,
+                    }).appendTo('form');
+                    return true;
+                },
+                change: function (e, data) {
+                    $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+                }
+            }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+    });
+    function showSuccessMessageForDocumentSignatureRequest(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionDocumentSignatureRequest").hide();
+        $("#successMsgRegionDocumentSignatureRequest").html(closeButton + message);
+        $("#successMsgRegionDocumentSignatureRequest").show();
+    }
+    function showErrorMessageForDocumentSignatureRequest(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionDocumentSignatureRequest").show();
+        $("#errorMsgRegionDocumentSignatureRequest").html(closeButton + message);
+        $("#successMsgRegionDocumentSignatureRequest").hide();
+    }
+    function sendEmailForSignatureRequest() {
+        if ($("#lstEmailTemplate").val() == "") {
+            alert("please select email template ")
+            return;
+        }
+        var data = {};
+        var lstJob = [];
+        var JobId = "";
+        data.BulkUploadDocumentGroupId = @Model.GroupId;
+        $("#datatableSendEmailJobList").find('.chkRow:checked').each(function () {
+            var jobdata = {};
+            jobdata.JobId = $(this).closest('tr').find(".select-jobid-forsending-request").text()
+            jobdata.InstallerSignatureStatus = $(this).closest('tr').find('#InstallerSignatureStatus').text()
+            jobdata.DesignerSignatureStatus = $(this).closest('tr').find('#DesignerSignatureStatus').text()
+            jobdata.ElectricianSignatureStatus = $(this).closest('tr').find('#ElectricianSignatureStatus').text()
+            jobdata.HomeOwnerSignatureStatus = $(this).closest('tr').find('#HomeOwnerSignatureStatus').text()
+            jobdata.SolarCompanySignatureStatus = $(this).closest('tr').find('#SolarCompanySignatureStatus').text()
+            lstJob.push(jobdata);
+        });
+        data.lstDocumentWiseSignatureDetail = lstJob;
+        $.ajax({
+            url: '@Url.Action("SendEmailForSignatureRequest", "DocumentSignatureRequest")',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: 'POST',
+            data: JSON.stringify({ sendEmailRequest: data, emailTemplateId: $("#lstEmailTemplate").val() }),
+            success: function (response) {
+                $("#datatableSendEmailJobList").dataTable().fnDraw();
+                $('#popupSendEmailForBulkSignature').modal('toggle');
+                showSuccessMessageForDocumentSignatureRequest("Documents email reuqest sent.");
+                $("#chkAll-addedJob").prop('checked', false);
+                SearchHistory();
+            },
+            error: function () {
+                showErrorMessageForDocumentSignatureRequest("Documents email reuqest are not sent.");
+            }
+        });
+    }
+    function AllCheckboxIsCheckedOrNot() {
+        if ($("#datatableSendEmailJobList .chkRow:checkbox:checked").length == $("#datatableSendEmailJobList .chkRow").length) {
+            $("#chkAll-addedJob").prop('checked', true);
+        }
+        else {
+            $("#chkAll-addedJob").prop('checked', false);
+        }
+    }
+    function viewDocument(id, jobDocumentId, eJobId, DocViewerLinkId) {
+        if (eJobId) {
+            DocPath = $("#" + DocViewerLinkId).attr("data-path");
+            $("#loading-image").show();
+            $.ajaxSetup({ async: false, cache: false });
+            $('#divViewer').load(url_Viewer + "?jobid=" + eJobId + "&docId=" + id + "&isClassic=false" + "&jobDocumentPath=" + encodeURIComponent(DocPath) + "&jobDocumentId=" + jobDocumentId);
+            $('#popupViewerDoc').modal({ backdrop: 'static', keyboard: false });
+        }
+    }
+    function DropDownValueBind() {
+        if (location.href.indexOf("localhost") != -1)
+            $("#lstEmailTemplate").val(1040);
+        else
+            $("#lstEmailTemplate").val(40);
+        $("#lstEmailTemplate").prop('disabled', true)
+    }
+</script>

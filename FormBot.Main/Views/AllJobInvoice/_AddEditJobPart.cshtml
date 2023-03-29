@@ -1,0 +1,740 @@
+﻿@model FormBot.Entity.Job.JobInvoiceDetail
+@using FormBot.Helper;
+
+@*<script src="~/Scripts/Calendar/moment.min.js"></script>*@
+<script src="~/Scripts/bootstrap-datetimepicker.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+<link href="~/Content/datepicker.css" rel="stylesheet" />
+
+@Scripts.Render("~/bundles/jqueryval")
+<style type="text/css">
+    textarea {
+        resize: none;
+    }
+
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }
+
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .modal {
+        z-index: 9999 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .table-bordered > tbody > tr > td {
+        border: 0px !important;
+    }
+
+    .fileUpload {
+        margin: 0px !important;
+    }
+
+    .input-validation-error {
+        border: 1px solid #b94a48 !important;
+    }
+</style>
+
+@Html.ValidationSummary(true)
+@*@Html.AntiForgeryToken()*@
+
+@*<div class="modal-header">
+
+        <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+        <h4 class="modal-title">Add/Edit Part</h4>
+
+    </div>*@
+@*<div class="modal-body">
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" aria-label="Close">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+    </div>
+
+    <form id="jobParts">
+
+        <div class="form-box">
+            <div class="row">
+                <div class="col-lg-6">*@
+<form id="jobParts">
+    <div class="form-box">
+
+        @Html.HiddenFor(m => m.JobInvoiceDetailID)
+        @Html.HiddenFor(m => m.JobPartID)
+        @Html.HiddenFor(m => m.Guid)
+        @Html.HiddenFor(m => m.FileName)
+        @Html.HiddenFor(m => m.JobInvoiceID)
+
+        @Html.HiddenFor(m => m.InvoiceNumber)
+        @Html.HiddenFor(m => m.JobId)
+
+        @Html.HiddenFor(m => m.OldFileName)
+
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.IsBillable, new { @class = "control-label" })
+                    @Html.CheckBoxFor(m => m.IsBillable, new { @class = "form-control", @tabindex = 1})
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobScheduleID, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobScheduleID, new SelectList(Model.JobVisit, "JobSchedulingID", "Label"), new { id = "JobScheduleID", @class = "form-control", @tabindex = 2 })
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.StaffName, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.StaffName, new { @class = "form-control", @disabled = "disabled", @tabindex = 3 })
+                </div>
+            </div>
+        </div>
+
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobScheduleID, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.DropDownListFor(m => m.JobScheduleID, new SelectList(Model.JobVisit, "JobSchedulingID", "Label"), new { id = "JobScheduleID", @class = "form-control" })
+                    </div>
+                </div>
+            </div>*@
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.StaffName, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.StaffName, new { @class = "form-control", @disabled = "disabled" })
+                    </div>
+                </div>
+            </div>*@
+
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Sale, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.Sale, new { @class = "form-control CalculateMargin", @maxlength = 12, onblur = "SaleBlur();", onkeypress = "return isDecimal(event, 8, 2, this)", @tabindex = 4 })
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Sale, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.Sale, new { @class = "form-control decimal CalculateMargin", @maxlength = 12, onblur = "SaleBlur();" })
+                    </div>
+                </div>
+            </div>*@
+
+
+        <div class="row">
+
+            <div class="col-sm-6">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.TimeStart, new { @class = "control-label required" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.DateAdded, new { @class = "form-control  required date-pick", @readonly = "readonly", @tabindex = 5 })
+                        <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+                        @Html.ValidationMessageFor(m => m.DateAdded)
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="control-label inv">&nbsp;</label>
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.TimeAdded, new { @class = "form-control required", @tabindex = 6})
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                        @Html.ValidationMessageFor(m => m.TimeAdded)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.TimeStart, new { @class = "control-label required" })
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.DateAdded, new { @class = "form-control  required date-pick" })
+                        <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+                        @Html.ValidationMessageFor(m => m.DateAdded)
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.TimeAdded, new { @class = "form-control required" })
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                        @Html.ValidationMessageFor(m => m.TimeAdded)
+                    </div>
+                </div>
+            </div>*@
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ItemCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.ItemCode, new { @class = "form-control required", @maxlength = 100, @tabindex = 7})
+                    @Html.ValidationMessageFor(m => m.ItemCode)
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.ItemCode, new { @class = "control-label required" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.ItemCode, new { @class = "form-control required", @maxlength = 100 })
+                        @Html.ValidationMessageFor(m => m.ItemCode)
+                    </div>
+                </div>
+            </div>*@
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Quantity, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @maxlength = 10, onkeypress = "return isDecimal(event, 8, 2, this)", @tabindex = 8})
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Quantity, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @maxlength = 10, onkeypress = "return isNumber(event);" })
+                    </div>
+                </div>
+
+            </div>*@
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Purchase, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.Purchase, new { @class = "form-control CalculateMargin", @maxlength = 12, onblur = "PurchaseBlur();", onkeypress = "return isDecimal(event, 8, 2, this)", @tabindex = 9})
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Purchase, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.Purchase, new { @class = "form-control decimal CalculateMargin", @maxlength = 12, onblur = "PurchaseBlur();" })
+                    </div>
+                </div>
+            </div>*@
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Margin, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.Margin, new { @class = "form-control", @maxlength = 6, @readonly = "readonly", @tabindex = 10 })
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Margin, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextBoxFor(m => m.Margin, new { @class = "form-control decimal", @maxlength = 6, @readonly = "readonly" })
+                    </div>
+                </div>
+            </div>*@
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Description, new { @class = "control-label required" })
+                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control required", @maxlength = 500, @tabindex = 11 })
+                    @Html.ValidationMessageFor(m => m.Description)
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Description, new { @class = "control-label" })
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        @Html.TextAreaFor(m => m.Description, new { @class = "form-control required", @maxlength = 500 })
+                        @Html.ValidationMessageFor(m => m.Description)
+                    </div>
+                </div>
+            </div>*@
+
+        <div class="row">
+
+            <div class="col-sm-2">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.FileName, new { @class = "control-label" })
+                    <div class="input-group">
+                        <div class="fileUpload btn primary upload_ic" id="divPartUpload">
+                            <span>Upload</span>
+                            <input id="uploadPartBtnInvoice" name="uploadPartBtnInvoice" type="file" class="upload fileUpload" tabindex="12" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-10">
+                <div class="form-group">
+                    <label class="control-label inv">&nbsp;</label>
+                    <div class="input-group">
+                        <table class="table table-bordered" id="tblSelectedFile2">
+                            <tbody>
+                                @if (Model.JobInvoiceDetailID != 0)
+                                {
+                                    if (Model.FileName != null && Model.FileName != "")
+                                    {
+                                        <tr class='success' id='@Model.FileName'>
+                                            <td class="col-sm-8">@Model.FileName</td>
+
+                                            @if (Model.MimeType == "image")
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Preview" onclick="OpenDocument(this)"></td>
+                                            }
+                                            else
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Download" onclick="DownloadDocument(this)"></td>
+                                            }
+                                            @*<td class="col-sm-2"><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage();'>&times;</a></td>*@
+                                            <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" filename="@Model.FullFileName" oldfilename="@Model.FullFileName" style="cursor: pointer" onclick='deleteInvoiceImage(this);'></td>
+                          </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*<div class="row">
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <div class="fileUpload btn primary upload_ic" id="divPartUpload" style="margin-left: 0px;">
+                            <span>Upload</span>
+                            <input id="uploadPartBtnInvoice" name="uploadPartBtnInvoice" type="file" class="upload fileUpload" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-10">
+                    <div class="form-group">
+                        <table class="table table-bordered" id="tblSelectedFile2">
+                            <tbody>
+                                @if (Model.JobInvoiceDetailID != 0)
+                                {
+                                    if (Model.FileName != null)
+                                    {
+                                        <tr class='success' id='@Model.FileName'>
+                                            <td class="col-sm-8">@Model.FileName</td>
+                                            @if (Model.MimeType == "image")
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.FileName" class="@Model.FileName" title="Preview" onclick="OpenDocument(this)"></td>
+                                            }
+                                            else
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.FileName" class="@Model.FileName" title="Download" onclick="DownloadDocument(this)"></td>
+                                            }
+                                            <td class="col-sm-2"><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage();'>&times;</a></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>*@
+
+        @*<div class="row">
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <div class="fileUpload btn primary upload_ic" id="divPartUpload" style="margin-left: 0px;">
+                            <span>Upload</span>
+                            <input id="uploadPartBtnInvoice" name="uploadPartBtnInvoice" type="file" class="upload fileUpload" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <table class="table table-bordered" id="tblSelectedFile2">
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>*@
+    </div>
+</form>
+
+
+@*</div>
+                    <div class="col-lg-6">
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>*@
+@*<div class="modal-footer">
+        <button type="button" class="btn primary save_ic" id="btnJobPartSave">Save</button>
+        <button type="button" class="btn primary save_ic" id="btnJobPartSaveAndAdd">Save and Add</button>
+        <button type="button" class="btn primary delete_ic" id="btnJobPartClear">Clear</button>
+    </div>*@
+
+
+<script type="text/javascript">
+
+    var message = '';
+
+    $(function () {
+
+        FileUpload($('#uploadPartBtnInvoice'), '@Model.Guid', $("#tblSelectedFile2"));
+
+        
+    });
+
+
+    $(document).ready(function () {
+
+
+        $(".CalculateMargin").change(function (e) {
+            CalculateMargin();
+        });
+
+        $(".CalculateMargin").keyup(function (e) {
+            CalculateMargin();
+        });
+
+        var date = $("#DateAdded").val() || new Date();
+
+        $("#DateAdded").val('').removeAttr('value');
+
+        $('.date-pick').datepicker({
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('change', function () {
+            $(this).valid();
+        });
+
+        var startDate = moment(date).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+
+        $("#DateAdded").val(startDate);
+
+        $('#TimeAdded').datetimepicker({
+            format: "HH:mm"
+        });
+
+        $(".date-pick").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+        $(".TimeAdded").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+
+        //$('.decimal').keypress(function (event) {
+        //    var $this = $(this);
+        //    if ((event.which != 46 || $this.val().indexOf('.') != -1) &&
+        //       ((event.which < 48 || event.which > 57) &&
+        //       (event.which != 0 && event.which != 8))) {
+        //        event.preventDefault();
+        //    }
+
+        //    var text = $(this).val();
+        //    if ((event.which == 46) && (text.indexOf('.') == -1)) {
+        //        setTimeout(function () {
+        //            if ($this.val().substring($this.val().indexOf('.')).length > 3) {
+        //                $this.val($this.val().substring(0, $this.val().indexOf('.') + 3));
+        //            }
+        //        }, 1);
+        //    }
+
+        //    if ((text.indexOf('.') != -1) &&
+        //        (text.substring(text.indexOf('.')).length > 2) &&
+        //        (event.which != 0 && event.which != 8) &&
+        //    ($(this)[0].selectionStart >= text.length - 2)) {
+        //        event.preventDefault();
+        //    }
+        //});
+
+
+
+    });
+
+
+    @*function deleteInvoiceImage() {
+        //var FolderName = imageId;
+
+        var FolderName = $('#imgSign').attr('folderName');
+        var fileDelete = $('#imgSign').attr('class');
+
+        //if (confirm('Are you sure you want to delete this file ?')) {
+        $.ajax(
+                {
+                    url: '@Url.Action("DeleteFileFromInvoiceFolder", "Job")',
+                    data: { fileName: fileDelete, FolderName: FolderName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        var sign = $('#imgSign').attr('class');
+                        $("[name='Signature']").each(function () {
+                            $(this).remove();
+                        });
+                        $('#imgSign').removeAttr('src');
+                        $('#imgSign').removeAttr('class');
+                        //$('#popupbox').modal('hide');
+                        $("#imgSignature").hide();
+                        $(".alert").hide();
+                        return false;
+                    }
+                });
+        //}
+        //else
+        //    return;
+    }*@
+
+    function SaveInvoiceDetail() {
+        if ($("#jobParts").valid()) {
+            //var formData = new FormData();
+            //var file = document.getElementById("uploadPartFile").files[0];
+            //formData.append("uploadPartFile", file);
+
+            var startDateTime = $("#DateAdded").val();
+            var startDate = '';
+            var startTime = $("#TimeAdded").val();
+
+            var tickStartDate = ConvertDateToTick(startDateTime, '@ProjectConfiguration.GetDateFormat');
+            startDate = moment(tickStartDate).format("YYYY-MM-DD");
+
+
+            var obj = {};
+            obj.JobInvoiceDetailID = $("#JobInvoiceDetailID").val();
+
+            obj.JobInvoiceID = $("#JobInvoiceID").val();
+
+            //obj.JobInvoiceID = null;
+            obj.JobPartID = $("#JobPartID").val();
+            obj.IsBillable = $('#IsBillable').is(":checked");
+            obj.JobScheduleID = $("#JobScheduleID").val();
+            obj.Staff = $("#Staff").val();
+            obj.Sale = $("#Sale").val();
+            obj.TimeStart = startDate;
+            obj.ItemCode = $("#ItemCode").val();
+            obj.Quantity = $("#Quantity").val();
+            obj.Purchase = $("#Purchase").val();
+            obj.Margin = $("#Margin").val();
+
+            obj.Description = $("#Description").val();
+
+            var Sign = document.getElementsByName("Signature");
+            if (Sign.length > 0) {
+                obj.Guid = '@Model.Guid';
+                //obj.FileName = document.getElementsByName("Signature")[0].id.split('_')[1];
+                obj.FileName = document.getElementsByName("Signature")[0].id.substr(document.getElementsByName("Signature")[0].id.indexOf('_') + 1);
+            }
+
+            obj.PaymentAmount = 0;
+
+            obj.InvoiceStartDate = startDate;
+            obj.InvoiceStartTime = startTime;
+
+            obj.DateAdded = startDate;
+            obj.TimeAdded = startTime;
+            obj.InvoiceNumber = $("#InvoiceNumber").val();
+            obj.JobId = $("#hasJobID").val();
+            obj.OldFileName = $("#OldFileName").val();
+            
+            if ('@ProjectSession.UserTypeId' == 4)
+                obj.OwnerUsername = $("#drpInvoiceTo").val();
+            else
+                obj.SentTo = $("#drpInvoiceTo").val();
+
+            var data = JSON.stringify(obj);
+            $("#hasJobID").val(obj.JobId);
+            $.ajax(
+            {
+                url: '@Url.Action("InsertJobInvoiceDetailAndJobParts", "JobInvoiceDetail")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'post',
+                data: data,
+                async: false,
+                success: function (response) {
+                    if (response) {
+                        var responseMsg = response.split("#")[0];
+                        if (responseMsg == "successs") {
+                            var responseJobInvoiceDetailID = response.split('#')[1];
+                            var responseJobPartID = response.split('#')[2];
+                            var responseJobInvoiceID = response.split('#')[3];
+
+                            if (responseJobInvoiceDetailID > 0 && responseJobPartID > 0 && responseJobInvoiceID > 0) {
+                                $("#popupAddEditPart").modal('hide');
+                                message = "Job invoice detail has been saved successfully."
+                                $(".modal-backdrop.in").css("opacity", 0);
+                                $(".modal-backdrop").css("z-index", 0);
+                                $(".modal-backdrop.fade").css("z-index", -10);
+
+                                $("#hdnJobInvoiceID").val(responseJobInvoiceID);
+
+                                if ($('#invoiceDetailListTable')) {
+                                    var table = $('#invoiceDetailListTable').DataTable();
+                                    table.destroy();
+                                }
+
+                                //jobInvoiceDetail.loadInvoiceDetailGrid(responseJobInvoiceID);
+                                jobInvoiceDetail.loadData(responseJobInvoiceID,$("#hasJobID").val());
+                                
+
+                                showSuccessMessage(message);
+                            }
+                            else {
+                                message = "Job invoice detail has not been saved."
+                                showErrorMessage(message);
+                            }
+                        }
+                        else {
+                            message = response.split('#')[1];
+                            showErrorMessage(message);
+                        }
+                    }
+                },
+                error: function () {
+                    message = "Job invoice detail has not been saved."
+                    showErrorMessage(message);
+                }
+            });
+            $("#hasJobID").val(obj.JobId);
+        }
+    }
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForInvoice").html(closeButton + message);
+        $("#errorMsgRegionForInvoice").show();
+        $("#errorMsgRegionForInvoice").fadeOut(6000);
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+        $("#successMsgRegion").fadeOut(6000);
+    }
+
+    function CalculateMargin() {
+        var margin = 0;
+        var sale = $("#Sale").val();
+        var purchase = $("#Purchase").val();
+
+        if (sale == null || sale == undefined || sale == '' || sale == 0) {
+            sale = 0;
+        }
+
+        if (purchase == null || purchase == undefined || purchase == '' || purchase == 0) {
+            purchase = 0;
+        }
+
+        if (sale > 0) {
+            var margin = ((parseFloat(sale) - parseFloat(purchase)) / parseFloat(sale)) * 100;
+            margin = margin.toFixed(2);
+            $("#Margin").val(margin);
+        }
+
+        if (sale == 0 && purchase == 0)
+            $("#Margin").val(0);
+    }
+
+    function PurchaseBlur() {
+        CalculateMargin();
+    }
+    function SaleBlur() {
+        CalculateMargin();
+    }
+
+</script>

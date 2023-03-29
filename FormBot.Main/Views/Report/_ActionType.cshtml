@@ -1,0 +1,99 @@
+﻿@model FormBot.Entity.Report
+@{
+    Layout = null;
+}
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstActionTypeUser, new MultiSelectList(Model.LstActionTypeUser, "Value", "Text"), new { id = "LstActionTypeUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoRAction" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoLAction" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.RECActionTypeAssignedUser, new MultiSelectList(Model.LstActionTypeAssignedUser, "Value", "Text"), new { id = "LstActionTypeAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnRECActionTypeAssignedUser, new { id = "hdnActionType" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnActionType" tabindex="6">
+    <input type="button" value="Clear" id="btnClear" class="default reset_ic" tabindex="7">
+</div>
+
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+<script src="~/Scripts/jquery-1.11.0.min.js"></script>
+<link href="~/Content/jquery-ui.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+<script type="text/javascript">
+    $(document).on("click", "#btnLtoRAction", function () {
+        $('#LstActionTypeUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstActionTypeAssignedUser");
+        });
+        $('#AvailableAction').html($('#LstActionTypeAssignedUser option').length);
+    });
+
+
+    $(document).on("click", "#btnRtoLAction", function () {
+        $('#LstActionTypeAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstActionTypeUser");
+        });
+        $('#AvailableAction').html($('#LstActionTypeAssignedUser option').length);
+    });
+
+    //$(document).on("click", "#closeActionType", function () {
+    //    $('#popupActionProof').modal('hide');
+    //});
+
+    $(document).on("click", "#btnActionType", function () {
+        var strAssignedActionTypeList = [];
+        $('#LstActionTypeAssignedUser option').each(function (i) {
+            strAssignedActionTypeList.push($(this).val().trim());
+        });
+
+        $("#hdnActionType").val(strAssignedActionTypeList);
+        $('#cntAction').html($('#LstActionTypeAssignedUser option').length);
+        $('#popupActionProof').modal('hide');
+    });
+
+    $(document).on("click", "#btnClear", function () {
+        $('#LstActionTypeAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstActionTypeUser");
+        });
+        $("#hdnActionType").val('');
+        $('#AvailableAction').html($('#LstActionTypeAssignedUser option').length);
+    }); 
+
+
+    $(document).on("click", "#closeActionType", function () {
+        var strAssignedActionTypeList = [];
+        $('#LstActionTypeAssignedUser option').each(function (i) {
+            strAssignedActionTypeList.push($(this).val().trim());
+        });
+
+        $("#hdnActionType").val(strAssignedActionTypeList);
+        $('#cntAction').html($('#LstActionTypeAssignedUser option').length);
+        $('#popupActionProof').modal('hide');
+    });
+    
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

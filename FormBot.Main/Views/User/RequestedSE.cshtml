@@ -1,0 +1,742 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "RequestedSE";
+}
+
+@{
+    bool isDelete = false, isSendRequest = false; bool isAllScaJobView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.RequestedSEDelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SendRequestToElectrician.GetHashCode()) { isSendRequest = true; }
+        });
+    }
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+    //if (TempData.ContainsKey(SystemEnums.TempDataKey.IsSendRequest.ToString()))
+    //{
+    //    ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.IsSendRequest.ToString()]).ForEach(d =>
+    //    {
+    //        if (d.MenuId == (int)SystemEnums.MenuId.SendRequestToElectrician.GetHashCode()) { isSendRequest = true; }
+
+    //    });
+    //}
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <h1>Requested Solar Electricians/SWH Users</h1>
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 4 || Model.UserTypeID == 5 || Model.UserTypeID == 6 || Model.UserTypeID == 8)
+        {
+            if (isSendRequest)
+            {
+                <input type="button" id="btnSendRequest" value="Send Request" class="primary pull-right sendRequest_ic" style="" onclick="javascript:SendRequestToElectrician()" />//location.href='@Url.Action("SendRequest", "User")'" />
+            }
+        }
+    </div>
+    <div class="alert alert-info">
+        Use the "send request" button on the right to add an installer to your scheduling team. Only electricians who are registered and approved Greenbot users will be able to be added. Once a request has been sent, electricians must accept the request via the Greenbot Installers APP to complete the connection.<br />
+        Electricians who are displayed as "Request Accepted" Status will be able to be selected from the staff dropdown in "Add Visit" single job view.
+        <br />To sign-up an electrician use this link:
+        <a target="_blank" href="https://login.greenbot.com.au/Account/GreenbotSignUp">https://login.greenbot.com.au/Account/GreenbotSignUp</a>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <form class="form-block" style="margin-top:10px;">
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Reseller:</label>
+                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+            </div>
+        </div>
+        }
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+        {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Solar Company:</label>
+                @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })*@
+                <input type="hidden" id="hdnsolarCompanyid" />
+                <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+            </div>
+        </div>
+        }
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Solar SubContractor:</label>
+                @Html.DropDownListFor(model => model.SolarSubContractorID, new List<SelectListItem>(), new { id = "SolarSubContractorID", @class = "form-control" })
+            </div>
+        </div>
+        }
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <div class="form-group">
+                    <label class="control-label">User Job Type:</label>
+                    @Html.DropDownList("UserType", null, null, new { id = "UserTypeID", @class = "form-control" })
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Name:</label>
+                <input type="text" id="txtName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3 SE">
+            <div class="form-group">
+                <label class="control-label">CEC Accreditation Number:</label>
+                <input type="text" id="txtCECAccreditationNumber" class="form-control" maxlength="20" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3 SWH">
+            <div class="form-group">
+                <label class="control-label">License Number:</label>
+                <input type="text" id="txtLicenseNumber" class="form-control" maxlength="20" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 4 || Model.UserTypeID == 5 || Model.UserTypeID == 6 || Model.UserTypeID == 8)
+        {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Status:</label>
+                @Html.DropDownList("ElectricianStatus", null, "Select", new { id = "ElectricianStatusId", @class = "form-control" })
+            </div>
+        </div>
+        }
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Send By:</label>
+                <br />
+                <label class="radio-inline">
+                    <input type="radio" name="optionsRadios" id="rbSolarCompany" value="1" checked />
+                    Solar Company
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="optionsRadios" id="rbSolarSubContractor" value="2" />
+                    Solar Sub Contractor
+                </label>
+            </div>
+        </div>
+        }
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchUsers();">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    </form>
+
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="3%" style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                            <th><span>@Html.DisplayName("Name")</span></th>
+                            <th><span>@Html.DisplayName("CEC Accreditation Number")</span></th>
+                            <th><span>@Html.DisplayName("License Number")</span></th>
+                            <th><span>@Html.DisplayName("Status ")</span></th>
+                            <th class="action">@Html.DisplayName("Action")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+        var chkCount = 0;
+        var SendBy = 1;
+        var solarCompanyList = [];
+        var valueSE = $("#UserTypeID").val();
+        $('.SE').show();
+        $('.SWH').hide();
+
+        if($('#UserTypeID').val() == 'pvd')
+        {
+            $('.SE').show();
+            $('.SWH').hide();
+        }
+        else if($('#UserTypeID').val() == 'swh')
+        {
+            $('.SE').hide();
+            $('.SWH').show();
+        }
+
+        $(document).ready(function () {
+
+            $('#searchSolarCompany').autocomplete({
+                minLength: 0,
+                source: function (request, response) {
+                    var data=[];
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.text.toLowerCase().indexOf($("#searchSolarCompany").val().toLowerCase()) > -1 ) {
+                            data.push({Title : value.text,id:value.value});
+                        }
+                    });
+
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title,id:item.id };
+                    }))
+                },
+                select: function (event, ui) {
+                    $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+                }
+            }).on('focus', function() { $(this).keydown(); });
+
+            $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+                var re = new RegExp($.trim(this.term.toLowerCase()));
+                var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                    "</span>");
+                return $("<li style='font-size:14px;'></li>")
+                    .data("item.autocomplete", item)
+                    .append("<a>" + t + "</a>")
+                    .appendTo(ul);
+            };
+
+            $("[name=optionsRadios]").click(function () {
+                var $this = $(this);
+                if (!$this.hasClass("checked")) {
+                    $("[name=optionsRadios]").removeClass("checked");
+                    $this.addClass("checked");
+                    SendBy = $(this).val();
+                }
+            });
+
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3) {
+                $("#ResellerId").focus();
+            }
+            else if ('@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 5) {
+                $("#searchSolarcompany").focus();
+            }
+            else {
+                $("#txtName").focus();
+            }
+
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3) {
+                var IsResellerExist = false;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetReseller", "Reseller")',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (reseller) {
+                        $.each(reseller, function (i, res) {
+                            $("#ResellerId").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                            if(IsResellerExist==false && res.Value==localStorage.getItem('RequestedSE_ResellerId')){
+                                IsResellerExist=true;
+                            }
+                        });
+
+                        if(IsResellerExist){
+                            document.getElementById("ResellerId").value = localStorage.getItem('RequestedSE_ResellerId')
+                        }
+                        else{
+                            $("#ResellerId").val($("#ResellerId option:first").val());
+                            localStorage.setItem('RequestedSE_ResellerId',$("#ResellerId option:first").val());
+                        }
+
+                        if ($("#ResellerId").val() > 0 && ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3)) {
+                            BindSolarCompany(document.getElementById("ResellerId").value);
+                        }
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Resellers.' + ex);
+                    }
+                });
+            }
+
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3) {
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetSolarSubContractor", "User")',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (subcontractors) {
+                        $("#SolarSubContractorID").append('<option value="0">Select</option>');
+                        $.each(subcontractors, function (i, ssc) {
+                            $("#SolarSubContractorID").append('<option value="' + ssc.Value + '">' +
+                                 ssc.Text + '</option>');
+                        });
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Solar Sub Contractors.' + ex);
+                    }
+                });
+            }
+
+            if ('@Model.UserTypeID' == 2) {
+                BindSolarCompany(@ProjectSession.ResellerId);
+            }
+
+            if ('@Model.UserTypeID' == 5) {
+                if(isAllScaJobView == "true"){
+                    BindSolarCompany(@ProjectSession.ResellerId);
+                }
+                else{
+                    var IsCompanyExist=false;
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("GetAssignedSolarCompanyToRAM","RAMSolarCompany")',
+                        dataType: 'json',
+                        data: '',
+                        async: false,
+                        success: function (solarcompany) {
+                            solarCompanyList=[];
+                            $.each(solarcompany, function (i, company) {
+                                solarCompanyList.push({ value:company.Value,text:company.Text });
+                                if(IsCompanyExist==false && company.Value==localStorage.getItem('RequestedSE_SolarCompanyId')){
+                                    IsCompanyExist=true;
+                                }
+                            });
+
+                            if(IsCompanyExist){
+                                $('#hdnsolarCompanyid').val(localStorage.getItem('RequestedSE_SolarCompanyId'));
+                            }
+                            else{
+
+                                localStorage.setItem('RequestedSE_SolarCompanyId',solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                            }
+                        },
+                        error: function (ex) {
+                            alert('Failed to retrieve Solar Companies.' + ex);
+                        }
+                    });
+                }
+            }
+
+            $("#ResellerId").change(function () {
+                if ($("#ResellerId").val() > 0 && ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3)) {
+                    BindSolarCompany(document.getElementById("ResellerId").value);
+                    $('#searchSolarCompany').focus();
+                    //$('#searchSolarCompany').val('');
+                }
+            });
+
+            SetParamsFromLocalStorage();
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'Id',
+                            "orderable": false,
+                            "render": function (data, type, full, meta) {
+                                if($('#chkAll').prop('checked')==true){
+                                    return '<input type="checkbox" id="chk_'+full.Id+'" checked>';
+                                }
+                                else{
+                                    return '<input type="checkbox" id="chk_'+full.Id+'">';
+                                }
+                            }
+                        },
+
+                        { 'data': 'Name' },
+
+                        { 'data': 'CECAccreditationNumber',
+                            visible: valueSE=='swh'?false:true,
+                            name: "CECAccreditationNumberColumn"
+                        },
+
+                        { 'data': 'ElectricalContractorsLicenseNumber',
+                            visible: valueSE=='swh'?true:false,
+                            name: "ElectricalContractorsLicenseNumberColumn"
+                        },
+
+                        { 'data': 'Status',
+                            "render": function (data, type, full, meta) {
+                                if(full.Status==1){
+                                    return '<p>Request Send</p>'
+                                }
+                                else if(full.Status==2){
+                                    return '<p>Request Accepted</p>'
+                                }
+                                else if(full.Status==3){
+                                    return '<p>Request Rejected</p>'
+                                }
+                                else{
+                                    return '';
+                                }
+                            },
+                        },
+                        {
+                            'data': 'Id',
+                            "render": function (data, type, full, meta) {
+                                var viewHref ="";
+                                var deleteHref="";
+                                var returnHTML = '';
+                                imgview = 'background:url(../Images/view-icon.png) no-repeat center; text-decoration:none;';
+                                imgdelete = 'background:url(../Images/delete-icon.png) no-repeat center; text-decoration:none;';
+                                viewHref = ("@Url.Action("RequestedSE", "User")" + "/" + full.Id);
+
+                                returnHTML +='<a href="' + viewHref + '" class="action view" style="' + imgview + '" title="View">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+
+                                if('@ProjectSession.UserTypeId'==1 || '@ProjectSession.UserTypeId'==3 ||'@ProjectSession.UserTypeId'==4 || '@ProjectSession.UserTypeId'==6 || '@ProjectSession.UserTypeId'==8){
+                                    @if (isDelete) {
+                                        <text>
+                                    deleteHref = "javascript:DeleteRequestToSE('" + full.Id + "','"+full.SolarCompanyId+"')";
+                                    deleteButton = '&nbsp;&nbsp;'+ '<a href="' + deleteHref + '" class="action delete" style="' + imgdelete + '" title="Delete">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                    returnHTML += deleteButton;
+                                    </text>
+                                    }
+                                }
+                                return returnHTML;
+                            },
+                            "orderable": false
+                        },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function( settings, json ) {
+                    $('.grid-bottom span:first').attr('id','spanMain');
+                    $("#spanMain span").html("");
+                },
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetRequestedSolarElectricianList", "User")',
+
+                "fnDrawCallback": function () {
+                    if($('#chkAll').prop('checked')==true){
+                        chkCount=$('#datatable >tbody >tr').length;
+                    }
+                    else{
+                        chkCount=0;
+                    }
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length >= 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> Solar Electrician(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> Solar Electrician(s) found';
+                    }
+
+                    if(valueSE == 'swh')
+                    {
+                        table.columns("CECAccreditationNumberColumn:name").visible( false );//table.column( 4 ).visible( false );
+                        table.columns("ElectricalContractorsLicenseNumberColumn:name").visible( true );//table.column( 5 ).visible( false );
+                    }
+                    else if( valueSE == 'pvd')
+                    {
+                        table.columns("CECAccreditationNumberColumn:name").visible( true );
+                        table.columns("ElectricalContractorsLicenseNumberColumn:name").visible( false );
+                    }
+
+                    //------------------------------------------------------------------------------------------------------------------------------
+
+                },
+
+                "fnServerParams": function (aoData) {  //These are the extra parameters from our custom filters
+                    if(SendBy==1){
+                        if('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 5){
+                            aoData.push({ "name": "solarcompanyid", "value": localStorage.getItem('RequestedSE_SolarCompanyId') });
+                        }
+                    }
+                    else{
+                        if('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3){
+                            aoData.push({ "name": "solarcompanyid", "value": localStorage.getItem('RequestedSE_SolarSubContractorId') });
+                        }
+                    }
+
+                    aoData.push({ "name": "name", "value": $("#txtName").val() });
+                    if ($("#UserTypeID").val() == 'pvd') {
+                        aoData.push({ "name": "accreditationnumber", "value": $("#txtCECAccreditationNumber").val() });
+                        aoData.push({ "name": "licensenumber", "value": "" });
+                    }
+                    else if ($("#UserTypeID").val() == 'swh')
+                    {
+                        aoData.push({ "name": "licensenumber", "value": $("#txtLicenseNumber").val() });
+                        aoData.push({ "name": "accreditationnumber", "value": "" });
+                    }
+                    aoData.push({ "name": "electricianstatus", "value": document.getElementById("ElectricianStatusId").value });
+                    aoData.push({ "name": "requestedusertype", "value": $("#UserTypeID").val() });
+                    //aoData.push({ "name": "licensenumber", "value": $("#txtLicenseNumber").val() });
+                }
+            });
+
+            var table = $('#datatable').DataTable();
+
+            $('#chkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                chkCount = this.checked ? $('#datatable >tbody >tr').length : 0;
+            });
+
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (this.checked) {
+                    chkCount++;
+                    if (chkCount == $('#datatable >tbody >tr').length) {
+                        $('#chkAll').prop('checked', this.checked)
+                    }
+                }
+                else {
+                    chkCount--;
+                    $('#chkAll').prop('checked', this.checked)
+                }
+            });
+
+            $('#UserTypeID').change(function () {
+                valueSE = $('#UserTypeID').val();
+                //$("#txtCECAccreditationNumber").val('');
+
+                if($('#UserTypeID').val() == 'pvd')
+                {
+                    $('.SE').show();
+                    $('.SWH').hide();
+                }
+                else if($('#UserTypeID').val() == 'swh')
+                {
+                    $('.SE').hide();
+                    $('.SWH').show();
+                }
+            });
+
+        });
+
+        function ResetSearchFilters() {
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3) {
+                $("#ResellerId").val($("#ResellerId option:first").val());
+                localStorage.setItem('RequestedSE_ResellerId',document.getElementById("ResellerId").value);
+                BindSolarCompany(document.getElementById("ResellerId").value);
+                localStorage.setItem('RequestedSE_SolarSubContractorId',0);
+                $("#SolarSubContractorID").val(0);
+                //localStorage.setItem('RequestedSE_SendBy',1)
+            }
+            if ('@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 5) {
+                //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                $('#hdnsolarCompanyid').val(solarCompanyList.length>0?solarCompanyList[0].value:0);
+                localStorage.setItem('RequestedSE_SolarCompanyId',$('#hdnsolarCompanyid').val());
+            }
+
+            $('#hdnsolarCompanyid').val(solarCompanyList.length>0?solarCompanyList[0].value:0);
+            localStorage.setItem('RequestedSE_SolarCompanyId',$('#hdnsolarCompanyid').val());
+
+            localStorage.setItem('RequestedSE_ElectricianStatusId',0)
+            document.getElementById("ElectricianStatusId").selectedIndex = 0;
+
+            localStorage.setItem('RequestedSE_Name','');
+            localStorage.setItem('RequestedSE_CECAccreditationNumber','');
+            SetParamsFromLocalStorage();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function SearchUsers() {
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3) {
+                localStorage.setItem('RequestedSE_ResellerId',document.getElementById("ResellerId").value);
+                localStorage.setItem('RequestedSE_SolarSubContractorId',document.getElementById("SolarSubContractorID").value);
+                //localStorage.setItem('RequestedSE_SendBy',SendBy);
+            }
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 5) {
+                localStorage.setItem('RequestedSE_SolarCompanyId',$('#hdnsolarCompanyid').val());
+            }
+            if('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 4 || '@Model.UserTypeID' == 5 || '@Model.UserTypeID' == 6 || '@Model.UserTypeID' == 8){
+                localStorage.setItem('RequestedSE_ElectricianStatusId',document.getElementById("ElectricianStatusId").value);
+            }
+            localStorage.setItem('RequestedSE_Name',$("#txtName").val());
+            localStorage.setItem('RequestedSE_CECAccreditationNumber',$("#txtCECAccreditationNumber").val());
+            //localStorage.setItem('RequestedSE_LicenseNumber',$("#txtLicenseNumber").val());
+
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function BindSolarCompany(resellerID) {
+            $("#searchSolarCompany").val('');
+            var IsCompanyExist=false;
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")',
+                dataType: 'json',
+                async: false,
+                data: { id: resellerID },
+                success: function (solarcompany) {
+
+                    solarCompanyList=[];
+
+                    $.each(solarcompany, function (i, company) {
+
+                        solarCompanyList.push({ value:company.Value,text:company.Text });
+                        if(IsCompanyExist==false && company.Value==localStorage.getItem('RequestedSE_SolarCompanyId')){
+                            IsCompanyExist=true;
+                        }
+                    });
+                    if(IsCompanyExist){
+                        //document.getElementById("SolarCompanyId").value = localStorage.getItem('RequestedSE_SolarCompanyId')
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('RequestedSE_SolarCompanyId'));
+                    }
+                    else{
+                        //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('RequestedSE_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    if (localStorage.getItem('RequestedSE_SolarCompanyId') == '') {
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('RequestedSE_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.value ==  localStorage.getItem('RequestedSE_SolarCompanyId')) {
+                            $("#searchSolarCompany").val(value.text);
+                            $('#hdnsolarCompanyid').val(localStorage.getItem('RequestedSE_SolarCompanyId'));
+                        }
+                    });
+
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function SendRequestToElectrician(){
+            if(SendBy==1){
+                var sID=0;
+                if('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 5){
+
+                    sID = $('#hdnsolarCompanyid').val();
+                }
+                else{
+                    sID = @ProjectSession.SolarCompanyId;
+                }
+                if(sID!=0){
+                    location.href='@Url.Action("SendRequest", "User")' + '?SolarCompanyId=' + sID + '&SendBy=' + SendBy
+                }
+                else{
+                    alert("Please select Solar company first.");
+                }
+            }
+            else{
+
+                if(document.getElementById("SolarSubContractorID").value!=0){
+                    var sscID = document.getElementById("SolarSubContractorID").value;
+                    location.href='@Url.Action("SendRequest", "User")' + '?SolarCompanyId=' + sscID + '&SendBy=' + SendBy
+                }
+                else{
+                    alert("Please select Solar Sub Contractor.");
+                }
+            }
+        }
+
+        function DeleteRequestToSE(electricianid, sID){
+            @*var sID=0;
+            if('@ProjectSession.UserTypeId'==1 ||'@ProjectSession.UserTypeId'==3){
+
+                sID = $('#hdnsolarCompanyid').val();
+            }
+            else{
+                sID = '@ProjectSession.SolarCompanyId';
+            }*@
+            var result = confirm("Are you sure you want to delete this record ?");
+            if(result)
+            {
+                $.ajax({
+                    url: '@Url.Action("DeleteRequestToSE", "User")',
+                    type: "POST",
+                    async: false,
+                    data: JSON.stringify({ solarcompanyid: sID, electricianid: electricianid }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data.success) {
+                            @*//Email configuration not required
+                        var strEmailConfigureMsg='';
+                        if('@ProjectSession.IsUserEmailAccountConfigured'=='False'){
+                            strEmailConfigureMsg='(Can not send mail to solar company because email account is not configured)';
+                        }*@
+                            $(".alert").hide();
+                            $("#errorMsgRegion").html(closeButton + "Request deleted successfully.");
+                            $("#errorMsgRegion").show();
+                            $("#datatable").dataTable().fnDraw();
+                        }
+                    },
+                });
+            }
+        }
+
+        function SetParamsFromLocalStorage(){
+            if('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 3){
+                document.getElementById("SolarSubContractorID").value=localStorage.getItem('RequestedSE_SolarSubContractorId');
+            }
+            if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 4 || '@Model.UserTypeID' == 5 || '@Model.UserTypeID' == 6 || '@Model.UserTypeID' == 8){
+
+                document.getElementById("ElectricianStatusId").value=localStorage.getItem('RequestedSE_ElectricianStatusId');
+            }
+
+            $("#txtName").val(localStorage.getItem('RequestedSE_Name'));
+            $("#txtCECAccreditationNumber").val(localStorage.getItem('RequestedSE_CECAccreditationNumber'));
+            //$("#txtLicenseNumber").val(localStorage.getItem('RequestedSE_LicenseNumber'));
+        }
+
+    </script>
+}
+<style type="text/css">
+    .sendRequest_ic {
+        background-image: url(../images/send-request-wh.png) !important;
+        background-repeat: no-repeat;
+        background-position: 6px 9px;
+        padding: 0px 10px 0px 28px !important;
+    }
+</style>

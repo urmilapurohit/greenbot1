@@ -1,0 +1,1885 @@
+﻿@model IEnumerable<EmailFolder>
+@using FormBot.Entity.Email
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Scripts {
+    @*<script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+    <script type="text/javascript" src="~/Scripts/respond.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/fastclick.min.js"></script>*@
+    @*<script src="~/Scripts/jquery-1.10.2.js"></script>*@
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+    @*@Scripts.Render("~/datatableJs")
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="~/Scripts/general.js"></script>*@
+    }
+
+<style>
+    #FolderStructure, #divMailList, #mailBoxAttachment {
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        border: 1px solid #d5d5d5;
+    }
+
+    #mailText {
+        overflow-x: auto !important;
+        overflow-y: hidden;
+    }
+
+    .mail-top-hed {
+        overflow-x: hidden !important;
+    }
+
+    #SendermailText {
+        padding-bottom: 20px;
+    }
+
+    #emailDisplay {
+        display: none;
+    }
+
+    .selectedMessage {
+        background: #dddddd !important;
+    }
+
+    .unread > .message-body > .subject {
+        font-weight: bold !important;
+        color: #333 !important;
+    }
+
+    .mail-list li.unread .message-body .sender span {
+        font-weight: bold !important;
+        color: #333 !important;
+        font-size: 12px;
+    }
+
+    .unread > .em-fright.date {
+        font-weight: bold !important;
+        color: #333 !important;
+    }
+
+    .opened > .message-body > .subject {
+        font-weight: normal !important;
+        color: #666 !important;
+    }
+
+    .opened > .em-fright.date {
+        font-weight: normal !important;
+        color: #666 !important;
+    }
+
+    .error {
+        color: #b94a48;
+        font-weight: 100;
+    }
+
+    #mailText > table, caption, tbody, tfoot, thead, tr, th, td {
+        border: 1px solid #d5d5d5;
+    }
+
+    .loading-image {
+        margin-left: 0px;
+    }
+
+    .mCSB_inside > .mCSB_container {
+        margin-right: 5px !important;
+    }
+
+    #mailText > pre {
+        background-color: white;
+        border: 0px;
+        padding: 0px;
+    }
+
+    #SendermailText > pre {
+        background-color: white;
+        border: 0px;
+        padding: 0px;
+    }
+
+    #mailList .subject {
+        max-width: 250px;
+    }
+
+    ul.navbar-nav > li.open > a {
+        background-color: #f0f0f0 !important;
+    }
+
+    .right-hd{ float:right;}
+    .assign-select{float:left; margin:5px 10px 0px 0px;}
+    .assign-select .control-label{ float:left; margin:5px 5px 0px 0px; font-size:13px; }
+    .assign-select .form-control{ float:left; width:350px; height:28px; line-height:28px; padding:2px !important;}
+
+    @@media screen and (max-width:992px) {
+    .email-hed{ height:auto; overflow:hidden; margin-bottom:10px;}
+    .right-hd{ float:none; padding-left:10px;}
+    }
+
+
+</style>
+<section class="email_mngt">
+    <div class="container-fluid">
+
+        <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        
+        <h1 class="title">Email</h1>
+        <div class="email-hed">
+            <a class="admin-id" href="javascript:void(0)"> <img class="mail-icon" src="@Url.Content("~/images/admin-id-icon.png")" alt="" /><span id="emailId"></span> </a>            
+
+            <div class="right-hd">
+                <div class="assign-select">
+                    <label class="control-label">Assign To:</label>
+                    <input type="hidden" id="hdnjobidToAssign" />
+                    @*<input type="text" id="AssignToJob" name="AssignToJob" value=" " class="form-control" maxlength="50" tabindex="3" placeholder="RefNumber, NMI, Title, OwnerName" />*@
+                    <input type="text" id="AssignToJob" name="AssignToJob" value=" " class="form-control" maxlength="50" tabindex="3"/>&nbsp;
+                    <input type="button" id="btnAssign" class="primary assign_ic" value="Assign" tabindex="4" onclick="AssignSelectedMessagesToJob();" />
+                    <a class="settngs" title="Settings" href="@Url.Action("EmailSettings", "Email", new { area = "Email" })"> <img class="settngs-icon" src="@Url.Content("~/images/settngs-icon.png" )" title="Settings" alt="" />Settings </a>
+                </div>
+
+           
+        </div>
+        <div class="emailbox clearfix">
+            <!-- left-menu -->
+            <div class="foldernavs col-md-2">
+                <h4 id="newmaillink" class="newmail-link" data-toggle="modal" data-target="#emailbox" data-backdrop="static" data-keyboard="false">New Mail<a href="javascript:void(0)" class="newmail" title="New Mail"></a></h4>
+                <div id="FolderStructure" class="mCustomScrollbar">
+                    <ul class="foldersList">
+                        @foreach (var item in Model)
+                        {
+                            bool isActive = false;
+                            string image = "~/images/";
+                            switch (item.type)
+                            {
+                                case 1:
+                                    image += "ic-inbox.png";
+                                    isActive = true;
+                                    break;
+                                case 2:
+                                    image += "ic-sent.png";
+                                    break;
+                                case 3:
+                                    image += "ic-draft.png";
+                                    break;
+                                case 4:
+                                    image += "ic-trash.png";
+                                    break;
+                                case 5:
+                                    image += "spam-icon.png";
+                                    break;
+                                default:
+                                    image += "test-icon.png";
+                                    break;
+                            }
+                            <li data-id="@item.id_folder" data-type="@item.type" data-text="@item.name" class="@(isActive == true ? "active" : "" )"><a href="javascript:void(0)" title="@item.name"><img src="@Url.Content(@image)" alt="" />@item.name</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- left-menu -->
+            <div id="EmailMessageSection" class="emailbody col-md-offset-2 col-sm-6 col-md-5">
+                <div id="emailBodyList">
+                    <ul class="mail-nav">
+                        <li id="CheckEmail"> <a href="javascript:void(0)" title="Check Mail"> <img class="icon" src="@Url.Content("~/images/refresh.png")" alt="Check Mail">Check Mail</a> </li>
+                        <li class="dropdown">
+                            <a aria-expanded="false" aria-haspopup="true" role="button" data-toggle="dropdown" class="dropdown-toggle" href="javascript:void(0)" title="Move To Folder"><img class="icon" src="@Url.Content("~/images/move-to-folder.png")" alt="Move To Folder">Move To Folder<span class="caret"></span></a>
+                            <ul class="dropdown-menu moveFolderList" style="max-height:400px;overflow-y:auto;">
+                                @foreach (var item in Model)
+                                {
+                                    <li data-id="@item.id_folder" data-type="@item.type" data-text="@item.name"><a href="javascript:void(0)" title="@item.name">@item.name</a></li>
+                                }
+                            </ul>
+                        </li>
+                        @{
+                            var Trashfolderid = Model.Where(w => w.type == 4).FirstOrDefault().id_folder;
+                            var Spamfolderid = Model.Where(w => w.type == 5).FirstOrDefault().id_folder;
+                        }
+                        <li id="delete" data-text="Trash" data-id="@Trashfolderid" data-type="4"><a href="javascript:void(0)" title="Delete"><img class="icon" src="@Url.Content("~/images/delete-mail.png")" alt="Delete">Delete</a></li>
+                        <li id="spam" data-id="@Spamfolderid" data-text="Spam" data-type="5"><a href="javascript:void(0)" title="Spam"><img class="icon" src="@Url.Content("~/images/spam-mail-icon.png")" alt="Spam">Spam</a></li>
+                        <li><a id="addFolder" href="javascript:void(0)" class="newfolder" data-toggle="modal" data-target="#myModal" data-backdrop="static" data-keyboard="false" title="Create Folder"><img class="icon" src="@Url.Content("~/images/ic-addfolder.png")" alt="Folder">Folders</a></li>
+                    </ul>
+                    <div class="clear"></div>
+                    <div class="mailheader">
+                        <!--mailheader-->
+                        <div class="em-fleft">
+                            <span>
+                                <input name="" id="checkAll" type="checkbox" class="chkmark">
+                            </span>
+                        </div>
+                        <div class="em-fleft">
+                            <span>Arranged By :</span>
+                            <div class="dropdown mydrop">
+                                <a href="javascript:void(0)" class="action-dropdown" id="dropdownMenu1" data-toggle="dropdown"><span id="SortByText" data-value="0">Date, Descending</span> <b class="caret"></b></a>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                    <li><a id="sortbyAscending" data-value="1" href="javascript:void(0)">Date, Ascending</a></li>
+                                    <li><a id="sortbyDesscending" data-value="0" href="javascript:void(0)">Date, Descending</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="search-mail">
+                            <!--<a class="ic-mail-filter"></a>-->
+                            <div class="search-mail-box">
+                                <a class="ic-mail-search" id="SearchMail"></a>
+                                <input class="search-input" type="text" placeholder="Search" id="SearchInput">
+                            </div>
+                            <div class="mail-filterbox">
+                                <form>
+                                    <div class="form-group col-sm-4">
+                                        <label class="control-label required">Keyword</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                    <div class="form-group col-sm-4">
+                                        <label class="control-label">From</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                    <div class="form-group col-sm-4">
+                                        <label class="control-label">To</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                    <div class="form-group col-sm-12">
+                                        <div class="checkbox">
+                                            <label class="clbl">
+                                                <input type="checkbox">
+                                                Only messages with attachments
+                                            </label>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+                    <!--mailheader-->
+
+
+                    <div>
+                        <div id="divMailList">
+                            <ul id="mailList" class="mail-list"></ul>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- ==emailblock=========================== -->
+                <input type="hidden" id="signature" />
+
+            </div>
+            <!-- ==emailblock=========================== -->
+            <div class="emailblock col-sm-6 col-md-5" id="emailDisplay">
+                <ul class="mail-nav">
+                    @*<h4 id="newmaillink" class="newmail-link" data-toggle="modal" data-target="#emailbox" data-backdrop="static" data-keyboard="false">New Mail<a href="javascript:void(0)" class="newmail" title="New Mail"></a></h4>
+    <a title="Reply" href="javascript:void(0)" id="Reply" data-toggle="modal" data-target="#emailbox" data-backdrop="static" data-keyboard="false">*@
+                    <li class="btn-group hideReplyForward">
+                        <a title="Reply" href="javascript:void(0)" id="Reply" data-toggle="modal" data-target="#emailbox">
+                            <img alt="Reply" src="@Url.Content("~/images/ic-reply.png")" class="icon">Reply
+                        </a>
+                        <button aria-expanded="false" aria-haspopup="true" data-toggle="dropdown" class="btn dropdown-toggle" type="button">
+                            <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a title="Reply to All" href="javascript:void(0)" id="ReplyAll" data-toggle="modal" data-target="#emailbox">Reply to All</a></li>
+                        </ul>
+                    </li>
+                    <li id="Forward" data-toggle="modal" data-target="#emailbox" class="hideReplyForward"><a href="javascript:void(0)" title="Forward"><img class="icon" src="@Url.Content("~/images/ic-forward.png")" alt="Forward">Forward</a></li>
+                    <li id="Edit" class="showEdit" style="display:none"><a href="javascript:void(0)" title="Edit" data-toggle="modal" data-target="#emailbox" data-backdrop="static" data-keyboard="false"><img class="icon" src="@Url.Content("~/images/edit-icon.png")" alt="Forward">Edit</a></li>
+                </ul>
+                <div class="clear"></div>
+                <div id="mailBoxAttachment" class="mail-box attachment mCustomScrollbar" style="word-wrap: break-word;">
+                    <div class="modal-header">
+                        <div class="em-fleft sender"><span id="ReplySubject"></span></div>
+                        <div class="em-fleft subject"><a href="javascript:void(0)" title="Email Id" id="ReplyEmailId"></a></div>
+                    </div>
+                    <div class="content-box">
+                        @*<div id="mailTextContent" class="mail-text mCustomScrollbar">*@
+                        <div id="mailTextContent" class="mail-text">
+                            <div class="mail-top-hed">
+                                <ul class="id-block">
+                                    <li><strong>From : </strong> <a href="javascript:void(0)" title="" id="FromView"></a></li>
+                                    <li><strong>Sent : </strong><span id="SendView"></span></li>
+                                    <li><strong>To: </strong><a href="javascript:void(0)" id="ToView"></a></li>
+                                    <li id="LiccView"><strong>Cc: </strong><a href="javascript:void(0)" id="CcView"></a></li>
+                                    <li id="LiBccView"><strong>Bcc: </strong><a href="javascript:void(0)" id="BccView"></a></li>
+                                    <li><strong>Subject :</strong><span id="SubjectView"></span></li>
+                                </ul>
+                                <ul class="attachment-ber" id="attachment"></ul>
+                            </div>
+                            <div id="mailText">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade newemail-modal" id="emailbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button title="Close" id="emailClose" class="close" type="button" data-target="#emailbox" data-toggle="modal" data-backdrop="static" data-keyboard="false">
+                    <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                </button>
+                <div class="email-hed"> <a href=" #" class="admin-id"> <img alt="" src="@Url.Content("~/images/admin-id-icon.png")" class="mail-icon"><span id="emailBoxEmailId">Admin@tatvasoft.com</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <!--<li class="active"><a href="#" title="Back to List" data-dismiss="modal" aria-label="Close"> <img class="icon" src="images/back-list.png" alt="Back to List">Back to List</a></li>-->
+                    <li class="active" id="SendMail"><a href="javascript:void(0)" title="Send"> <img class="icon" src="@Url.Content("~/images/send-icon.png")" alt="Send">Send</a></li>
+                    <li class="active"> <a href="javascript:void(0)" title="Save" id="SaveMail"><img class="icon" src="@Url.Content("~/images/save-icon.png")" alt="Save">Save</a> </li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <!-- menu End -->
+                <div class="mail-box-input">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">To</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="ToMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Cc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="CcMail">
+                                <!--<div class="text-right"><a class="show-bcc" href="#" title="">Show BCc</a></div>-->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Bcc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="BccMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Subject</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="SubjectMail" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Body</label>
+                            <div class="col-sm-11">
+                                <div id="editor">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Selected Files :</label>
+                            <div class="col-sm-11">
+                                <table class="table table-bordered" id="tblSelectedFile">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Attach File :</label>
+                            <div class="col-sm-11">
+                                <table class="uf">
+                                    <tr>
+                                        <td><input id="uploadFile" placeholder="Choose File" class="form-control" disabled="disabled" /></td>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary">
+                                                <span>Upload</span>
+                                                <input id="uploadBtn" type="file" class="upload" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <script type="text/javascript">
+                                    document.getElementById("uploadBtn").onchange = function () {
+                                        //document.getElementById("uploadFile").value = this.value;
+                                        $("#uploadFile").val("");
+                                    };
+                                </script>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog  modal-md">
+        @using (Html.BeginForm("Foo", "Bar", FormMethod.Post, new { id = "frmAddFolder" }))
+        {
+        <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" id="FolderpopupClose" data-target="#myModal" data-toggle="modal" data-backdrop="static" data-keyboard="false">&times;</button>
+                    <h4 class="modal-title">Add Folder</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="alert alert-danger" role="alert" id="errorMsg" style="display:none">
+                                <div id="errorTextMessage"></div>
+                                @*<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>*@
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-2 form-group"><label class="control-label required">Name</label></div>
+                        <div class="col-sm-5"><input id="txtFolderName" type="text" class="form-control" autofocus="autofocus" maxlength="30" required="required" /></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btnAddNewFolder" type="submit" class="btn primary">Save</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+@Html.Hidden("SelectedMessageId", "")
+
+<div class="modal fade newemail-modal" id="mail-box2" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button title="Close" class="close oldMailClose" type="button">
+                    <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                </button>
+                <div class="email-hed"> <a href=" #" class="admin-id"> <img alt="" src="@Url.Content("~/images/admin-id-icon.png")" class="mail-icon"><span id="mailBoxEmailId">Admin@tatvasoft.com</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <li class="btn-group">
+                        <a title="Reply" href="javascript:void(0)" id="SenderReply">
+                            <img alt="Reply" src="@Url.Content("~/images/ic-reply.png")" class="icon">Reply
+                        </a>
+                        <button aria-expanded="false" aria-haspopup="true" data-toggle="dropdown" class="btn dropdown-toggle" type="button">
+                            <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a title="" href="javascript:void(0)" id="SenderReplyAll">Reply to All</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="javascript:void(0)" title="Forward" id="SenderForward" data-toggle="modal" data-target="#emailbox"><img class="icon" src="@Url.Content("~/images/ic-forward.png")" alt="Forward">Forward</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <div class="emailblock">
+                    <div class="mail-box attachment">
+                        <div class="modal-header">
+                            <div class="em-fleft sender"><span id="SenderSubjectFormat"></span></div>
+                            <div class="em-fleft subject"><a title="Email Id" href="javascript:void(0)" id="SenderEmailId"></a></div>
+                        </div>
+                        <div class="content-box mCustomScrollbar">
+                            <div class="mail-text">
+                                <div class="mail-top-hed">
+                                    <ul class="id-block">
+                                        <li><strong>From : </strong> <a href="javascript:void(0)" title="" id="SenderFrom">Rajeshkumar Prajapati</a></li>
+                                        <li><strong>Sent : </strong> <span id="SenderSent">Thursday, May 19, 2016 12:41 PM</span> </li>
+                                        <li><strong>To : </strong><a href="javascript:void(0)" id="SenderTo">bhupesh.rajput@tatvasoft.cpom</a></li>
+                                        <li id="LiSenderCc"><strong>Cc: </strong><a href="javascript:void(0)" id="SenderCc"></a></li>
+                                        <li id="LiSenderBcc"><strong>Bcc: </strong><a href="javascript:void(0)" id="SenderBcc"></a></li>
+                                        <li><strong>Subject :</strong><span id="SenderSubject">Testing-Rajesh</span> </li>
+                                    </ul>
+                                    <ul class="attachment-ber" id="SenderAttachment"></ul>
+                                </div>
+                                <div id="SendermailText">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<link href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" />*@
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>*@
+
+
+@*<script type="text/javascript" src="~/Scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/bootstrap-datepicker.js"></script>
+    <script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+    <script type="text/javascript" src="~/Scripts/respond.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/fastclick.min.js"></script>
+    <script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+<link href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" />
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+<script src="~/Areas/Email/js/ckeditor/bootstrap-ckeditor-modal-fix.js"></script>
+
+@*<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+
+@*<link href="https://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" rel="Stylesheet" type="text/css" />*@
+<link href="~/Content/jquery-ui.css" rel="stylesheet" />
+
+<script type="text/javascript">
+    var pageIndex=0;
+    var checkIndex=0;
+    var isLast=false;
+    var ID='',TypeID='';
+    var isEditClickedDraft = false;
+    $(document).ready(function () {
+        // Put placeholder at page init
+        $('#AssignToJob').attr('placeholder','RefNumber, NMI, Title, OwnerName');
+        $('#AssignToJob').val('a');        
+        $('#AssignToJob').val('');        
+        // Put placeholder at page init
+
+        $('#AssignToJob').autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("GetJobsToAssign","Email")',
+                    dataType: 'json',
+                    data: {
+                        //excludePostBoxFlag: true,
+                        searchText: request.term
+                    },
+                    success: function (data) {
+                         response($.map(data, function (item) {  
+                            return { label: item.Title, value: item.Title,id:item.JobID };  
+                        }))  
+                    }
+                })
+            },
+            select: function (event, ui) {
+                 $("#hdnjobidToAssign").val(ui.item.id); // save selected id to hidden input
+            }
+        });
+
+        $("#content").css("padding","0px");
+        var maxMessageId = 0;
+        var inboxFolder = $(".foldersList li:first");
+        BindMessage(inboxFolder.data('id'), inboxFolder.data('type'),SetDefaultMessageSelected);
+        $('.modal').modal({backdrop: 'static', keyboard: false,show:false});
+
+        function SetDefaultMessageSelected(){
+            if ($(".mail-list li").length>0) {
+                var fromFolder = $(".foldersList li.active");
+                var fromFolderId = fromFolder.data('id');
+                var fromFolderName = fromFolder.text();
+                var messageId = $(".mail-list li:first").data('messageid');
+                $("#SelectedMessageId").val(messageId);
+                var getUrl = '@Url.Action("GetMailDetail", "Email", new { area = "Email" })' + '?folderId='+fromFolderId+'&mailId='+messageId+'&foldarName='+fromFolderName+'';
+                loadMail(getUrl);
+                $("#emailDisplay").show();
+                $(".mail-list li:first").addClass("selectedMessage");
+                if ($(".mail-list li:first").hasClass("unread")) {
+                    $(".mail-list li:first").removeClass("unread").addClass("opened");
+                }
+            }else {
+                $("#emailDisplay").hide();
+            }
+        }
+
+        function BindMessage(id, typeId,callback) {
+            if (isLast) {
+                return;
+            }
+            //if (isNaN(pageIndex)) {
+            //    pageIndex = 1;
+            //} else  { pageIndex = pageIndex+1; }
+
+            if (id == 0) {
+                id = ID;
+                typeId=TypeID;
+            } else {
+                ID =id;
+                TypeID = typeId;
+            }
+
+            $.ajax({
+                url: '@Url.Action("_MailList", "Email", new { area = "Email" })',
+                type: "GET",
+                dataType: "HTML",
+                data: { folderId: id, typeId: typeId, pageIndex:pageIndex,sort_order : $("#SortByText").data('value')},
+                contentType: 'application/json',
+                cache:false,
+                async:false,
+                success: function (Data) {
+                    var result = JSON.parse(Data);
+                    pageIndex = result.MessageIdForScroll;
+                    $("#mailList").append(result.Result);
+                    if (id == $(".foldersList li:first").data('id')) {//if inbox is selected
+                        maxMessageId = result.MaxMessageId;
+                    }
+                    isLast = result.IsLast;
+                    if (typeof callback === "function") {
+                        callback();
+                    }
+                }
+            });
+
+            UncheckCheckbox();
+        }
+
+        $(document).on("click",".foldersList li", function () {
+            $("#mailList").empty();
+            $("#divMailList").scroll(0,0);
+            pageIndex=0;
+            checkIndex=0;
+            isLast=false;
+            $(".foldersList li").removeClass("active");
+            $(this).addClass("active");
+
+            BindMessage($(this).data('id'), $(this).data('type'),SetDefaultMessageSelected);
+            UncheckCheckbox();
+            $("#SearchInput").val("");
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.text();
+            var fromFolderTypeId = fromFolder.data('type');
+            if (fromFolderTypeId == 3) {
+                $(".showEdit").show();
+                $(".hideReplyForward").hide();
+            }else {
+                $(".hideReplyForward").show();
+                $(".showEdit").hide();
+            }
+
+            //$(".mail-box").hide();
+        });
+
+        $("#divMailList").on("scroll", function (e){
+            var $o = $(e.currentTarget);
+            if ($o[0].scrollHeight - $o.scrollTop() <= $("#divMailList").height()) {
+                BindMessage(0,0);
+            }
+        });
+
+
+        $(document).on("click", ".mail-list li", function () {
+            var control = $(this);
+            var isSeen = control.data("seen").toLowerCase();
+            var folderId = $(".foldersList li.active").data('id');
+            var folderName = $(".foldersList li.active").data('text');
+            if (isSeen == 'false') {
+                var id = $(this).data('messageid');
+                $.ajax({
+                    url: '@Url.Action("MessageSeen", "Email", new { area = "Email" })',
+                    type: "GET",
+                    dataType: "json",
+                    data: { messageId: id, folderId: folderId, folderName: folderName },
+                    contentType: 'application/json',
+                    success: function (Data) {
+                        $(control).removeClass("unread").addClass("opened");
+                    }
+                });
+            }
+
+            //UncheckCheckbox();
+        });
+
+        $(document).on("click", ".moveFolderList li", function () {
+            var openedMessage = $("#SelectedMessageId").val();
+            var isOpenedMessageSelected = false;
+            var control = $(this);
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.data('text');
+            var fromTypeId = fromFolder.data('type');
+            var msgCheckedList = $(".chkmark:checked").parents('li');
+            if (msgCheckedList.length > 0) {
+                var lstId = [];
+                msgCheckedList.each(function (i, j) {
+                    var item = $(j).data('messageid');
+                    lstId.push(item);
+                    if (item == openedMessage) {
+                        isOpenedMessageSelected = true;
+                    }
+                });
+
+                var messageids = lstId.join(', ');
+                var id = msgCheckedList.data('messageid');
+
+                var toFolderId = $(control).data('id');
+                var toFolderName = $(control).data('text');
+                var toTypeId = $(control).data('type');
+                if (fromFolderId != toFolderId) {
+                    $.ajax({
+                        url: '@Url.Action("MoveMessageToFolder", "Email", new { area = "Email" })',
+                        type: "GET",
+                        dataType: "json",
+                        data: { messageIds: messageids, fromFolderId: fromFolderId, toFolderId: toFolderId, fromFolderName: fromFolderName, toFolderName: toFolderName, fromTypeId: fromTypeId, toTypeId: toTypeId },
+                        contentType: 'application/json',
+                        cache:false,
+                        success: function (Data) {
+                            msgCheckedList.each(function (i, j) {
+                                $(j).remove();
+                            });
+
+                            if (isOpenedMessageSelected) {
+                                $(".mail-box").hide();
+                                $("#emailDisplay").hide();
+                            }
+
+                            BindMessage(fromFolderId,fromTypeId);//This will bring new emails
+                        }
+                    });
+                } else {
+                    $(".chkmark").removeAttr('checked');
+                }
+            }else {
+                alert('Please select message.');
+            }
+            UncheckCheckbox();
+        });
+
+        $("#spam, #delete").click(function () {
+            
+            var openedMessage = $("#SelectedMessageId").val();
+            var isOpenedMessageSelected = false;
+            var control = $(this);
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.text();
+            var msgCheckedList = $(".chkmark:checked").parents('li');
+            if (msgCheckedList.length > 0) {
+                var fromTypeId = fromFolder.data('type');
+                var lstId = [];
+                msgCheckedList.each(function (i, j) {
+                    var item = $(j).data('messageid');
+                    lstId.push(item);
+                    if (item == openedMessage) {
+                        isOpenedMessageSelected = true;
+                    }
+                });
+
+                var messageids = lstId.join(', ');
+                var id = msgCheckedList.data('messageid');
+                var toFolderId = $(control).data('id');
+                var toFolderName = $(control).data('text');
+                var toTypeId = $(control).data('type');
+                var isDbCall = false;
+                if (fromTypeId == 4) {
+                    isDbCall = true;
+                }else if (fromFolderId != toFolderId ) {
+                    isDbCall = true;
+                }
+
+                if (isDbCall) {
+                    if (confirm("Are you sure you want to delete this mail ?")) {
+                        $.ajax({
+                            url: '@Url.Action("MoveMessageToFolder", "Email", new { area = "Email" })',
+                            type: "GET",
+                            dataType: "json",
+                            data: { messageIds: messageids, fromFolderId: fromFolderId, toFolderId: toFolderId, fromFolderName: fromFolderName, toFolderName: toFolderName, fromTypeId: fromTypeId, toTypeId: toTypeId },
+                            contentType: 'application/json',
+                            success: function (Data) {
+                                msgCheckedList.each(function (i, j) {
+                                    $(j).remove();
+                                });
+
+                                if (isOpenedMessageSelected) {
+                                    $(".mail-box").hide();
+                                    $("#emailDisplay").hide();
+                                }
+
+                                BindMessage(fromFolderId,fromTypeId);//This will bring new emails
+                            }
+                        });
+
+                        UncheckCheckbox();
+                    }
+                }
+                $(".chkmark").removeAttr('checked');
+            }else {
+                alert('Please select message.');
+            }
+        });
+
+        function UncheckCheckbox() {
+            $("#checkAll").removeAttr('checked');
+        }
+
+        $(document).on("click", "#mailList .chkmark", function () {            
+            var msgCheckedList = $("#mailList .chkmark:checked").length;
+            var msgTotalCheckBox = $("#mailList .chkmark").length;
+            if (msgTotalCheckBox > 0 && msgCheckedList == msgTotalCheckBox) {
+                setTimeout(function(){
+                    $("#checkAll").prop("checked",true);
+                },300);
+
+            }else {
+                $("#checkAll").prop("checked",false);
+            }
+        });
+
+        $("#checkAll").click(function () {
+            var isChecked = $(this).is(':checked');
+            if (isChecked) {
+                $(".chkmark").prop('checked', 'checked');
+            } else {
+                $(".chkmark").removeAttr('checked');
+            }
+        });
+
+        $("#CheckEmail").click(function () {
+            checkIndex++;
+            var selectedFolderId = $(".foldersList li.active").data('id');
+            var inboxFolderId = $(".foldersList li:first").data('id');
+            var inboxFolderName = $(".foldersList li:first").data('id');
+            $.ajax({
+                url: '@Url.Action("CheckNewEmail", "Email", new { area = "Email" })',
+                type: "GET",
+                dataType: "HTML",
+                data: { maxMessageId: maxMessageId,pageIndex:checkIndex,folderId:inboxFolderId,folderName:inboxFolderName},
+                contentType: 'application/json',
+                success: function (Data) {
+                    if (selectedFolderId == $(".foldersList li:first").data('id')) {//If selected folder is inbox
+                        var result = JSON.parse(Data);
+                        $("#mailList").prepend(result.Result);
+                        maxMessageId = result.MaxMessageId;
+                    }
+                }
+            });
+        });
+
+        $("#SearchInput").keypress(function (event) {
+            if (event.which == 13) {
+                SearchEmailMessage();
+            }
+        });
+
+        function SearchEmailMessage(){
+            if ($("#SearchInput").val() == "") {
+                $("#mailList").empty();
+                var fromFolder = $(".foldersList li.active");
+                pageIndex = 0;
+                isLast = false;
+                BindMessage(fromFolder.data('id'),fromFolder.data('type'));
+            }else {
+                SearchAndSortFunctionality(0);
+                isLast = true;
+            }
+        }
+
+        $("#SearchMail").click(function(){
+            SearchEmailMessage();
+        });
+
+        $("#ToMail,#CcMail,#BccMail").keypress(function (event) {
+            if (event.which == 44) {event.preventDefault();
+                $(this).val($(this).val() + ";");
+            }
+
+            if (event.which == 9) {
+                $(this).val($(this).val().replace(",",";"));
+            }
+        });
+
+        $("#ToMail,#CcMail,#BccMail").blur(function (event) {
+            $(this).val($(this).val().replace(/,/g,";"));
+        });
+
+        $("#sortbyAscending,#sortbyDesscending").click(function () {
+            var control = $(this);
+            var sort_order = control.data('value');
+            $("#SortByText").text(control.text());
+            $("#SortByText").data('value',sort_order);
+            if ($("#SearchInput").val() == "") {
+                $("#mailList").empty();
+                var fromFolder = $(".foldersList li.active");
+                pageIndex = 0;
+                isLast = false;
+                BindMessage(fromFolder.data('id'),fromFolder.data('type'));
+            }else {
+                SearchAndSortFunctionality(sort_order);
+                isLast = true;
+            }
+        });
+
+        function SearchAndSortFunctionality(sort_order) {
+            var folderId = $(".foldersList li.active").data('id');
+            var folderName = $(".foldersList li.active").data('text');
+
+            $.ajax({
+                url: '@Url.Action("SearchMailList", "Email", new { area = "Email" })',
+                type: "GET",
+                dataType: "HTML",
+                data: { folderId: folderId, folderName: folderName, search: $("#SearchInput").val(), sort_order: sort_order },
+                contentType: 'application/json',
+                success: function (Data) {
+                    var result = JSON.parse(Data);
+                    $("#mailList").empty();
+                    $("#mailList").html(result.Result);
+                }
+            });
+
+            UncheckCheckbox();
+        }
+
+        $("#btnAddNewFolder").click(function(){
+            $("#errorTextMessage").html("");
+            if ($("#frmAddFolder").valid()) {
+                var folderName = $("#txtFolderName").val();
+                var allFolders = $("#FolderStructure li");
+                var isFolderExists = allFolders.filter(function(){
+                    return $(this).attr('data-text').toLowerCase() == folderName.trim().toLowerCase();
+                });
+
+                var filterCharacter = /^\w+$/;
+                if (filterCharacter.test(folderName)) {
+                    $("#errorMsg").hide();
+                    $("#errorTextMessage").html("");
+                }else {
+                    $("#errorMsg").show();
+                    $("#errorTextMessage").append("Letters, numbers, and underscores only please");
+                    return false;
+                }
+
+                filterCharacter = /^(?=.*[a-z\d]).+/igm
+                if (filterCharacter.test(folderName)) {
+                    $("#errorMsg").hide();
+                    $("#errorTextMessage").html("");
+                }else {
+                    $("#errorMsg").show();
+                    $("#errorTextMessage").append("You should specify a correct folder name.");
+                    return false;
+                }
+
+                if (isFolderExists.length > 0) {
+                    $("#errorMsg").show();
+                    $("#errorTextMessage").append("Folder name already exists.");
+                    return false;
+                }
+
+                $("#errorMsg").hide();
+                $("#errorTextMessage").empty();
+                if (folderName.trim() == '') {
+                    $("#errorMsg").show();
+                    $("#errorTextMessage").append('Folder name is required.');
+                }else {
+                    $.ajax({
+                        url: '@Url.Action("AddNewFolder", "Email", new { area = "Email" })',
+                        type: "GET",
+                        dataType: "HTML",
+                        data: { folderName: folderName},
+                        contentType: 'application/json',
+                        success: function (Data) {
+                            var result = JSON.parse(Data);
+                            if (result.Success == true) {
+                                var image = '<img src="@Url.Content("~/images/test-icon.png")" />';
+                                var anchortag = '<a href="javascript:void(0)">'+image+folderName+'</a>';
+                                var link = '<li data-id='+result.id+' data-type='+result.type+' data-text='+folderName.trim()+'>'+anchortag+'</li>';
+                                $(".foldersList").append(link);
+                                anchortag = '<a href="javascript:void(0)">'+image+folderName+'</a>';
+                                link = '<li data-id='+result.id+' data-type='+result.type+' data-text='+folderName.trim()+'>'+'<a href="javascript:void(0)">'+folderName+'</a>'+'</li>';
+                                $(".moveFolderList").append(link);
+                                $("#txtFolderName").val("");                                
+                                $("#FolderpopupClose").click();
+                                //$(".close").click();
+                            }else {
+                                $("#errorMsg").show();
+                                $("#errorTextMessage").append(result.Message);
+                            }
+                        }
+                    });
+                }
+            }else {
+                $("#errorMsg").hide();
+                $("#errorTextMessage").html("");
+            }
+            return false;
+        });
+
+        function cleanArray(actual) {
+            var newArray = new Array();
+            for (var i = 0; i < actual.length; i++) {
+                if (actual[i]) {
+                    newArray.push(actual[i]);
+                }
+            }
+            return newArray;
+        }
+
+        function CreateCommaSeparetedArray(element) {
+            var x = element;
+            x = x.replace(/,/g,";");
+            var emailList = x.trim().replace(/(^;)|(;$)/g, "").split(";");
+            emailList = cleanArray(emailList);
+            return emailList;
+        }
+
+        function validateForm(emailList,message,lengthExceedMessage) {
+            var flag = true;
+            var testing;
+            emailList.forEach(function(i,j){
+                var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+                testing = i.trim();
+                if (filter.test(testing)) {
+                }
+                else {
+                    flag = false;
+                }
+            });
+
+            if (emailList.length == 0) {
+                flag = false;
+            }
+
+            if (flag == false) {
+                alert(message);
+            }else {
+                if (emailList.length > 25) {
+                    alert(lengthExceedMessage);
+                    flag = false;
+                }
+            }
+
+            return flag;
+        }
+
+        $("#SendMail").click(function () {
+            
+            var flag = true;
+            var toEmailArray,ccEmailArray,bccEmailArray;
+            if ($("#ToMail").val() == '') {
+                alert('You cannot leave "To" field blank');
+                flag = false;
+            }else {
+                toEmailArray = CreateCommaSeparetedArray($("#ToMail").val());
+                flag = validateForm(toEmailArray,'The specified email address for "To" is invalid.','Maximum 25 emails are allowed in "To" field.');
+            }
+
+            if ($("#CcMail").val() != "" && flag == true) {
+                ccEmailArray = CreateCommaSeparetedArray($("#CcMail").val());
+                flag = validateForm(ccEmailArray,'The specified email address for "Cc" is invalid.','Maximum 25 emails are allowed in "Cc" field.');
+            }
+
+            if ($("#BccMail").val() != "" && flag == true) {
+                bccEmailArray= CreateCommaSeparetedArray($("#BccMail").val());
+                flag = validateForm(bccEmailArray,'The specified email address for "Bcc" is invalid.','Maximum 25 emails are allowed in "Bcc" field.');
+            }
+
+            if (flag == true && $("#SubjectMail").val() == "") {
+                var flag = confirm("The subject field is empty. Do you wish to continue?");
+            }
+
+            if (flag) {
+
+                //return false;
+                var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                var attachmentObject = [];
+                var selectedFiles = $("#tblSelectedFile tr");
+
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({GeneratedName : tmp_name,FileName : filename});
+                }
+
+                var selectedFolder = $("#FolderStructure li.active");
+                var selectedMessage = -1;
+                if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                    var selectedMessage = $("#SelectedMessageId").val();
+                }
+
+                var toEmailString = toEmailArray.length > 0 ? toEmailArray.join(";") : "";
+                var ccEmailString = ccEmailArray != undefined ? ccEmailArray.join(";") : "";
+                var bccMailEmailString = bccEmailArray != undefined ? bccEmailArray.join(";") : "";
+
+                var inboxFolder = $(".foldersList li:first");
+                var data = JSON.stringify({ "From": "", "To": toEmailString, "Cc": ccEmailString, "Bcc": bccMailEmailString, "Subject": $("#SubjectMail").val(), "Body": { "body": CKEDITOR.instances['editor'].getData() }, "Attachment": $("#uploadFile").val(), "IsSave": "false","Attachments" :attachmentObject,SaveMailFolderId : inboxFolder.data('id'),eventType : 'send',selectedMessageid : selectedMessage });
+                $.ajax({
+                    url: getUrl,
+                    type: "POST",
+                    dataType: "json",
+                    data: data,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                            isEditClickedDraft  = false;
+                            $("#emailDisplay").hide();
+                            $(".selectedMessage").remove();
+                            SetDefaultMessageSelected();
+                        }
+                        $("#tblSelectedFile tr").remove();
+                        $("#ToMail").val("");
+                        $("#CcMail").val("");
+                        $("#BccMail").val("");
+                        $("#SubjectMail").val("");
+                        $("#uploadFile").val("");
+                        isEditClickedDraft  = false;
+                        @*var data = '@Html.Raw(Json.Encode(ViewBag.signature.Data))';
+
+                        CKEDITOR.instances['editor'].setData("<br/><br/>"+data.Signature);*@
+                        //$(".newEmailClose").click();
+                        $("#emailClose").click();
+                        
+                    }
+                });
+            }
+        });
+
+        $("#SaveMail").click(function () {
+            var flag = true;
+            if ($("#ToMail").val() != '') {
+                flag = true;
+            }
+
+            if ($("#CcMail").val() != "") {
+                flag = true;
+            }
+
+            if ($("#BccMail").val() != "") {
+                flag = true;
+            }
+
+            if ($("#SubjectMail").val() == "") {
+                flag = true;
+            }
+
+            if (flag == false) {
+                if(CKEDITOR.instances['editor'].getData() == ""){
+                    flag = false;
+                    alert('Atleast one field should be filled.');
+                }
+            }
+
+            if (flag) {
+                var selectedFolder = $("#FolderStructure li.active");
+                var selectedMessage = -1;
+                if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                    selectedMessage = $("#SelectedMessageId").val();
+                }
+
+                var attachmentObject = [];
+                var selectedFiles = $("#tblSelectedFile tr");
+
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({GeneratedName : tmp_name,FileName : filename});
+                }
+
+                var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                var draftFolder = $(".foldersList li[data-type='3']");
+                var data = JSON.stringify({ "From": "", "To": $("#ToMail").val(), "Cc": $("#CcMail").val(), "Bcc": $("#BccMail").val(), "Subject": $("#SubjectMail").val(), "Body": { "body": CKEDITOR.instances['editor'].getData() }, "Attachment": $("#uploadFile").val(), "IsSave": "true","Attachments" :attachmentObject,SaveMailFolderId : draftFolder.data('id'),eventType: 'save',selectedMessageid : selectedMessage});
+                $.ajax({
+                    url: getUrl,
+                    type: "POST",
+                    dataType: "json",
+                    data: data,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+
+                        if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                            isEditClickedDraft  = false;
+                            $(".selectedMessage").data("messageid",Data.updatedMessageId);
+                            $(".selectedMessage div.message-body div.subject").html("<span>"+$("#SubjectMail").val()+"</span>");
+                            $(".selectedMessage").click();
+                        }else if (selectedFolder.data("type") == "3" ) {
+                            $(selectedFolder).click();
+                        }
+
+                        $("#tblSelectedFile tr").remove();
+                        $("#ToMail").val("");
+                        $("#CcMail").val("");
+                        $("#BccMail").val("");
+                        $("#SubjectMail").val("");
+                        $("#uploadFile").val("");
+                        isEditClickedDraft  = false;
+                        @*var data = '@Html.Raw(Json.Encode(ViewBag.signature.Data))';
+
+                        CKEDITOR.instances['editor'].setData("<br/><br/>"+data.Signature);*@
+                        //$(".newEmailClose").click();
+                        $("#emailClose").click();
+                    }
+                });
+            }
+        });
+        $(document).on('click','.newEmailClose',function(){            
+            $('#emailbox').modal("hide");
+            //$('body').removeClass('modal-open');
+            //$('.modal-backdrop').remove();
+
+            $("#tblSelectedFile tr").remove();
+            $("#ToMail").val("");
+            $("#CcMail").val("");
+            $("#BccMail").val("");
+            $("#SubjectMail").val("");
+            $("#uploadFile").val("");
+            isEditClickedDraft  = false;
+            var data = '@Html.Raw(Json.Encode(ViewBag.signature.Data))';
+
+            CKEDITOR.instances['editor'].setData("<br/><br/>"+data.Signature);
+        });
+
+        $(".ic").click(function (e) {
+            e.preventDefault();
+            var $this = $(this);
+            if ($this.hasClass("flag-d"))
+                $this.removeClass("flag-d").addClass('flag');
+            else if ($this.hasClass("flag"))
+                $this.removeClass("flag-d").addClass('flag-d');
+        });
+
+        var isEditClickedDraft = false;
+        initSample();
+        var data = @Html.Raw(Json.Encode(ViewBag.signature.Data));
+        $("#emailId").html('@ViewBag.email');
+        $("#emailBoxEmailId").html('@ViewBag.email');
+        $("#mailBoxEmailId").html('@ViewBag.email');
+        var replyFolderId ='';
+        var replyMessageId = '';
+        var replyFolderName = '';
+        CKEDITOR.instances['editor'].setData("<br/><br/>"+data.Signature);
+
+        $("#Reply").click(function () {
+            //$(".oldMailClose").click();
+            //$('#emailbox').modal({backdrop: 'static', keyboard: false,show:true});
+            CKEDITOR.instances['editor'].setData("");
+            var messageId = $("#SelectedMessageId").val();
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.data('text');
+            if (messageId != '') {
+                var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId='+fromFolderId+'&mailId='+messageId+'&foldarName='+fromFolderName+'';
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data != null) {
+                            if (Data.Result.From != null) {
+                                $("#ToMail").val(Data.Result.From.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            }
+
+                            if (Data.Result.Subject != null) {
+                                $("#SubjectMail").val('Re: ' + Data.Result.Subject);
+                            }
+
+                            if (Data.Result.Body != null) {
+                                CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                            }
+
+                            if (Data.Result.Attachments != null) {
+                                var attachedFilename = Data.Result.Attachments;
+                                for (var i = 0; i < attachedFilename.length; i++) {
+                                    var fName = attachedFilename[i].FileName;
+                                    var GName = attachedFilename[i].GeneratedName;
+                                    var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                    $("#tblSelectedFile").append(result);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        $("#Edit").click(function () {
+            isEditClickedDraft = true;
+            CKEDITOR.instances['editor'].setData("");
+            var messageId = $("#SelectedMessageId").val();
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.data('text');
+
+            if (messageId != '') {
+                var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId='+fromFolderId+'&mailId='+messageId+'&foldarName='+fromFolderName+'&isFromDrafts='+true;
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data != null) {
+                            if (Data.Result.To != null) {
+                                $("#ToMail").val(Data.Result.To.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            }
+
+                            if (Data.Result.Cc != null) {
+                                $("#CcMail").val(Data.Result.Cc.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            }
+
+                            if (Data.Result.Bcc != null) {
+                                $("#BccMail").val(Data.Result.Bcc.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            }
+
+                            if (Data.Result.Subject != null) {
+                                $("#SubjectMail").val(Data.Result.Subject);
+                            }
+
+                            if (Data.Result.Body != null) {
+                                CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                            }
+
+                            if (Data.Result.Attachments != null) {
+                                var attachedFilename = Data.Result.Attachments;
+                                for (var i = 0; i < attachedFilename.length; i++) {
+                                    var fName = attachedFilename[i].FileName;
+                                    var GName = attachedFilename[i].GeneratedName;
+                                    var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                    $("#tblSelectedFile").append(result);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        $(".oldMailClose").click(function(){
+            $('#mail-box2').modal("hide");
+        });
+
+        $("#SenderReply").click(function () {
+            $(".oldMailClose").click();
+            $('#emailbox').modal({backdrop: 'static', keyboard: false,show:true});
+            CKEDITOR.instances['editor'].setData("");
+            var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId=' + replyFolderId + '&mailId=' + replyMessageId + '&foldarName=' + replyFolderName + '';
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                dataType: "json",
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.From != null) {
+                            $("#ToMail").val(Data.Result.From.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                        }
+
+                        if (Data.Result.Subject != null) {
+                            $("#SubjectMail").val('Re: ' + Data.Result.Subject);
+                        }
+                        if (Data.Result.Body != null) {
+                            CKEDITOR.instances['editor'].setData(Data.Result.Body.body);}
+                        if (Data.Result.Attachments != null) {
+                            var attachedFilename = Data.Result.Attachments;
+                            for (var i = 0; i < attachedFilename.length; i++) {
+                                var fName = attachedFilename[i].FileName;
+                                var GName = attachedFilename[i].GeneratedName;
+                                var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFile").append(result);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        $("#SenderReplyAll").click(function () {
+            $(".oldMailClose").click();
+            $('#emailbox').modal({backdrop: 'static', keyboard: false,show:true});
+            CKEDITOR.instances['editor'].setData("");
+            var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId=' + replyFolderId + '&mailId=' + replyMessageId + '&foldarName=' + replyFolderName + '';
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                dataType: "json",
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.From != null) {
+                            $("#ToMail").val(Data.Result.To.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                        }
+                        if (Data.Result.Cc != null) {
+                            $("#CcMail").val(Data.Result.Cc.replace(/&lt;/g, '').replace(/&gt;/g, '').replace(/\,/g, ';'));
+                        }
+                        //if (Data.Result.Bcc != null)
+                        //{
+                        //    $("#BccMail").val(Data.Result.Bcc.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                        //}
+                        if (Data.Result.Subject != null) {
+                            $("#SubjectMail").val('Re: ' + Data.Result.Subject);
+                        }
+                        if (Data.Result.Body != null) {
+                            CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                        }
+                        if (Data.Result.Attachments != null) {
+                            var attachedFilename = Data.Result.Attachments;
+                            for (var i = 0; i < attachedFilename.length; i++) {
+                                var fName = attachedFilename[i].FileName;
+                                var GName = attachedFilename[i].GeneratedName;
+                                var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFile").append(result);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        $("#ReplyAll").click(function () {
+            CKEDITOR.instances['editor'].setData("");
+            var messageId = $("#SelectedMessageId").val();
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.data('text');
+            if (messageId != '') {
+                var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId='+fromFolderId+'&mailId='+messageId+'&foldarName='+fromFolderName+'';
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data != null) {
+                            if (Data.Result.From != null) {
+                                $("#ToMail").val(Data.Result.To.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            }
+
+                            if (Data.Result.Cc != null) {
+                                $("#CcMail").val(Data.Result.Cc.replace(/&lt;/g, '').replace(/&gt;/g, '').replace(/\,/g, ';'));
+                            }
+                            //if (Data.Result.Bcc != null)
+                            //{
+                            //    $("#BccMail").val(Data.Result.Bcc.replace(/&lt;/g, '').replace(/&gt;/g, '') );
+                            //}
+                            if (Data.Result.Subject != null) {
+                                $("#SubjectMail").val('Re: ' + Data.Result.Subject);
+                            }
+                            if (Data.Result.Body != null) {
+                                CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                            }
+                            if (Data.Result.Attachments != null) {
+                                var attachedFilename = Data.Result.Attachments;
+                                for (var i = 0; i < attachedFilename.length; i++) {
+                                    var fName = attachedFilename[i].FileName;
+                                    var GName = attachedFilename[i].GeneratedName;
+                                    var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                    $("#tblSelectedFile").append(result);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        $("#Forward").click(function () {
+            CKEDITOR.instances['editor'].setData("");
+            var messageId = $("#SelectedMessageId").val();
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.data('text');
+            if (messageId != '') {
+                var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId='+fromFolderId+'&mailId='+messageId+'&foldarName='+fromFolderName+'';
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data != null) {
+                            if (Data.Result.Subject != null) {
+                                $("#SubjectMail").val('Fw: ' + Data.Result.Subject);
+                            }
+
+                            if (Data.Result.Body != null) {
+                                CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                            }
+                            if (Data.Result.Attachments != null) {
+                                var attachedFilename = Data.Result.Attachments;
+                                for (var i = 0; i < attachedFilename.length; i++) {
+                                    var fName = attachedFilename[i].FileName;
+                                    var GName = attachedFilename[i].GeneratedName;
+                                    var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                    $("#tblSelectedFile").append(result);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        $("#SenderForward").click(function () {
+            $(".oldMailClose").click();
+            CKEDITOR.instances['editor'].setData("");
+            var getUrl = '@Url.Action("MailDetailForReply", "Email", new { area = "Email" })' + '?folderId='+replyFolderId+'&mailId='+replyMessageId+'&foldarName='+replyFolderName+'';
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                dataType: "json",
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (Data) {
+                    if (Data != null) {
+                        if (Data.Result.Subject != null) {
+                            $("#SubjectMail").val('Fw: ' + Data.Result.Subject);
+                        }
+
+                        if (Data.Result.Body != null) {
+                            CKEDITOR.instances['editor'].setData(Data.Result.Body.body);
+                        }
+                        if (Data.Result.Attachments != null) {
+                            var resultAttachments = Data.Result.Attachments;
+                            for (var i = 0; i < resultAttachments.length; i++) {
+                                var fName = resultAttachments[i].FileName;
+                                var GName = resultAttachments[i].GeneratedName;
+                                var result = "<tr class='success' data-tmpname='"+GName+"' data-filename='"+fName+"'><td>"+fName+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                                $("#tblSelectedFile").append(result);
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        $("#uploadBtn").change(function(){
+            var fileInput = document.getElementById('uploadBtn');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var tmp_name = JSON.parse(xhr.response);
+                    tmp_name = tmp_name.tmp_name;
+                    var result = "<tr class='success' data-tmpname='"+tmp_name+"' data-filename='"+fileInput.files[0].name+"'><td>"+fileInput.files[0].name+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                    $("#tblSelectedFile").append(result);
+                }
+            }
+            return false;
+        });
+
+        $(document).on("click", ".attachmentclose", function () {
+            $(this).parent().parent().remove();
+        });
+
+
+        //$(".mail-box").hide();
+
+        $(document).on('click','ul#mailList li',function(e) {
+            $("#loading-image").removeClass("loadingOverlay").removeClass("loading-image");
+            $("#emailDisplay").show();
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.text();
+            $("#SelectedMessageId").val($(this).data('messageid'));
+            var getUrl = '@Url.Action("GetMailDetail", "Email", new { area = "Email" })' + '?folderId='+$(".foldersList").find(".active").data('id')+'&mailId='+$(this).data('messageid')+'&foldarName='+fromFolderName+'';
+            loadMail(getUrl);
+            $(".mail-list li").removeClass("selectedMessage");
+            $(this).addClass("selectedMessage");
+            setTimeout(function() { $("#loading-image").addClass("loadingOverlay").addClass("loading-image") },400);
+        });
+
+        $(document).on('dblclick','ul#mailList li',function(){
+        $("#SenderEmailId").html("&nbsp;");
+        $("#SenderFrom").html("&nbsp;");
+        $("#SenderTo").html("&nbsp;");
+        $("#SenderCc").html("&nbsp;");
+        $("#LiSenderCc").hide();
+        $("#SenderBcc").html("&nbsp;");
+        $("#LiSenderBcc").hide();
+        $("#SenderSent").html("&nbsp;");
+        $("#SenderSubject").html("&nbsp;");
+        $("#SenderAttachment").html("&nbsp;");
+        $("#SenderAttachment").hide();
+
+            var fromFolder = $(".foldersList li.active");
+            var fromFolderId = fromFolder.data('id');
+            var fromFolderName = fromFolder.text();
+            var fromFolderTypeID = fromFolder.data('type');
+            if (fromFolderTypeID != 3) {
+                $("#SendermailText").empty();
+                $(this).attr("data-toggle","modal").attr("data-backdrop","static").attr("data-keyboard","false");
+                replyFolderId = $(".foldersList").find(".active").data('id');
+                replyFolderName = fromFolderName;
+                replyMessageId = $(this).data('messageid');
+                var getUrl = '@Url.Action("GetMailDetail", "Email", new { area = "Email" })' + '?folderId='+$(".foldersList").find(".active").data('id')+'&mailId='+$(this).data('messageid')+'&foldarName='+fromFolderName+'';
+                $.ajax({
+                    url: getUrl,
+                    type: "GET",
+                    dataType: "json",
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data != null) {
+                            $(".mail-box").show();
+                            $("#SenderSubjectFormat").html(Data.Result.Subject);
+                            if (Data.Result.From != null && Data.Result.To != null && Data.Result.ShortDate != null) {
+                                    $("#SenderEmailId").html(Data.Result.From + " " + "< " + Data.Result.To + " >" + " " + Data.Result.ShortDate);
+                            }else {
+                                    $("#SenderEmailId").html("&nbsp;");
+                            }
+
+                            if (Data.Result.From != null && Data.Result.From != "") {
+                                $("#SenderFrom").html(Data.Result.From);
+                            }else {
+                                $("#SenderFrom").html("&nbsp;");
+                            }
+
+                            if (Data.Result.To != '' && Data.Result.To != null) {
+                                $("#SenderTo").html(Data.Result.To);
+                            }else {
+                                $("#SenderTo").html("&nbsp;");
+                            }
+
+                            if (Data.Result.Cc != '' && Data.Result.Cc != null) {
+
+
+                                $("#SenderCc").html(Data.Result.Cc);
+                                $("#LiSenderCc").show();
+                            }else {
+                                $("#SenderCc").html("&nbsp;");
+                                $("#LiSenderCc").hide();
+                            }
+
+                            var fromFolder = $(".foldersList li.active");
+                            var fromFolderName = fromFolder.text();
+
+                            if (Data.Result.Bcc != '' && fromFolderName == 'Sent Items') {
+                                $("#SenderBcc").html(Data.Result.Bcc);
+                                $("#LiSenderBcc").show();
+                            }else {
+                                $("#SenderBcc").html("&nbsp;");
+                                $("#LiSenderBcc").hide();
+                            }
+
+                            if (Data.Result.FullDate != null) {
+                                $("#SenderSent").html(Data.Result.FullDate);
+                            }else {
+                                $("#SenderSent").html("&nbsp;");
+                            }
+
+                            if (Data.Result.Subject != null && Data.Result.Subject != "") {
+                                $("#SenderSubject").html(Data.Result.Subject);
+                            }else
+                            {
+                                $("#SenderSubject").html("&nbsp;");
+                            }
+
+
+                            if(Data.Result.Body!="" && Data.Result.Body != null)
+                            {
+                                $("#SendermailText").html(Data.Result.Body.body);
+                            } else { $("#SendermailText").html("");  }
+                            if (Data.Result.Attachment !="" && Data.Result.Attachment != null) {
+                                var label ="<li class='attachment-title'><strong>Attachment :</strong></li>";
+                                $("#SenderAttachment").html(label+Data.Result.Attachment);
+                                $("#SenderAttachment").show();
+                            } else { $("#SenderAttachment").html("&nbsp;");
+                                $("#SenderAttachment").hide();
+                            }
+                        }
+                    }
+                });
+
+                $(this).click();
+                $(this).removeAttr("data-toggle").removeAttr("data-backdrop").removeAttr("data-keyboard");
+                $("#loading-image").addClass("loadingOverlay").addClass("loading-image");
+            }
+        });
+
+        $("#addFolder").click(function(){
+            $("#txtFolderName").val("");
+            $("#txtFolderName").focus();
+            $("#errorMsg").hide();
+            $("label[for=txtFolderName]").hide();
+        });
+    });
+
+    function loadMail(getUrl) {
+        $("#LiccView").hide();
+        $("#LiBccView").hide();
+        $("#attachment").hide();
+        $("#mailText").empty();
+        $("#ReplySubject").html("&nbsp;");
+        $("#ReplyEmailId").html("&nbsp;");
+        $("#FromView").html("&nbsp;");
+        $("#ToView").html("&nbsp;");
+        $("#CcView").html("&nbsp;");
+        $("#BccView").html("&nbsp;");
+        $("#SendView").html("&nbsp;");
+         $("#SubjectView").html("&nbsp;");
+        $.ajax({
+            url: getUrl,
+            type: "GET",
+            dataType: "json",
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+                if (Data.Result.To != null && Data.Result.From != null) {
+                    $("#mailText").empty();
+                    //$(".mail-box").show();
+                    if (Data.Result.Subject != null && Data.Result.Subject != "") {
+                        $("#ReplySubject").html(Data.Result.Subject);
+                    }else {
+                       $("#ReplySubject").html("&nbsp;");
+                    }
+                    
+                    if (Data.Result.From != null && Data.Result.From != "" && Data.Result.To != null && Data.Result.To != "") {
+                        $("#ReplyEmailId").html(Data.Result.From + " " + "< " + Data.Result.To + " >" + " " + Data.Result.ShortDate);
+                    }else
+                    {
+                        $("#ReplyEmailId").html("&nbsp;");
+                    }
+                    
+                    if (Data.Result.From != null && Data.Result.From != "") {
+                        $("#FromView").html(Data.Result.From);
+                    }else{
+                        $("#FromView").html("&nbsp;");
+                    }
+
+                    if (Data.Result.To != '' && Data.Result.To != null) {
+                        $("#ToView").html(Data.Result.To);
+                    }else {
+                        $("#ToView").html("&nbsp;");
+                    }
+
+                    if (Data.Result.Cc != '' && Data.Result.Cc != null) {
+                        $("#CcView").html(Data.Result.Cc);
+                        $("#LiccView").show();
+                    }else {
+                        $("#CcView").html("&nbsp;");
+                        $("#LiccView").hide();
+                    }
+
+                    var fromFolder = $(".foldersList li.active");
+                    var fromFolderName = fromFolder.text();
+
+                    if (Data.Result.Bcc != '' && Data.Result.Bcc != null && fromFolderName == 'Sent Items') {
+                        $("#BccView").html(Data.Result.Bcc);
+                        $("#LiBccView").show();
+                    }else {
+                        $("#BccView").html("&nbsp;");
+                        $("#LiBccView").hide();
+                    }
+
+                    if (Data.Result.FullDate != null && Data.Result.FullDate != "") {
+                        $("#SendView").html(Data.Result.FullDate);
+                    }else {
+                        $("#SendView").html("&nbsp;");
+                    }
+                    
+                    if (Data.Result.Subject != null && Data.Result.Subject != "") {
+                        $("#SubjectView").html(Data.Result.Subject);
+                    }else {
+                        $("#SubjectView").html("&nbsp;");
+                    }
+                    
+                    if(Data.Result.Body!="" && Data.Result.Body != null)
+                    {
+                        $("#mailText").html(Data.Result.Body.body);
+                    } else { $("#mailText").html("");  }
+                    if (Data.Result.Attachment!="" && Data.Result.Attachment != null) {
+                        var label ="<li class='attachment-title'><strong>Attachment :</strong></li>";
+                        $("#attachment").html(label+Data.Result.Attachment);
+                        $("#attachment").show();
+                    } else {
+                        $("#attachment").html("");
+                        $("#attachment").hide();
+                    }
+                }
+                else { //$(".mail-box").hide(); 
+
+                }
+            }
+        });
+
+        $(".mail-box").show();
+    }
+
+    function DynamicHeight(){
+        var flag = false;
+        var width = $(window).width();
+        if (width >= 1008 &&  width <= 1094) {
+            $("#divMailList").css("height","519px");
+            flag = true;
+        }else if (width >= 1095 && flag == false) {
+            $("#FolderStructure,#mailBoxAttachment").css("height","600px");
+            $("#divMailList").css("height","557px");
+        }
+    }
+
+    window.onload = function(){
+        DynamicHeight();
+    }
+
+    $(window).resize(function(){
+        DynamicHeight();
+    });
+
+    function AssignSelectedMessagesToJob(){
+        var MsgcloseButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+        var selectedValue = $("#hdnjobidToAssign").val();
+        if (selectedValue != "") {
+            var msgCheckedList = $(".chkmark:checked").parents('li');
+
+            if (msgCheckedList.length > 0) {
+                var lstId = [];
+                msgCheckedList.each(function (i, j) {
+                    var item = $(j).data('messageid');
+                    lstId.push(item);
+                });
+
+                var messageids = lstId.join(', ');
+                var data = JSON.stringify({Jobid : selectedValue,"Id_msgs" :messageids });
+                $.ajax({
+                    url: '@Url.Action("AssignMessageToJob", "Email", new { area = "Email" })',
+                    type: "POST",
+                    dataType: "json",
+                    data: data,
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {                        
+                        $(".alert").hide();
+                        $("#errorMsgRegion").removeClass("alert-danger");
+                        $("#errorMsgRegion").addClass("alert-success");
+                        $("#errorMsgRegion").html(MsgcloseButton + "Message assigned to job successfully.");
+                        $("#errorMsgRegion").show();
+                       
+                        $(".chkmark").removeAttr('checked');
+                    }
+                });
+            }else {
+                alert("Please select message.");                
+            }
+        }
+        else{
+            alert('Please select atleast one message to assign.');
+        }
+    }
+    
+</script>

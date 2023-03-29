@@ -1,0 +1,1779 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Manage Price";
+}
+
+<style type="text/css">
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .form-border img {
+        max-width: none !important;
+    }
+
+    /*.input-group-addon {
+        top: 36px !important;
+        padding: 0px 24px !important;
+    }*/
+</style>
+
+<form class="form-block" id="PricingManagerDetails">
+    <div class="container-fluid">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <div class="row">
+            @if (Model.PricingMode == 1 || (Model.PricingMode == 2 && Model.SystemSize == 1))
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">24 Hours:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="Hour24Switch" isvisible="@Model.IsPriceDay1">
+                                <label class="onoffswitch-label" for="Hour24Switch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.Hour24, new { id = "txt24Hour", @class = "form-control decimal", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.Hour24)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">UpFront:</label>
+                            <a onclick="UpFrontOptions()">options</a>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="UpFrontSwitch" isvisible="@Model.IsPriceDay1">
+                                <label class="onoffswitch-label" for="UpFrontSwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @*<label class="control-label required">UpFront:</label>*@
+                        @Html.TextBoxFor(m => m.UpFront, new { id = "txtUpFront", @class = "form-control decimal", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.UpFront)
+                    </div>
+                </div>
+            }
+
+            @if (Model.PricingMode == 1 || (Model.PricingMode == 2 && Model.SystemSize == 1))
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">3 Days:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="Days3Switch" isvisible="@Model.IsPriceDay3">
+                                <label class="onoffswitch-label" for="Days3Switch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.Days3, new { id = "txt3Days", @class = "form-control decimal", @maxlength = 8, @tabindex = 2, onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.Days3)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Partial Payment:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="PartialPaymentSwitch" isvisible="@Model.IsPriceDay1">
+                                <label class="onoffswitch-label" for="PartialPaymentSwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @*<label class="control-label required">Partial Payment:</label>*@
+                        @Html.TextBoxFor(m => m.PartialPayment, new { id = "txtPartialPayment", @class = "form-control decimal", @maxlength = 8, @tabindex = 2, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.PartialPayment)
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="row">
+            @if (Model.PricingMode == 1 || (Model.PricingMode == 2 && Model.SystemSize == 1))
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">7 Days:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="Days7Switch" isvisible="@Model.IsPriceDay7">
+                                <label class="onoffswitch-label" for="Days7Switch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.Days7, new { id = "txt7Days", @class = "form-control decimal", @maxlength = 8, @tabindex = 3, onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.Days7)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label class="control-label required">Initial STC:</label>
+                        @Html.TextBoxFor(m => m.InitialSTC, new { id = "txtInitialSTC", @class = "form-control decimal", @maxlength = 8, @tabindex = 3, onblur = "CheckSTC();", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.InitialSTC)
+                    </div>
+                </div>
+            }
+
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <div class="option-box" style="margin-bottom:10px;">
+                        <label class="control-label required">On Approval:</label>
+                        <div class="onoffswitch">
+                            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="CERApprovedSwitch" isvisible="@Model.IsPriceApproval">
+                            <label class="onoffswitch-label" for="CERApprovedSwitch">
+                                <span class="onoffswitch-inner"></span>
+                                <span class="onoffswitch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                    @*<input type="text" id="txtOnApproval" maxlength="7" class="decimal">*@
+                    @Html.TextBoxFor(m => m.CERApproved, new { id = "txtOnApproval", @class = "form-control decimal", @maxlength = 8, @tabindex = 4, onkeypress = "return isDecimal(event, 5, 2, this)" })
+                    @Html.ValidationMessageFor(m => m.CERApproved)
+                </div>
+            </div>
+        </div>
+
+        @if (Model.PricingMode == 1 || (Model.PricingMode == 2 && Model.SystemSize == 1))
+        {
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Rapid-Pay:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="RapidPaySwitch" isvisible="@Model.IsPriceRapidPay">
+                                <label class="onoffswitch-label" for="RapidPaySwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.RapidPay, new { id = "txtRapidPay", @class = "form-control decimal", @maxlength = 8, @tabindex = 5, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.RapidPay)
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Invoice Stc:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="InvoiceStcSwitch" isvisible="@Model.IsPriceInvoiceStc">
+                                <label class="onoffswitch-label" for="InvoiceStcSwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.InvoiceStc, new { id = "txtInvoiceStc", @class = "form-control decimal", @maxlength = 8, @tabindex = 8, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.InvoiceStc)
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Commercial:</label>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="CommercialSwitch" isvisible="@Model.IsPriceCommercial">
+                                <label class="onoffswitch-label" for="CommercialSwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                        @Html.TextBoxFor(m => m.Commercial, new { id = "txtCommercial", @class = "form-control decimal", @maxlength = 8, @tabindex = 7, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                        @Html.ValidationMessageFor(m => m.Commercial)
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Custom:</label>
+                            <a id="customOptions" onclick="CustomOptions()" style="display: none;">options</a>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="CustomSwitch" isvisible="@Model.IsPriceCustom">
+                                <label class="onoffswitch-label" for="CustomSwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    @Html.DropDownListFor(model => model.CustomSettlementTerm, new SelectList(Model.SettlementTermList, "Key", "Value"), "Select", new { id = "CustomSettlementTerm", @class = "form-control", @tabindex = 9 })
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                @Html.TextBoxFor(m => m.Custom, new { id = "txtCustom", @class = "form-control decimal", @maxlength = 8, @tabindex = 10, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                @Html.ValidationMessageFor(m => m.Custom)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <div class="option-box" style="margin-bottom:10px;">
+                        <label class="control-label required">Peak Pay:</label>
+                        <a onclick="PeakPayOptions()">options</a>
+                        <div class="onoffswitch">
+                            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="PeakPaySwitch" isvisible="@Model.IsPricePeakPay">
+                            <label class="onoffswitch-label" for="PeakPaySwitch">
+                                <span class="onoffswitch-inner"></span>
+                                <span class="onoffswitch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                    @Html.TextBoxFor(m => m.PeakPay, new { id = "txtPeakPay", @class = "form-control decimal", @maxlength = 8, @tabindex = 6, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                    @*@Html.ValidationMessageFor(m => m.PeakPay)*@
+                </div>
+            </div>
+
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <div class="option-box" style="margin-bottom:10px;">
+                        <label class="control-label required">Opti-Pay:</label>
+                        <a onclick="Options()">options</a>
+                        <div class="onoffswitch">
+                            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="OptiPaySwitch" isvisible="@Model.IsPriceOptiPay">
+                            <label class="onoffswitch-label" for="OptiPaySwitch">
+                                <span class="onoffswitch-inner"></span>
+                                <span class="onoffswitch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                    @Html.TextBoxFor(m => m.OptiPay, new { id = "txtOptiPay", @class = "form-control decimal", @maxlength = 8, @tabindex = 6, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                    @Html.ValidationMessageFor(m => m.OptiPay)
+                </div>
+            </div>
+
+        </div>
+
+        @if (Model.PricingType == 2)
+        {
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label class="control-label required">Expiry Date:</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.OfferExpires, new { @id = "txtExpiryDate", @class = "form-control date-pick", @tabindex = 11, @readonly = "readonly" })
+                            <span class="input-group-addon sprite-img date-picker"></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.OfferExpires)
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.PricingType == 2)
+        {
+            <div class="row malti-list">
+                <div class="col-sm-5 ">
+                    <div class="form-group">
+                        @if (Model.PricingMode == 1)
+                        {
+                            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">Solar company(s)</label>
+                        }
+                        else
+                        {
+                            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">Solar Job(s)</label>
+                        }
+                        <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                            @Html.ListBoxFor(m => m.LeftSide, new MultiSelectList(Model.lstLeftSide, "Value", "Text"), new { id = "lstLeftList", @class = "form-control", style = "padding:0px;height: 150px; overflow: auto;", @tabindex = 11 })
+                        </div>
+                    </div>
+                </div>
+                <div class=" col-sm-2 tra-btn">
+                    <div class="form-group">
+                        <a id="btnLtoR" href="javascript:void(0);" class="linkbutton">
+                            <input type="button" value=">>" class="btn btn-info primary" tabindex="12" />
+                        </a>
+                        <a id="btnRtoL" href="javascript:void(0);" class="linkbutton">
+                            <input type="button" value="<<" class="btn btn-info primary" tabindex="13" />
+                        </a>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        @if (Model.PricingMode == 1)
+                        {
+                            <label class="col-md-10 col-sm-10 control-label " for="md" style="padding-top: 8px;margin-left:-13px;">Selected Solar Company(s):</label>
+                        }
+                        else
+                        {
+                            <label class="col-md-10 col-sm-10 control-label " for="md" style="padding-top: 8px;margin-left:-13px;">Selected Solar Job(s):</label>
+                        }
+                        <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0">
+                            @Html.ListBoxFor(m => m.RightSide, new MultiSelectList(Model.lstRightSide, "Value", "Text"), new { id = "lstRightList", @class = "form-control", style = "padding:0px;height: 150px; overflow: auto;", @tabindex = 14 })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="form-group defaultFormBot tab_bottomrow">
+            <div class="btn primary icon-btn ">
+                <span class="sprite-img save_ic"></span>
+                <input type="button" name="SavePricing" value="Save" class="" id="btnSavePrice" tabindex="15">
+            </div>
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" data-dismiss="modal" tabindex="16">
+        </div>
+
+    </div>
+</form>
+
+<div class="modal fade" id="popupOptions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header ">
+
+                <button type="button" class="close" aria-label="Close" id="btnParaOption">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">OPTI-PAY PARAMETERS</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*@Html.Partial("_OptiPayOptions", Model)*@
+
+                    <form class="form-block">
+                        <div class="container-fluid">
+
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Allow for under or equal to(KW):</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="KWswitch" onclick="kwSwitch($('#KWswitch'),$('#txtKWValue'),'@Model.KWValue');" checked>
+                                                <label class="onoffswitch-label" for="KWswitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @Html.TextBoxFor(m => m.KWValue, new { id = "txtKWValue", @class = "form-control", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                        @Html.ValidationMessageFor(m => m.KWValue)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Residential Job Claims(no GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="NonCommercialJobSwitch" checked>
+                                                <label class="onoffswitch-label" for="NonCommercialJobSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Commercial job claims(+GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CommercialJobSwitch">
+                                                <label class="onoffswitch-label" for="CommercialJobSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group defaultFormBot tab_bottomrow">
+                                <input type="button" name="SavePricing" value="Save" class="primary save_ic" id="btnSaveParameters" onclick="saveOptiPayParameters($('#txtKWValue'), $('#popupOptions'));" tabindex="15">
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupCustomOptions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header ">
+
+                <button type="button" class="close" aria-label="Close" id="btnCustomParaOption">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">OPTI-PAY PARAMETERS</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border" id="dvCustomOption">
+                    @*@Html.Partial("_CustomOptiPayOptions", Model)*@
+
+                    <form class="form-block">
+                        <div class="container-fluid">
+
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Allow for under or equal to(KW):</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomKWswitch" onclick="kwSwitch($('#CustomKWswitch'), $('#txtCustomKWValue'), '@Model.CustomKWValue');" checked>
+                                                <label class="onoffswitch-label" for="CustomKWswitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @Html.TextBoxFor(m => m.CustomKWValue, new { id = "txtCustomKWValue", @class = "form-control", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.CustomKWValue)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Residential Job Claims(no GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomNonCommercialJobSwitch" checked>
+                                                <label class="onoffswitch-label" for="CustomNonCommercialJobSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Commercial job claims(+GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomCommercialJobSwitch">
+                                                <label class="onoffswitch-label" for="CustomCommercialJobSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group defaultFormBot tab_bottomrow">
+                                <input type="button" name="SavePricing" value="Save" class="primary save_ic" id="btnCustomSaveParameters" onclick="saveOptiPayParameters($('#txtCustomKWValue'), $('#popupCustomOptions'));" tabindex="15">
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade popup" tabindex="-1" role="dialog" id="popupPeakPay">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnPeakPayOption">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">PEAK PAY PARAMETERS</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-border" id="dvPeakPayOptions">
+                        <form class="form-block">
+                            <div class="container-fluid">
+
+                                <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Time Period(Weeks):</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="TimePeriodSwitch" onclick="timePeriodSwitch($('#TimePeriodSwitch'),$('#txtTimePeriodValue'),'@Model.TimePeriod');">
+                                                    <label class="onoffswitch-label" for="TimePeriodSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.TimePeriod, new { id = "txtTimePeriodValue", @class = "form-control", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isNumber(event);" })
+                                            @Html.ValidationMessageFor(m => m.TimePeriod)
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Fee($):</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="FeeSwitch" onclick="feeSwitch($('#FeeSwitch'), $('#txtFeeValue'), $('.addGst'), $('#GstSwitch'), $('#txtGstValue'), '@Model.Fee')">
+                                                    <label class="onoffswitch-label" for="FeeSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.Fee, new { id = "txtFeeValue", @class = "form-control", @tabindex = 2, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                            @Html.ValidationMessageFor(m => m.Fee)
+                                        </div>
+
+                                        <div class="form-group addGst">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Add GST(%):</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="GstSwitch" onclick="gstSwitch($('#GstSwitch'), $('#txtGstValue'), '@Model.PeakPayGst')">
+                                                    <label class="onoffswitch-label" for="GstSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.PeakPayGst, new { id = "txtGstValue", @class = "form-control", @tabindex = 3, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                            @Html.ValidationMessageFor(m => m.PeakPayGst)
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box">
+                                                <label class="control-label">Allow Residential Job Claims(no GST)?</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="PeakPayNonCommercialJobSwitch">
+                                                    <label class="onoffswitch-label" for="PeakPayNonCommercialJobSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box">
+                                                <label class="control-label">Allow Commercial job claims(+GST)?</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="PeakPayCommercialJobSwitch">
+                                                    <label class="onoffswitch-label" for="PeakPayCommercialJobSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="col-sm-7" style="padding-left:0px;">
+                                                <label class="control-label required">STC Price</label>
+                                            </div>
+                                            <div class="col-sm-5" style="padding-right:0px;">
+                                                @Html.DropDownListFor(model => model.PeakPayStcPrice, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Withhold STC price", Value = "1" }, new SelectListItem() { Text = "Set STC price", Value = "2" } }, new { @class = "form-control", @tabindex = 6 })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group defaultFormBot tab_bottomrow">
+                                    <input type="button" name="SavePeakPayPricing" value="Save" class="primary save_ic" id="btnSavePeakPayParameters" tabindex="7" onclick="savePeakPayParameters($('#txtTimePeriodValue'), $('#txtFeeValue'), $('#txtGstValue'), $('#PeakPayStcPrice'), $('#popupPeakPay'));">
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade popup" tabindex="-1" role="dialog" id="popupCustomPeakPay">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnCustomPeakPayOption">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">PEAK PAY PARAMETERS</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-border" id="dvCustomPeakPayOptions">
+                        <form class="form-block">
+                            <div class="container-fluid">
+
+                                <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Time Period:</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomTimePeriodSwitch" onclick="timePeriodSwitch($('#CustomTimePeriodSwitch'),$('#txtCustomTimePeriodValue'),'@Model.CustomTimePeriod');">
+                                                    <label class="onoffswitch-label" for="CustomTimePeriodSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.CustomTimePeriod, new { id = "txtCustomTimePeriodValue", @class = "form-control", @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isNumber(event);" })
+                                            @Html.ValidationMessageFor(m => m.CustomTimePeriod)
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Fee:</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomFeeSwitch" onclick="feeSwitch($('#CustomFeeSwitch'), $('#txtCustomFeeValue'), $('.addCustomGst'), $('#CustomGstSwitch'), $('#txtCustomGstValue'), '@Model.CustomFee')">
+                                                    <label class="onoffswitch-label" for="CustomFeeSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.CustomFee, new { id = "txtCustomFeeValue", @class = "form-control", @tabindex = 2, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                            @Html.ValidationMessageFor(m => m.CustomFee)
+                                        </div>
+
+                                        <div class="form-group addCustomGst">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Add GST:</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomGstSwitch" onclick="gstSwitch($('#CustomGstSwitch'), $('#txtCustomGstValue'), '@Model.CustomPeakPayGst')">
+                                                    <label class="onoffswitch-label" for="CustomGstSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.CustomPeakPayGst, new { id = "txtCustomGstValue", @class = "form-control", @tabindex = 3, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                            @Html.ValidationMessageFor(m => m.CustomPeakPayGst)
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box">
+                                                <label class="control-label">Allow Residential Job Claims(no GST)?</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomPeakPayNonCommercialJobSwitch">
+                                                    <label class="onoffswitch-label" for="CustomPeakPayNonCommercialJobSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box">
+                                                <label class="control-label">Allow Commercial job claims(+GST)?</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="CustomPeakPayCommercialJobSwitch">
+                                                    <label class="onoffswitch-label" for="CustomPeakPayCommercialJobSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="col-sm-7" style="padding-left:0px;">
+                                                <label class="control-label required">STC Price</label>
+                                            </div>
+                                            <div class="col-sm-5" style="padding-right:0px;">
+                                                @Html.DropDownListFor(model => model.CustomPeakPayStcPrice, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Withhold STC price", Value = "1" }, new SelectListItem() { Text = "Set STC price", Value = "2" } }, new { @class = "form-control", @tabindex = "6" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group defaultFormBot tab_bottomrow">
+                                    <input type="button" name="SaveCustomPeakPayPricing" value="Save" class="primary save_ic" id="btnSaveCustomPeakPayParameters" tabindex="7" onclick="savePeakPayParameters($('#txtCustomTimePeriodValue'), $('#txtCustomFeeValue'), $('#txtCustomGstValue'), $('#CustomPeakPayStcPrice'), $('#popupCustomPeakPay'));">
+                                </div>
+
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade popup" tabindex="-1" role="dialog" id="popupUpFront">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnUpFrontOption">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">UP FRONT PARAMETERS</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-border" id="dvUpFrontOptions">
+                        <form class="form-block">
+                            <div class="container-fluid">
+
+                                <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Settelment After Days:</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="SettelmentAfterDaysSwitch" onclick="SettelmentAfterDaysSwitchfn($('#SettelmentAfterDaysSwitch'),$('#txtSettelmentAfterDaysValue'),'@Model.TimePeriod');">
+                                                    <label class="onoffswitch-label" for="SettelmentAfterDaysSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            @Html.TextBoxFor(m => m.UpFrontSettelmentDay, new { id = "txtSettelmentAfterDaysValue", @class = "form-control", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isNumber(event);" })
+                                            @Html.ValidationMessageFor(m => m.UpFrontSettelmentDay)
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="option-box" style="margin-bottom: 10px;">
+                                                <label class="control-label">Settelment Date:</label>
+                                                <div class="onoffswitch">
+                                                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="SettelmentDateSwitch" onclick="SettelmentDateSwitchfn($('#SettelmentDateSwitch'), $('#strSettelmentDate_Popup'), '@Model.UpFrontSettelmentDate')">
+                                                    <label class="onoffswitch-label" for="SettelmentDateSwitch">
+                                                        <span class="onoffswitch-inner"></span>
+                                                        <span class="onoffswitch-switch"></span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="input-group">
+                                                    @Html.TextBoxFor(m => m.UpFrontSettelmentDate, new { @class = "form-control date-pick", @tabindex = 205, @id = "strSettelmentDate_Popup" })
+                                                    <span class="input-group-addon sprite-img date-picker" id="SettelmentDatePickerIcon"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group defaultFormBot tab_bottomrow">
+                                    <input type="button" name="SaveUpFrontPricing" value="Save" class="primary save_ic" id="btnSaveUpFrontParameters" tabindex="7" onclick="saveUpFrontParameters($('#txtSettelmentAfterDaysValue'), $('#strSettelmentDate_Popup'), $('#popupUpFront'));">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        OptipayParameters();
+        CustomOptipayParameters();
+        ShowHideCustomParam('@Model.CustomSettlementTerm');
+        PeakPayParameters();
+        CustomPeakPayParameters();
+        UpFrontParameters();
+    })
+
+    if (userTypeMode == 2) {
+        //$('input.switch').on('change', function () {
+        //    $('input.switch').not(this).prop('checked', false);
+        //});
+
+        $('input.pricingSwitch').on('change', function () {
+            $('input.pricingSwitch').not(this).prop('checked', false);
+        });
+    }
+
+    $("#PricingManagerDetails").find('.onoffswitch').find('input[type=checkbox]').each(function () {
+        $(this).prop('checked', $(this).attr("IsVisible"));
+    });
+
+    $('#CustomSettlementTerm').change(function () {
+        ShowHideCustomParam($(this).val());
+    });
+
+    @*$("#KWswitch").click(function () {
+        if ($('#KWswitch').prop('checked') == false) {
+            $('#txtKWValue').hide();
+            $('#txtKWValue').val(0);
+        }
+        else {
+            $('#txtKWValue').show();
+            if ('@Model.KWValue' == '' || '@Model.KWValue' == '0') {
+                $('#txtKWValue').val(10);
+            }
+            else {
+                $('#txtKWValue').val('@Model.KWValue');
+            }
+        }
+    });*@
+
+
+    //$("#btnParaOption").click(function () {
+    //    $("#popupOptions").modal('hide');
+    //});
+
+    //$("#btnSaveParameters").click(function () {
+
+    //    if ($('#txtKWValue').is(':visible') == true) {
+    //        if ($('#txtKWValue').val() == "") {
+    //            alert("Please enter KW value.")
+    //        }
+    //        else if ($('#txtKWValue').val() != "") {
+    //            $("#popupOptions").modal('hide');
+    //        }
+    //    }
+    //    else {
+    //        $("#popupOptions").modal('hide');
+    //    }
+
+    //});
+
+    @*$("#CustomKWswitch").click(function () {
+        if ($('#CustomKWswitch').prop('checked') == false) {
+            $('#txtCustomKWValue').hide();
+            $('#txtCustomKWValue').val(0);
+        }
+        else {
+            $('#txtCustomKWValue').show();
+            if ('@Model.CustomKWValue' == '' || '@Model.CustomKWValue' == '0') {
+                $('#txtCustomKWValue').val(10);
+            }
+            else {
+                $('#txtCustomKWValue').val('@Model.CustomKWValue');
+            }
+        }
+    });*@
+
+    //$("#btnCustomParaOption").click(function () {
+    //    $("#popupCustomOptions").modal('hide');
+    //});
+
+    //$("#btnCustomSaveParameters").click(function () {
+
+    //    if ($('#txtCustomKWValue').is(':visible') == true) {
+    //        if ($('#txtCustomKWValue').val() == "") {
+    //            alert("Please enter KW value.")
+    //        }
+    //        else if ($('#txtCustomKWValue').val() != "") {
+    //            $("#popupCustomOptions").modal('hide');
+    //        }
+    //    }
+    //    else {
+    //        $("#popupCustomOptions").modal('hide');
+    //    }
+
+
+    //});
+
+    $(document).off('click', '#btnSavePrice').on('click', '#btnSavePrice', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if ($('#PeakPayStcPrice').val() != 1 && ($('#txtPeakPay').val() == 0 || $('#txtPeakPay').val() == '')) {
+            alert('Please enter PeakPay price.');
+            return false;
+        }
+        if (($("#CustomSettlementTerm").val() == 12 && $('#CustomPeakPayStcPrice').val() == 2) && ($("#txtCustom").val() == 0 || $("#txtCustom").val() == '')) {
+            alert('Please enter Custom PeakPay price.');
+            return false;
+        }
+        if (typeof (validateExtraFields) == "function") {
+            if (validateExtraFields() == false) {
+                return false;
+            }
+        }
+        if ($("#SettelmentAfterDaysSwitch").is(':checked') == true) {
+            if ($('#txtSettelmentAfterDaysValue').val() == "" || $('#txtSettelmentAfterDaysValue').val() == 0) {
+                alert("Please enter settelment days in upfront options.");
+                return false;
+            }
+        }
+
+        if ($('#SettelmentDateSwitch').is(':checked') == true) {
+            if ($('#strSettelmentDate_Popup').val() == "" || $('#strSettelmentDate_Popup').val() == 0) {
+                alert("Please enter settelment date in upfront options.");
+                return false;
+            }
+        }
+
+        if ($('#SettelmentDateSwitch').is(':checked') == false && $("#SettelmentAfterDaysSwitch").is(':checked') == false) {
+            alert("Please set any values in upfront options.");
+            return false;
+        }
+
+        if (typeof (validateForm) != "function" || ((typeof (validateForm) == "function") && validateForm())) {
+            if (('@Model.PricingType' == 2) && ($('#lstRightList option').length == 0)) {
+                var vitem = '@Model.PricingMode' == 1 ? "Solar Company" : "Job";
+                $(".alert").hide();
+                $("#popuperrorMsgRegion").removeClass("alert-success");
+                $("#popuperrorMsgRegion").addClass("alert-danger");
+                $("#popuperrorMsgRegion").html(closeButton + "Please select at least one " + vitem + ".");
+                $("#popuperrorMsgRegion").show();
+
+            }
+            else {
+                var liCountWithNoZero = 0;
+
+                $.each($("#PricingManagerDetails").find('input[type=text]'), function (e) {
+                    if ($(this).val() > 0) {
+                        liCountWithNoZero++;
+                    }
+                });
+
+                if (userTypeMode == 2 && $("#PricingManagerDetails").find($('.onoffswitch input:checked')).length == 0) {
+                    alert("Please select 1 settlement term of price.");
+                    return false;
+                }
+
+                if (liCountWithNoZero < 1) {
+                    alert("Please select atleast 1 settlement term of price.");
+                    return false;
+                }
+                else {
+                    if ($("#txtCustom").val() > 0) {
+                        if ($("#CustomSettlementTerm").val() == "" || $("#CustomSettlementTerm").val() <= 0) {
+                            alert("Please select settlement term of custom.");
+                            return false;
+                        }
+                    }
+                    else if ($('#CustomSettlementTerm').val() == "11" || $('#CustomSettlementTerm').val() == "4") {
+                        if ($("#txtCustom").val() == 0) {
+                            alert("Custom value must be greater than 0");
+                            return false;
+                        }
+                    }
+
+                    var selectedItemArray = [];
+                    var lstSelecteditems = '';
+                    var expirydate = '';
+                    var saveUrl = '';
+                    var scID = '', rsId = '';
+                    var d1price = '', d3price = '', d7price = '', upfront = '', partialpayment = '', initialSTC = '';
+
+                    if ('@Model.PricingType' == 2) {
+                        $("#lstRightList option").each(function (i) {
+                            selectedItemArray.push($(this).val().trim());
+                        });
+                        lstSelecteditems = selectedItemArray.join(',');
+                        expirydate = GetDates($("#txtExpiryDate").val());
+                    }
+
+                    if ('@Model.PricingMode' == 1) {
+                        saveUrl = '@Url.Action("SavePriceForSolarCompany", "PricingManager")';
+                        d1price = $("#txt24Hour").val();
+                        d3price = $("#txt3Days").val();
+                        d7price = $("#txt7Days").val();
+                        if ('@ProjectSession.UserTypeId' == 1 || '@ProjectSession.UserTypeId' == 3) {
+
+                            if (userTypeMode == 2) {
+                                rsId = document.getElementById("WholeSalerID").value;
+                            }
+                            else {
+                                rsId = document.getElementById("ResellerId").value;
+                            }
+                        }
+                    }
+                    else {
+                        saveUrl = '@Url.Action("SavePriceForSolarJob", "PricingManager")';
+                        //scID = document.getElementById("SolarCompanyId").value;
+                        scID = $("#hdnsolarCompanyid").val();
+                        if ('@Model.SystemSize' == 1) {
+                            d1price = $("#txt24Hour").val();
+                            d3price = $("#txt3Days").val();
+                            d7price = $("#txt7Days").val();
+                        }
+                        else {
+                            //d1price = $("#txtUpFront").val();
+                            upfront = $("#txtUpFront").val();
+                            partialpayment = $("#txtPartialPayment").val();
+                            initialSTC = $("#txtInitialSTC").val();
+                        }
+                    }
+
+                    var UpFrontSettelmentDayvalue = '';
+                    var strSettelmentDate_Popupvalue = '';
+                    if ($('#SettelmentAfterDaysSwitch').prop('checked')) {
+                        if ($('#txtSettelmentAfterDaysValue').val() == '') {
+                            UpFrontSettelmentDayvalue = '4'
+                        }
+                        else {
+                            UpFrontSettelmentDayvalue = $('#txtSettelmentAfterDaysValue').val();
+                        }
+                    }
+
+                    if ($('#SettelmentDateSwitch').prop('checked')) {
+                        if ($('#strSettelmentDate_Popup').val() == '') {
+                            var Todaydate1 = new Date();
+                            var FinaltodayDate1 = new Date(Todaydate.getFullYear(), Todaydate.getMonth(), Todaydate.getDate());
+                            $('#strSettelmentDate_Popup').datepicker('setDate', FinaltodayDate);
+                            strSettelmentDate_Popupvalue = $('#strSettelmentDate_Popup').val();
+                        }
+                        else {
+                            strSettelmentDate_Popupvalue = $('#strSettelmentDate_Popup').val();
+                        }
+                    }
+
+                    $.ajax({
+                        url: saveUrl,
+                        type: "GET",
+                        data: {
+                            PricingType: '@Model.PricingType', items: lstSelecteditems, day1price: d1price, day3price: d3price, day7price: d7price, onapprovalprice: $("#txtOnApproval").val(), expiryDate: expirydate, ResellerId: rsId, solarCompanyId: scID,
+                            upFront: upfront, partialPayment: partialpayment, initialstc: initialSTC, systemSize: '@Model.SystemSize', rapidPay: $("#txtRapidPay").val(), optiPay: $("#txtOptiPay").val(), commercial: $("#txtCommercial").val(), custom: $("#txtCustom").val(),
+                            invoiceStcPrice: $("#txtInvoiceStc").val(), customSettlementTerm: $("#CustomSettlementTerm").val(), UnderKW: $('#KWswitch').prop('checked'), KWvalue: $("#txtKWValue").val(), NonCommercialJob: $('#NonCommercialJobSwitch').prop('checked'),
+                            CommercialJob: $('#CommercialJobSwitch').prop('checked'), IsCustomUnderKw: $('#CustomKWswitch').prop('checked'), CustomKWValue: $("#txtCustomKWValue").val(), IsCustomNonCommercialJob: $('#CustomNonCommercialJobSwitch').prop('checked'),
+                            IsCustomCommercialJob: $('#CustomCommercialJobSwitch').prop('checked'), IsPriceDay1: '@Model.SystemSize' == 1 || '@Model.PricingMode' == 1 ? $('#Hour24Switch').prop('checked') : $("#UpFrontSwitch").prop('checked'), IsPriceDay3: $('#Days3Switch').prop('checked'),
+                            IsPriceDay7: $('#Days7Switch').prop('checked'), IsPriceApproval: $('#CERApprovedSwitch').prop('checked'), IsPriceRapidPay: $('#RapidPaySwitch').prop('checked'), IsPriceOptiPay: $('#OptiPaySwitch').prop('checked'), IsPriceCommercial: $('#CommercialSwitch').prop('checked'),
+                            IsPriceCustom: $('#CustomSwitch').prop('checked'), IsPriceInvoiceStc: $('#InvoiceStcSwitch').prop('checked'), IsPricePartialPayment: $("#PartialPaymentSwitch").prop('checked'), peakPay: $('#txtPeakPay').val(), IsTimePeriod: $('#TimePeriodSwitch').prop('checked'),
+                            timePeriod: $('#txtTimePeriodValue').val(), IsFee: $('#FeeSwitch').prop('checked'), fee: $('#txtFeeValue').val(), IsPricePeakPay: $('#PeakPaySwitch').prop('checked'), IsCustomTimePeriod: $('#CustomTimePeriodSwitch').prop('checked'),
+                            customTimePeriod: $('#txtCustomTimePeriodValue').val(), IsCustomFee: $('#CustomFeeSwitch').prop('checked'), customFee: $('#txtCustomFeeValue').val(), IsPeakPayGst: $('#GstSwitch').prop('checked'), peakPayGst: $('#txtGstValue').val(),
+                            IsPeakPayCommercialJob: $('#PeakPayCommercialJobSwitch').prop('checked'), IsPeakPayNonCommercialJob: $('#PeakPayNonCommercialJobSwitch').prop('checked'), peakPayStcPrice: $('#PeakPayStcPrice').val(), IsCustomPeakPayGst: $('#CustomGstSwitch').prop('checked'),
+                            customPeakPayGst: $('#txtCustomGstValue').val(), IsCustomPeakPayCommercialJob: $('#CustomPeakPayCommercialJobSwitch').prop('checked'), IsCustomPeakPayNonCommercialJob: $('#CustomPeakPayNonCommercialJobSwitch').prop('checked'), customPeakPayStcPrice: $('#CustomPeakPayStcPrice').val(),
+                            IsSettelmentDayUpFront: $('#SettelmentAfterDaysSwitch').prop('checked'), UpFrontSettelmentDay: UpFrontSettelmentDayvalue, IsSettelmentDateUpFront: $('#SettelmentDateSwitch').prop('checked'), UpFrontSettelmentDate: strSettelmentDate_Popupvalue
+                        },
+                        dataType: "json",
+                        contentType: "application/json; charset=utf-8",
+                        success: function (data) {
+                            if (data.success) {
+
+                                if ('@Model.PricingType' == 1) {
+
+                                    SetPrice($("#txt24Hour").val(), $("#txt3Days").val(), $("#txt7Days").val(), $("#txtOnApproval").val(), $("#txtRapidPay").val(), $("#txtOptiPay").val(), $("#txtCommercial").val(), $("#txtCustom").val(), $("#txtInvoiceStc").val(),
+                                             "Custom - " + $("#CustomSettlementTerm option:selected").text(), $('#txtPeakPay').val(), $('#PeakPayStcPrice').val(), $('#CustomPeakPayStcPrice').val(), $("#CustomSettlementTerm").val());
+
+                                    ShowHidePrice($('#Hour24Switch').prop('checked'), $('#Days3Switch').prop('checked'), $('#Days7Switch').prop('checked'), $('#CERApprovedSwitch').prop('checked'), $('#RapidPaySwitch').prop('checked'),
+                                                  $('#OptiPaySwitch').prop('checked'), $('#CommercialSwitch').prop('checked'), $('#CustomSwitch').prop('checked'), $('#InvoiceStcSwitch').prop('checked'), $('#PeakPaySwitch').prop('checked'));
+
+                                    SetCustomSubDescription($("#CustomSettlementTerm").val());
+                                }
+
+                                $('#popupProof').modal('toggle');
+
+                                $(".alert").hide();
+                                $("#errorMsgRegion").removeClass("alert-danger");
+                                $("#errorMsgRegion").addClass("alert-success");
+                                $("#errorMsgRegion").html(closeButton + "Price saved successfully.");
+                                $("#errorMsgRegion").show();
+
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        },
+                    });
+                }
+
+            }
+        }
+
+
+    });
+
+    function validateForm() {
+        $.validator.unobtrusive.parse("#PricingManagerDetails");
+        if ($("#PricingManagerDetails").valid()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    //$('.decimal').keypress(function (event) {
+    //    var $this = $(this);
+    //    if ((event.which != 46 || $this.val().indexOf('.') != -1) &&
+    //        (event.which > 31) &&
+    //      ((event.which < 48 || event.which > 57) &&
+    //      (event.which != 0 && event.which != 8))) {
+    //        event.preventDefault();
+    //    }
+
+    //    var text = $(this).val();
+    //    if ((event.which == 46) && (text.indexOf('.') == -1)) {
+    //        setTimeout(function () {
+    //            if ($this.val().substring($this.val().indexOf('.')).length > 5) {
+    //                $this.val($this.val().substring(0, $this.val().indexOf('.') + 3));
+    //            }
+    //        }, 1);
+    //    }
+
+    //    if ((text.indexOf('.') != -1) &&
+    //        (text.substring(text.indexOf('.')).length > 2) &&
+    //        (event.which != 0 && event.which != 8) &&
+    //    ($(this)[0].selectionStart >= text.length - 2)) {
+    //        event.preventDefault();
+    //    }
+
+    //    if ($this.val().indexOf('.') == -1 && ($this.val().length > 4) && event.which != 46) {
+    //        event.preventDefault();
+    //    }
+    //});
+
+    $("#txtExpiryDate").datepicker({
+        format: '@ProjectConfiguration.GetDateFormat',
+        startDate: new Date(),
+        autoclose: true
+    });
+
+    $("#btnLtoR").click(function () {
+        $('#lstLeftList option:selected').each(function () {
+            $(this).remove().appendTo("#lstRightList");
+        });
+    });
+
+    $("#btnRtoL").click(function () {
+        $('#lstRightList option:selected').each(function () {
+            $(this).remove().appendTo("#lstLeftList");
+        });
+    });
+
+    function CheckSTC() {
+        var minSTCs = [];
+        $("#lstRightList option").each(function (i) {
+            minSTCs.push($(this).text().trim().split('-')[1]);
+        });
+        var result = minSTCs[0];
+        minSTCs.forEach(function (x) {
+            if (parseFloat(x) < result) result = x; // find smallest number as string instead
+        });
+        if (parseFloat($("#txtInitialSTC").val()) > result) {
+            $(".alert").hide();
+            $("#popuperrorMsgRegion").removeClass("alert-success");
+            $("#popuperrorMsgRegion").addClass("alert-danger");
+            $("#popuperrorMsgRegion").html(closeButton + "Please enter Initial STC less than minimum STC " + result);
+            $("#popuperrorMsgRegion").show();
+
+            $("#txtInitialSTC").val('');
+        }
+    }
+
+    function GetDates(date) {
+        if (date != '') {
+            var tickStartDate = ConvertDateToTick(date, '@ProjectConfiguration.GetDateFormat');
+            return moment(tickStartDate).format("YYYY-MM-DD");
+        }
+        else {
+            return '';
+        }
+    }
+
+    function Options() {
+        $('#popupOptions').modal({ backdrop: 'static', keyboard: false });
+        $('#popupOptions').find('form').css('display', "block");
+    }
+
+    $("#btnParaOption").click(function () {
+        $("#popupOptions").modal('toggle');
+    });
+
+    function OptipayParameters() {
+
+        if ('@Model.UnderKW' != '') {
+            if ('@Model.UnderKW' == 'True') {
+                $('#KWswitch').prop('checked', true);
+                $('#txtKWValue').val('@Model.KWValue');
+            }
+            else {
+                $('#KWswitch').prop('checked', false);
+                $('#txtKWValue').hide();
+            }
+        }
+        else {
+            $('#KWswitch').prop('checked', true);
+            if ('@Model.KWValue' == '' || '@Model.KWValue' == '0') {
+                $('#txtKWValue').val(10);
+            }
+            else {
+                $('#txtKWValue').val('@Model.KWValue');
+            }
+        }
+
+        if ('@Model.NonCommercialJob' != '') {
+            if ('@Model.NonCommercialJob' == 'True') {
+                $('#NonCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#NonCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#NonCommercialJobSwitch').prop('checked', true);
+        }
+
+        if ('@Model.CommercialJob' != '') {
+            if ('@Model.CommercialJob' == 'True') {
+                $('#CommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#CommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#CommercialJobSwitch').prop('checked', false);
+        }
+
+    }
+
+    function CustomOptions() {
+        if ($('#CustomSettlementTerm').val() == 8) {
+            $('#popupCustomOptions').modal({ backdrop: 'static', keyboard: false });
+            $('#popupCustomOptions').find('form').css('display', "block");
+        }
+        if ($('#CustomSettlementTerm').val() == 12) {
+            $('#popupCustomPeakPay').modal({ backdrop: 'static', keyboard: false });
+            $('#popupCustomPeakPay').find('form').css('display', "block");
+        }
+    }
+
+    $("#btnCustomParaOption").click(function () {
+        $("#popupCustomOptions").modal('toggle');
+    });
+
+    function CustomOptipayParameters() {
+
+        if ('@Model.IsCustomUnderKW' != '') {
+            if ('@Model.IsCustomUnderKW' == 'True') {
+                $('#CustomKWswitch').prop('checked', true);
+                @*if ('@Model.CustomKWValue' == '' || '@Model.CustomKWValue' == '0') {
+                    $('#txtCustomKWValue').val(10);
+                }*@
+                $('#txtCustomKWValue').val('@Model.CustomKWValue');
+            }
+            else {
+                $('#CustomKWswitch').prop('checked', false);
+                $('#txtCustomKWValue').hide();
+            }
+        }
+        else {
+            $('#CustomKWswitch').prop('checked', true);
+            if ('@Model.CustomKWValue' == '' || '@Model.CustomKWValue' == '0') {
+                $('#txtCustomKWValue').val(10);
+            }
+            else {
+                $('#txtCustomKWValue').val('@Model.KWValue');
+            }
+        }
+
+        if ('@Model.IsCustomNonCommercialJob' != '') {
+            if ('@Model.IsCustomNonCommercialJob' == 'True') {
+                $('#CustomNonCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#CustomNonCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#CustomNonCommercialJobSwitch').prop('checked', true);
+        }
+
+        if ('@Model.IsCustomCommercialJob' != '') {
+            if ('@Model.IsCustomCommercialJob' == 'True') {
+                $('#CustomCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#CustomCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#CustomCommercialJobSwitch').prop('checked', false);
+        }
+
+    }
+
+    function kwSwitch(objKWswitch, objTxtKWValue, objKWValue) {
+        if (objKWswitch.prop('checked') == false) {
+            objTxtKWValue.hide();
+            objTxtKWValue.val(0);
+        }
+        else {
+            objTxtKWValue.show();
+            if (objKWValue == '' || objKWValue == '0') {
+                objTxtKWValue.val(10);
+            }
+            else {
+                objTxtKWValue.val(objKWValue);
+            }
+        }
+    };
+
+    function saveOptiPayParameters(objTxtKWValue, objPopup) {
+        if (objTxtKWValue.is(':visible') == true) {
+            if (objTxtKWValue.val() == "") {
+                alert("Please enter KW value.")
+            }
+            else if (objTxtKWValue.val() != "") {
+                objPopup.modal('hide');
+            }
+        }
+        else {
+            objPopup.modal('hide');
+        }
+    }
+
+    function ShowHideCustomParam(value) {
+
+        if (value == "8" || value == "12") {
+            $("#customOptions").show();
+        } else {
+            $("#customOptions").hide();
+        }
+
+    }
+
+    function PeakPayOptions() {
+        $('#popupPeakPay').modal({ backdrop: 'static', keyboard: false });
+        $('#popupPeakPay').find('form').css('display', "block");
+    }
+
+    $("#btnPeakPayOption").click(function () {
+        $("#popupPeakPay").modal('toggle');
+    });
+
+    function PeakPayParameters() {
+
+        if ('@Model.IsTimePeriod' != '') {
+            if ('@Model.IsTimePeriod' == 'True') {
+                $('#TimePeriodSwitch').prop('checked', true);
+                $('#txtTimePeriodValue').val('@Model.TimePeriod');
+            }
+            else {
+                $('#TimePeriodSwitch').prop('checked', false);
+                $('#txtTimePeriodValue').hide();
+            }
+        }
+        else {
+            $('#TimePeriodSwitch').prop('checked', true);
+            if ('@Model.TimePeriod' == '' || '@Model.TimePeriod' == '0') {
+                $('#txtTimePeriodValue').val(4);
+            }
+            else {
+                $('#txtTimePeriodValue').val('@Model.TimePeriod');
+            }
+        }
+
+        if ('@Model.IsFee' != '') {
+            if ('@Model.IsFee' == 'True') {
+                $('#FeeSwitch').prop('checked', true);
+                $('#txtFeeValue').val('@Model.Fee');
+                $('.addGst').show();
+                if ('@Model.IsPeakPayGst' == 'True') {
+                    $('#GstSwitch').prop('checked', true);
+                    $('#txtGstValue').show();
+                }
+                else {
+                    $('#GstSwitch').prop('checked', false);
+                    $('#txtGstValue').hide();
+                }
+            }
+            else {
+                $('#FeeSwitch').prop('checked', false);
+                $('#txtFeeValue').val(0);
+                $('#txtFeeValue').hide();
+                $('.addGst').hide();
+            }
+        }
+        else {
+            $('#FeeSwitch').prop('checked', true);
+            if ('@Model.Fee' == '' || '@Model.Fee' == '0') {
+                $('#txtFeeValue').val(0);
+            }
+            else {
+                $('#txtFeeValue').val('@Model.Fee');
+            }
+        }
+
+        if ('@Model.IsPeakPayNonCommercialJob' != '') {
+            if ('@Model.IsPeakPayNonCommercialJob' == 'True') {
+                $('#PeakPayNonCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#PeakPayNonCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#PeakPayCommercialJobSwitch').prop('checked', true);
+        }
+
+        if ('@Model.IsPeakPayCommercialJob' != '') {
+            if ('@Model.IsPeakPayCommercialJob' == 'True') {
+                $('#PeakPayCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#PeakPayCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#PeakPayCommercialJobSwitch').prop('checked', false);
+        }
+    };
+
+    $("#btnCustomPeakPayOption").click(function () {
+        $("#popupCustomPeakPay").modal('toggle');
+    });
+
+    function CustomPeakPayParameters() {
+        if ('@Model.IsCustomTimePeriod' != '') {
+            if ('@Model.IsCustomTimePeriod' == 'True') {
+                $('#CustomTimePeriodSwitch').prop('checked', true);
+                $('#txtCustomTimePeriodValue').val('@Model.CustomTimePeriod');
+            }
+            else {
+                $('#CustomTimePeriodSwitch').prop('checked', false);
+                $('#txtCustomTimePeriodValue').hide();
+            }
+        }
+        else {
+            $('#CustomTimePeriodSwitch').prop('checked', true);
+            if ('@Model.CustomTimePeriod' == '' || '@Model.CustomTimePeriod' == '0') {
+                $('#txtCustomTimePeriodValue').val(4);
+            }
+            else {
+                $('#txtCustomTimePeriodValue').val('@Model.CustomTimePeriod');
+            }
+        }
+
+        if ('@Model.IsCustomFee' != '') {
+            if ('@Model.IsCustomFee' == 'True') {
+                $('#CustomFeeSwitch').prop('checked', true);
+                $('#txtCustomFeeValue').val('@Model.CustomFee');
+                $('.addCustomGst').show();
+                if ('@Model.IsCustomPeakPayGst' == 'True') {
+                    $('#CustomGstSwitch').prop('checked', true);
+                    $('#txtCustomGstValue').show();
+                }
+                else {
+                    $('#CustomGstSwitch').prop('checked', false);
+                    $('#txtCustomGstValue').hide();
+                }
+            }
+            else {
+                $('#CustomFeeSwitch').prop('checked', false);
+                $('#txtCustomFeeValue').val(0);
+                $('#txtCustomFeeValue').hide();
+                $('.addCustomGst').hide();
+            }
+        }
+        else {
+            $('#CustomFeeSwitch').prop('checked', true);
+            if ('@Model.CustomFee' == '' || '@Model.CustomFee' == '0') {
+                $('#txtCustomFeeValue').val(0);
+            }
+            else {
+                $('#txtCustomFeeValue').val('@Model.CustomFee');
+            }
+        }
+
+        if ('@Model.IsCustomPeakPayNonCommercialJob' != '') {
+            if ('@Model.IsCustomPeakPayNonCommercialJob' == 'True') {
+                $('#CustomPeakPayNonCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#CustomPeakPayNonCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#CustomPeakPayCommercialJobSwitch').prop('checked', true);
+        }
+
+        if ('@Model.IsCustomPeakPayCommercialJob' != '') {
+            if ('@Model.IsCustomPeakPayCommercialJob' == 'True') {
+                $('#CustomPeakPayCommercialJobSwitch').prop('checked', true);
+            }
+            else {
+                $('#CustomPeakPayCommercialJobSwitch').prop('checked', false);
+            }
+        }
+        else {
+            $('#CustomPeakPayCommercialJobSwitch').prop('checked', false);
+        }
+    };
+
+    function timePeriodSwitch(objTimePeriodSwitch, objTxtTimePeriod, objTimePeriod) {
+        if (objTimePeriodSwitch.prop('checked') == false) {
+            objTxtTimePeriod.hide();
+            objTxtTimePeriod.val(4);
+        }
+        else {
+            objTxtTimePeriod.show();
+            if (objTimePeriod == '' || objTimePeriod == '0') {
+                objTxtTimePeriod.val(4);
+            }
+            else {
+                objTxtTimePeriod.val(objTimePeriod);
+            }
+        }
+    };
+
+    function feeSwitch(objFeeSwitch, objTxtFee, objAddGst, objGstSwitch, objTxtGst, objFee) {
+        if (objFeeSwitch.prop('checked') == false) {
+            objTxtFee.hide();
+            objTxtFee.val(0);
+            objAddGst.hide();
+        }
+        else {
+            objTxtFee.show();
+            if (objFee == '' || objFee == '0') {
+                objTxtFee.val(0);
+            }
+            else {
+                objTxtFee.val(objFee);
+            }
+            objAddGst.show();
+            objGstSwitch.prop('checked', false);
+            objTxtGst.hide();
+        }
+    };
+
+    function gstSwitch(objGstSwitch, objTxtGst, objGst) {
+        if (objGstSwitch.prop('checked') == false) {
+            objTxtGst.hide();
+        }
+        else {
+            objTxtGst.show();
+            if (objGst == '' || objGst == '0') {
+                objTxtGst.val();
+            }
+            else {
+                objTxtGst.val(objGst);
+            }
+        }
+    };
+
+    function savePeakPayParameters(objTimeperiod, objFee, objGst, objStcPrice, objPopup) {
+        if (objTimeperiod.is(':visible') == true) {
+            if (objTimeperiod.val() == "" || objTimeperiod.val() == 0) {
+                alert("Please enter Time Period.");
+                return false;
+            }
+        }
+
+        if (objFee.is(':visible') == true) {
+            if (objFee.val() == "" || objFee.val() == 0) {
+                alert("Please enter Fee.");
+                return false;
+            }
+        }
+
+        if (objGst.is(':visible') == true) {
+            if (objGst.val() == "" || objGst.val() == 0) {
+                alert("Please enter Gst.");
+                return false;
+            }
+        }
+
+        if (objStcPrice.val() == '') {
+            alert("Please select Stc Price.");
+            return false;
+        }
+
+        if (((objTimeperiod.is(':visible') == true && objTimeperiod.val() > 0) || objTimeperiod.is(':visible') == false) &&
+            ((objFee.is(':visible') == true && objFee.val() > 0) || objFee.is(':visible') == false) &&
+            ((objGst.is(':visible') == true && objGst.val() > 0) || objGst.is(':visible') == false) &&
+            (objStcPrice.val() > 0)) {
+            objPopup.modal('hide');
+        }
+    };
+
+    function UpFrontOptions() {
+        $('#popupUpFront').modal({ backdrop: 'static', keyboard: false });
+        $('#popupUpFront').find('form').css('display', "block");
+        $("#SettelmentDatePickerIcon").hide();
+    }
+
+    $("#btnUpFrontOption").click(function () {
+        $("#popupUpFront").modal('toggle');
+    });
+
+    function SettelmentAfterDaysSwitchfn(objSettelmentAfterDays, objTxtSettelmentAfterDaysValue, objDays) {
+        debugger;
+        if (objSettelmentAfterDays.prop('checked') == false) {
+            objTxtSettelmentAfterDaysValue.hide();
+            objTxtSettelmentAfterDaysValue.val(4);
+        }
+        else {
+            objTxtSettelmentAfterDaysValue.show();
+            if (objDays == '' || objDays == '0') {
+                objTxtSettelmentAfterDaysValue.val(4);
+            }
+            else {
+                objTxtSettelmentAfterDaysValue.val(objDays);
+            }
+
+            $('#SettelmentDateSwitch').prop('checked', false);
+            $('#strSettelmentDate_Popup').val('');
+            $('#strSettelmentDate_Popup').hide();
+            $('#SettelmentDatePickerIcon').hide();
+        }
+    };
+
+    function SettelmentDateSwitchfn(objSettelmentDateSwitch, objstrSettelmentDate_PopupValue, objDate) {
+        debugger;
+        if (objSettelmentDateSwitch.prop('checked') == false) {
+            objstrSettelmentDate_PopupValue.hide();
+            $("#SettelmentDatePickerIcon").hide();
+            objstrSettelmentDate_PopupValue.val('');
+        }
+        else {
+            objstrSettelmentDate_PopupValue.show();
+            $("#SettelmentDatePickerIcon").show();
+            objstrSettelmentDate_PopupValue.val('');
+        }
+        $('#SettelmentAfterDaysSwitch').prop('checked', false);
+        $('#txtSettelmentAfterDaysValue').val('');
+        $('#txtSettelmentAfterDaysValue').hide();
+    };
+
+    $('#strSettelmentDate_Popup').datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+        autoclose: true
+    }).on('change', function () {
+            $(this).valid();
+    });
+
+    var Todaydate = new Date();
+    var FinaltodayDate = new Date(Todaydate.getFullYear(), Todaydate.getMonth(), Todaydate.getDate());
+    $('#strSettelmentDate_Popup').datepicker('setDate', FinaltodayDate);
+
+    function UpFrontParameters() {
+        if ('@Model.IsPriceDay1' != '') {
+            if ('@Model.IsPriceDay1' == 'True') {
+                $('#SettelmentAfterDaysSwitch').prop('checked', true);
+                $('#txtSettelmentAfterDaysValue').val(4);
+            }
+            else {
+                $('#SettelmentAfterDaysSwitch').prop('checked', false);
+                $('#txtSettelmentAfterDaysValue').hide();
+            }
+        }
+        else {
+            $('#SettelmentAfterDaysSwitch').prop('checked', true);
+            $('#txtSettelmentAfterDaysValue').val(4);
+        }
+
+        $('#SettelmentDateSwitch').prop('checked', false);
+        $('#strSettelmentDate_Popup').hide();
+    }
+
+    function saveUpFrontParameters(objSettelmentDays, objSettelmentDate, objPopup) {
+        if (objSettelmentDays.is(':visible') == true) {
+            if (objSettelmentDays.val() == "" || objSettelmentDays.val() == 0) {
+                alert("Please enter settelment days.");
+                return false;
+            }
+        }
+
+        if (objSettelmentDate.is(':visible') == true) {
+            if (objSettelmentDate.val() == "" || objSettelmentDate.val() == 0) {
+                alert("Please enter settelment date.");
+                return false;
+            }
+        }
+
+        if (((objSettelmentDays.is(':visible') == true && objSettelmentDays.val() > 0) || objSettelmentDays.is(':visible') == false) &&
+            ((objSettelmentDate.is(':visible') == true && objSettelmentDate.val() != '') || objSettelmentDate.is(':visible') == false)) {
+            objPopup.modal('hide');
+        }
+    }
+
+</script>

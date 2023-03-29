@@ -1,0 +1,313 @@
+﻿@model FormBot.Entity.PeakPay
+@using FormBot.Helper;
+@{ ViewBag.Title = "PeakPay"; }
+@{ bool isAllScaJobView = false;
+                if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+                {
+                    ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+                    {
+                        if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+                    });
+                } }
+<input id="IsWholeSaler" type="hidden" name="IsWholeSaler">
+<input id="UserId_WholeSaler" type="hidden" name="UserId_WholeSaler">
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="container-fluid">
+
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">Peak Pay</h1>
+        </div>
+    </div>
+
+    <div class="joblisting_search">
+        <div class="row">
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+            {
+<div class="col-sm-6 col-md-4 col-lg-3">
+    <div class="form-group">
+        <label for="exampleInputName2">Reseller:</label>
+        @Html.DropDownListFor(model => model.ResellerId, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+    </div>
+</div>            }
+
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+            {
+<div class="col-sm-6 col-md-4 col-lg-3">
+    <div class="form-group">
+        <label class="control-label">Solar Company :</label>
+        @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), "Select", new { id = "SolarCompanyId", @class = "form-control" })*@
+        <input type="hidden" id="hdnsolarCompanyid" />
+        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+    </div>
+</div>            }
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">System Size :</label>
+                    @Html.DropDownListFor(model => model.SystemSize, new List<SelectListItem> { new SelectListItem() { Text = "All", Value = "" }, new SelectListItem() { Text = "Search System < 60kW", Value = "1" }, new SelectListItem() { Text = "Search System > 60kW", Value = "2" } }, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">STC Price Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtStcFromPrice" placeholder="From" onkeypress="return isDecimal(event, 5, 2, this)">
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtStcToPrice" placeholder="To" onkeypress="return isDecimal(event, 5, 2, this)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Search for:</label>
+                    <input type="text" id="txtSearchfor" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">CER Approved Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCERApprovedFromDate" placeholder="From">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCERApprovedToDate" placeholder="To">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settle Before Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettleBeforeFromDate" placeholder="From">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtSettleBeforeToDate" placeholder="To">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Payment Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtPaymentFromDate" placeholder="From">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtPaymentToDate" placeholder="To">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12">
+                <div class="input-group">
+                    <label class="checkbox-inline" style="margin-right:10px;"><input type="checkbox" id="chkSentInvoice">Sent Invoice</label>
+                    <label class="checkbox-inline"><input type="checkbox" id="chkUnsentInvoice" checked>Unsent Invoice</label>
+                    <label class="checkbox-inline"><input type="checkbox" id="chkReadytoSTCInvoice" checked>Ready to Invoice</label>
+                </div>
+            </div>
+
+            <div class="col-sm-12" style="margin-top:10px;">
+                <div class="form-group">
+                    <input type="button" id="btnSearch" class="primary search_ic" value="Search" onclick="SearchPeakPayRecords();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" class="" value="Reset">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords" style="padding-top:0px;"></p>
+    </div>
+
+    <div class="gridtop_filters">
+        <div class="submission-filters">
+            <span class="stage_title">Filters:</span>
+            <div class="filters-row" style="padding:0;">
+                <ul>
+                    @*<li><a id="peakPayStcstage_0" href="javascript:void(0);" style="cursor:pointer;" onclick="SetStageId('0');">Show All<span>@Model.lstPeakPayJobStages.Sum(t => t.jobCount)</span></a></li>*@
+                    @{
+                        //CER approved as default first filter
+                        var stageModel = Model.lstPeakPayJobStages.Where(w => w.JobStageId == 22).FirstOrDefault();
+                        <li><a id="peakPayStcstage_@stageModel.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#686868;" onclick="SetStageId('@stageModel.JobStageId');">@stageModel.StageName<span>@stageModel.jobCount</span></a></li>
+                    }
+                    @foreach (var stage in Model.lstPeakPayJobStages)
+                    {
+                        if (stage.JobStageId != 22)
+                        {
+                            <li><a id="peakPayStcstage_@stage.JobStageId" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<span>@stage.jobCount</span></a></li>
+                        }
+                    }
+                    <li><a id="peakPayStcstage_0" href="javascript:void(0);" style="cursor:pointer; background-color: #f7f7f7;" onclick="SetStageId('0');">Show All<span>@Model.lstPeakPayJobStages.Sum(t => t.jobCount)</span></a></li>
+
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+    {
+<div class="grid_topbar mag-top-20">
+    <div class="row">
+        @*<div class="col-sm-6">
+                <div class="form-group col-xs-6" style="padding-left:0;">
+                    @Html.DropDownListFor(model => model.STCJobStageID, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "CER Approved", Value = "22" } }, new { @class = "form-control" })
+                </div>
+                <a href="javascript:void(0);" onclick="BulkChangeInvoiceStatus();" style="margin-right:0; margin-right:30px;" class="primary payment-status--h-ic" title="Bulk Change Invoice Status">Bulk Change Invoice Status</a>
+            </div>*@
+
+        <div class="col-sm-6">
+            <div class="form-group col-xs-2" style="padding-left:0;">
+                @Html.TextBoxFor(m => m.SetSTCPrice, new { @class = "form-control", @onkeypress = "return isDecimal(event, 5, 2, this);" })
+            </div>
+            <a href="javascript:void(0);" onclick="SetStcPrice();" class="primary payment-status--h-ic" title="Set Stc Price">Set STC Price</a>
+        </div>
+
+        <div class="col-sm-6 rigth-btn">
+            @*<button id="btnReadyToSent" class="btn default icon-btn mark-ic btn-sm" type="button" title="ReadyToSent" onclick="ReadyToSent();"></button>*@
+            <button id="btnReadyToSent" class="btn default icon-btn mark-ic btn-sm pull-right" type="button" title="Mark as ReadyToSent" onclick="ChangePeakPayInvoiceStatus(3);"></button>
+            <button id="btnUnsent" class="btn default unmark-ic icon-btn btn-sm pull-right" type="button" title="Mark as Unsent" onclick="ChangePeakPayInvoiceStatus(2);"></button>
+            @*<a href="javascript:void(0);" onclick="SetStcPrice();" class="primary payment-status--h-ic pull-right" title="Set Stc Price">Set STC Price</a>
+                <div class="form-group col-xs-2 pull-right" style="padding-left:0;">
+                    @Html.TextBoxFor(m => m.SetSTCPrice, new { @class = "form-control", @onkeypress = "return isDecimal(event, 5, 2, this);" })
+                </div>*@
+        </div>
+    </div>
+</div>}
+
+    <div id="grid">
+        <!-- Grid start -->
+        <div class="table-responsive toggle-table-row">
+            <table id="datatable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                        <th><span>Id</span></th>
+                        <th><span>Refrence</span></th>
+                        <th><span>Owner Name</span></th>
+                        <th><span>Installation address</span></th>
+                        <th><span>Stc Status</span></th>
+                        <th><span>Solar company</span></th>
+                        <th><span>Submission Date</span></th>
+                        <th><span>CER Approved Date</span></th>
+                        <th><span>Settle Before</span></th>
+                        <th><span>Days Left</span></th>
+                        <th><span>Payment Date</span></th>
+                        <th><span>STC Amount</span></th>
+                        <th><span>STC Price</span></th>
+                        <th><span>IsGST</span></th>
+                        <th><span>STC Fee</span></th>
+                        <th><span>Total</span></th>
+                        <th>IsInvoiced</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="total-amount-block">
+        <div class="total-amount">
+            <lable>Total Amount : <b style="margin-left:0px;">$</b><b id="lblTotalAmount"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total Amount Selected : <b style="margin-left:0px;">$</b><b id="lblTotalAmountSelected"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total Amount Viewable : <b style="margin-left:0px;">$</b><b id="lblTotalAmountViewable"></b></lable>
+        </div>
+        <div class="total-amount">
+            <lable>Total STC Selected : <b style="margin-left:0px;"></b><b><span id="btotalTradedSTC">0</span></b></lable>
+        </div>
+    </div>
+
+    <div class="total-amount-rigth-btn">
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+<a href="javascript:void(0);" id="btnSendSTCInvoice" class="btn default pull-right invoicing-ic" onclick="SendSTCInvoice(1);" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Send STC Invoice">Send to STC Invoicing</a>}
+        <a href="javascript:void(0);" id="exportCSV" class="btn default pull-right export-ic" onclick="ExportCsv();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Export CSV">Export CSV</a>
+        @if (Model.UserTypeID == 1)
+        {
+<div class="fileUpload btn default import-ic pull-right" id="divImportCSV" title="Import CSV" style="margin-right:0; margin-top:10px;margin-right:10px;">
+    <span>Import CSV</span>
+    <input id="importCSV" type="file" class="upload fileUpload" title="Import CSV" name="Import CSV" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+</div>}
+    </div>
+
+</div>
+
+
+<script src="~/Scripts/View/PeakPay.min.js?v=@ProjectConfiguration.ScriptVersion"></script>
+<script>
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+        url_GetReseller = '@Url.Action("GetReseller", "Reseller")?IsPeakPay=true',
+        urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")',
+        urlGetSolarCompanyByRamId ='@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")',
+        PeakPay_SolarCompanyId = '@TempData["PeakPay_SolarCompanyId"]',
+        PeakPay_Reseller = '@TempData["PeakPay_Reseller"]',
+        urlGetPeakPayList ='@Url.Action("GetPeakPayList","PeakPay")',
+        PageSize = @ProjectConfiguration.GetPageSize,
+        UserTypeID = @Model.UserTypeID,
+        ProjectSession_LoggedInUserId = '@FormBot.Helper.ProjectSession.LoggedInUserId',
+        ProjectSession_ResellerId = '@FormBot.Helper.ProjectSession.ResellerId',
+        ProjectSession_SolarCompanyId = '@FormBot.Helper.ProjectSession.SolarCompanyId',
+        urlJobIndex = '@Url.Action("Index", "Job")',
+        urlBulkChangeSTCJobStage = '@Url.Action("BulkChangeSTCJobStage", "Job")',
+        urlImportCSV = '@Url.Action("ImportCSV", "PeakPay")',
+        urlExportCSV = '@Url.Action("GenerateCSVForSelectedJobs", "PeakPay")?jobs=',
+        urlGenerateSTCInvoiceForSelectedJobs = '@Url.Action("GenerateSTCInvoiceForSelectedJobs", "STCInvoice")',
+        urlConnect =  '@Url.Action("Connect", "XeroConnect")',
+        urlPeakPaySetStcPrice = '@Url.Action("PeakPaySetStcPrice", "PeakPay")'
+    urlChangePeakpayInvoiceStatus = '@Url.Action("ChangePeakpayInvoiceStatus", "PeakPay")',
+    urlGetPeakPayJobStageCount = '@Url.Action("GetPeakPayJobStageCount", "PeakPay")',
+        SelectedStageId = 22;
+    var ResellerId = '@ProjectSession.ResellerId'
+    var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()'
+    var defaultGrid = true;
+</script>

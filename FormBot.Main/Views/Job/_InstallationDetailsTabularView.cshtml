@@ -1,0 +1,1535 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@{
+    ////Todo
+    bool isOtherDetails = false;
+    bool isCustomDetails = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.OtherDetails.GetHashCode()) { isOtherDetails = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.CustomDetails.GetHashCode()) { isCustomDetails = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.OtherDetails.GetHashCode()) { isOtherDetails = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.CustomDetails.GetHashCode()) { isCustomDetails = true; }
+            });
+        }
+    }
+
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+}
+
+@*@Html.HiddenFor(m => m.panelXml)
+    @Html.HiddenFor(m => m.inverterXml)*@
+
+@Html.HiddenFor(m => m.UserType)
+@Html.Hidden("hdnNMI", (@Model != null && @Model.JobInstallationDetails != null) ? @Model.JobInstallationDetails.NMI : "")
+@Html.HiddenFor(m => m.JobInstallationDetails.AddressDisplay)
+@Html.HiddenFor(m => m.Guid)
+@*@Html.HiddenFor(m => m.BasicDetails.SolarCompanyId)
+    @Html.HiddenFor(m => m.BasicDetails.strInstallationDateTemp)
+    @Html.HiddenFor(m => m.GlobalisAllowedSPV)*@
+@*<input type="hidden" id="STCStatusId" value="@ViewBag.STCStatusId" />*@
+
+@Html.HiddenFor(m => m.JobInstallationDetails.PropertyName)
+<input type="hidden" id="BasicDetails_JobID" value="@Model.JobID" />
+
+
+
+<form id="frmInstallationDetail">
+    <div class="sub-title">
+        <h4 style="width:15%;">
+            Installation Details
+        </h4>
+    </div>
+    <div class="form-con-box">
+        <div class="part-50 bor-right">
+            @Html.HiddenFor(m => m.JobInstallationDetails.JobID)
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.DistributorID, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.JobInstallationDetails.DistributorID, new List<SelectListItem>(), new { @class = "form-control", @data_val = "false", @tabindex = 40 })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.ElectricityProviderID, new { @class = "control-label", @id = "ElectricityProviderID" })
+                        @Html.DropDownListFor(m => m.JobInstallationDetails.ElectricityProviderID, new List<SelectListItem>(), new { @class = "form-control", @data_val = "false", @tabindex = 41 })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.PhaseProperty, new { @class = "control-label", @id = "PhaseProperty" })
+                        @Html.DropDownListFor(m => m.JobInstallationDetails.PhaseProperty, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "1", Value = "1" }, new SelectListItem() { Text = "2", Value = "2" }, new SelectListItem() { Text = "3", Value = "3" } }, new { @class = "form-control", @tabindex = 22 })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.NMI, new { @class = "control-label", @id = "NMI" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.NMI, new
+                   {
+                       @class = "form-control",
+                       @maxlength = 11,@*@onpaste = "return false;",*@@tabindex = 19
+})
+                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.NMI)
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.MeterNumber, new { @class = "control-label", @id = "MeterNumber" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.MeterNumber, new { @class = "form-control", @maxlength = 25, @tabindex = 21 })
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>
+                        @Html.CheckBoxFor(m => m.JobInstallationDetails.IsSameAsOwnerAddress)
+                        Same as owner address
+                    </p>
+                    <div class="form-box">
+                        <div class="form-group">
+                            <label class="control-label required ">Address:</label>
+                            <div class="input-group">
+                                <textarea class="form-control" rows="3" id="txtAddress1" value="" readonly="readonly" tabindex="16">@(Model.JobOwnerDetails.UnitNumber+" , "+Model.JobOwnerDetails.StreetNumber+" , "+Model.JobOwnerDetails.StreetName+" , "+Model.JobOwnerDetails.Town+" , "+Model.JobOwnerDetails.State+" , "+Model.JobOwnerDetails.PostCode)</textarea>
+                                <textarea class="form-control" rows="3" id="txtAddress" readonly="readonly" tabindex="16" style="display:none;"></textarea>
+                                <span id="spantxtAddress" class="" style="color: #b94a48;display:none">Installation Address details are required.</span>
+                                <span class="input-group-btn input-group-icon-btn">
+                                    <button class="btn" type="button" id="btnAddressDetail" tabindex="17"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                                    <br />
+                                    <button class="btn" id="btnMap" type="button" tabindex="18"><img src='@Url.Content("~/images/map-icon.png")' alt="" title="Map"></button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="row" style="display:none;">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.Latitude, new { @class = "control-label" })
+                        @Html.TextAreaFor(m => m.JobInstallationDetails.Latitude, new { @class = "form-control", @maxlength = 25, @tabindex = 21, @id = "lblLatitude", @readonly = "readonly" })
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.Longitude, new { @class = "control-label" })
+                        @Html.TextAreaFor(m => m.JobInstallationDetails.Longitude, new { @class = "form-control", @maxlength = 25, @tabindex = 21, @id = "lblLongitude", @readonly = "readonly" })
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="part-50">
+            @*<div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label required">Postal Address Type :</label>
+                            @Html.DropDownListFor(m => m.JobInstallationDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control InstallationAddress", @tabindex = 701 })
+                        </div>
+                    </div>
+                    <div class="InstallationPDA" style="display:none">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobInstallationDetails.PostalAddressID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.JobInstallationDetails.PostalAddressID, new List<SelectListItem>
+                                        (), new { @class = "form-control", @tabindex = 702 })
+                                @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalAddressID)
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 703 })
+                                @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalDeliveryNumber)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 InstallationDPA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobInstallationDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallationUnitTypeID" })
+                            @Html.DropDownListFor(model => model.JobInstallationDetails.UnitTypeID, new List<SelectListItem>
+                                    (), new { @class = "form-control", @tabindex = 704 })
+                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-4 InstallationDPA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallationUnitNumber" })
+                            @Html.TextBoxFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 705 })
+                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitNumber)
+                        </div>
+                    </div>
+
+                </div>*@
+
+            @*<div class="InstallationDPA">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallationStreetNumber" })
+                                @Html.TextBoxFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 706 })
+                                @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetNumber)
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobInstallationDetails.StreetName, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.JobInstallationDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 708 })
+                                @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetName)
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobInstallationDetails.StreetTypeID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.JobInstallationDetails.StreetTypeID, new List<SelectListItem>
+                                        (), new { @class = "form-control", @tabindex = 709 })
+                                @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetTypeID)
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+            @*<div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobInstallationDetails.Town, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.JobInstallationDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 710, })
+                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobInstallationDetails.State, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.JobInstallationDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 711, @readonly = "readonly" })
+                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobInstallationDetails.PostCode, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.JobInstallationDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 712 })
+                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostCode)
+                        </div>
+                    </div>
+                </div>*@
+
+            @if (ProjectSession.UserTypeId != 8 || isOtherDetails)
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.ExistingSystem, new { @class = "control-label", @id = "ExistingSystem1", @style = "display:inline;" })
+                    @Html.CheckBoxFor(m => m.JobInstallationDetails.ExistingSystem, new { @tabindex = 24 })
+                </div>
+                <div id="ExistingSystem" style="display:none;">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.ExistingSystemSize, new { @class = "control-label" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.ExistingSystemSize, new { @class = "form-control", @maxlength = 13, @data_val = "false", @tabindex = 25, @onkeypress = "return isDecimal(event,10,2,this);" })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.NoOfPanels, new { @class = "control-label" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.NoOfPanels, new { @class = "form-control", @maxlength = 9, @data_val = "false", @onkeypress = "return isNumber(event);", @tabindex = 26 })
+                        <span id="spanJobInstallationDetailsNoOfPanelValue" class="" style="color: #b94a48;display:none">Number of panel should be between 1 to 10000</span>
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.SystemLocation, new { @class = "control-label" })
+                        @Html.TextAreaFor(m => m.JobInstallationDetails.SystemLocation, new { @class = "form-control", @maxlength = 250, @tabindex = 27 })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "form-control", @maxlength = 4000, @tabindex = 61 })
+                </div>
+            }
+            @*@if (ProjectSession.UserTypeId != 8 || isCustomDetails)
+                {
+                    <div class="sub-title">
+                        <h4>Custom Details</h4>
+                    </div>
+                    <div class="row" id="customDetails">
+                        <div class="col-md-12">
+                            @for (int i = 0; i < @Model.lstCustomDetails.Count; i++)
+                            {
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label">@Model.lstCustomDetails[i].FieldName :</label>
+                                        @Html.TextAreaFor(m => m.lstCustomDetails[i].FieldValue, new { @class = "spanCustomFields", data_SeperatorId = Model.lstCustomDetails[i].SeparatorId, data_JobCustomFieldId = Model.lstCustomDetails[i].JobCustomFieldId, style = "width:100%; border: 1px solid #d8dadd;", @rows = "3" })
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }*@
+        </div>
+    </div>
+
+    @*add-installationDetail*@
+
+
+    @*popupmap*@
+    <div class="modal fade" tabindex="-1" role="dialog" id="popupMap">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title">Map</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="form-box">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="control-label" id="lblSrcMap">Source</label>
+                                    <input type="text" id="txtSource" class="form-control" placeholder="Source" tabindex="301" />
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="control-label">Destination</label>
+                                    <input type="text" id="txtDestination" class="form-control" placeholder="Destination" tabindex="302" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button type="button" class="btn default pull-right" onclick="GetLocation()" tabindex="303">Get Location</button>
+                                <button type="button" class="btn default pull-right" onclick="GetRoute()" tabindex="304">Get Route</button>
+                                <div id="dvDistance" style="font-weight: bold;color:black">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div id="dvMap" style="height:400px;margin-top:10px">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</form>
+
+<div class="modal fade popupAddress " tabindex="-1" role="dialog" id="popupAddress">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Address Detail</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="JobInstallationAddress">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobInstallationDetails.AddressID, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1" } }, new { @class = "form-control InstallationAddress", @tabindex = 701 })
+                                    </div>
+                                </div>
+                                <div class="InstallationPDA" style="display:none">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalAddressID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.PostalAddressID, new List<SelectListItem>
+                                                    (), new { @class = "form-control", @tabindex = 702 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalAddressID)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 703 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalDeliveryNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallationUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobInstallationDetails.UnitTypeID, new List<SelectListItem>
+                                                (), new { @class = "form-control", @tabindex = 704 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallationUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 705 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitNumber)
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="InstallationDPA">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallationStreetNumber" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 706 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetNumber)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 708 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetTypeID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.StreetTypeID, new List<SelectListItem>
+                                                    (), new { @class = "form-control", @tabindex = 709 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetTypeID)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 710, })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 711, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 712 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostCode)
+                                    </div>
+                                </div>
+                                <div class="row">
+                                </div>
+                                <div class="alert" id="JobInstallationDetails_LocationValidation" style="display: none;color: #a94442;">
+                                    "Please enter valid state,town and postcode."
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupInstallation()" tabindex="714">
+                                    <span class="sprite-img reset_ic"></span> Reset
+                                </button>
+                                <button type="button" class="btn primary icon-btn" onclick="validateInstallation()" tabindex="713">
+                                    <span class="sprite-img save_ic"></span> Save
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+@Scripts.Render("~/bundles/jqueryval")
+
+<script type="text/javascript">
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+</script>
+@*<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+<script>
+    var isTabLoad = 1;
+    var dropDownData = [];
+    var InstallationJson = [];
+    var fillInstallationAddress;
+    var modelInstallationPostalAddressID = '@Model.JobInstallationDetails.PostalAddressID';
+    var modelInstallationUnitTypeID = '@Model.JobInstallationDetails.UnitTypeID';
+    var modelInstallationStreetTypeID = '@Model.JobInstallationDetails.StreetTypeID';
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+    var modelInstallationElectricityProviderID = '@Model.JobInstallationDetails.ElectricityProviderID';
+    var modelInstallationExistingSystem = '@Model.JobInstallationDetails.ExistingSystem';
+    var modelInstalltionInstallingNewPanel = '@Model.JobInstallationDetails.InstallingNewPanel';
+    var modelInstalltionAddressID = '@Model.JobInstallationDetails.AddressID';
+    var modelInstallationLatitude = '@Model.JobInstallationDetails.Latitude';
+    var modelInstallationLongitude = '@Model.JobInstallationDetails.Longitude';
+    var modelInstallationStreetName = '@Model.JobInstallationDetails.StreetName';
+    var modelInstallationStreetNumber = '@Model.JobInstallationDetails.StreetNumber';
+    var modelInstallationTown = '@Model.JobInstallationDetails.Town';
+    var modelInstallationState = '@Model.JobInstallationDetails.State';
+    var modelInstallationPostCode = '@Model.JobInstallationDetails.PostCode';
+    var distributorid = modelInstallationDistributorID || 0;
+    var Installationid = modelInstallationElectricityProviderID || 0;
+    var JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)';
+    JobOwnerDetails_OwnerType_Glbl = '@Model.JobOwnerDetails.OwnerType';
+    @*var JobInstallationDetails_PropertyType = '';
+    if ($("#JobInstallationDetails_PropertyType").val() != undefined && $("#JobInstallationDetails_PropertyType").val() != '') {
+        JobInstallationDetails_PropertyType = $("#JobInstallationDetails_PropertyType").val();
+    }
+    else {
+        JobInstallationDetails_PropertyType = '@Model.JobInstallationDetails.PropertyType'.toLowerCase();
+    }*@
+
+    $(document).ready(function () {
+
+        if (@Model.JobOwnerDetails.AddressID== 2)
+            $('#JobInstallationDetails_IsSameAsOwnerAddress').attr('disabled', true);
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+            return returnObj;
+        };
+        fillInstallationAddressDetail();
+        buttonInstallationDetailClick();
+        buttonMapClick();
+
+        dropDownData = [];
+        dropDownData.push({ id: 'JobInstallationDetails_DistributorID', key: "Destributors", value: distributorid, hasSelect: true, callback: DisplayInstallationInfo, defaultText: null, proc: 'GetDistributor', param: [], bText: 'DistributorName', bValue: 'DistributorID' },
+            { id: 'JobInstallationDetails_ElectricityProviderID', key: "ElectricityProvider", value: Installationid, hasSelect: true, callback: DisplayInstallationInfo, defaultText: null, proc: 'Job_GetElectricityProvider', param: [], bText: 'Provider', bValue: 'ElectricityProviderId' },
+            { id: 'JobInstallationDetails_UnitTypeID', key: "UnitType", value: modelInstallationUnitTypeID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'UnitType_BindDropdown', param: [], bText: 'UnitTypeName', bValue: 'UnitTypeID' },
+            { id: 'JobInstallationDetails_StreetTypeID', key: "StreetType", value: modelInstallationStreetTypeID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'StreetType_BindDropdown', param: [], bText: 'StreetTypeName', bValue: 'StreetTypeID' },
+            { id: 'JobInstallationDetails_PostalAddressID', key: "PostalAddress", value: modelInstallationPostalAddressID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'PostalAddress_BindDropdown', param: [], bText: 'PostalDeliveryType', bValue: 'PostalAddressID' });
+        dropDownData.bindDropdown();
+
+        $('#JobInstallationDetails_ExistingSystem').change(function () {
+            OwnerHasExistingSystem($(this).is(":checked"));
+        });
+
+        OwnerHasExistingSystem(modelInstallationExistingSystem);
+
+        InstallationAutoComplete();
+    });
+
+    SameAsOwnerAddressMethod();
+
+    function showHideInstallationAddress(addressId) {
+        if (addressId == 1) {
+            $('.InstallationDPA').show();
+            $('.InstallationPDA').hide();
+        }
+        else {
+            $('.InstallationPDA').show();
+            $('.InstallationDPA').hide();
+        }
+    }
+
+    function DisplayInstallationInfo(isJobAdded) {
+        if ($("#JobInstallationDetails_DistributorID").val() > 0) {
+            $("#lblDistributor").html($("#JobInstallationDetails_DistributorID option:selected").text());
+            if (isJobAdded)
+                $("#lblDistributor").data('id', $("#JobInstallationDetails_DistributorID").val());
+        }
+        else
+            $("#lblDistributor").html('');
+
+        if ($("#JobInstallationDetails_ElectricityProviderID").val() > 0)
+            $("#lblElectricityProvider").html($("#JobInstallationDetails_ElectricityProviderID option:selected").text());
+        else
+            $("#lblElectricityProvider").html('');
+
+        if ($("#JobInstallationDetails_PhaseProperty").val() > 0)
+            $("#lblPhaseProperty").html($("#JobInstallationDetails_PhaseProperty option:selected").text());
+        else
+            $("#lblPhaseProperty").html('');
+
+        $("#lblNMI").html($("#JobInstallationDetails_NMI").val());
+        $("#lblMeterNumber").html($("#JobInstallationDetails_MeterNumber").val());
+        $("#lblLatitude").html(modelInstallationLatitude);
+        $("#lblLongitude").html(modelInstallationLongitude);
+
+        if ($('#JobInstallationDetails_UnitTypeID option:selected').val() == "") {
+            $('#lblInstallationUnitNumber').removeClass("required");
+            $('#lblInstallationUnitTypeID').removeClass("required");
+            $('#lblInstallationStreetNumber').addClass("required");
+        }
+        else {
+            $('#lblInstallationUnitNumber').addClass("required");
+            $('#lblInstallationUnitTypeID').addClass("required");
+        }
+
+        $("#JobInstallationDetails_UnitTypeID").change(function () {
+            if ($('#JobInstallationDetails_UnitTypeID option:selected').val() == "") {
+                $('#lblInstallationUnitNumber').removeClass("required");
+                $('#lblInstallationUnitTypeID').removeClass("required");
+                $('#lblInstallationStreetNumber').addClass("required");
+            }
+            else {
+                $('#lblInstallationUnitNumber').addClass("required");
+                $('#lblInstallationUnitTypeID').addClass("required");
+            }
+        });
+    }
+
+    function DisplayInstallationExtraInfo() {
+        $("#lblOwnerHasExistingSystem").html($('#JobInstallationDetails_ExistingSystem').is(":checked") ? "Yes" : "No");
+        if ($('#JobInstallationDetails_ExistingSystem').is(":checked")) {
+            $("#pExistingSystemSize").show();
+            $("#pSystemLocation").show();
+            $("#pNoOfInstallationPanel").show();
+            $("#lblExistingSystemSize").html($("#JobInstallationDetails_ExistingSystemSize").val());
+            $("#lblSystemLocation").html($("#JobInstallationDetails_SystemLocation").val());
+            $("#lblNoOfInstallationPanel").html($("#JobInstallationDetails_NoOfPanels").val());
+        }
+        else {
+            $("#pExistingSystemSize").hide();
+            $("#pSystemLocation").hide();
+            $("#pNoOfInstallationPanel").hide();
+            $("#lblExistingSystemSize").html('');
+            $("#lblSystemLocation").html('');
+            $("#lblNoOfInstallationPanel").html('');
+        }
+        $("#lblAdditionalInstallationInformation").html($("#JobInstallationDetails_AdditionalInstallationInformation").val());
+        $('#customFields').find('textarea').each(function () {
+            $('#customDetails').find('[id=' + this.id + ']').text(this.value);
+        });
+    }
+
+    function OwnerHasExistingSystem(value) {
+        if (value.toString().toLowerCase() == 'false') {
+            $("#ExistingSystem").hide();
+        } else {
+            $("#ExistingSystem").show();
+        }
+    }
+
+    function notsameAddressCK() {
+        //$("#txtAddress").show();
+        //        $("#txtAddress1").hide();
+
+                //$('#JobInstallationDetails_AddressID').attr('disabled', false);
+                ////$('#JobInstallationDetails_UnitTypeID').prop("readonly", false);
+                //$('#JobInstallationDetails_StreetTypeID').attr('disabled', false);
+                //$('#JobInstallationDetails_UnitNumber').prop("readonly", false);
+                //$('#JobInstallationDetails_UnitTypeID').attr('disabled', false);
+                //$('#JobInstallationDetails_StreetNumber').prop("readonly", false);
+                //$('#JobInstallationDetails_StreetName').prop("readonly", false);
+                //$('#JobInstallationDetails_StreetTypeID').prop("readonly", false);
+                //$('#JobInstallationDetails_Town').prop("readonly", false);
+                ////$('#JobInstallationDetails_State').prop("readonly", false);
+                //$('#JobInstallationDetails_PostCode').prop("readonly", false);
+                //$("#JobInstallationDetails_PostalDeliveryNumber").prop("readonly", false);
+                //$('#JobInstallationDetails_PostalAddressID').attr('disabled', false);
+
+
+                @*$('#JobInstallationDetails_AddressID').val('@Model.JobInstallationDetails.AddressID');
+                $('#JobInstallationDetails_UnitTypeID').val('@Model.JobInstallationDetails.UnitTypeID');
+                $('#JobInstallationDetails_UnitNumber').val('@Model.JobInstallationDetails.UnitNumber');
+                //$('#JobInstallationDetails_UnitTypeID').val('@Model.JobInstallationDetails.UnitTypeID');
+                $('#JobInstallationDetails_StreetNumber').val('@Model.JobInstallationDetails.StreetNumber');
+                $('#JobInstallationDetails_StreetName').val('@Model.JobInstallationDetails.StreetName');
+                $('#JobInstallationDetails_StreetTypeID').val('@Model.JobInstallationDetails.StreetTypeID');
+                $('#JobInstallationDetails_Town').val('@Model.JobInstallationDetails.Town');
+                $('#JobInstallationDetails_State').val('@Model.JobInstallationDetails.State');
+                $('#JobInstallationDetails_PostCode').val('@Model.JobInstallationDetails.PostCode');
+                $("#JobInstallationDetails_PostalDeliveryNumber").val('@Model.JobInstallationDetails.PostalDeliveryNumber');
+                $('#JobInstallationDetails_PostalAddressID').val('@Model.JobInstallationDetails.PostalAddressID');*@
+
+        $.each(InstallationJson, function (key, value) {
+
+            $('#JobInstallationDetails_UnitNumber').val(value.UnitNumber);
+            $('#JobInstallationDetails_UnitTypeID').val(value.UnitType);
+            $('#JobInstallationDetails_StreetNumber').val(value.StreetNumber);
+            $('#JobInstallationDetails_StreetName').val(value.StreetName);
+            $('#JobInstallationDetails_StreetTypeID').val(value.StreetType);
+            $('#JobInstallationDetails_Town').val(value.Town);
+            $('#JobInstallationDetails_State').val(value.State);
+            $('#JobInstallationDetails_PostCode').val(value.PostCode);
+
+            $("#JobInstallationDetails_PostalDeliveryNumber").val(value.PostalDeliveryNumber);
+            $('#JobInstallationDetails_PostalAddressID').val(value.PostalAddressID);
+
+        });
+    }
+
+    @*function sameAddressCK() {
+        $("#txtAddress1").show();
+        $("#txtAddress").hide();
+        if ('@Model.JobOwnerDetails.AddressID' == '1') {
+
+            $('.InstallationDPA').show();
+            $('.InstallationPDA').hide();
+        }
+        else {
+
+            $('.InstallationDPA').hide();
+            $('.InstallationPDA').show();
+        }
+        //$('#JobInstallationDetails_AddressID').attr('disabled', true);
+        //        $('#JobInstallationDetails_UnitTypeID').prop("readonly", true);
+        //$('#JobInstallationDetails_StreetTypeID').attr('disabled', true);
+        //        $('#JobInstallationDetails_UnitNumber').prop("readonly", true);
+        //$('#JobInstallationDetails_UnitTypeID').attr('disabled', true);
+        //        $('#JobInstallationDetails_StreetNumber').prop("readonly", true);
+        //        $('#JobInstallationDetails_StreetName').prop("readonly", true);
+        //        //$('#JobInstallationDetails_StreetTypeID').prop("readonly", true);
+        //        $('#JobInstallationDetails_Town').prop("readonly", true);
+        //        $('#JobInstallationDetails_State').prop("readonly", true);
+        //        $('#JobInstallationDetails_PostCode').prop("readonly", true);
+        //        $("#JobInstallationDetails_PostalDeliveryNumber").prop("readonly", true);
+        //$('#JobInstallationDetails_PostalAddressID').attr('disabled', true);
+
+                $('#JobInstallationDetails_AddressID').val('@Model.JobOwnerDetails.AddressID');
+                $('#JobInstallationDetails_UnitNumber').val('@Model.JobOwnerDetails.UnitNumber');
+                $('#JobInstallationDetails_UnitTypeID').val('@Model.JobOwnerDetails.UnitTypeID');
+                $('#JobInstallationDetails_StreetNumber').val('@Model.JobOwnerDetails.StreetNumber');
+                $('#JobInstallationDetails_StreetName').val('@Model.JobOwnerDetails.StreetName');
+                $('#JobInstallationDetails_StreetTypeID').val('@Model.JobOwnerDetails.StreetTypeID');
+                $('#JobInstallationDetails_Town').val('@Model.JobOwnerDetails.Town');
+                $('#JobInstallationDetails_State').val('@Model.JobOwnerDetails.State');
+                $('#JobInstallationDetails_PostCode').val('@Model.JobOwnerDetails.PostCode');
+                $("#JobInstallationDetails_PostalDeliveryNumber").val('@Model.JobOwnerDetails.PostalDeliveryNumber');
+                $('#JobInstallationDetails_PostalAddressID').val('@Model.JobOwnerDetails.PostalAddressID');
+    }*@
+
+    function SameAsOwnerAddressMethod() {
+        $('#JobInstallationDetails_IsSameAsOwnerAddress').change(function () {
+            if ($(this).is(":checked")) {
+                //$("#txtAddress1").show();
+                //$("#txtAddress").hide();
+                $.each(OwnerAddressJson, function (key, value) {
+
+                    $('#JobInstallationDetails_UnitNumber').val(value.UnitNumber);
+                    $('#JobInstallationDetails_UnitTypeID').val(value.UnitType);
+                    $('#JobInstallationDetails_StreetNumber').val(value.StreetNumber);
+                    $('#JobInstallationDetails_StreetName').val(value.StreetName);
+                    $('#JobInstallationDetails_StreetTypeID').val(value.StreetType);
+                    $('#JobInstallationDetails_Town').val(value.Town);
+                    $('#JobInstallationDetails_State').val(value.State);
+                    $('#JobInstallationDetails_PostCode').val(value.PostCode);
+
+                    $("#JobInstallationDetails_PostalDeliveryNumber").val(value.PostalDeliveryNumber);
+                    $('#JobInstallationDetails_PostalAddressID').val(value.PostalAddressID);
+
+                });
+
+                if ($(".OwnerAddress").val() == 1) {
+                    $(".InstallationAddress").val(1);
+                    $('.InstallationDPA').show();
+                    $('.InstallationPDA').hide();
+                }
+                else {
+                    $(".InstallationAddress").val(2);
+                    $('.InstallationPDA').show();
+                    $('.InstallationDPA').hide();
+                }
+                $(".popupAddress").find('input[type=text]').each(function () {
+                    $(this).attr('class', 'form-control valid');
+                });
+                $(".popupAddress").find('.field-validation-error').attr('class', 'field-validation-valid');
+                $('#spantxtAddress').hide();
+                $('#popupAddress').modal('toggle');
+            }
+            else {
+                $(".popupAddress").find('input[type=text]').each(function () {
+                    $(this).val('');
+                    $(this).attr('class', 'form-control valid');
+                });
+                $(".popupAddress").find('.field-validation-error').attr('class', 'field-validation-valid');
+                $("#JobInstallationDetails_UnitTypeID").val($("#JobInstallationDetails_UnitTypeID option:first").val());
+                $("#JobInstallationDetails_StreetTypeID").val($("#JobInstallationDetails_StreetTypeID option:first").val());
+                $("#JobInstallationDetails_PostalAddressID").val($("#JobInstallationDetails_PostalAddressID option:first").val());
+                notsameAddressCK();
+            }
+        });
+    }
+
+    function buttonInstallationDetailClick() {
+
+        $("#btnInstallationInfo").click(function () {
+            $('#popupInstalltionInfo').modal({ backdrop: 'static', keyboard: false });
+        });
+
+        $("#btnInstallationExtraInfo").click(function () {
+            $("#popupInstalltionExtraInfo").modal({ backdrop: 'static', keyboard: false });
+        });
+
+        $('#btnAddressDetail').click(function (e) {
+            e.preventDefault();
+
+            $('#popupAddress').modal({ backdrop: 'static', keyboard: false });
+            setTimeout(function () {
+                $('#JobInstallationDetails_AddressID').focus();
+            }, 1000);
+
+            $(".popupAddress").find('input[type=text]').each(function () {
+                $(this).attr('class', 'form-control valid');
+            });
+            $(".popupAddress").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+            dropDownData = [];
+            dropDownData.push({ id: 'JobInstallationDetails_DistributorID', key: "Destributors", value: distributorid, hasSelect: true, callback: DisplayInstallationInfo, defaultText: null, proc: 'GetDistributor', param: [], bText: 'DistributorName', bValue: 'DistributorID' },
+                { id: 'JobInstallationDetails_ElectricityProviderID', key: "ElectricityProvider", value: Installationid, hasSelect: true, callback: DisplayInstallationInfo, defaultText: null, proc: 'Job_GetElectricityProvider', param: [], bText: 'Provider', bValue: 'ElectricityProviderId' },
+                { id: 'JobInstallationDetails_UnitTypeID', key: "UnitType", value: modelInstallationUnitTypeID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'UnitType_BindDropdown', param: [], bText: 'UnitTypeName', bValue: 'UnitTypeID' },
+                { id: 'JobInstallationDetails_StreetTypeID', key: "StreetType", value: modelInstallationStreetTypeID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'StreetType_BindDropdown', param: [], bText: 'StreetTypeName', bValue: 'StreetTypeID' },
+                { id: 'JobInstallationDetails_PostalAddressID', key: "PostalAddress", value: modelInstallationPostalAddressID, hasSelect: true, callback: fillInstallationAddress, defaultText: null, proc: 'PostalAddress_BindDropdown', param: [], bText: 'PostalDeliveryType', bValue: 'PostalAddressID' });
+            dropDownData.bindDropdown();
+
+            //if ($('#JobInstallationDetails_IsSameAsOwnerAddress').is(":checked")) {
+            //    sameAddressCK();
+            //}
+            //else {
+            //    //notsameAddressCK();
+            //}
+            notsameAddressCK();
+            if ($('#JobInstallationDetails_UnitTypeID option:selected').val() == "") {
+                $('#lblInstallationUnitNumber').removeClass("required");
+                $('#lblInstallationUnitTypeID').removeClass("required");
+                $('#lblInstallationStreetNumber').addClass("required");
+            }
+            else {
+                $('#lblInstallationUnitNumber').addClass("required");
+                $('#lblInstallationUnitTypeID').addClass("required");
+            }
+
+            //if ($('#JobInstallationDetails_AddressID').val() == 1) {
+            //    $('.InstallationDPA').show();
+            //    $('.InstallationPDA').hide();
+            //}
+            //else {
+            //    $('.InstallationPDA').show();
+            //    $('.InstallationDPA').hide();
+            //}
+
+            $("#JobInstallationDetails_LocationValidation").hide();
+        });
+    }
+
+    function buttonMapClick() {
+
+        $('#btnMap').click(function () {
+            $("#lblSrcMap").html("Source");
+            $("#txtSource").attr("placeholder", "Source");
+            LoadInstallationSignatureLocation('');
+        });
+
+        $('#InstallerMap').click(function () {
+            $("#lblSrcMap").html("Geo Location");
+            $("#txtSource").attr("placeholder", "Geo Location");
+            LoadInstallationSignatureLocation($('#InstallerLatLong').val());
+        });
+
+        $('#DesignerMap').click(function () {
+            $("#lblSrcMap").html("Geo Location");
+            $("#txtSource").attr("placeholder", "Geo Location");
+            LoadInstallationSignatureLocation($('#DesignerLatLong').val());
+        });
+
+        $('#ElectricianMap').click(function () {
+            $("#lblSrcMap").html("Geo Location");
+            $("#txtSource").attr("placeholder", "Geo Location");
+            LoadInstallationSignatureLocation($('#ElectricianLatLong').val());
+        });
+
+        $('#OwnerMap').click(function () {
+            $("#lblSrcMap").html("Geo Location");
+            $("#txtSource").attr("placeholder", "Geo Location");
+            LoadInstallationSignatureLocation($('#OwnerLatLong').val());
+        });
+    }
+
+    window.mapsCallback = function () {
+        getLatitudeLongitude(DisplayLatLonOfInstallationAdd, $("#installationAdd").html());
+    };
+
+    function getLatitudeLongitude(callback, address) {
+        if ((typeof (google) != 'undefined')) {
+            // Initialize the Geocoder
+            geocoder = new google.maps.Geocoder();
+            if (geocoder) {
+                geocoder.geocode({
+                    'address': address
+                }, function (results, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        callback(results[0]);
+                    }
+                    else {
+                        callback(null);
+                    }
+                });
+            }
+        }
+    }
+
+    function DisplayLatLonOfInstallationAdd(result) {
+        if (result == null) {
+            $("#lblLatitude").html("");
+            $("#lblLongitude").html("");
+        }
+        else {
+
+            $("#lblLatitude").html(result.geometry.location.lat());
+            $("#lblLongitude").html(result.geometry.location.lng());
+        }
+    }
+
+    function LoadInstallationSignatureLocation(srcAddress, isFromDocumentReady = 0) {
+        loadMapScript();
+        if (isFromDocumentReady == 0) {
+            $('#popupMap').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        setTimeout(function () {
+            $('#txtSource').focus();
+        }, 1000);
+        $('#txtSource').val(srcAddress);
+        $('#txtDestination').val($('#txtAddress').val());
+
+        $("#dvDistance").html('');
+        $("#errorMsgRegionMap").hide();
+    }
+
+    function GetRoute(isFromPhotoView = 0) {
+        $("#dvDistance").html('');
+        $("#errorMsgRegionMap").hide();
+        source = document.getElementById("txtSource").value;
+        destination = document.getElementById("txtDestination").value;
+
+        if (source != "" && destination != "") {
+            var India = new google.maps.LatLng(51.508742, -0.120850);
+            var mapOptions = {
+                zoom: 4,
+                center: India
+            };
+            //map = new google.maps.Map(document.getElementById('dvMap'), mapOptions);
+            if (isFromPhotoView == 1) {
+                map = new google.maps.Map(document.getElementById('dMap'), mapOptions);
+            }
+            else {
+                map = new google.maps.Map(document.getElementById('dvMap'), mapOptions);
+            }
+            directionsDisplay.setMap(map);
+            //*********DIRECTIONS AND ROUTE**********************//
+            var request = {
+                origin: source,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+            directionsService.route(request, function (response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(response);
+                }
+                else {
+                    createMarker(destination, 25.2744, 133.7751);
+                    $("#errorMsgRegionMap").html(closeButton + " Both Source and Destination  are not in same country.");
+                    $("#errorMsgRegionMap").show();
+                    //$("#errorMsgRegionMap").fadeOut(5000);
+                }
+            });
+        }
+        else {
+            $("#errorMsgRegionMap").html(closeButton + " Both Source and Destination  address are  required");
+            $("#errorMsgRegionMap").show();
+            //$("#errorMsgRegionMap").fadeOut(5000);
+        }
+    }
+    function GetLocation() {
+        latitude = '';
+        longitude = '';
+        latitude1 = '';
+        longitude1 = '';
+
+        $("#dvDistance").html('');
+        $("#errorMsgRegionMap").hide();
+        //$("#dvMap").html('');
+        locations = [];
+        source = document.getElementById("txtSource").value;
+        destination = document.getElementById("txtDestination").value;
+
+
+        geocoder = new google.maps.Geocoder();
+
+        if (source != "" || destination != "") {
+
+            if (source != "") {
+                geocoder.geocode({ 'address': source }, function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        latitude = results[0].geometry.location.lat();
+                        longitude = results[0].geometry.location.lng();
+                        sourcedetail = [source, latitude, longitude];
+                        locations.push(sourcedetail);
+                        GetLocationOnMap(latitude, longitude);
+                    }
+                    else {
+                        $("#errorMsgRegionMap").html(closeButton + "Invalid source Address.");
+                        $("#errorMsgRegionMap").show();
+                        //$("#errorMsgRegionMap").fadeOut(5000);
+                        createMarker('Victoria , Australia', -37.4713, 144.7852);
+                    }
+                });
+            }
+            if (destination != "") {
+                geocoder.geocode({ 'address': destination }, function (results, status) {
+
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        latitude1 = results[0].geometry.location.lat();
+                        longitude1 = results[0].geometry.location.lng();
+                        destinationdetail = [destination, latitude1, longitude1];
+                        locations.push(destinationdetail);
+                        GetLocationOnMap(latitude1, longitude1);
+                    }
+                    else {
+                        $("#errorMsgRegionMap").html(closeButton + "Invalid Destination Address.");
+                        $("#errorMsgRegionMap").show();
+                        //$("#errorMsgRegionMap").fadeOut(5000);
+                        createMarker('Victoria , Australia', -37.4713, 144.7852);
+                    }
+                });
+            }
+        }
+        else {
+            $("#errorMsgRegionMap").html(closeButton + "Source or Destination address  are  required");
+            $("#errorMsgRegionMap").show();
+            //$("#errorMsgRegionMap").fadeOut(5000);
+        }
+    }
+
+    function GetLocationOnMap(latitude, longitude) {
+        var bounds = new google.maps.LatLngBounds();
+        var infowindow = new google.maps.InfoWindow();
+        var lat = latitude;
+        var lng = longitude;
+        var map = new google.maps.Map(document.getElementById('dvMap'), {
+            zoom: 10,
+            center: new google.maps.LatLng(lat, lng),
+            mapTypeId: google.maps.MapTypeId.DRIVING
+        });
+
+        var marker, i;
+        for (i = 0; i < locations.length; i++) {
+            marker = new google.maps.Marker({
+                position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+                draggable: false,
+                map: map
+            });
+
+            //extend the bounds to include each marker's position
+            bounds.extend(marker.position);
+
+            google.maps.event.addListener(marker, 'click', (function (marker, i) {
+                return function () {
+                    infowindow.setContent(locations[i][0]);
+                    infowindow.open(map, marker);
+                }
+            })(marker, i));
+        }
+        //now fit the map to the newly inclusive bounds
+        map.fitBounds(bounds);
+    }
+
+    function createMarker(add, lat, lng) {
+        var infowindow = new google.maps.InfoWindow();
+        var latlng = new google.maps.LatLng(lat, lng);
+
+        var map = new google.maps.Map(document.getElementById('dvMap'), {
+            zoom: 12,
+            center: new google.maps.LatLng(lat, lng),
+            mapTypeId: google.maps.MapTypeId.DRIVING
+        });
+        var bounds = new google.maps.LatLngBounds();
+
+        var contentString = add;
+        var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(lat, lng),
+            center: latlng,
+            map: map,
+            draggable: false
+        });
+
+        google.maps.event.addListener(marker, 'click', function () {
+            infowindow.setContent(contentString);
+            infowindow.open(map, marker);
+        });
+    }
+
+    function loadMapScript(isFromPhotoView = 0) {
+        var scriptMap = document.createElement("script");
+        scriptMap.type = "text/javascript";
+        var src;
+        if (isFromPhotoView != 1) {
+            src = JobMapKeyUrl + '&callback=mapsCallback';
+        }
+        else {
+            src = JobMapKeyUrl;
+        }
+        src = src.toString().replace(/&amp;/g, '&');
+        scriptMap.src = src;
+
+        var len = $('script[src="' + src + '"]').length;
+        if (len <= 0) {
+            if (scriptMap.readyState) {  //IE
+                scriptMap.onreadystatechange = function () {
+                    if (scriptMap.readyState == "loaded" ||
+                        scriptMap.readyState == "complete") {
+                        scriptMap.onreadystatechange = null;
+                        loadMap(isFromPhotoView);
+                        if (isFromPhotoView != 1) {
+                            var a = setTimeout(function () {
+                                if (ProjectSession_UserTypeId == 1) {
+                                    geocodeAddress($('#txtAddress').val());
+                                }
+                            }, 1000);
+                        }
+
+                    }
+                };
+            } else {  //Others
+                scriptMap.onload = function () {
+                    loadMap(isFromPhotoView);
+                    if (isFromPhotoView != 1) {
+                        var a = setTimeout(function () {
+                            if (ProjectSession_UserTypeId == 1) {
+                                geocodeAddress($('#txtAddress').val());
+                            }
+                        }, 1000);
+                    }
+                };
+            }
+
+            document.body.appendChild(scriptMap);
+        }
+        else {
+            if (isFromPhotoView != 1) {
+                var a = setTimeout(function () {
+                    if (ProjectSession_UserTypeId == 1) {
+                        geocodeAddress($('#txtAddress').val());
+                    }
+                }, 1000);
+            }
+        }
+    }
+
+    function geocodeAddress(address, isownerAddress = false, isInstallationAdd = false) {
+        $("#errorMsgRegionMap").hide();
+        var geocoder = new google.maps.Geocoder();
+        if (address.trim() == "") {
+
+            createMarker('Victoria , Australia', -37.4713, 144.7852);
+        }
+        else {
+            geocoder.geocode({ address: address }, function (results, status) {
+                var addressList = address.split(' ');
+                var resultAddressList = [];
+
+                if (results != null) {
+                    if (results[0].address_components != null && results[0].address_components.length > 0) {
+                        for (var i = 0; i < results[0].address_components.length; i++) {
+                            resultAddressList.push((results[0].address_components[i].long_name + ",").toLowerCase());
+                        }
+                    }
+                }
+                if (isInstallationAdd == true && addressList[1] != undefined && addressList[1] != null && resultAddressList != undefined && resultAddressList != null) {
+                    if (resultAddressList.includes((addressList[1] + " " + addressList[2]).replace(",", "").toLowerCase().trim() + ",")) {
+                        $("#errorMsgValidInstallationAddress").hide();
+                        $('#installationAdd').css('color', '');
+                        installationAddressValidationFlag(true);
+                    }
+                    else {
+                        $("#errorMsgValidInstallationAddress").html(closeButton + "Installation address does not match google street address.");
+                        $("#errorMsgValidInstallationAddress").show();
+                        $('#installationAdd').css('color', 'Red');
+                        installationAddressValidationFlag(false);
+                    }
+                }
+
+                if (isownerAddress == true && addressList[1] != undefined && addressList[1] != null && resultAddressList != undefined && resultAddressList != null) {
+                    if (resultAddressList.includes((addressList[1] + " " + addressList[2]).replace(",", "").toLowerCase().trim() + ",")) {
+                        $("#errorMsgValidOwnerAddress").hide();
+                        $('#ownerAdd').css('color', '');
+                        OwnerAddressValidationFlag(true);
+                    }
+                    else {
+                        $("#errorMsgValidOwnerAddress").html(closeButton + "Owner address does not match google street address.");
+                        $("#errorMsgValidOwnerAddress").show();
+                        $('#ownerAdd').css('color', 'Red');
+                        OwnerAddressValidationFlag(false);
+                    }
+                }
+                if (status == google.maps.GeocoderStatus.OK) {
+                    var p = results[0].geometry.location;
+                    var lat = p.lat();
+                    var lng = p.lng();
+                    createMarker(address, lat, lng);
+                }
+                else {
+                    $("#errorMsgRegionMap").html(closeButton + "Invalid Destination Address.");
+                    $("#errorMsgRegionMap").show();
+                    createMarker('Victoria , Australia', -37.4713, 144.7852);
+                }
+            }
+            );
+        }
+    }
+
+    function loadMap(isFromPhotoView = 0) {
+
+        //  var map = new google.maps.Map(document.getElementById('dvMap'));
+        var map;
+        if (isFromPhotoView == 1) {
+            map = new google.maps.Map(document.getElementById('dMap'));
+        }
+        else {
+            map = new google.maps.Map(document.getElementById('dvMap'));
+        }
+        directionsService = new google.maps.DirectionsService();
+        new google.maps.places.SearchBox(document.getElementById('txtSource'));
+        new google.maps.places.SearchBox(document.getElementById('txtDestination'));
+
+        directionsDisplay = new google.maps.DirectionsRenderer({
+            draggable: false
+        });
+
+        google.maps.event.addListener(directionsDisplay, 'directions_changed', function () {
+
+            directions = directionsDisplay.getDirections();
+            var distance = directions.routes[0].legs[0].distance.text;
+            var duration = directions.routes[0].legs[0].duration.text;
+            var source = directions.routes[0].legs[0].start_address;
+            var dest = directions.routes[0].legs[0].end_address;
+            var dvDistance = document.getElementById("dvDistance");
+            dvDistance.innerHTML = "";
+            dvDistance.innerHTML += "Distance: " + distance + "   ";
+            dvDistance.innerHTML += "Duration:" + duration;
+            $("#txtSource").val(source);
+            $("#txtDestination").val(dest);
+        });
+
+    }
+
+    function validateInstallation() {
+        //$("#frmInstallationDetail").validate(); /* Solution for error Cannot read properties of undefined (reading 'settings') at init.rules */
+        isTabLoad = 0;
+        oldaddress = $("#JobInstallationDetails_AddressDisplay").val();
+        $("#JobInstallationDetails_oldInstallationAddress").val(oldaddress);
+        var isValid = addressValidationRules("JobInstallationDetails");
+        if (isValid && $('#JobInstallationAddress').valid()) {
+            InstallationJson = [];
+            var address;
+            var UnitTypeId = $("#JobInstallationDetails_UnitTypeID").find("option:selected").text();
+            var UnitNumber = $("#JobInstallationDetails_UnitNumber").val();
+            var StreetNumber = $("#JobInstallationDetails_StreetNumber").val();
+            var StreetName = $("#JobInstallationDetails_StreetName").val();
+            var StreetTypeId = $("#JobInstallationDetails_StreetTypeID").find("option:selected").text();
+            var PostalAddressID = $("#JobInstallationDetails_PostalAddressID").find("option:selected").text();
+            var PostalDeliveryNumber = $("#JobInstallationDetails_PostalDeliveryNumber").val();
+            var Town = $("#JobInstallationDetails_Town").val();
+            var State = $("#JobInstallationDetails_State").val();
+            var PostCode = $("#JobInstallationDetails_PostCode").val();
+            if ($("#JobInstallationDetails_AddressID").val() == 1) {
+                if (UnitNumber != "") {
+                    address = UnitTypeId + ' ' + UnitNumber + "/" + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                } else {
+                    address = UnitTypeId + ' ' + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                }
+                InstallationJson.push({ PostalAddressType: $("#JobInstallationDetails_AddressID").val(), UnitType: $("#JobInstallationDetails_UnitTypeID").val(), UnitNumber: $("#JobInstallationDetails_UnitNumber").val(), StreetNumber: $("#JobInstallationDetails_StreetNumber").val(), StreetName: $("#JobInstallationDetails_StreetName").val(), StreetType: $("#JobInstallationDetails_StreetTypeID").val(), Town: $("#JobInstallationDetails_Town").val(), State: $("#JobInstallationDetails_State").val(), PostCode: $("#JobInstallationDetails_PostCode").val() });
+            } else {
+                address = PostalAddressID + ' ' + PostalDeliveryNumber + ', ' + Town + ' ' + State + ' ' + PostCode;
+                InstallationJson.push({ PostalAddressType: $("#JobInstallationDetails_AddressID").val(), PostalAddressID: $("#JobInstallationDetails_PostalAddressID").val(), PostalDeliveryNumber: $("#JobInstallationDetails_PostalDeliveryNumber").val(), Town: $("#JobInstallationDetails_Town").val(), State: $("#JobInstallationDetails_State").val(), PostCode: $("#JobInstallationDetails_PostCode").val() });
+
+            }
+            InstallationPostcodeFromjson = $("#JobInstallationDetails_PostCode").val();
+            $("#JobInstallationDetails_AddressDisplay").val(address);
+
+            $("#txtAddress").val(address);
+            $("#txtaddresshead").html(address);
+            $('#spantxtAddress').hide();
+            $('#popupAddress').modal('toggle');
+            DisplayInstallationAdd();
+            getlatLongFromInstallationAddress(DisplayLatLonOfInstallationAdd, $("#txtAddress").val());
+            // SearchHistory();
+        }
+    }
+    function fillInstallationAddressDetail() {
+
+        showHideInstallationAddress(modelInstalltionAddressID);
+
+        $('#JobInstallationDetails_AddressID').change(function () {
+            showHideInstallationAddress($('#JobInstallationDetails_AddressID').val());
+        });
+
+        fillInstallationAddress = function () {
+            if ($("#BasicDetails_JobID").val() != "0") {
+                if ($("#JobInstallationDetails_Town").length > 0 && $("#JobInstallationDetails_Town").val().trim() != "" && $("#JobInstallationDetails_Town").val() != undefined && $("#JobInstallationDetails_Town").val() != null) {
+
+                    if ($("#JobInstallationDetails_UnitTypeID").find('option').length > 0 && $("#JobInstallationDetails_StreetTypeID").find('option').length > 0 && $("#JobInstallationDetails_PostalAddressID").find('option').length > 0) {
+                        var address;
+                        if ($('#JobInstallationDetails_IsSameAsOwnerAddress').is(":checked")) {
+                            $("#JobInstallationDetails_PostalAddressID").val('@Model.JobOwnerDetails.PostalAddressID');
+                        }
+                        else {
+                            $("#JobInstallationDetails_PostalAddressID").val('@Model.JobInstallationDetails.PostalAddressID');
+                        }
+                        var UnitTypeId = $("#JobInstallationDetails_UnitTypeID").find("option:selected").text();
+                        var UnitNumber = $("#JobInstallationDetails_UnitNumber").val();
+                        var StreetNumber = $("#JobInstallationDetails_StreetNumber").val();
+                        var StreetName = $("#JobInstallationDetails_StreetName").val();
+                        var StreetTypeId = $("#JobInstallationDetails_StreetTypeID").find("option:selected").text();
+                        var PostalAddressID = $("#JobInstallationDetails_PostalAddressID").find("option:selected").text();
+                        var PostalDeliveryNumber = $("#JobInstallationDetails_PostalDeliveryNumber").val();
+                        var Town = $("#JobInstallationDetails_Town").val();
+                        var State = $("#JobInstallationDetails_State").val();
+                        var PostCode = $("#JobInstallationDetails_PostCode").val();
+                        if ($("#JobInstallationDetails_AddressID").val() == 1) {
+                            if (UnitNumber != "") {
+                                address = UnitTypeId + ' ' + UnitNumber + "/" + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                                address = address.replace("Select", "");
+                            } else {
+                                address = UnitTypeId + ' ' + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                                address = address.replace("Select", "");
+                            }
+                            InstallationJson.push({ PostalAddressType: $("#JobInstallationDetails_AddressID").val(), UnitType: $("#JobInstallationDetails_UnitTypeID").val(), UnitNumber: $("#JobInstallationDetails_UnitNumber").val(), StreetNumber: $("#JobInstallationDetails_StreetNumber").val(), StreetName: $("#JobInstallationDetails_StreetName").val(), StreetType: $("#JobInstallationDetails_StreetTypeID").val(), Town: $("#JobInstallationDetails_Town").val(), State: $("#JobInstallationDetails_State").val(), PostCode: $("#JobInstallationDetails_PostCode").val() });
+                        } else {
+                            address = PostalAddressID + ' ' + PostalDeliveryNumber + ', ' + Town + ' ' + State + ' ' + PostCode;
+
+                            InstallationJson.push({ PostalAddressType: $("#JobInstallationDetails_AddressID").val(), PostalAddressID: $("#JobInstallationDetails_PostalAddressID").val(), PostalDeliveryNumber: $("#JobInstallationDetails_PostalDeliveryNumber").val(), Town: $("#JobInstallationDetails_Town").val(), State: $("#JobInstallationDetails_State").val(), PostCode: $("#JobInstallationDetails_PostCode").val() });
+                        }
+                        InstallationPostcodeFromjson = $("#JobInstallationDetails_PostCode").val();
+                        address = address.replace("Select", "");
+                        if (address.trim() != "/ ," && address.trim() != "/Select ,") {
+                            $("#JobInstallationDetails_AddressDisplay").val(address);
+                            $("#txtAddress").val(address); $("#txtaddresshead").html(address); $('#spantxtAddress').hide();
+                        }
+                    }
+                }
+            }
+            DisplayInstallationAdd();
+        };
+        DisplayInstallationInfo();
+        DisplayInstallationExtraInfo();
+    }
+
+    function getlatLongFromInstallationAddress(callback, address) {
+        if ((typeof (google) == 'undefined')) {
+            var scriptMap = document.createElement("script");
+            scriptMap.type = "text/javascript";
+            var src = JobMapKeyUrl;
+            src = src.toString().replace(/&amp;/g, '&');
+            scriptMap.src = src;
+            document.body.appendChild(scriptMap);
+        }
+        setTimeout(function () { getLatitudeLongitude(callback, address) }, 1000);
+    }
+
+    function clearPopupInstallation() {
+        $(".popupAddress").find('input[type=text]').each(function () {
+            $(this).val('');
+            $(this).attr('class', 'form-control valid');
+        });
+        $("#JobInstallationDetails_StreetTypeID").attr("class", "form-control valid")
+        $(".popupAddress").find('.field-validation-error').attr('class', 'field-validation-valid');
+        $("#JobInstallationDetails_UnitTypeID").val($("#JobInstallationDetails_UnitTypeID option:first").val());
+        $("#JobInstallationDetails_StreetTypeID").val($("#JobInstallationDetails_StreetTypeID option:first").val());
+        $("#JobInstallationDetails_PostalAddressID").val($("#JobInstallationDetails_PostalAddressID option:first").val());
+        $("#JobInstallationDetails_LocationValidation").hide();
+    }
+
+    function DisplayInstallationAdd() {
+        if (isTabLoad == 1) {
+            if ($('#JobInstallationDetails_IsSameAsOwnerAddress').is(":checked")) {
+                $.each(OwnerAddressJson, function (key, value) {
+
+                    $('#JobInstallationDetails_UnitNumber').val(value.UnitNumber);
+                    $('#JobInstallationDetails_UnitTypeID').val(value.UnitType);
+                    $('#JobInstallationDetails_StreetNumber').val(value.StreetNumber);
+                    $('#JobInstallationDetails_StreetName').val(value.StreetName);
+                    $('#JobInstallationDetails_StreetTypeID').val(value.StreetType);
+                    $('#JobInstallationDetails_Town').val(value.Town);
+                    $('#JobInstallationDetails_State').val(value.State);
+                    $('#JobInstallationDetails_PostCode').val(value.PostCode);
+
+                    $("#JobInstallationDetails_PostalDeliveryNumber").val(value.PostalDeliveryNumber);
+                    $('#JobInstallationDetails_PostalAddressID').val(value.PostalAddressID);
+
+                });
+
+
+            }
+        }
+        var addressLine1, addressLine2, addressLine3, streetAddress, postCodeAddress;
+        var PostalDeliveryType = $("#JobInstallationDetails_PostalAddressID").val() > 0 ? $("#JobInstallationDetails_PostalAddressID option:selected").text() : "";
+        var UnitTypeName = $("#JobInstallationDetails_UnitTypeID").val() > 0 ? $("#JobInstallationDetails_UnitTypeID option:selected").text() : "";
+        var StreetNumber = $("#JobInstallationDetails_StreetNumber").val();
+        var StreetName = $("#JobInstallationDetails_StreetName").val();
+        var StreetTypeName = $("#JobInstallationDetails_StreetTypeID").val() > 0 ? $("#JobInstallationDetails_StreetTypeID option:selected").text() : "";
+        var PostalDeliveryNumber = $("#JobInstallationDetails_PostalDeliveryNumber").val();
+        var UnitNumber = $("#JobInstallationDetails_UnitNumber").val();
+
+        PostalDeliveryType = (PostalDeliveryType == "" || PostalDeliveryType == null) ? "" : PostalDeliveryType;
+        UnitTypeName = (UnitTypeName == "" || UnitTypeName == null) ? "" : UnitTypeName;
+        StreetNumber = (StreetNumber == "" || StreetNumber == null) ? "" : StreetNumber;
+        streetAddress = StreetNumber + ((StreetName == "" || StreetName == null) ? "" : ' ' + StreetName) + ((StreetTypeName == "" || StreetTypeName == null) ? '' : ' ' + StreetTypeName);
+        postCodeAddress = $("#JobInstallationDetails_Town").val() + ' ' + $("#JobInstallationDetails_State").val() + ' ' + $("#JobInstallationDetails_PostCode").val();
+
+        if ($("#JobInstallationDetails_AddressID").val() == 1) {
+            // physical address
+            if ((UnitTypeName == "" || UnitTypeName == null) && (UnitNumber == "" || UnitNumber == null)) {
+                addressLine1 = streetAddress;
+                addressLine2 = postCodeAddress;
+                addressLine3 = "";
+            }
+            else {
+                addressLine1 = UnitTypeName + ((UnitNumber == "" || UnitNumber == null) ? "" : ' ' + UnitNumber)
+                addressLine2 = streetAddress;
+                addressLine3 = postCodeAddress;
+            }
+        }
+        else {
+            // P.o.box
+            addressLine1 = PostalDeliveryType + ((PostalDeliveryNumber == "" || PostalDeliveryNumber == null) ? "" : ' ' + PostalDeliveryNumber);
+            addressLine2 = postCodeAddress;
+        }
+        //var fullAddress = addressLine1 + '</br>' + addressLine2 + (addressLine3 != undefined && addressLine3 != "" && addressLine3 != null ? '</br>' + addressLine3 : '');
+        if (addressLine3 != undefined || addressLine3 != "" || addressLine3 != null) {
+            var fullAddress = addressLine1 + '\r\n' + addressLine2 + '\r\n' + addressLine3;
+        }
+        else {
+            var fullAddress = addressLine1 + '\r\n' + addressLine2 + '\r\n' + '';
+        }
+
+        $("#txtAddress1").html(fullAddress);
+
+    }
+
+    function InstallationAutoComplete() {
+
+        $("#JobInstallationDetails_Town").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: actionProcessRequest,
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array) {
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                        }
+                        else {
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                        }
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobInstallationDetails_State').val(ui.item.state);
+                $('#JobInstallationDetails_PostCode').val(ui.item.postcode);
+            }
+        });
+
+        $("#JobInstallationDetails_PostCode").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: actionProcessRequest,
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobInstallationDetails_State').val(ui.item.state);
+                $('#JobInstallationDetails_Town').val(ui.item.location);
+            }
+        });
+    }
+</script>
+
+
+

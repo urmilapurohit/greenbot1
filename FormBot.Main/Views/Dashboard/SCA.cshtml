@@ -1,0 +1,846 @@
+﻿@model FormBot.Entity.SolarElectrician.InstallerDesignerView
+@using FormBot.Helper
+@{
+    ViewBag.Title = "SCA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    string isDashboardWS_SCASettlementTermView = !string.IsNullOrEmpty(ViewBag.isDashboardWS_SCASettlementTermView) ? ViewBag.isDashboardWS_SCASettlementTermView : "false";
+}
+
+
+@*<link href="~/Content/style.css" rel="stylesheet" />*@
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<script src="~/Scripts/View/Job/_InstallerDesignerElectrician.min.js?v=1+@ProjectConfiguration.ScriptVersion"></script>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@Html.Hidden("IsWholeSaler", (string)ViewBag.IsWholeSaler)
+<div class="container-fluid sca_dashboard">
+    <div class="title">
+        <h1>Dashboard  <p class="pull-right" style="color:#5a5a5a"> <b>|</b>  @ViewBag.CompanyName</p> </h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-info" id="specialNotification" style="min-height:100px;max-height:300px;overflow-y:scroll;">
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <!-- ===SCA Profile======================================= -->
+            <div class="account-manager-block">
+                <h3 class="sca-heding">Hi @ViewBag.SCAName</h3>
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionProfile" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionProfile" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="upload-profile">
+                    <span class="btn-file">
+                        <img src="~/Images/photo-camera.svg">
+
+                        <input type="file" id="uploadProfilePhoto" class="upload-file" name="uplPhoto" accept="image/png, image/jpeg">
+                    </span>
+                    @*<div id="profileImg" class="img-block" style="display:none;"></div>*@
+                    <span id="profileImg" class="img-block">
+                        @*<img class="profile-img img-responsive img-circle" src=""/>*@
+                    </span>
+                </div>
+                <p>Your Account Manager is:</p>
+                <h2>@ViewBag.FullName</h2>
+                <a href="mailto:@(ViewBag.Email)" title="@ViewBag.Email">@ViewBag.Email</a>
+                <p class="contact">Contact : @ViewBag.Phone</p>
+            </div>
+            <!-- ===Job Status Summary======================================= -->
+            <div class="account-manager-block your-team-block">
+                <h3 class="sca-heding">Job Status Summary</h3>
+                <ul class="job-status-list niceScroll" style="max-height:250px;">
+                    <li class="collection-item"><a href="#">Complaince Issue <em>(3)</em></a></li>
+                    <li class="collection-item"><a href="#">Untraded Jobs <em>(3)</em></a></li>
+                    <li class="collection-item"><a href="#">Require Call Backs <em>(3)</em></a></li>
+                    <li class="collection-item"><a href="#">Current OutStanding Payments</a></li>
+                </ul>
+            </div>
+            <!-- ===Add installer======================================= -->
+            <div class="account-manager-block your-team-block">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionInstallerDetails" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInstallerDetails" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <h3 class="sca-heding">Your Team <a href="#" title="add installer" id="btnFindInstaller" class="link-btn">+ add installer</a></h3>
+                <div class="form-group">
+                    @*<input type="text" class="form-control" id="search-box" placeholder="Search...">*@
+                    <input type="hidden" id="hdBasicDetails_InstallerID" name="pvdInstaller" />
+                    <input type="text" id="txtBasicDetails_InstallerID" name="txtBasicDetails_InstallerID" class="form-control" maxlength="50" placeholder="Search..." onchange="SCAInstallerDesignerOnChange($('#hdBasicDetails_InstallerID'));" />
+                </div>
+                <ul class="niceScroll installerList" style="max-height:250px;">
+                    @*@foreach (var p in Model)
+                        {
+                            <li class="collection-item"><span>@p.CECAccreditationNumber - @p.Name <a href="#" title="" class="icon-link sprite-img edit-icon" onclick="UpdateInstaller(@p.InstallerDesignerId);"></a></span></li>
+                        }*@
+                </ul>
+            </div>
+            <!-- ===quick-links======================== -->
+            <div class="quick-links">
+                <h3 class="sca-heding">Quick Links</h3>
+                <ul>
+                    <li id="dCreateJob"><a href="#" class="createJobFromSolarJobScreen" title="Create a job"><span class="icon"><img src="~/images/-icontest.png" alt=""></span>Create a job</a></li>
+                    <li id="dJobScheduling"><a href="@Url.Action("JobSchedulingDetail", "JobScheduling")" title="Schedule Electrician"><span class="icon"><img src="~/images/ic-cal.png" alt=""></span>Schedule Electrician</a></li>
+                    @if (ProjectSession.UserTypeId == 4)
+                    {
+                        <li id="dCreateUser"><a href="@Url.Action("Create", "User")" title="Create New User"><span class="icon"><img src="~/images/ic-create-new-user.png" alt=""></span>Create New User</a></li>
+                    }
+                    <li id="dInvoiceSetting"><a href="@Url.Action("Settings", "Settings")" title="Invoice Settings"><span class="icon"><img src="~/images/ic-invoice-setting.png" alt=""></span>Invoice Settings</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <!-- ===Greenbot News(NotificationBlock)======================== -->
+            <div class="clearfix" id="divNotificationBlock">
+                <h3 class="sca-heding">Greenbot News</h3>
+                <div id="divNotification" class="status-block">
+                </div>
+            </div>
+            <!-- ===live-stc-price======================== -->
+            @if ((ProjectSession.IsWholeSaler && isDashboardWS_SCASettlementTermView == "false") || !ProjectSession.IsWholeSaler)
+            {
+                <div id="dvSettleMentBlock" class="sca-dashboard-settlement-block live-stc-price">
+                </div>
+            }
+            <div class="news-feed">
+                <h3 class="sca-heding">Reports Summary </h3>
+                <div class="clearfix">
+                    <div class="col-md-6 SCA-traded-chart-block">
+                        <h4 class="chart-title">STC Traded Over Time</h4>
+                        <div class="reports-block form-inline">
+                            <div class="form-group">
+                                <div id="trade-report-daterange" title="daterangepicker" style="margin-right:15px;"></div>
+                            </div>
+                            <div class="form-group pull-right">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="traded-chart-type" id="option1" autocomplete="off" trade-type="1">Year
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="traded-chart-type" id="option2" autocomplete="off" trade-type="2"> Month
+                                    </label>
+                                    <label class="btn border-btn active">
+                                        <input type="radio" name="traded-chart-type" id="option3" autocomplete="off" trade-type="3" checked> Week
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="SCA-traded-chart" style="margin-top:10px;"></div>
+                        <span class="empty-data-msg" style="display:none;"> No data available</span>
+                    </div>
+                    <div class="col-md-6 SCA-status-chart-block">
+                        <h4 class="chart-title">STC Submission Status</h4>
+                        <div class="reports-block">
+                            <div class="form-group pull-right">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn border-btn active">
+                                        <input type="radio" name="status-chart-type" id="option1" autocomplete="off" status-type="1" checked>JObs
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="status-chart-type" id="option2" autocomplete="off" status-type="2"> STCs
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="status-chart-type" id="option3" autocomplete="off" status-type="3"> $
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="SCA-status-chart">
+                        </div>
+                        <span class="empty-data-msg" style="display:none;"> No data available</span>
+                    </div>
+                </div>
+            </div>
+            <div class="news-feed">
+                <h3 class="sca-heding">Latest Job Updates<p class="pull-right">Last 30 Days Data</p></h3>
+                <div class="history-filter-div">
+                    <span style="font-weight:bold;">Displaying </span>
+                    <select id="historyCategories">
+                        <option value="0">All Activity</option>
+                        <option value="1">General</option>
+                        <option value="2">Interaction</option>
+                        <option value="3">Statuses</option>
+                        <option value="4">Notifications</option>
+                        <option value="5">Invoicing</option>
+                        <option value="6">Documents</option>
+                        <option value="7">Scheduling</option>
+                    </select>
+                </div>
+                <hr />
+                <div id="dvHistoryList" class="niceScroll">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.Partial("~/Views/Job/_InstallerDesignerPopup.cshtml", Model)
+<style>
+    hr {
+        margin: 10px 30px 10px 30px;
+    }
+
+    #dvHistoryList {
+        height: 500px;
+        overflow-y: scroll;
+    }
+
+    #divNotification {
+        max-height: 500px;
+        overflow-y: scroll;
+        min-height: 100px;
+    }
+
+    .status-block {
+        background-color: #fff;
+        padding: 0px;
+        /*display: table;*/
+        margin: 10px;
+    }
+
+    .blue-title {
+        color: #1b94da;
+    }
+
+    .stc-amount-block {
+        padding: 20px;
+    }
+
+
+    .history-filter-div {
+        padding: 17px 0px 0px 10px;
+    }
+
+    #historyCategories {
+        border: 0;
+        color: green;
+        font-weight: bold;
+    }
+
+    .chart-block {
+        padding: 15px;
+    }
+
+    .Chart-header {
+        font-size: 16px;
+        text-transform: uppercase;
+        line-height: 20px;
+        padding: 10px 15px;
+        font-family: 'OpenSansBold';
+    }
+
+    .settlement-contain-box {
+        background-color: white;
+    }
+
+    .collection-item {
+        font-weight: 700;
+    }
+
+    .sca-dashboard-settlement-block .stc-amount-block ul li .time {
+        margin-top: 20px;
+    }
+
+    #profileImg {
+        width: 100%;
+        text-align: center;
+        color: black;
+        font-size: 48px;
+        line-height: 130px;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+</style>
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="~/Scripts/Charts/c3.js"></script>*@
+<script>
+    var pageIndex = 0;
+    var pageSize = 10;
+    var IsLast = false;
+    var count = 0;
+    var IsProcessOn = 0;
+    var startDate = "";
+    var endDate = "";
+    var isDashboardWS_SCASettlementTermView = '@isDashboardWS_SCASettlementTermView.ToLower()';
+    var isSCADashboard = true;
+    var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+    var AddInstallerDesignerURL = '@Url.Action("AddInstallerDesigner", "User")',
+        FillInstallerDesignerURL = '@Url.Action("FillInstallerDesigner", "User")',
+        ProjectSession_UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+        ProjectSession_LoggedInUserId = '@ProjectSession.LoggedInUserId';
+    dropDownData = [],
+    companyId = '@ProjectSession.SolarCompanyId',
+    CheckUserExistURL = '@Url.Action("CheckUserExist", "User")',
+    AddInstallerDesignerURL = '@Url.Action("AddInstallerDesigner", "User")',
+    FillInstallerDesignerURL = '@Url.Action("FillInstallerDesigner", "User")',
+    SRCSignInstallerDesigner = '',
+    urlUploadProfilePhoto = '@Url.Action("UploadProfilePhoto", "User")',
+        profilePhotoPath = ProjectSession_UploadedDocumentPath + "UserDocuments" + "/" + ProjectSession_LoggedInUserId;
+     var actionProcessRequest = '@Url.Action("ProcessRequest","User")';
+
+    $(document).ready(function () {
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+            return returnObj;
+        };
+
+        var start = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 77);//( Last 12 weeks select automaic)
+        var end = new Date();
+        $("#trade-report-daterange").kendoDateRangePicker({
+            format: "dd-MM-yyyy",
+            change: SetTradeRange,
+            range: { start: start, end: end }
+        }).data("kendoDatePicker");
+        startDate = start.getFullYear() + "-" + (start.getMonth() + 1) + "-" + start.getDate();
+        endDate = end.getFullYear() + "-" + (end.getMonth()+1) + "-" + end.getDate()
+        $("[name='traded-chart-type']").change(function () {
+            BindSTCTradedChart();
+        })
+        $("#trade-report-daterange").find(".k-label").remove();
+        $("#loading-image").show();
+        $("[name='status-chart-type']").change(function () {
+            BindSTCStatusChart();
+        })
+        pageIndex = 1;
+        GetNewsFeed(1, 10, 0);
+        if((@ProjectSession.IsWholeSaler.ToString().ToLower() == true && isDashboardWS_SCASettlementTermView == "true") || @ProjectSession.IsWholeSaler.ToString().ToLower() == false)
+        {
+            GetSTCForTrade();
+        }
+        BindSTCTradedChart()
+        BindSTCStatusChart()
+        GetNotification(new Date().toISOString());
+        GetInstallers();
+        GetSTCStatusCount();
+        fnNiceScroll();
+
+        $("#loading-image").hide();
+
+        //Invoice Setting
+        if ($('#InvoiceSetting').length > 0)
+            $('#dInvoiceSetting').show();
+        else
+            $('#dInvoiceSetting').hide();
+
+        //Job Scheduling
+        if ($('#JobScheduling').length > 0)
+            $('#dJobScheduling').show();
+        else
+            $('#dJobScheduling').hide();
+
+        //Create new user
+        if ($('#CreateNewUser').length > 0)
+            $('#dCreateUser').show();
+        else
+            $('#dCreateUser').hide();
+
+        //Create job
+        if ($('#CreateJob').length > 0)
+            $('#dCreateJob').show();
+        else
+            $('#dCreateJob').hide();
+
+        if ($('#InvoiceSetting').length == 0 && $('#JobScheduling').length == 0 && $('#CreateNewUser').length == 0 && $('#CreateJob').length == 0)
+            $(".quick-links").hide();
+        else
+            $(".quick-links").show();
+
+
+        // load news feed on scroll
+        $("#dvHistoryList").on("scroll", function (e) {
+            if (IsLast == false) {
+                if (pageIndex == 1 && count > 0 && IsProcessOn == 1) {
+                    count = 0;
+                    return false;
+                }
+                IsProcessOn = 1
+                var $o = $(e.currentTarget);
+                if ($o[0].scrollHeight - $o.scrollTop() <= $("#dvHistoryList").height()) {
+                    if (isNaN(pageIndex)) {
+                        pageIndex = 1;
+                    } else { pageIndex = pageIndex + 1; }
+                    count = pageIndex;
+                    GetNewsFeed(pageIndex, pageSize, $("#historyCategories").val());
+
+                }
+            }
+        });
+
+        // Hide settlement block details
+        $('.settlement-term').find('.sca-heding').html('LIVE STC PRICE');
+        $('#CERApproved').find('.time span').hide()
+        $('#pricing-stc-title').hide();
+        $('#paymentscheduleinfo').hide();
+        $('.settlement-term').find('.row').hide();
+        $('#tradeButton').hide();
+
+        if('@ViewBag.ProfilePhoto' == ''){
+            var fullName = '@ViewBag.SCAName';
+            var initials = fullName.split(' ')[0].charAt(0)+""+fullName.split(' ')[1].charAt(0);
+            $("#profileImg").html(initials);
+        }
+        else{
+            $("#profileImg").html('<img class="profile-img img-responsive img-circle" src=""/>');
+            $('.profile-img').attr('src', profilePhotoPath + "/" +'@ViewBag.ProfilePhoto');
+        }
+        $('#uploadProfilePhoto').fileupload({
+            url: urlUploadProfilePhoto,
+            dataType: 'json',
+            done: function (e, data) {
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                var UploadFailedFilesName = [];
+                UploadFailedFilesName.length = 0;
+
+                for (var i = 0; i < data.result.length; i++) {
+
+                    if (data.result[i].Status == true) {
+                        //var guid = ProjectSession_LoggedInUserId;
+                        //var proofDocumentURL = UploadedDocumentPath;
+                        //var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                        var SRC = profilePhotoPath + "/" + data.result[i].FileName;
+                        $("#profileImg").html('');
+                        $("#profileImg").html('<img class="profile-img img-responsive img-circle" src=""/>')
+                        $('.profile-img').attr('src',SRC);
+                    }
+                    else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                        UploadFailedFilesName.push(data.result[i].FileName);
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName);
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+                    showErrorMessageForPopup(UploadFailedFiles.length + " " + "File has not been uploaded.", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                }
+                if (UploadFailedFilesName.length > 0) {
+                    showErrorMessageForPopup(UploadFailedFilesName.length + " " + "Uploaded filename is too big.", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                }
+                if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0) {
+                    showSuccessMessageForPopup("File has been uploaded successfully.", $("#successMsgRegionProfile"), $("#errorMsgRegionProfile"));
+                }
+            },
+
+            progressall: function (e, data) {
+            },
+
+            singleFileUploads: true,
+            send: function (e, data) {
+                var documentType = data.files[0].type.split("/");
+                var mimeType = documentType[0];
+                if (data.files.length == 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].name.length > 50) {
+                            showErrorMessageForPopup("Please upload small filename.", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessageForPopup("Please upload file that not conatain <> ^ [] .", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        }
+                    }
+                }
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt(MaxLogoSize)) {
+                            showErrorMessageForPopup(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxLogoSize + "MB", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessageForPopup("Please upload file that not conatain <> ^ [] .", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt(MaxLogoSize)) {
+                        showErrorMessageForPopup("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxLogoSize + "MB", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                        return false;
+                    }
+                }
+                if (mimeType != "image") {
+                    showErrorMessageForPopup("Please upload a file with .jpg , .jpeg or .png extension.", $("#errorMsgRegionProfile"), $("#successMsgRegionProfile"));
+                    $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                    $('body').animate({ scrollTop: 0 }, 'slow');
+                    return false;
+                }
+                $(".alert").hide();
+                $("#errorMsgRegion").html("");
+                $("#errorMsgRegion").hide();
+                return true;
+            },
+            formData: { userId: ProjectSession_LoggedInUserId,solarCompanyId: ProjectSession_SolarCompanyId },
+            change: function (e, data) {}
+        }).prop('disabled', !$.support.fileInput)
+         .parent().addClass($.support.fileInput ? undefined : 'disabled');
+    });
+
+
+    function SetTradeRange() {
+        startDate = kendo.toString(this.range().start, 'yyyy-MM-dd');
+        endDate = kendo.toString(this.range().end, 'yyyy-MM-dd');
+        BindSTCTradedChart();
+    }
+    function BindSTCStatusChart() {
+        var type = $("[name='status-chart-type']:checked").attr('status-type');
+        $(".SCA-status-chart").kendoChart({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetSCAStatusChartData","FormbotReport")',
+                        dataType: "json",
+                        data: { Type: type}
+                    }
+                }
+            },
+            chartArea: {
+                background: "",
+            },
+            legend: {
+                visible: false
+            },
+            seriesColors: ['#9de219','#1ca04d', '#678900', '#006634', '#068c35', '#ff6800'],
+            seriesDefaults: {
+
+                labels: {
+                    visible: true,
+                    background: "transparent",
+                    align: "column",
+                    template: "#= category #: #= value#"
+                }
+            },
+            series: [{
+                type: "pie",
+                field: "StatusCount",
+                categoryField: "Status",
+                padding: 60
+            }],
+            tooltip: {
+                visible: true,
+                format: "N0"
+            },
+            dataBound: function (e) {
+                var view = e.sender.dataSource.view();
+                if (view.length == 0)
+                    $(".SCA-status-chart-block").find(".empty-data-msg").show();
+                else
+                    $(".SCA-status-chart-block").find(".empty-data-msg").hide();
+            }
+        });
+    }
+
+
+    function BindSTCTradedChart() {
+
+        var type = $("[name='traded-chart-type']:checked").attr('trade-type');
+        var sortobj = {}
+        var categoryField = "";
+        if (type == 1) {
+            sortobj.field = "STCSubmissionDateYear";
+            sortobj.dir = "asc";
+            categoryField = "STCSubmissionDateYear";
+        } else if (type == 2) {
+            sortobj.field = "STCSubmissionDateMonth";
+            sortobj.dir = "asc";
+            categoryField = "STCSubmissionDateMonth";
+        } else if (type == 3) {
+            sortobj.field = "STCSubmissionDateWeek";
+            sortobj.dir = "asc";
+            categoryField = "STCSubmissionDateWeek";
+        }
+        $(".SCA-traded-chart").kendoChart({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetSCATradedChartData","FormbotReport")',
+                        dataType: "json",
+                        data: { StartDate: startDate == null ? "" : startDate, EndDate: endDate == null ? "" : endDate, Type: type }
+                    }
+                }
+            },
+            seriesDefaults: {
+                type: "line",
+                style: "smooth"
+
+            },
+            chartArea: {
+                background: "",
+                height: 450,
+
+            },
+            legend: {
+                visible: false
+            },
+            seriesColors: [$('#navigation').css("background-color")],
+            series: [{
+                field: "TradedCount",
+                categoryField: categoryField,
+                name: "Trade Data"
+            }],
+            categoryAxis: {
+                labels: {
+                    rotation: "-90"
+                },
+                majorGridLines: {
+                    visible: false
+                }
+            },
+            valueAxis: {
+                line: {
+                    visible: false
+                }
+            },
+            tooltip: {
+                visible: true,
+                format: "N0"
+            },
+            dataBound: function (e) {
+                var view = e.sender.dataSource.view();
+                if (view.length == 0)
+                    $(".SCA-traded-chart-block").find(".empty-data-msg").show();
+                else
+                    $(".SCA-traded-chart-block").find(".empty-data-msg").hide();
+            }
+        });
+    }
+
+    function GetNotification(date) {
+        debugger
+        $.ajax({
+            url: '@Url.Action("GetNotifications", "JobSetting")?dt='+date,
+            method: 'POST',
+            cache: false,
+            async: false,
+            success: function (Data) {
+                if (Data) {
+                    debugger
+                    Data = Data.replace(/(?:\\r\\n|\\r|\\n)/g, '<br />');
+                    Data = JSON.parse(Data);
+                    if(Data.length){
+                        var li = "";
+                        var specialLi = "";
+                        for(var i=0;i<Data.length;i++){
+                            var data = Data[i];
+
+                            if (data.IsShowToAll == false) {
+                                if (data.IsSpecialNotification)
+                                {
+
+                                specialLi += "<li class='status-box part-status'><span class='border-icon'></span><p><label>"+data.NotificationTitle+" : "+  data.strCreateDate +"</label></p><p>"+data.NotificationContent+"</p></li>";
+                                }
+                            else
+                            {
+                                li += "<li class='status-box part-status'><span class='border-icon'></span><p><label>"+data.NotificationTitle+" : "+  data.strCreateDate +"</label></p><p>"+data.NotificationContent+"</p></li>";
+                            }
+                          }
+                        }
+
+                        $('#divNotification').html(li);
+                        $('#specialNotification').html(specialLi);
+
+                        if(li == "")
+                            $('#divNotificationBlock').remove();
+                        if(specialLi == "")
+                            $('#specialNotification').remove();
+                    }
+                    else
+                    {
+                        $('#divNotificationBlock').remove();
+                        $('#specialNotification').remove();
+                    }
+                }
+            }
+        });
+    }
+
+    function GetNewsFeed(pageIndex, pageSize, paramCategoryID = 0) {
+        var categoryID = paramCategoryID;
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format("YYYY-MM-DD");
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        $.ajax({
+            url: '@Url.Action("GetNewsFeed", "Dashboard")',
+            method: 'GET',
+            data: { categoryID: categoryID, from: fDate, to: tDate, pageIndex: pageIndex, pageSize: pageSize },
+            cache: false,
+            async: false,
+            success: function (Data) {
+                if (Data.indexOf("No Record(s) Found.") > -1) {
+                    IsLast = true;
+                    if ($("#dvHistoryList").html() == '') {
+                        $("#dvHistoryList").html(Data);
+                    }
+                }
+                else {
+                    if (pageIndex == "1") {
+                        $("#dvHistoryList").append(Data);
+                    }
+                    else {
+                        $("#divCustom div").append(Data);
+                    }
+                }
+                IsProcessOn = 0;
+                fnNiceScroll();
+                fnNiceScrollResize();
+                //$("#loading-image").hide();
+            }
+        });
+    }
+
+        function GetSTCForTrade() {
+            var IsShowInDashboard = true;
+            $.ajax({
+                url: '@Url.Action("GetDashboardJobSTCPrice", "Dashboard")',
+                method: 'GET',
+                data: { IsShowInDashboard: IsShowInDashboard, IsGridView: false },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    if (Data == '') {
+                        alert("Select Custom Price");
+                    } else {
+                        $("#dvSettleMentBlock").html(Data);
+                        $("#dvSettleMentBlock").find(".sca-heding").hide();
+                        //$("#dvSettleMentBlock").find(".stc-amount-block").removeClass("stc-amount-block")
+                        $("#dvSettleMentBlock").find(".settlement-term").addClass("settlement-term-sca")
+                        $("#dvSettleMentBlock").find('li').removeClass("active");
+
+                        $('#PricingBlock li:eq(0)').before("<li class='livestc-titleblock'><h2>Live STC Price</h2><p>Last Updated: " + priceLastUpdatedDate.split(' ')[0] + "</p></li>");
+                        $("#dvSettleMentBlock").find('.table-responsive').addClass("niceScroll")
+                        //$("#dvSettleMentBlock").find(".time").css("padding", "0px")
+                        fnNiceScroll();
+                        if('@ProjectSession.IsAllowTrade.ToString().ToLower()' == "false"){
+                            $('.term').remove();
+                        }
+                    }
+                }
+            });
+        }
+
+
+
+        $('#historyCategories').change(function () {
+            var categoryID = this.value;
+            pageIndex = 1;
+            IsLast = false;
+            $("#dvHistoryList").html('');
+            GetNewsFeed(pageIndex, pageSize, categoryID);
+        });
+
+        function DownloadDocument(e) {
+            var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+            var FolderName = $(e).attr("data-folder");
+            var FileName = $(e).attr("data-name");
+            window.location.href = BaseURL + 'ViewDownloadFileForStc/Job?FileName=' + FileName + '&FolderName=' + FolderName;
+        }
+
+        function GetInstallers(){
+            $.ajax({
+                url: '@Url.Action("GetInstallerDesignerForSCADashboard", "User")',
+                contentType: 'application/json',
+                dataType: 'json',
+                method: 'get',
+                cache: false,
+                async:false,
+                success: function (data) {
+                    $('.installerList').html('');
+                    $.each(data, function (key, value) {
+                        $('.installerList').append("<li class='collection-item' installerDesignerId="+value.InstallerDesignerId+"><span>"+value.CECAccreditationNumber +" - " +value.Name+" <a href='#' class='icon-link sprite-img edit-icon' onclick='UpdateInstaller("+value.InstallerDesignerId+");'></a></span></li>");
+                    });
+                }
+            });
+        }
+
+        function GetSTCStatusCount() {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetSTCJobStageCount", "Job")',
+                dataType: 'json',
+                async: false,
+                data: { reseller: '@ProjectSession.ResellerId', ram: 0, sId: '@ProjectSession.SolarCompanyId', isAllScaJobView: false },
+                success: function (jobstagescount) {
+                    var sum = 0;
+                    $(".job-status-list").html('')
+
+                    $.each(jobstagescount.lstSTCJobStagesCount, function (i, count) {
+                        $(".job-status-list").append('<li class="collection-item"><a href="/Dashboard/RedirectToJobSTCSubmission?SearchId=' +@ProjectSession.SolarCompanyId+'&status=' + count.JobStageId + '">  ' + count.StageName + '  <em>(' + count.jobCount + ')</em></a></li>')
+                    });
+                    fnNiceScroll();
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve count for Job Stages.' + ex);
+                }
+            });
+        }
+
+        function showErrorMessageForPopup(message, objError, objSuccess) {
+            $(".alert").hide();
+            if (objSuccess)
+                objSuccess.hide();
+            objError.html(closeButton + message);
+            objError.show();
+        }
+
+        function showSuccessMessageForPopup(message, objSuccess, objError) {
+            $(".alert").hide();
+            if (objError)
+                objError.hide();
+            objSuccess.html(closeButton + message);
+            objSuccess.show();
+        }
+
+        $(document).on("keyup", "#txtBasicDetails_InstallerID", function (e) {
+            var filter = $(this).val();
+            $(".installerList li").each(function () {
+                if ($(this).text().trim().search(new RegExp(filter.trim(), "i")) < 0) {
+                    $(this).hide();
+                } else {
+                    $(this).show()
+                }
+            });
+        })
+
+</script>

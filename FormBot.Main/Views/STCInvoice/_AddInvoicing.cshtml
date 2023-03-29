@@ -1,0 +1,728 @@
+﻿@model FormBot.Entity.STCInvoice
+@using FormBot.Helper
+
+@{
+    bool isInvoiceEdit = false;
+   
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.InvoiceEdit.GetHashCode()) { isInvoiceEdit = true; }
+            TempData.Keep();          
+        });
+    }
+}
+
+<style type="text/css">
+    .remittance .view {
+        background-position: -192px -43px !important;
+        width: 18px !important;
+        height: 16px !important;
+    }
+
+        .remittance .view:hover, .remittance .view:focus {
+            background-position: -192px -73px !important;
+        }
+
+    .remittance .delete {
+        background-position: -170px -42px;
+        width: 18px !important;
+        height: 16px !important;
+    }
+
+        .remittance .delete:not(.disDelete):hover, .remittance .delete:not(.disDelete):focus {
+            background-position: -170px -70px;
+        }
+</style>
+
+<div class="modal-header">
+    <button type="button" class="close" aria-label="Close" data-dismiss="modal" id="AddTimeClose">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title">@Model.STCInvoiceNumber | @Model.SolarCompany</h4>
+</div>
+<div class="modal-body">
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionForInvoicing" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForInvoicing" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+
+
+    @using (Html.BeginForm("SaveInvoiceData", "StcInvoice", FormMethod.Post, new { id = "FromInvoicing", enctype = "multipart/form-data" }))
+    {
+<div class="form-box">
+    @Html.HiddenFor(m => m.JobID)
+    @Html.HiddenFor(m => m.STCInvoiceID)
+    @Html.HiddenFor(m => m.STCJobDetailsID)
+    @Html.HiddenFor(m => m.SettlementTerms)
+    @Html.HiddenFor(m => m.STCInvoiceNumber)
+    @Html.HiddenFor(m => m.FilePaths)
+    @Html.HiddenFor(m => m.SolarCompanyId)
+    @Html.HiddenFor(m => m.ResellerID)
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="form-group">
+                <div class="col-md-2" style="padding:0">
+                    <label class="control-label">Invoice:</label>
+                </div>
+                <div class="col-md-10">
+                    <ul class="invoice-pup-ramittence">
+                        <li>
+                            <ul class="remittance">
+                                <li><img src="~/Images/pdf-icon.png">&nbsp;@Path.GetFileName(Model.InvoiceFilePath)</li>
+                                <li><a class="view sprite-img" name=@Model.InvoiceFilePath href="javascript:void();" title="Invoice File" onclick="OpenPdf(this,true)"></a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <div class="col-md-2" style="padding:0">
+                    <label class="control-label">Remittance:</label>
+                </div>
+                <div class="fileUpload primary upload_ic col-sm-2" style="display:none">
+                    <span>Upload New Remittence File</span>
+                    <input id="uploadbtnRemittenceFile" type="file" class="upload fileUpload" multiple />
+                </div>
+                @if (!string.IsNullOrEmpty(Model.RemittenceFilePath))
+                {
+                    <div class="col-md-10">
+                        <ul class="invoice-pup-ramittence newRemittenceFiles" id="ulRemittence">
+                            @{int i = 1;
+                                foreach (string filepath in Model.RemittenceFilePath.Split(','))
+                                {
+                                    <li id="@filepath">
+                                        <ul class="remittance">
+                                            <li>
+                                                <img src="~/Images/pdf-icon.png">
+                                                @*&nbsp;@Path.GetFileName(filepath)*@
+                                                &nbsp; @Convert.ToString("Remittance_")@i@Convert.ToString(".pdf")
+                                            </li>
+                                            <li>
+                                                <a class="view sprite-img" name=@filepath href="javascript:void();" title="Remittence File" onclick="OpenPdf(this,true,true);"></a>
+                                            </li>
+                                            <li>
+                                                <a class="action delete sprite-img" href="javascript:void();" title="Remittence File" onclick="RemoveRemittenceFile('@Model.STCInvoiceID','@filepath.Replace(@"\",@"\\")',this)"></a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    i = i + 1;
+                                }
+                            }
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-md-10">
+                        <ul class="invoice-pup-ramittence newRemittenceFiles" id="ulRemittence">
+                            <li>No Remittence Files Available</li>
+                        </ul>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="form-group box-border">
+                <label class="control-label">Job Details:</label>
+                <div>
+                    @Model.RefNumberOwnerName
+                    @Model.InstallationAddress
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Payment Status:</label>
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || isInvoiceEdit || ProjectSession.UserTypeId == 3)
+                {
+                    @Html.DropDownListFor(m => m.PaymentStatusID, ViewBag.PaymentStatus as IEnumerable<SelectListItem>, new { @class = "form-control", @tabindex = 1 })
+                }
+                else
+                {
+                    @Html.DropDownListFor(m => m.PaymentStatusID, ViewBag.PaymentStatus as IEnumerable<SelectListItem>, new { @class = "form-control", @tabindex = 1, @disabled = "disabled" })
+                }
+                @Html.ValidationMessageFor(m => m.PaymentStatusID)
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label required">STC Price($):</label>
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || isInvoiceEdit || ProjectSession.UserTypeId == 3)
+                {
+                    @Html.TextBoxFor(m => m.STCAmount, new { @class = "form-control decimal", @maxlength = 8, @tabindex = 4, @onblur = "UpdateTotalBasedOnGST()" })
+                }
+                else
+                {
+                    @Html.TextBoxFor(m => m.STCAmount, new { @class = "form-control decimal", @maxlength = 8, @tabindex = 4, @onblur = "UpdateTotalBasedOnGST()", @readonly = "readonly" })
+                }
+                @Html.ValidationMessageFor(m => m.STCAmount)
+
+            </div>
+        </div>
+        @if (Model.SettlementTerms == "5")
+        {
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label required">STC Qty:</label>
+                    @Html.TextBoxFor(m => m.STCValue, new { @class = "form-control", @maxlength = 8, @tabindex = 4, @readonly = "readonly" })
+                    @Html.ValidationMessageFor(m => m.STCValue)
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label required">STC Qty:</label>
+                    @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || isInvoiceEdit || ProjectSession.UserTypeId == 3)
+                    {
+                        @Html.TextBoxFor(m => m.STCValue, new { @class = "form-control decimal", @maxlength = 8, @tabindex = 4, @onblur = "UpdateTotalBasedOnGST()" })
+                    }
+                    else
+                    {
+                        @Html.TextBoxFor(m => m.STCValue, new { @class = "form-control decimal", @maxlength = 8, @tabindex = 4, @onblur = "UpdateTotalBasedOnGST()", @readonly = "readonly" })
+                    }
+                    @Html.ValidationMessageFor(m => m.STCValue)
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Total:</label>
+                @*@Html.Label("Total", Model.Total.ToString(), new { @id = "lblTotal", @class = "form-control" })*@
+                @Html.TextBoxFor(m => m.Total, new { @id = "lblTotal", @class = "form-control", @readonly = "readonly" })
+                @*@Html.LabelFor(m => m.Total, Model.Total.ToString(), new { @id = "lblTotal", @class = "form-control" })*@
+                @*<label id="lblTotal" class="form-control">@Model.Total</label>*@
+            </div>
+        </div>
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">+Gst?:</label>
+
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || isInvoiceEdit || ProjectSession.UserTypeId == 3)
+                {
+                    @Html.CheckBoxFor(m => m.IsGst, new { @id = "chkIsGST", @class = "txtField", @onclick = "UpdateTotalBasedOnGST();" })
+                }
+                else
+                {
+                    @Html.CheckBoxFor(m => m.IsGst, new { @id = "chkIsGST", @class = "txtField", @onclick = "UpdateTotalBasedOnGST();", @disabled = "disabled" })
+                }
+
+
+            </div>
+        </div>
+        @if (Model.SettlementDate != null)
+        {
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Settlement Date:</label>
+                    @Html.LabelFor(m => m.SettlementDate, Model.SettlementDate.Value.ToShortDateString())
+                </div>
+            </div>
+        }
+
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Settlement Terms:</label>
+
+                @Html.LabelFor(m => m.SettlementTermDescription, Model.SettlementTermDescription)
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Notes:</label>
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || isInvoiceEdit || ProjectSession.UserTypeId == 3)
+                {
+                    @Html.TextAreaFor(m => m.Notes, new { @class = "form-control", @maxlength = 1000, @tabindex = 5 })
+                }
+                else
+                {
+                    @Html.TextAreaFor(m => m.Notes, new { @class = "form-control", @maxlength = 1000, @tabindex = 5, @readonly = "readonly" })
+                }
+                @Html.ValidationMessageFor(m => m.Notes)
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <div class="form-group">
+                <label class="control-label">Adjustment Notes:</label>
+                @Html.TextAreaFor(m => m.AdjustmentNotes, new { @class = "form-control", @maxlength = 1000, @readonly = "readonly" })
+            </div>
+        </div>
+    </div>
+</div>
+        <div class="modal-footer">
+            <button type="button" id="btnSaveInvoice" class="btn primary icon-btn" tabindex="6"> <span style="background-position: -1px -230px !important;" class="sprite-img save_ic"></span>Save</button>
+            @*<button type="button" id="btnSaveInvoice" class="btn primary save_ic" tabindex="6" onclick="SaveInvoicing()">Save</button>*@
+            @*<input type="submit" name="Submit" value="Save" autofocus class="primary save_ic" id="btnSubmit">*@
+
+            <button type="button" class="btn default cancel_ic" data-dismiss="modal" tabindex="7">Cancel</button>
+        </div>
+    }
+
+
+
+    <script type="text/javascript">
+        
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'STCInvoice/';
+        //var multiply = parseFloat($("#lblTotal").text());
+        $('.decimal').keypress(function (event) {
+            var $this = $(this);
+            if ((event.which != 46 || $this.val().indexOf('.') != -1) &&
+                (event.which > 31) &&
+              ((event.which < 48 || event.which > 57) &&
+              (event.which != 0 && event.which != 8))) {
+                event.preventDefault();
+            }
+
+            var text = $(this).val();
+            if ((event.which == 46) && (text.indexOf('.') == -1)) {
+                setTimeout(function () {
+                    if ($this.val().substring($this.val().indexOf('.')).length > 5) {
+                        alert('hi');
+                        $this.val($this.val().substring(0, $this.val().indexOf('.') + 3));
+                    }
+                }, 1);
+            }
+
+            if ((text.indexOf('.') != -1) &&
+                (text.substring(text.indexOf('.')).length > 2) &&
+                (event.which != 0 && event.which != 8) &&
+            ($(this)[0].selectionStart >= text.length - 2)) {
+                event.preventDefault();
+            }
+
+            if ($this.val().indexOf('.') == -1 && ($this.val().length > 4) && event.which != 46) {
+                event.preventDefault();
+            }
+        });
+
+        $(document).off('click', '#btnSaveInvoice').on('click', '#btnSaveInvoice', function (e) {
+            //e.preventDefault();
+            //e.stopPropagation();
+            if (typeof (validateExtraFields) == "function") {
+                if (validateExtraFields() == false) {
+                    return false;
+                }
+            }
+
+            if (typeof (validateForm) != "function" || ((typeof (validateForm) == "function") && validateForm())) {
+                var lstFileName = [];
+                for (var i = 0; i < $("[name='FileNamesCreate']").length; i++) {
+                    lstFileName.push($("[name='FileNamesCreate']")[i].id);
+                }
+
+                $("#FilePaths").val(JSON.stringify(lstFileName));
+                var formdata = JSON.stringify($('#FromInvoicing').serializeToJson());
+
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("SaveInvoiceData", "STCInvoice")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: formdata,
+                    success: function (data) {
+                        if (data.success) {
+                            $('#popupOpenInvoice').modal('toggle');
+                            $(".alert").hide();
+                            $("#errorMsgRegion").removeClass("alert-danger");
+                            $("#errorMsgRegion").addClass("alert-success");
+                            $("#errorMsgRegion").html(closeButton + "Invoice data updated successfully.");
+                            $("#errorMsgRegion").show();
+                            GetSTCInvoicePaymentStatusStageCount();
+                            $("#datatable").dataTable().fnDraw();
+                        }
+                    },
+                    error: function (ex) {
+
+                    }
+                });
+            }
+        });
+
+
+
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        function validateForm() {
+            $.validator.unobtrusive.parse("#FromInvoicing");
+            if ($("#FromInvoicing").valid()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        function RemoveRemittenceFile(STCInvoiceId, FilePath, t) {
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("RemoveRemittenceFile", "STCInvoice")',
+                    async: false,
+                    cache: false,
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ stcinvoiceid: STCInvoiceId, filepath: FilePath }),
+                    success: function (data) {
+                        if (data.success) {
+                            $(".alert").hide();
+                            $("#errorMsgRegionForInvoicing").hide();
+                            $("#successMsgRegionForInvoicing").html(closeButton + "Remittence file deleted successfully.");
+                            $("#successMsgRegionForInvoicing").show();
+                            //$("#" + FilePath).html('');
+                            t.parentNode.parentNode.parentNode.remove();
+                        }
+                    },
+                    error: function (ex) {
+                        $(".alert").hide();
+                        $("#successMsgRegionForInvoicing").hide();
+                        $("#errorMsgRegionForInvoicing").html(closeButton + ex);
+                        $("#errorMsgRegionForInvoicing").show();
+                    }
+                });
+            }
+        }
+
+        function UpdateTotalBasedOnGST() {
+            var multiply = parseFloat($("#STCAmount").val()) * parseFloat($("#STCValue").val());
+            if ($("#chkIsGST").prop('checked') == true) {
+                var res = multiply + ((multiply * @Model.TaxRate) / 100);
+                //$("#lblTotal").html(res);
+                $("#lblTotal").val(res);
+            }
+            else {
+                //$("#lblTotal").html(multiply);
+                $("#lblTotal").val(multiply);
+            }
+
+            @*if ($("#chkIsGST").prop('checked') == true) {
+
+                var res = multiply + ((multiply * @Model.TaxRate) / 100);
+                $("#lblTotal").html(res);
+            }
+            else {
+                $("#lblTotal").html(multiply);
+            }*@
+        }
+
+        // file upload
+        @*$(function () {
+            'use strict';
+            var url = BaseURL + 'UploadRemittenceFile/STCInvoice';
+            var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+            var jobID = '@Model.JobID';
+
+            $('#uploadbtnRemittenceFile').fileupload({
+                url: url,
+                dataType: 'json',
+                done: function (e, data) {
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    var UploadFailedFilesName = [];
+                    UploadFailedFilesName.length = 0;
+
+                    var UploadFailedFilesType = [];
+                    UploadFailedFilesType.length = 0;
+                    //formbot start
+
+                    for (var i = 0; i < data.result.length; i++) {
+
+                        if (data.result[i].Status == true) {
+                            var rowcount = $('#tblDocuments tr').length;
+                            var count = rowcount + 1;
+                            var documentType = data.result[i].MimeType.split("/");
+                            var mimeType = documentType[0];
+                            var documentId = "document" + count;
+                            var content = "<tr style='margin-top:30px' id= " + data.result[i].FileName.replace("%", "$") + " >"
+                            content += '<td class="tdCount col-sm-2" >' + count + '.' + ' </td>';
+                            content += '<td class="col-sm-6" style="color:#494949">' + data.result[i].FileName.replace("%", "$") + ' </td>';
+
+
+                            content += '<td  class="col-sm-2" style="color:blue"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" id="' + data.result[i].FileName.replace("%", "$") + '" class="' + data.result[i].FileName.replace("%", "$") + '" title="Download" onclick="DownloadDocument(this)"></td>';
+
+                            content += '<td style="color:blue"><img src=' + ProjectImagePath + 'images/delete-icon.png style="cursor: pointer id="signDelete" title="Delete" onclick="OpenUploadingPdf(\'' + data.result[i].FileName + '\')"></td>';
+                            content += "</tr>"
+
+                            $('#tblDocuments').append(content);
+                            $('<input type="hidden">').attr({
+                                name: 'FileNamesCreate',
+                                value: data.result[i].FileName.replace("%", "$"),
+                                id: data.result[i].FileName.replace("%", "$"),
+                            }).appendTo('form');
+
+                        }
+                        else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                            UploadFailedFilesName.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                        else if (data.result[i].Status == false && data.result[i].Message == "NotPDF") {
+                            UploadFailedFilesType.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                        else {
+                            UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                    }
+                    if (UploadFailedFiles.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegionForInvoicing").hide();
+                        $("#errorMsgRegionForInvoicing").html(closeButton + UploadFailedFiles.length + " " + "File has not been uploaded.");
+                        $("#errorMsgRegionForInvoicing").show();
+                        $("#errorMsgRegionForInvoicing").fadeOut(3000);
+                    }
+                    if (UploadFailedFilesName.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegionForInvoicing").hide();
+                        $("#errorMsgRegionForInvoicing").html(closeButton + UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+                        $("#errorMsgRegionForInvoicing").show();
+                        $("#errorMsgRegionForInvoicing").fadeOut(3000);
+                    }
+                    if (UploadFailedFilesType.length > 0) {
+                        $(".alert").hide();
+                        $("#successMsgRegionForInvoicing").hide();
+                        $("#errorMsgRegionForInvoicing").html(closeButton + "Please upload only pdf file.");
+                        $("#errorMsgRegionForInvoicing").show();
+                        $("#errorMsgRegionForInvoicing").fadeOut(3000);
+                    }
+                    if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0 && UploadFailedFilesType.length == 0) {
+                        $(".alert").hide();
+                        $("#errorMsgRegionForInvoicing").hide();
+                        $("#successMsgRegionForInvoicing").html(closeButton + "File has been uploaded successfully.");
+                        $("#successMsgRegionForInvoicing").show();
+                        $("#successMsgRegionForInvoicing").fadeOut(3000);
+                    }
+                },
+
+                progressall: function (e, data) {
+
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+                    var mimeType = data.files[0].type;
+                    if (data.files.length == 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].name.length > 70) {
+                                $(".alert").hide();
+                                $("#successMsgRegionForInvoicing").hide();
+                                $("#errorMsgRegionForInvoicing").html(closeButton + "Please upload small filename.");
+                                $("#errorMsgRegionForInvoicing").show();
+                                $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                $('body').animate({ scrollTop: 0 }, 'slow');
+                                $("#errorMsgRegionForInvoicing").fadeOut(4000);
+                                return false;
+                            }
+                        }
+                    }
+                    if (data.files.length > 1) {
+
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                                $(".alert").hide();
+                                $("#successMsgRegionForInvoicing").hide();
+                                $("#errorMsgRegionForInvoicing").html(closeButton + " " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + MaxImageSize + " MB");
+                                $("#errorMsgRegionForInvoicing").show();
+                                $("#errorMsgRegionForInvoicing").fadeOut(3000);
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            $(".alert").hide();
+                            $("#successMsgRegionForInvoicing").hide();
+                            $("#errorMsgRegionForInvoicing").html(closeButton + "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + MaxImageSize + " MB");
+                            $("#errorMsgRegionForInvoicing").show();
+                            $("#errorMsgRegionForInvoicing").fadeOut(3000);
+                            return false;
+                        }
+                    }
+                    if (mimeType != "application/pdf") {
+                        $(".alert").hide();
+                        $("#errorMsgRegionForInvoicing").html(closeButton + "Please upload a file with .pdf extension.");
+                        $("#errorMsgRegionForInvoicing").show();
+                        $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                        $('body').animate({ scrollTop: 0 }, 'slow');
+                        $("#errorMsgRegionForInvoicing").fadeOut(4000);
+                        return false;
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegionForInvoicing").html("");
+                    $("#errorMsgRegionForInvoicing").hide();
+                    return true;
+                    $('<input type="hidden">').attr({
+                        name: 'JobID',
+                        value: jobID,
+                        id: jobID,
+                    }).appendTo('form');
+                    return true;
+                },
+                formData: { jobID: jobID },
+                change: function (e, data) {
+                    $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+                }
+            }).prop('disabled', !$.support.fileInput)
+     .parent().addClass($.support.fileInput ? undefined : 'disabled');
+        });
+
+
+
+
+        function DeleteFileFromUserOnCancel(fileNames, guid) {
+            $.ajax(
+                {
+                    url: BaseURL + 'DeleteFileFromFolder/User',
+                    data: { fileName: fileNames, FolderName: guid },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function (data) {
+
+                    },
+                });
+        }
+
+        function DeleteDocumentFolderOnCancel() {
+            var guid = USERID;
+            var Name = [];
+            Name = document.getElementsByName("FileNamesCreate");
+
+
+            if (Name.length > 0) {
+                for (var i = 0; i < Name.length; i++) {
+                    var docname = Name[i].id;
+                    DeleteFileFromUserOnCancel(docname, guid);
+                }
+            }
+            //if (SignName != null && SignName != "") {
+            //    DeleteFileFromUserOnCancel(SignName, guid);
+            //}
+
+        }
+
+
+
+        //Proof of Download Document
+        function DownloadDocument(e) {
+            //$("#loading-image").show();
+            var JobID = '@Model.JobID';
+            var FileName = e.id;
+            window.location.href = BaseURL + 'ViewDownloadFile/STCInvoice?FileName=' + e.className + '&JobID=' + JobID;
+
+            //$("#loading-image").hide();
+        }
+        function DeleteFileFromDatabase(UserDocumentID, userId, documentpath) {
+
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax(
+                {
+                    url: BaseURL + 'DeleteFileByID/STCInvoice',
+                    data: { UserDocumentID: UserDocumentID, UserId: userId, Documentpath: documentpath },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        $("#tblDocuments").find('tr').each(function () {
+                            if ($(this).attr('id') == UserDocumentID)
+                                $(this).remove();
+                        });
+                        $("#tblDocuments tr").each(function () {
+                            var trNumber = $(this).index() + 1;
+                            $(this).find('td.tdCount').html(trNumber);
+                        });
+                        $(".alert").hide();
+                        $("#successMsgRegion").html(closeButton + "File has been Deleted successfully.");
+                        $("#successMsgRegion").show();
+                        $("#successMsgRegion").fadeOut(3000);
+                    }
+                });
+            }
+        }
+
+        function DeleteFileFromFolder(fileDelete) {
+            var FolderName = '@Model.JobID';
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax(
+                {
+                    url: BaseURL + 'DeleteFileFromFolder/STCInvoice',
+                    data: { fileName: fileDelete, FolderName: FolderName },
+                    method: 'get',
+                    success: function () {
+                        document.getElementById("tblDocuments").deleteRow(fileDelete);
+                        $("#tblDocuments tr").each(function () {
+                            var trNumber = $(this).index() + 1;
+                            $(this).find('td.tdCount').html(trNumber);
+                        });
+                        $("[name='FileNamesCreate']").each(function () {
+
+                            if ($(this).attr('id') == fileDelete)
+                                $(this).remove();
+                        });
+
+                        $(".alert").hide();
+                        $("#successMsgRegion").html(closeButton + "File has been Deleted successfully.");
+                        $("#successMsgRegion").show();
+                        $("#successMsgRegion").fadeOut(3000);
+                        return false;
+                    }
+                });
+            }
+        }*@
+
+        @*function OpenStcPdf(e) {
+
+            var name = e.name;
+            var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath' + '/';
+            var imagePath = UploadedDocumentPath + name;
+
+            window.open(imagePath);
+
+        }
+        function OpenUploadingPdf(e) {
+
+            var name = e.name;
+            var JobID = '@Model.JobID';
+            var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath' + '/';
+            var imagePath = UploadedDocumentPath + "/" + "JobDocuments" + "/" + JobID + "/" + "Invoice" + "/" + "Report" + "/" + name;
+
+            window.open(imagePath);
+
+        }*@
+
+    </script>

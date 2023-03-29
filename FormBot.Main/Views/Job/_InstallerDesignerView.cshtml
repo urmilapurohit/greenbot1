@@ -1,0 +1,234 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Installer/Designer";
+}
+
+<form class="form-block" id="installerDesigner">
+    <div class="container-fluid">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionInstallerDesignerPopup" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInstallerDesignerPopup" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        @Html.HiddenFor(m => m.InstallerDesignerView.InstallerDesignerId)
+        
+            <div class="row FindInstaller">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.InstallerDesignerView.CECAccreditationNumber, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.InstallerDesignerView.CECAccreditationNumber, new { @id = "FindInstaller_CECAccreditationNumber", @class = "form-control", @maxlength = 20, @onblur = "checkExistInstaller(this,'InstallerDesigner AccreditationNumber',true)" })
+                        @Html.ValidationMessageFor(m => m.InstallerDesignerView.CECAccreditationNumber)
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.InstallerDesignerView.FirstName, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.InstallerDesignerView.FirstName, new { @id = "FindInstaller_FirstName", @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                        @Html.ValidationMessageFor(m => m.InstallerDesignerView.FirstName)
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.InstallerDesignerView.LastName, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.InstallerDesignerView.LastName, new { @id = "FindInstaller_LastName", @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                        @Html.ValidationMessageFor(m => m.InstallerDesignerView.LastName)
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.InstallerDesignerView.SERoleId, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.InstallerDesignerView.SEDesignRoleId, new List<SelectListItem>
+                                                                                    {
+                                                                                       new SelectListItem{ Text="Install", Value = "1" },
+                                                                                       new SelectListItem{ Text="Design", Value = "2" },
+                                                                                       new SelectListItem{ Text="Design_Install", Value = "3" }
+                                                                                    }, new { @class = "form-control" })
+                        @*@Html.DropDownListFor(m => m.InstallerDesignerView.SERoleId, new SelectList(Model.SERoleId, "Key", "Value"), "Select", new { id = "SettlementTermId", @class = "form-control" })*@
+                        @*@Html.DropDownListFor(model => model.DictSettlementTerm, new SelectList(Model.DictSettlementTerm, "Key", "Value"), "Select", new { id = "SettlementTermId", @class = "form-control" })*@
+                    </div>
+                </div>
+            </div>
+            <div class="AddEditInstaller">
+                <div class="row">
+                    @*<div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BasicDetails.InstallerID, new { @class = "control-label", @id = "InstallerID" })
+                                @Html.DropDownListFor(m => m.BasicDetails.InstallerID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 31 })
+                            </div>
+                        </div>*@
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.CECAccreditationNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @onblur = "checkExistInstaller(this,'InstallerDesigner AccreditationNumber')", @idClass = "installerRequired" })
+                            @Html.ValidationMessageFor(m => m.InstallerDesignerView.CECAccreditationNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label required">SE Role:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @Html.RadioButton("SEDesignRoleId", "2", true, new { @tabindex = 18 }) Design
+                                @Html.RadioButton("SEDesignRoleId", "1", false, new { @tabindex = 19 }) Install
+                                @Html.RadioButton("SEDesignRoleId", "3", false, new { @tabindex = 20 }) Design & Install
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.FirstName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.FirstName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus", @idClass = "installerRequired" })
+                            @Html.ValidationMessageFor(m => m.InstallerDesignerView.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.LastName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.LastName, new { @class = "form-control", @maxlength = 50, @idClass = "installerRequired" })
+                            @Html.ValidationMessageFor(m => m.InstallerDesignerView.LastName)
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.Email, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.Email, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.Phone, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.Phone, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.Mobile, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.Mobile, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.ElectricalContractorsLicenseNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label required">Postal Address Type :</label>
+                            @Html.DropDownListFor(m => m.InstallerDesignerView.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4 PDAInstaller" style="display:none">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.PostalAddressID, new { @class = "control-label" })
+                            @Html.DropDownListFor(model => model.InstallerDesignerView.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4 PDAInstaller" style="display:none">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.PostalDeliveryNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4 DPAInstaller">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.UnitTypeID, new { @class = "control-label" })
+                            @Html.DropDownListFor(model => model.InstallerDesignerView.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4 DPAInstaller">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.UnitNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.UnitNumber, new { @class = "form-control", @maxlength = 10, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4 DPAInstaller">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.StreetNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.StreetNumber, new { @class = "form-control", @maxlength = 15, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4 DPAInstaller">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.StreetName, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.StreetName, new { @class = "form-control", @maxlength = 45, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4 DPAInstaller">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.StreetTypeID, new { @class = "control-label" })
+                            @Html.DropDownListFor(model => model.InstallerDesignerView.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.Town, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.Town, new { @class = "form-control", @maxlength = 80, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.State, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.PostCode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.InstallerDesignerView.PostCode, new { @class = "form-control", @maxlength = 8, @idClass = "installerNotRequired" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.InstallerDesignerView.SESignature, new { @class = "control-label" })
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic">
+                                            <span>Upload</span>
+                                            <input id="uploadBtnSignatureInstaller" type="file" class="upload fileUpload" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="bxcont" style="margin-top:7px;">
+                                            <a id="imgSignatureInstaller" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="btn default icon-btn AddEditInstaller">
+                    <span class="sprite-img reset_ic"></span>
+                    <input type="button" id="btnResetInstaller" value="Reset" onclick="ResetInstaller();">
+                </div>
+                <button type="button" name="addInstaller" class="btn primary icon-btn" id="addInstaller"><span class="sprite-img save_ic"></span>Save Installer</button>
+                <button type="button" name="btnResetFindInstaller" class="btn primary icon-btn FindInstaller" id="btnResetFindInstaller" style="width:100px;"><span class="sprite-img reset_ic"></span>Clear</button>
+            </div>        
+    </div>
+</form>

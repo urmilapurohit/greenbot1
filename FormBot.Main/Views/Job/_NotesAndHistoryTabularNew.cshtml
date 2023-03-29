@@ -1,0 +1,71 @@
+﻿<script src="~/Scripts/ckeditor/ckeditor_4.16.2_custom6/ckeditor/ckeditor.js"></script>
+
+<script>
+    var urlDeleteNote = '@Url.Action("DeleteNote","Job")';
+    var urlEditNote = '@Url.Action("EditNote","Job")';
+    var urlReplyNote = '@Url.Action("ReplyNotes","Job")';
+    var urlSaveReplyForNote = '@Url.Action("SaveReplyForNote","Job")';
+    var jobRefNo = '@Model.BasicDetails.RefNumber';
+    var BaseURLForJob = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+
+    function DownloadHistoryDocument(e) {        
+        var FolderName = $(e).attr("data-folder");
+        var FileName = $(e).attr("data-name");
+        window.location.href = BaseURLForJob + 'ViewDownloadFileForStc/Job?FileName=' + FileName + '&FolderName=' + FolderName;
+    }
+
+    /* To set value in global variable on change as its value is used in other tabs as well -- By default value is set to false*/
+    $("#FilterIsImportantNote").change(function () {
+        FilterIsImportantNote_Glbl = $("#FilterIsImportantNote").prop('checked');
+    });
+
+    $(document).on('mouseenter', '#divHistoryList li', function (event) {        
+        $(".IconsEditDelete", this).css("display", "inline-flex");
+    }).on('mouseleave', '#divHistoryList li', function () {
+        // $("li p a.IconsEditDelete",this).css("background-color", "white");
+        $(".IconsEditDelete", this).css("display", "none");
+    });
+
+    $('#JobHistorySearch').on('keyup', function () {        
+        tagandsearchfilter();
+    });
+
+    $("#relatedTofilter").on("change", function () {        
+
+        tagandsearchfilter();
+        $("#width_tmp_option").html($('#relatedTofilter option:selected').text());
+        $(this).width($("#width_tmp_select").width());
+
+    });
+
+    $("#refreshJobHistory").click(function (e) {
+        SearchHistory();
+    });
+
+    $("#IsDeletedJobNote").on("change", function () {
+        SearchHistory();
+    });
+    $("#historyCategory").change(function () {
+        $('#JobHistorySearch').val("");
+        SearchHistory();
+        $("#width_tmp_option").html($('#historyCategory option:selected').text());
+        $(this).width($("#width_tmp_select").width());
+    });
+
+    $("#FilterIsImportantNote").change(function () {        
+        $('#JobHistorySearch').val("");
+        SearchHistory();
+    });
+
+    $("#filter-postvisibility").change(function () {        
+        $('#JobHistorySearch').val("");
+        SearchHistory();
+        $("#width_tmp_option").html($('#filter-postvisibility option:selected').text());
+        $(this).width($("#width_tmp_select").width());
+    });
+
+</script>
+
+@Html.Partial("_Notes")
+
+@Html.Partial("_HistoryTabular")

@@ -1,0 +1,160 @@
+﻿@{
+    Layout = null;
+}
+
+<input type="button" value="popup" id="popupAdd" />
+
+<div class="container-fluid">
+
+    <div class="invoice-omponents">
+
+        <div role="group" class="btn-group">
+            <button aria-expanded="false" aria-haspopup="true" data-toggle="dropdown" class="btn primary dropdown-toggle add_ic" type="button">
+                Add Invoice Components<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a href="#">01</a></li>
+                <li><a href="#">02</a></li>
+            </ul>
+        </div>
+        <div class="form-inline">
+            <div class="form-group">
+                <label for="exampleInputName2">Invoiced 123:</label>
+                <select id="drdInvoiced" class="form-control">
+                    <option>All</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="exampleInputEmail2">Show Charge :</label>
+                <select id="drdCharges" class="form-control">
+                    <option>All</option>
+                    <option>Time</option>
+                    <option>Parts</option>
+                    <option>Payments</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+
+
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="invoiceDetailListTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%"><span>@Html.DisplayName("Added") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Type")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Description") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Staff")</span></th>
+                            @*<th width="10%"><span>@Html.DisplayName("Job Visit")</span></th>*@
+                            <th width="10%"><span>@Html.DisplayName("Quantity")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Price/Rate")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Sub Total")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Cost")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Profit")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Margin (%)")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Tax")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Total")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Billable")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Invoiced")</span></th>
+                        </tr>
+                    </thead>
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-sm-6 col-md-4">
+            <div class="form-inline  invoice-to">
+                <div class="form-group">
+                    <label for="exampleInputName2">Invoice to :</label>
+                    <select class="form-control">
+                        <option>Harry Lim</option>
+                        <option>Harry Lim01</option>
+                        <option>Harry Lim02</option>
+                        <option>Harry Lim03</option>
+                    </select>
+                </div>
+                <p>S2155 Harry Adams, 8 Headcliff Ave Deer Park VIC 3023</p>
+                <span class="last-invoice-text">last invoice sent (23/03/2016 4:0pm)</span>
+                <input type="button" class="default resend-invoice resend_ic" value="Resend Invoice">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-8">
+            @Html.Partial("~/Views/JobHistory/_HistoryList.cshtml", Model)
+
+
+            <div class="Profitability">
+
+                <table border="0" collapse="0">
+                    <tbody>
+                        <tr>
+                            <td class="label">Job Profitability</td>
+                            <td><span class="total">Total</span></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Billable</td>
+                            <td>
+                                <label class="clslblSubTotal">@ViewBag.TotalPaymentAmount </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label">Actual Cost</td>
+                            <td> <label class="clslblTotalActualCost"> @ViewBag.TotalActualCost  </label> </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="label">Profit</td>
+                            <td> <label class="clslblTotalProfit_TotalMargin"> @ViewBag.TotalProfit @Html.Raw("/") @ViewBag.TotalMargin@Html.Raw("&nbsp;")% </label></td>
+                        </tr>
+                    </tfoot>
+
+                </table>
+
+                <table border="0" collapse="0">
+                    <tbody>
+                        <tr>
+                            <td></td>
+                            <td><span class="total">Total</span></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Billable</td>
+                            <td> <label class="clslblSubTotal"> @ViewBag.TotalPaymentAmount </td>
+                        </tr>
+                        <tr>
+                            <td class="label">Tax</td>
+                            <td><label class="clslblTax"> @ViewBag.TotalTax </label></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Total</td>
+                            <td><label class="clsTotalBillTotal"> @ViewBag.TotalBillTotal </label></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="label">Payments</td>
+                            <td><label class="clsTotalPayments"> @ViewBag.TotalPayments </label></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Remaining</td>
+                            <td><label class="clslblTotalRemaining"> @ViewBag.TotalRemaining </label></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+

@@ -1,0 +1,145 @@
+﻿
+@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="SWHBit" value="10" id="SWHBit" />
+<input type="hidden" name="minSWH" value="1" id="minSWH" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstSWH, new MultiSelectList(Model.LstSWHUsers, "Value", "Text"), new { id = "LstSWH", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SWH" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SWH" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.FormBotSWHAssignedUser, new MultiSelectList(Model.LstSWHAssignedUser, "Value", "Text"), new { id = "LstSWHAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnFormBotSWHAssignedUser, new { id = "hdnSWH" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnSWHSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnClearSWH" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SWH", function () {        
+        if (parseInt($('#SWHBit').val()) == 0) {
+            $('#LstSWH option:selected').each(function () {
+                $(this).remove().appendTo("#LstSWHAssignedUser");               
+            });
+            $('#AvailableSWH').html($('#LstSWHAssignedUser option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstSWH option:selected').length + $('#LstSWHAssignedUser option').length) <= parseInt($('#SWHBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstSWHAssignedUser option').length < parseInt($('#SWHBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstSWH option:selected').each(function () {
+                        $(this).remove().appendTo("#LstSWHAssignedUser");
+                    });
+                    var max = $('#SWHBit').val();
+                    $('#AvailableSWH').html($('#LstSWHAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstSWHAssignedUser option').length == parseInt($('#SWHBit').val()))) {
+                    $('#btnLtoR_SWH').css('opacity', '0.5');
+                    $('#btnLtoR_SWH').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SWH').css('opacity', '1');
+                    $('#btnLtoR_SWH').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_SWH", function () {        
+        $('#LstSWHAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstSWH");
+        });
+        var max = $('#SWHBit').val();
+        if (max > 0) {
+            $('#AvailableSWH').html($('#LstSWHAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableSWH').html($('#LstSWHAssignedUser option').length);
+        }
+        if (($('#LstSWHAssignedUser option').length < parseInt($('#SWHBit').val()))) {
+            $('#btnLtoR_SWH').css('opacity', '1');
+            $('#btnLtoR_SWH').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SWH').css('opacity', '0.5');
+            $('#btnLtoR_SWH').css('cursor', 'auto');
+        }
+    });
+    
+    $(document).on("click", "#btnSWHSave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstSWHAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#ReportID').val() == 10) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        $("#hdnSWH").val(strAssignedAttendeeList);
+        $('#cntSWH').html($('#LstSWHAssignedUser option').length);
+        $('#popupSWH').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearSWH", function () {
+        $('#LstSWHAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSWH");
+        });
+        var max = $('#SWHBit').val();
+        if (max > 0) {
+            $('#AvailableSWH').html($('#LstSWHAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableSWH').html($('#LstSWHAssignedUser option').length);
+        }
+        $('#btnLtoR_SWH').css('opacity', '1');
+        $('#btnLtoR_SWH').css('cursor', 'poiter');
+
+        $("#hdnSWH").val('');
+    });
+
+    $(document).on("click", "#closeSWH", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstSWHAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+
+        if ($('#ReportID').val() == 10) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        $("#hdnSWH").val(strAssignedAttendeeList);
+        $('#cntSWH').html($('#LstSWHAssignedUser option').length);
+        $('#popupSWH').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

@@ -1,0 +1,836 @@
+﻿
+@model List<FormBot.Entity.Job.JobHistory>
+@using FormBot.Helper
+@{
+    ViewBag.Title = "SCA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    string isDashboardWS_SCASettlementTermView = !string.IsNullOrEmpty(ViewBag.isDashboardWS_SCASettlementTermView) ? ViewBag.isDashboardWS_SCASettlementTermView : "false";
+
+    //if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    //{
+    //    ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+    //    {
+    //        if (d.MenuId == (int)SystemEnums.MenuId.WholesalerSCASettlementTermView.GetHashCode()) { isDashboardWS_SCASettlementTermView = true; }
+    //    });
+    //}
+}
+<link href="~/Content/style.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<style>
+
+    #trade-report-daterange input:after {
+        content: '' !important;
+    }
+    </style>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@Html.Hidden("IsWholeSaler", (string)ViewBag.IsWholeSaler)
+<div class="container-fluid sca_dashboard">
+    <div class="title">
+        <h1>Dashboard  <p class="pull-right" style="color:#5a5a5a"> <b>|</b>  @ViewBag.CompanyName</p> </h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-info" id="specialNotification" style="min-height:100px;max-height:300px;overflow-y:scroll;">
+
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="account-manager-block">
+                <h3 class="sca-heding">Hi Lisa Parikh</h3>
+                <img class="profile-img img-circle" src="~/Images/R-logo.jpg" />
+                <p>Your Account Manager is:</p>
+                <h2>@ViewBag.FullName</h2>
+                <a href="mailto:@(ViewBag.Email)" title="@ViewBag.Email">@ViewBag.Email</a>
+                <p class="contact">Contact : @ViewBag.Phone</p>
+            </div>
+
+            <!-- ===Job Status Summary======================================= -->
+            <div class="account-manager-block  your-team-block">
+                <h3 class="sca-heding">Job Status Summary</h3>
+                <ul>
+                    <li class="collection-item">Complaince Issue <em>(3)</em></li>
+                    <li class="collection-item">Untraded Jobs <em>(3)</em></li>
+                    <li class="collection-item">Require Call Backs <em>(3)</em></li>
+                    <li class="collection-item">Current OutStanding Payments</li>
+                </ul>
+            </div>
+
+            <!-- ===Job Status Summary======================================= -->
+            <div class="account-manager-block your-team-block">
+                <h3 class="sca-heding">Your Team <a href="#" title="add installer" class="link-btn">+ add installer</a></h3>
+                <div class="form-group">
+                    <input type="text" class="form-control" id="search-box" placeholder="Search...">
+                </div>
+                <ul class="niceScroll" style="max-height:300px;">
+                    <li class="collection-item">A2304200 - Rushi Parikh <a href="#" title="" class="icon-link sprite-img edit-icon"></a></li>
+                    <li class="collection-item">A2304200 - Rushi Parikh<a href="#" title="" class="icon-link sprite-img edit-icon"></a></li>
+                    <li class="collection-item">A2304200 - Rushi Parikh<a href="#" title="" class="icon-link sprite-img edit-icon"></a></li>
+                    <li class="collection-item">A2304200 - Rushi Parikh<a href="#" title="" class="icon-link sprite-img edit-icon"></a></li>
+                </ul>
+
+            </div>
+
+            <!-- ===Reports Summary======================================= -->
+            @*<div class="reports-summary">
+                    <h3 class="sca-heding">Reports Summary</h3>
+                    <div class="chart-block">
+                        <center><h3 class="Chart-header">Job Chart</h3></center>
+                        <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                            <div id="dvJobchart" style="height: 400px; width: 100%;"></div>
+                        </div>
+                        @if (ProjectSession.UserTypeId == 4)
+                        {
+                        <center><h3 class="Chart-header">Invoice Chart</h3></center>
+                        <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                            <div id="dvInvoiceChart" style="height: 400px; width: 100%;"></div>
+                        </div>
+                        }
+                    </div>
+                    <div class="submission-filters">
+                        <span class="filters_title">Pre Approvals :</span>
+                        <ul>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NotYetApplied" })" title="Not Yet Applied">Not Yet Applied<span>@ViewBag.NotYetApplied</span></a></li>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "PreApprovalIssues" })" title="Issues">Issues<span>@ViewBag.PreApprovalIssues</span></a></li>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "PreApprovalSent" })" title="Issues">Sent<span>@ViewBag.PreApprovalSent</span></a></li>
+                        </ul>
+                    </div>
+                    <div class="submission-filters">
+                        <span class="filters_title">Connections :</span>
+                        <ul>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "Incomplete" })" title="Incomplete">Incomplete<span>@ViewBag.Incomplete</span></a></li>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "ConnectionIssues" })" title="Issues">Issues<span>@ViewBag.ConnectionIssues</span></a></li>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "ConnectionSent" })" title="Sent">Sent<span>@ViewBag.ConnectionSent</span></a></li>
+                        </ul>
+                    </div>
+                    <div class="submission-filters">
+                        <span class="filters_title">Installation :</span>
+                        <ul>
+                            <li><a href="@Url.Action("JobSchedulingDetail", "JobScheduling")" title="Unscheduled Jobs">Unscheduled Jobs<span>@ViewBag.UnscheduledJobs</span></a></li>
+                        </ul>
+                    </div>
+                    <div class="submission-filters">
+                        <span class="filters_title">STC Submissions :</span>
+                        <ul>
+                            <li><a href="@Url.Action("RedirectToSTCSubmission", "Dashboard", new { status = "ComplianceIssues" })" title="Compliance Issues">Compliance Issues<span>@ViewBag.ComplianceIssues</span></a></li>
+                            <li><a href="@Url.Action("RedirectToSTCSubmission", "Dashboard", new { status = "RECFailure" })" title="REC Failure">REC Failure<span>@ViewBag.RECFailure</span></a></li>
+                        </ul>
+                    </div>
+                    <div class="submission-filters">
+                        <span class="filters_title">Invoices :</span>
+                        <ul>
+                            <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NotYetInvoiced" })" title="Not Yet Invoiced">Not Yet Invoiced<span>@ViewBag.NotYetInvoiced</span></a></li>
+                        </ul>
+                    </div>
+                </div>*@
+            <!-- ===quick-links======================== -->
+            <div class="quick-links">
+                <h3 class="sca-heding">Quick Links</h3>
+                <ul>
+                    <li id="dCreateJob"><a href="#" class="createJobFromSolarJobScreen" title="Create a job"><span class="icon"><img src="~/images/-icontest.png" alt=""></span>Create a job</a></li>
+                    <li id="dJobScheduling"><a href="@Url.Action("JobSchedulingDetail", "JobScheduling")" title="Schedule Electrician"><span class="icon"><img src="~/images/ic-cal.png" alt=""></span>Schedule Electrician</a></li>
+                    @if (ProjectSession.UserTypeId == 4)
+                    {
+                        <li id="dCreateUser"><a href="@Url.Action("Create", "User")" title="Create New User"><span class="icon"><img src="~/images/ic-create-new-user.png" alt=""></span>Create New User</a></li>
+                    }
+                    <li id="dInvoiceSetting"><a href="@Url.Action("Settings", "Settings")" title="Invoice Settings"><span class="icon"><img src="~/images/ic-invoice-setting.png" alt=""></span>Invoice Settings</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+
+            <div class="clearfix" id="divNotificationBlock">
+                <h3 class="sca-heding">Greenbot News</h3>
+                <div id="divNotification" class="status-block">
+                </div>
+            </div>
+            <div id="dvSettleMentBlock" class="sca-dashboard-settlement-block live-stc-price">
+            </div>
+            <div class="news-feed">
+                <h3 class="sca-heding">Reports Summary </h3>
+                
+                <div class="clearfix">
+                    <div class="col-md-6">
+                        <h4 class="chart-title">STC Traded Over Time</h4>
+                        <div class="reports-block form-inline">
+                            <div class="form-group">
+                                <div id="trade-report-daterange" title="daterangepicker" style="margin-right:15px;"></div>
+                            </div>
+                            <div class="form-group pull-right">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="traded-chart-type" id="option1" autocomplete="off" trade-type="1">Year
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="traded-chart-type" id="option2" autocomplete="off" trade-type="2"> Month
+                                    </label>
+                                    <label class="btn border-btn active">
+                                        <input type="radio" name="traded-chart-type" id="option3" autocomplete="off" trade-type="3" checked> Week
+                                    </label>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="SCA-traded-chart"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 class="chart-title">STC Submission Status</h4>
+                        <div class="reports-block">
+                            <div class="form-group pull-right">
+                                <div class="btn-group" data-toggle="buttons">
+                                    <label class="btn border-btn active">
+                                        <input type="radio" name="status-chart-type" id="option1" autocomplete="off" status-type="1" checked>JObs
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="status-chart-type" id="option2" autocomplete="off" status-type="2"> STCs
+                                    </label>
+                                    <label class="btn border-btn">
+                                        <input type="radio" name="status-chart-type" id="option3" autocomplete="off" status-type="3"> $
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="SCA-status-chart"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="news-feed">
+                <h3 class="sca-heding">Latest Job Updates<p class="pull-right">Last 30 Days Data</p></h3>
+                <div class="history-filter-div">
+                    <span style="font-weight:bold;">Displaying </span>
+                    <select id="historyCategories">
+                        <option value="0">All Activity</option>
+                        <option value="1">General</option>
+                        <option value="2">Interaction</option>
+                        <option value="3">Statuses</option>
+                        <option value="4">Notifications</option>
+                        <option value="5">Invoicing</option>
+                        <option value="6">Documents</option>
+                        <option value="7">Scheduling</option>
+                    </select>
+                </div>
+                <hr />
+                <div id="dvHistoryList">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    hr {
+        margin: 10px 30px 10px 30px;
+    }
+
+    #dvHistoryList {
+        height: 500px;
+        overflow-y: scroll;
+    }
+
+    #divNotification {
+        max-height: 500px;
+        overflow-y: scroll;
+        min-height: 100px;
+    }
+
+    .status-block {
+        background-color: #fff;
+        padding: 0px;
+        /*display: table;*/
+        margin: 10px;
+    }
+
+    .blue-title {
+        color: #1b94da;
+    }
+
+    .stc-amount-block {
+        padding: 20px;
+    }
+
+
+    .history-filter-div {
+        padding: 17px 0px 0px 10px;
+    }
+
+    #historyCategories {
+        border: 0;
+        color: green;
+        font-weight: bold;
+    }
+
+    .chart-block {
+        padding: 15px;
+    }
+
+    .Chart-header {
+        font-size: 16px;
+        text-transform: uppercase;
+        line-height: 20px;
+        padding: 10px 15px;
+        font-family: 'OpenSansBold';
+    }
+
+    .settlement-contain-box {
+        background-color: white;
+    }
+
+    .collection-item {
+        font-weight: 700;
+    }
+
+    .sca-dashboard-settlement-block .SettlementTerms .LiSettlement {
+        padding: 0 !important;
+        min-width: 111px;
+    }
+
+        .sca-dashboard-settlement-block .SettlementTerms .LiSettlement .processing-text {
+            height: 57px !important;
+        }
+
+    .sca-dashboard-settlement-block .stc-amount-block ul li .time {
+        margin-top: 20px;
+    }
+</style>
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+<script>
+    var pageIndex = 0;
+    var pageSize = 10;
+    var IsLast = false;
+    var count = 0;
+    var IsProcessOn = 0;
+    var startDate = "";
+    var endDate = "";
+    var isDashboardWS_SCASettlementTermView = '@isDashboardWS_SCASettlementTermView.ToLower()';
+
+    $(document).ready(function () {
+        fnNiceScroll();
+        var start = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 84);
+        var end = new Date();
+        $("#trade-report-daterange").kendoDateRangePicker({
+            format: "dd-MM-yyyy",
+            change: SetTradeRange,
+            range: { start: start, end: end }
+        }).data("kendoDatePicker");
+        startDate = start.getFullYear() + "-" + (start.getMonth() + 1) + "-" + start.getDate();
+        endDate = end.getFullYear() + "-" + (end.getMonth()+1) + "-" + end.getDate()
+        $("[name='traded-chart-type']").change(function () {
+            BindSTCTradedChart();
+        })
+        $("#trade-report-daterange").find(".k-label").remove();
+        $("#loading-image").show();
+        $("[name='status-chart-type']").change(function () {
+            BindSTCStatusChart();
+        })
+        //GetNewsFeed();
+        pageIndex = 1;
+        GetNewsFeed(1, 10, 0);
+        GetSTCForTrade();
+        //GetCERApprovedSummary();
+        //ShowJobDetailChart();
+        //ShowInvoiceChart();
+        BindSTCTradedChart()
+        BindSTCStatusChart()
+        GetNotification(new Date().toISOString());
+        $("#loading-image").hide();
+
+        //Invoice Setting
+        if ($('#InvoiceSetting').length > 0)
+            $('#dInvoiceSetting').show();
+        else
+            $('#dInvoiceSetting').hide();
+
+        //Job Scheduling
+        if ($('#JobScheduling').length > 0)
+            $('#dJobScheduling').show();
+        else
+            $('#dJobScheduling').hide();
+
+        //Create new user
+        if ($('#CreateNewUser').length > 0)
+            $('#dCreateUser').show();
+        else
+            $('#dCreateUser').hide();
+
+        //Create job
+        if ($('#CreateJob').length > 0)
+            $('#dCreateJob').show();
+        else
+            $('#dCreateJob').hide();
+
+        if ($('#InvoiceSetting').length == 0 && $('#JobScheduling').length == 0 && $('#CreateNewUser').length == 0 && $('#CreateJob').length == 0)
+            $(".quick-links").hide();
+        else
+            $(".quick-links").show();
+
+
+        // load news feed on scroll
+        $("#dvHistoryList").on("scroll", function (e) {
+            if (IsLast == false) {
+                if (pageIndex == 1 && count > 0 && IsProcessOn == 1) {
+                    count = 0;
+                    return false;
+                }
+                IsProcessOn = 1
+                var $o = $(e.currentTarget);
+                if ($o[0].scrollHeight - $o.scrollTop() <= $("#dvHistoryList").height()) {
+                    if (isNaN(pageIndex)) {
+                        pageIndex = 1;
+                    } else { pageIndex = pageIndex + 1; }
+                    count = pageIndex;
+                    GetNewsFeed(pageIndex, pageSize, $("#historyCategories").val());
+                }
+            }
+        });
+
+        // Hide settlement block details
+        $('.settlement-term').find('.sca-heding').html('LIVE STC PRICE');
+        $('#CERApproved').find('.time span').hide()
+        $('#pricing-stc-title').hide();
+        $('#paymentscheduleinfo').hide();
+        $('.settlement-term').find('.row').hide();
+        $('#tradeButton').hide();
+
+    });
+
+
+    function SetTradeRange() {
+        startDate = kendo.toString(this.range().start, 'yyyy-MM-dd');
+        endDate = kendo.toString(this.range().end, 'yyyy-MM-dd');
+        BindSTCTradedChart();
+    }
+    function BindSTCStatusChart() {
+        var type = $("[name='status-chart-type']:checked").attr('status-type');
+        $(".SCA-status-chart").kendoChart({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetSCAStatusChartData","FormbotReport")',
+                        dataType: "json",
+                        data: { Type: type}
+                    }
+                }
+            },
+            chartArea: {
+                background: "",
+                height: 450,
+
+            },
+            legend: {
+                visible: false
+            },
+            seriesColors: ['#678900','#1ca04d', '#9de219', '#006634', '#068c35', '#ff6800'],
+            seriesDefaults: {
+               
+                labels: {
+                    visible: true,
+                    background: "transparent",
+                    template: "#= category #: \n #= value#"
+                }
+            },
+            series: [{
+                type: "pie",
+                field: "StatusCount",
+                categoryField: "Status"
+            }],
+            tooltip: {
+                visible: true,
+                format: "N0"
+            }
+        });  
+    }
+
+
+    function BindSTCTradedChart() {
+        
+        var type = $("[name='traded-chart-type']:checked").attr('trade-type');
+        var sortobj = {}
+        var categoryField = "";
+        if (type == 1) {
+            sortobj.field = "Year";
+            sortobj.dir = "asc";
+            categoryField = "Year";
+        } else if (type == 2) {
+            sortobj.field = "Month";
+            sortobj.dir = "asc";
+            categoryField = "MonthName";
+        } else if (type == 3) {
+            sortobj.field = "Week";
+            sortobj.dir = "asc";
+            categoryField = "WeekName";
+        }
+        $(".SCA-traded-chart").kendoChart({
+            dataSource: {
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetSCATradedChartData","FormbotReport")',
+                        dataType: "json",
+                        data: { StartDate: startDate == null ? "" : startDate, EndDate: endDate == null ? "" : endDate, Type: type }
+                    }
+                },
+                sort: sortobj
+            },
+            seriesDefaults: {
+                type: "line",
+                style: "smooth"
+                
+            },
+            legend: {
+                visible: false
+            },
+            seriesColors: ['#1ca04d'],
+            series: [{
+                field: "TradedCount",
+                categoryField: categoryField,
+                name: "Trade Data"
+            }],
+            categoryAxis: {
+                labels: {
+                    rotation: -90
+                },
+                majorGridLines: {
+                    visible: false
+                }
+            },
+            valueAxis: {
+                labels: {
+                    format: "N0"
+                },
+                line: {
+                    visible: false
+                }
+            },
+            tooltip: {
+                visible: true,
+                format: "N0"
+            }
+        });
+    }
+
+    function GetNotification(date){
+        $.ajax({
+            url: '@Url.Action("GetNotifications", "Dashboard")?dt='+date,
+            method: 'GET',
+            cache: false,
+            async: false,
+            success: function (Data) {
+                if(Data){
+                    Data = Data.replace(/(?:\\r\\n|\\r|\\n)/g, '<br />');
+                    Data = JSON.parse(Data);
+                    if(Data.length){
+                        var li = "";
+                        var specialLi = "";
+                        for(var i=0;i<Data.length;i++){
+                            var data = Data[i];
+
+                            if(data.IsSpecialNotification)
+                            {
+                                specialLi += "<li class='status-box part-status'><span class='border-icon'></span><p><label>"+data.NotificationTitle+" : "+  data.strCreateDate +"</label></p><p>"+data.NotificationContent+"</p></li>";
+                            }
+                            else
+                            {
+                                li += "<li class='status-box part-status'><span class='border-icon'></span><p><label>"+data.NotificationTitle+" : "+  data.strCreateDate +"</label></p><p>"+data.NotificationContent+"</p></li>";
+                            }
+                        }
+                        $('#divNotification').html(li);
+                        $('#specialNotification').html(specialLi);
+
+                        if(li == "")
+                            $('#divNotificationBlock').remove();
+                        if(specialLi == "")
+                            $('#specialNotification').remove();
+                    }
+                    else
+                    {
+                        $('#divNotificationBlock').remove();
+                        $('#specialNotification').remove();
+                    }
+                }
+            }
+        });
+    }
+
+    function GetNewsFeed(pageIndex, pageSize, paramCategoryID = 0) {
+        var categoryID = paramCategoryID;
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format("YYYY-MM-DD");
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        $.ajax({
+            url: '@Url.Action("GetNewsFeed", "Dashboard")',
+            method: 'GET',
+            data: { categoryID: categoryID, from: fDate, to: tDate, pageIndex: pageIndex, pageSize: pageSize },
+            cache: false,
+            async: false,
+            success: function (Data) {
+                if (Data.indexOf("No Record(s) Found.") > -1) {
+                    IsLast = true;
+                    if ($("#dvHistoryList").html() == '') {
+                        $("#dvHistoryList").html(Data);
+                    }
+                }
+                else {
+                    if (pageIndex == "1") {
+                        $("#dvHistoryList").append(Data);
+                    }
+                    else {
+                        $("#divCustom div").append(Data);
+                    }
+                }
+                IsProcessOn = 0;
+                //$("#loading-image").hide();
+            }
+        });
+    }
+
+        function GetSTCForTrade() {
+            var IsShowInDashboard = true;
+            if ('@ProjectSession.UserTypeId' == 8) {
+                IsShowInDashboard = false;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetDashboardJobSTCPrice", "Dashboard")',
+                method: 'GET',
+                data: { IsShowInDashboard: IsShowInDashboard, IsGridView: true },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    if (Data == '') {
+                        alert("Select Custom Price");
+                    } else {
+                        $("#dvSettleMentBlock").html(Data);
+                        $("#dvSettleMentBlock").find(".sca-heding").hide();
+                        //$("#dvSettleMentBlock").find(".stc-amount-block").removeClass("stc-amount-block")
+                        $("#dvSettleMentBlock").find(".settlement-term").addClass("settlement-term-sca")
+                        $("#dvSettleMentBlock").find('li').removeClass("active");
+<<<<<<< HEAD
+                        $('#PricingBlock li:eq(0)').before("<li class='livestc-titleblock'><h2>Live STC Price</h2><p>Last Updated: " + priceLastUpdatedDate.split(' ')[0] + "</p></li>");
+=======
+                        $('#PricingBlock li:eq(0)').before("<li class='livestc-titleblock'><h2>Live STC Price</h2><p>Last Updated: 17/06/2019</p></li>");
+                        $("#dvSettleMentBlock").find('.table-responsive').addClass("niceScroll")
+                        fnNiceScroll();
+>>>>>>> ade0ddc727006aca7f161899e8d7142751628abc
+                        if('@ProjectSession.IsAllowTrade.ToString().ToLower()' == "false"){
+                            $('.term').remove();
+                        }
+                    }
+                }
+            });
+        }
+
+        function GetCERApprovedSummary() {
+            var IsShowInDashboard = true;
+            if ('@ProjectSession.UserTypeId' == 8) {
+                IsShowInDashboard = false;
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetDashboardJobCERApproved", "Dashboard")',
+                method: 'GET',
+                data: { IsShowInDashboard: IsShowInDashboard, IsGridView: true },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    if (Data == '') {
+                        alert("Select Custom Price");
+                    } else {
+                        $("#dvCERApproved").html(Data);
+                    }
+                }
+            });
+        }
+
+        $('#historyCategories').change(function () {
+            var categoryID = this.value;
+            pageIndex = 1;
+            IsLast = false;
+            $("#dvHistoryList").html('');
+            GetNewsFeed(pageIndex, pageSize, categoryID);
+            @*var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format("YYYY-MM-DD");
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        $.ajax({
+            url: '@Url.Action("GetNewsFeed", "Dashboard")',
+            method: 'GET',
+            data: { categoryID: categoryID, from: fDate, to: tDate },
+            cache: false,
+            async: false,
+            success: function (Data) {
+                $("#dvHistoryList").html($.parseHTML(Data));
+            }
+        });*@
+        });
+
+        function ShowJobDetailChart() {
+            $.ajax({
+                url: '@Url.Action("GetJobStatusDetailReportsList", "FormBotReport")',
+                type: "POST",
+                dataType: "json",
+                data: '{DeletedFilter:2,hdnSTCSubmissionStatusAssigned:"10,14,22,17",hdnPreapprovalStatusAssigned:"1,2,3,4,5",hdnConnectionStatusAssigned:"6,7,8,9"}',
+                async: false,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    if (result.lstJob_StatuswiseRecord != null && result.lstJob_StatuswiseRecord.length > 0) {
+                        var chartType = 'bar';
+                        var groupedData = {};
+                        var xAxis = ['xAxis'];
+                        var data1 = ['PreApprovals'];
+                        var data2 = ['Connections'];
+                        var data3 = ['STC Submission'];
+                        var data4 = ['Total Job'];
+                        var resultData = [];
+                        for (var i = 0; i < result.lstJob_StatuswiseRecord.length; i++) {
+                            var item = result.lstJob_StatuswiseRecord[i];
+                            var xax = @ProjectSession.UserTypeId==4?item.CompanyName:item.UserName
+                            xAxis.push(xax);
+                            data1.push(item.PreApproval);
+                            data2.push(item.Connection);
+                            data3.push(item.STCsubmission);
+                            data4.push(item.TotalJob);
+                        }
+                        resultData.push(xAxis);
+                        resultData.push(data1);
+                        resultData.push(data2);
+                        resultData.push(data3);
+                        resultData.push(data4);
+                        BindChart('dvJobchart', resultData, xAxis, chartType);
+                    }
+                    else {
+                        $('#dvJobchart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                    }
+                },
+                error: function (e) {
+                }
+            });
+            return false;
+        }
+        function ShowInvoiceChart() {
+            var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+            var startDate = new Date();
+            var endDate = new Date();
+
+            startDate.setDate(startDate.getDate() - 30);
+
+            var tickStartDate = Date.parse(startDate);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+            var tickEndDate = Date.parse(endDate);
+            tDate = moment(tickEndDate).format(dateFormatMoment);
+
+            var data = {
+                StartDate: fDate,
+                EndDate: tDate,
+                InvoiceMode: "3",
+                InvoiceType: "1",
+                hdnFormBotStatusAssignedUser: "1,2,3,4"
+            };
+
+            $.ajax({
+                url: '@Url.Action("GetInvoiceReport", "FormBotReport")',
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify(data),
+                async: false,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    if (result != "") {
+                        result = $.parseJSON(result);
+                        var chartType = 'bar';
+                        var groupedData = {};
+                        var xAxis = ['xAxis', 'Invoice Status'];
+                        var data1 = ['Paid', result[0].PaidInFull];
+                        var data2 = ['Partial', result[0].TotalPartialPayment];
+                        var data3 = ['PartialPaid', result[0].PartialPaidPayment];
+                        var data4 = ['Outstanding', result[0].Outstanding];
+                        var dataGroup = ['Partial', 'PartialPaid'];
+                        var chartType = $('#drdChartType').val();
+                        var resultData = [];
+                        resultData.push(xAxis);
+                        resultData.push(data1);
+                        resultData.push(data2);
+                        resultData.push(data3);
+                        resultData.push(data4);
+                        BindChart('dvInvoiceChart', resultData, xAxis, chartType);
+                    }
+                    else {
+                        $('#dvInvoiceChart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                    }
+                },
+                error: function (e) {
+
+                }
+            });
+            return false;
+        }
+        //charts
+        function BindChart(element, result, xAxis, chartType) {
+            var chartdiv = c3.generate({
+                bindto: '#' + element,
+                data: {
+                    columns: result,
+                    type: chartType,
+                    x: 'xAxis'
+                    //, groups: [dataGroup]
+                },
+                axis: {
+                    x: {
+                        type: 'category',
+                        categories: xAxis
+                    }
+                },
+                bar: {
+                    width: {
+                        ratio: 0.3,
+                        max: 30
+                    },
+                },
+                tooltip: {
+                    format: {
+                        value: function (value, ratio, id, index) {
+                            if (chartType == 'pie') {
+                                return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                            }
+                            else
+                                return value;
+                        }
+                    }
+                }
+            });
+        }
+        function DownloadDocument(e) {
+            var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+            var FolderName = $(e).attr("data-folder");
+            var FileName = $(e).attr("data-name");
+            window.location.href = BaseURL + 'ViewDownloadFileForStc/Job?FileName=' + FileName + '&FolderName=' + FolderName;
+        }
+</script>

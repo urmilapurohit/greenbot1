@@ -1,0 +1,223 @@
+﻿@model FormBot.Entity.VEECPricingManager
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Manage Veec Price";
+}
+
+<style type="text/css">
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .form-border img {
+        max-width: none !important;
+    }
+
+    /*.input-group-addon {
+        top: 36px !important;
+        padding: 0px 24px !important;
+    }*/
+</style>
+
+<form class="form-block" id="VEECPricingManagerDetails">
+    <div class="container-fluid">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="form-group">
+                    @*<div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">Opti-Pay:</label>
+                            <a onclick="VEECOptiPayOptions()">options</a>
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="OptiPaySwitch" isvisible="@Model.IsPriceOptiPay">
+                                <label class="onoffswitch-label" for="OptiPaySwitch">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>*@
+
+                    <label class="control-label required">Opti-Pay:</label>
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.OptiPay, new { id = "txtVEECOptiPay", @class = "form-control decimal", @maxlength = 8, @tabindex = 6, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.OptiPay)
+                </div>
+            </div>
+
+            @if (Model.PricingType == 2)
+            {
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label class="control-label required">Expiry Date:</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.OfferExpires, new { @id = "txtVEECExpiryDate", @class = "form-control date-pick", @tabindex = 11, @readonly = "readonly" })
+                            <span class="input-group-addon sprite-img date-picker"></span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.OfferExpires)
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        @if (Model.PricingType == 2)
+        {
+            <div class="row malti-list">
+                <div class="col-sm-5 ">
+                    <div class="form-group">
+                        @if (Model.PricingMode == 1)
+                        {
+                            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">Solar company(s)</label>
+                        }
+                        else
+                        {
+                            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">VEEC(s)</label>
+                        }
+                        <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                            @Html.ListBoxFor(m => m.LeftSide, new MultiSelectList(Model.lstLeftSide, "Value", "Text"), new { id = "lstLeftList", @class = "form-control", style = "padding:0px;height: 150px; overflow: auto;", @tabindex = 11 })
+                        </div>
+                    </div>
+                </div>
+                <div class=" col-sm-2 tra-btn">
+                    <div class="form-group">
+                        <a id="btnLtoR" href="javascript:void(0);" class="linkbutton" onclick="MoveLtoR();">
+                            <input type="button" value=">>" class="btn btn-info primary" tabindex="12" />
+                        </a>
+                        <a id="btnRtoL" href="javascript:void(0);" class="linkbutton" onclick="MoveRtoL();">
+                            <input type="button" value="<<" class="btn btn-info primary" tabindex="13" />
+                        </a>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        @if (Model.PricingMode == 1)
+                        {
+                            <label class="col-md-10 col-sm-10 control-label " for="md" style="padding-top: 8px;margin-left:-13px;">Selected Solar Company(s):</label>
+                        }
+                        else
+                        {
+                            <label class="col-md-10 col-sm-10 control-label " for="md" style="padding-top: 8px;margin-left:-13px;">Selected Solar VEEC(s):</label>
+                        }
+                        <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0">
+                            @Html.ListBoxFor(m => m.RightSide, new MultiSelectList(Model.lstRightSide, "Value", "Text"), new { id = "lstRightList", @class = "form-control", style = "padding:0px;height: 150px; overflow: auto;", @tabindex = 14 })
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="form-group defaultFormBot tab_bottomrow">
+            <div class="btn primary icon-btn ">
+                <span class="sprite-img save_ic"></span>
+                <input type="button" name="SavePricing" value="Save" class="" id="btnSaveVEECPrice" tabindex="15" onclick="SaveVEECPrice();">
+            </div>
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" data-dismiss="modal" tabindex="16">
+        </div>
+
+    </div>
+</form>
+
+<div class="modal fade" id="popupVEECOptipayOptions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="height:fit-content;">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header ">
+                <button type="button" class="close" aria-label="Close" onclick="CloseVeecOptiPayParameters();">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">OPTI-PAY PARAMETERS</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*@Html.Partial("_OptiPayOptions", Model)*@
+
+                    <form class="form-block">
+                        <div class="container-fluid">
+
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Allow for under or equal to(KW):</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="KWswitch" onclick="kwSwitch($('#KWswitch'),$('#txtKWValue'),'@Model.KWValue');" checked>
+                                                <label class="onoffswitch-label" for="KWswitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        @Html.TextBoxFor(m => m.KWValue, new { id = "txtKWValue", @class = "form-control", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus", onkeypress = "return isDecimal(event, 5, 2, this)" })
+                                        @Html.ValidationMessageFor(m => m.KWValue)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Residential VEEC Claims(no GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="VEECNonCommercialVeecSwitch" checked>
+                                                <label class="onoffswitch-label" for="VEECNonCommercialVeecSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box">
+                                            <label class="control-label">Allow Commercial VEEC claims(+GST)?</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="VEECCommercialVeecSwitch">
+                                                <label class="onoffswitch-label" for="VEECCommercialVeecSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group defaultFormBot tab_bottomrow">
+                                <input type="button" name="SaveVEECPricing" value="Save" class="primary save_ic" id="btnSaveVEECParameters" onclick="saveVEECOptiPayParameters($('#txtKWValue'), $('#popupVEECOptipayOptions'));" tabindex="15">
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $("#txtVEECExpiryDate").datepicker({
+        format: '@ProjectConfiguration.GetDateFormat',
+        startDate: new Date(),
+        autoclose: true
+    });
+
+</script>

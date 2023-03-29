@@ -1,0 +1,91 @@
+﻿@model System.Collections.Generic.List<FormBot.Entity.Job.InstallerDeviceAudit>
+<style>
+    .audit-div {
+        margin: 2rem;
+        border: 1px solid grey;
+        padding: 2rem;
+    }
+
+    .pl-4 {
+        padding-left: 2rem;
+    }
+
+    .mt-4 {
+        margin-top: 2rem;
+    }
+</style>
+@*Installer Device Audit*@
+<div class="modal fade filter-mobal" id="installer-device-audit" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="~/images/close-btn.png"></button>
+                <h4 id="installer-device-audit-header"></h4>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body" id="installer-device-audit-body">
+                @foreach (var audit in Model)
+                {
+                    <div class="audit-div">
+                        <h4>Installer Device Audit - @audit.InstallerName @audit.AccreditationNumber</h4>
+                        @foreach (var visit in audit.InstallerVisits)
+                        {
+                            <div class="row mt-4">
+                            <div class="col-md-8">
+                                <strong>Visist ID: @visit.VisitID</strong>
+                                <hr />
+                                <div class="row pl-4">
+                                    <div class="col-md-3">
+                                        <strong>Visit Day:</strong>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <strong>Time:</strong>
+                                    </div>
+                                </div>
+
+                                @foreach (var visitDateTime in visit.InstallerVisitDateTimes)
+                                {
+                                    <div class="row pl-4">
+                                        <div class="col-md-3">
+                                            <p>@visitDateTime.VisitDate.ToShortDateString()</p>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <p>Length of time:  @visitDateTime.LengthOfTime</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <a href="javascript:void(0);" onclick="temp('@visit.FileLocation')">see log</a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-4">
+                                <p><a href="#">DEVICE</a></p>
+                                <div class="mt-4">
+                                    <p><a>DEVICE ID: @visit.DeviceID</a></p>
+                                    <p><a>Registered OTP: @visit.RegisteredOTP.ToShortDateString()</a></p>
+                                    <p><a>Last used: @visit.LastUsed.ToShortDateString()</a></p>
+                                    <p><a>Most Recent Signed in: @visit.MostRecentSignedIn.ToShortDateString()</a></p>
+                                </div>
+
+                            </div>
+                        </div>
+                        }
+                    </div>
+                }
+            </div>
+            <!-- Model Footer -->
+            <div class="modal-footer">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="button" id="installerDeviceAudit" value="Get Installer Device Audit" class="btn" data-target="#installer-device-audit" data-toggle="modal">
+
+<script>
+    function temp(filePath) {
+        window.location.href = '/Job/DownloadInstallerDeviceAuditLog?filePath=' + filePath;
+    }
+</script>

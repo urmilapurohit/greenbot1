@@ -1,0 +1,213 @@
+﻿@model List<FormBot.Entity.Job.JobHistory>
+                                <style>
+                                    .status-box ol {
+                                        list-style: decimal !important;
+                                        padding: 0 40px !important;
+                                        margin: 13px 0 !important;
+                                    }
+                                    .status-box ul {
+                                        list-style: disc !important;
+                                        padding: 0 40px !important;
+                                        margin: 13px 0 !important;
+                                    }
+
+                                    .status-box ol li {
+                                        list-style-type: decimal !important;
+                                    }
+
+                                    .status-box ul li {
+                                        list-style-type: disc !important;
+                                    }
+
+                                    .status-box em {
+                                        font-style: italic !important;
+                                    }
+                                </style>
+
+@if (ViewBag.AllTagsShow == 1 || ViewBag.AllTagsShow == null)
+{
+    <div class="col-sm-12">
+        <div id="divCustom">
+            <div class="status-block">
+                @ListLoad()
+            </div>
+        </div>
+        <script>
+            //function reloadCustomScrollbar() {
+            //    //$('#divCustom').mCustomScrollbar();
+            //}
+            //reloadCustomScrollbar();
+        </script>
+    </div>
+}
+else
+{
+    @ListLoad()
+}
+
+@helper ListLoad()
+{
+    if (Model.Count() > 0)
+    {
+       
+        foreach (var item in Model)
+        {
+            string categoryClass = string.Empty;
+            switch (item.CategoryID)
+            {
+                case 33:
+                case 1:
+                case 5:
+                case 6:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 26:
+                case 28:
+                case 29:
+                case 32:
+                case 8:
+                case 35:
+                case 39:
+                case 40:
+                case 41:
+                case 43:
+                case 44:
+                case 45:
+                case 46:
+                case 50:
+                case 51:
+                case 47:
+                case 54:
+                case 53:
+                    categoryClass = "job-status";
+                    break;
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                case 13:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 27:
+                case 2:
+                    categoryClass = "part-status";
+                    break;
+                case 14:
+                case 15:
+                case 16:
+                case 17:
+                case 30:
+                    categoryClass = "part-status";
+                    break;
+                case 31:
+                    categoryClass = "part-status";
+                    break;
+                case 3:
+                    categoryClass = "note-status";
+                    break;
+                case 4:
+                    categoryClass = "message-status";
+                    break;
+            }
+            <li class="status-box @categoryClass">
+                <span class="border-icon" title="@item.HistoryCategory"></span>
+                <p><label>@item.HistoryCategory:</label> @item.CreateDate</p>
+                <p>
+                    <a href="@Url.Action("Index", "Job")?id=@item.JobIdEncoded" class="blue-title"><b>@item.RefNumber&nbsp;-&nbsp;</b></a>
+                    @if (item.CategoryID != 18)
+                    {
+                        <b class="blue-title" title="@item.Modifier">@item.Modifier </b>
+                    } @Html.Raw(item.HistoryMessage)
+                </p>
+            </li>
+
+
+
+        }
+        
+        <div class="pagination-div">
+
+            <ul class="pagination">
+                @{int pagCount = Model[0].TotalRecords % 10 == 0 ? Model[0].TotalRecords / 10 : (Model[0].TotalRecords / 10) + 1; }
+                <li class="page-item">
+                    @{
+                        int previous = Model[0].currentPage - 1 > 0 ? Model[0].currentPage - 1 : Model[0].currentPage;
+                    }
+                    <a class="page-link" href="javascript:;" onclick="SearchHistory(@previous,@pagCount)">Previous</a>
+                </li>
+                @for (int i = 1; i <= pagCount; i++)
+                {
+
+                    <li class="page-item">
+                        @if (i != Model[0].currentPage)
+                        {
+
+                            <a class="page-link" href="javascript:;" onclick="SearchHistory(@i,@pagCount)">@i</a>
+
+                        }
+                        else
+                        {
+                            <a class="page-link currentPage" href="javascript:;"><span>@i</span></a>
+                        }
+                    </li>
+
+                }
+                <li class="page-item">
+                    @{
+                        int next = Model[0].currentPage + 1 <= pagCount ? Model[0].currentPage + 1 : Model[0].currentPage;
+                    }
+                    <a class="page-link" href="javascript:;" onclick="SearchHistory(@next,@pagCount)">Next</a>
+                </li>
+            </ul>
+        </div>
+    }
+    else
+    {
+        <div class="panel panel-default" style="text-align:center">
+            <div class="panel-heading emailThread" role="tab">
+                No Record(s) Found.
+            </div>
+        </div>
+    }
+}
+
+<script>
+    
+    @*var urlShowJobNote = '@Url.Action("ShowJobNotes","Job")';
+    $("#aHistory").click(function () {
+        debugger;
+        $.ajax({
+            url: urlShowJobNote,
+            data: { JobId: $("#BasicDetails_JobID").val()},
+            type: 'get',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data.status) {
+                    debugger;
+                    var notes = data.jobnotes;
+                    if (notes.length > 0) {
+                        for (i = 0; i < notes.length; i++) {
+                            var html = '<li class="status-box ">' +
+                                '<span class="border-icon"></span>' + ' <p><label>Add Note:&nbsp;</label>' + moment(notes[i].strCreatedDate).format("MMM D YYYY H:mmA") + '</p>' + ' <p>' +
+                                '<a href="@Url.Action("Index", "Job")?id=' + notes[i].Id + '"><b>' + notes[i].JobID + '&nbsp; -&nbsp;' + notes[i].Created + '</b ></a > left a note for JobID ' + notes[i].JobID + '<p><label>Description: </label></p>'
+                                + notes[i].Notes + '</p>' + '</li>';
+                            debugger;
+                            $('.status-block').prepend(html);
+                        }
+                }
+                }
+                else {
+                    
+                }
+
+            },
+            error: function (data) {
+            }
+        })
+    });*@
+</script>

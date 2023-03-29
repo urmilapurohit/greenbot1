@@ -1,0 +1,1046 @@
+﻿@using FormBot.Helper
+@model FormBot.Entity.CreateVEEC
+@{
+    Layout = null;
+}
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+<div class="modal modal-center fade popupVEECOwner" tabindex="-1" role="dialog" id="popupVEECOwner">
+    <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" onclick="GetOwnerPopupDetails('popupVEECOwner', 'VEECOwnerDetail')" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Owner/Signatory Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="VEECOwner">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.OwnerType, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(m => m.VEECOwnerDetail.OwnerType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Individual", Value = "Individual" }, new SelectListItem() { Text = "Government body", Value = "Government body" }, new SelectListItem() { Text = "Corporate body", Value = "Corporate body" }, new SelectListItem() { Text = "Trustee", Value = "Trustee" } }, new { @class = "form-control", @tabindex = 8 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.OwnerType)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.CompanyName, new { @class = "control-label"})
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 9, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.CompanyName, "", new { id = "VEECOwnerCompanyNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.FirstName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 10 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.FirstName, "", new { id = "VEECOwnerFirstNameValidate" })
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.LastName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 11 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.LastName, "", new { id = "VEECOwnerLastNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 12 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.Email)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 13, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.Phone)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.Mobile, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 14, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.Mobile)
+                                    </div>
+                                </div>
+                            </div>
+
+                            @*<div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.VEECOwnerDetail.IsPostalAddress, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control OwnerAddress", @tabindex = 15 })
+                                        <script>
+                                            IsPostalAddressSelected("VEECOwnerDetail_IsPostalAddress",('@Model.VEECOwnerDetail.IsPostalAddress').toLowerCase());
+                                        </script>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 PDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.PostalAddressID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.VEECOwnerDetail.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 16 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.PostalAddressID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 PDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.PostalDeliveryNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 17 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.PostalDeliveryNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.UnitTypeID, new { @class = "control-label", @id = "VEECOwnerDetail_lblVEECOwnerUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.VEECOwnerDetail.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 18 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.UnitNumber, new { @class = "control-label", @id = "VEECOwnerDetail_lblVEECOwnerUnitNumber" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.UnitNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.StreetNumber, new { @class = "control-label required", @id = "VEECOwnerDetail_lblVEECOwnerStreetNumber" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 20 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.StreetNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.StreetName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 21 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.StreetName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.VEECOwnerDetail.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 22 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 23 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @tabindex = 24 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECOwnerDetail.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECOwnerDetail.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 25 })
+                                        @Html.ValidationMessageFor(m => m.VEECOwnerDetail.PostCode)
+                                    </div>
+                                </div>
+                            </div>*@
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateOwnerPopupDetails('popupVEECOwner', 'VEECOwnerDetail', 'VEECOwner', true, false, false,'VEECOwner')"><span class="sprite-img save_ic"></span> Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearOwnerPopupDetails('popupVEECOwner', 'VEECOwnerDetail')"><span class="sprite-img reset_ic"></span>Reset </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal modal-center fade popupVEECInstallation" tabindex="-1" role="dialog" id="popupVEECInstallation">
+    <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" onclick="GetUserAddress('popupVEECInstallation', 'VEECInstallationDetail', false, false, true)" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Installation Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="VEECInstallation">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4" style="display:none;">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.IsPostalAddress, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.VEECInstallationDetail.IsPostalAddress, new List<SelectListItem>() { new SelectListItem() { Text = "Physical Address", Value = "1"} },new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.LevelType, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.LevelType, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.LevelNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.LevelNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                                    </div>
+                                </div>
+
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.UnitTypeID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(model => model.VEECInstallationDetail.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 18 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.UnitNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.UnitNumber)
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.StreetNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 20 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.StreetNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.StreetName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 21 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.StreetName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.VEECInstallationDetail.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 22 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 23 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @tabindex = 24 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 25 })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.PostCode)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateAddress('popupVEECInstallation', 'VEECInstallationDetail', 'VEECInstallation', false, false, true,'VEECInstallation')"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearAddress('popupVEECInstallation', 'VEECInstallationDetail')"><span class="sprite-img reset_ic"></span> Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal modal-center fade" tabindex="-1" role="dialog" id="popupVEECInstalltionInfo">
+     <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" onclick="GetVEECInstallationInfo();" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Installation Details</h4>
+                </div>
+                <div class="modal-body" id="installtionInfo">
+
+                    <form id="VEECInstalltionInfo">
+
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.IndustryBusinessType, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(m => m.VEECInstallationDetail.IndustryBusinessType, new List<SelectListItem>(), new { @class = "form-control", @data_val = "false", @tabindex = 1 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.NumberOfLevels, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.NumberOfLevels, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.NumberOfLevels)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.FloorSpace, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.FloorSpace, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.FloorSpace)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.FloorSpaceUpgradedArea, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.FloorSpaceUpgradedArea, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstallationDetail.FloorSpaceUpgradedArea)
+                                    </div>
+                                </div>
+                                @*<div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstallationDetail.CertificateElectricalComplianceNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstallationDetail.CertificateElectricalComplianceNumber, new { @class = "form-control", @tabindex = 3})
+                                    </div>
+                                </div>*@
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateVEECInstallationInfo()" tabindex="6"><span class="sprite-img save_ic"></span> Save</button>
+                                <button type="button" class="btn default cancel_ic" onclick="clearVEECInstallationInfo()" tabindex="7">Clear</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>
+
+@*<div class="modal fade popupVEECUpgradeManager" tabindex="-1" role="dialog" id="popupVEECUpgradeManager">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Owner/Signatory Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="VEECUpgradeManager">
+                        @Html.HiddenFor(m => m.v.VEECUpgradeManagerDetailId)
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.CompanyName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.CompanyName, new { @class = "form-control", @maxlength = 100, @tabindex = 10 })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.CompanyName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.FirstName, new { @class = "control-label required", @id = "VEECUpgradeManagerFirstName" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 10 })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.FirstName, "", new { id = "VEECUpgradeManagerFirstNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.LastName, new { @class = "control-label required", @id = "VEECUpgradeManagerLastName" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 11 })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.LastName, "", new { id = "VEECUpgradeManagerLastNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.Phone, new { @class = "control-label required" }) =
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 13, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.Phone)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary save_ic" onclick="validateVEECUpgradeManager()">Save</button>
+                                <button type="button" class="btn default reset_ic" onclick="clearPopupVEECUpgradeManager()">Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>*@
+
+@*<div class="modal modal-center fade popupVEECInstaller" tabindex="-1" role="dialog" id="popupVEECInstaller">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" onclick="GetInstallerPopupDetails('popupVEECInstaller','VEECInstaller')" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title">Installer Details</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <form class="installerDiv" id="VEECInstaller">
+                        @Html.HiddenFor(m => m.VEECInstaller.VEECInstallerId)
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4" style="display:none;">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.CompanyName, new { @class = "control-label", @id = "VEECOwnerCompanyName" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 9, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstaller.CompanyName, "", new { id = "VEECOwnerCompanyNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.CECAccreditationNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @onblur = "checkExistInstaller(this,'InstallerDesigner AccreditationNumber')", @idClass = "installerRequired" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstaller.CECAccreditationNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label class="control-label required">SE Role:</label>
+                                            <div class="checkbox-box" style="color:#494949;">
+                                                @Html.RadioButton("SEDesignRoleId", "2", true, new { @tabindex = 18 }) Design
+                                                @Html.RadioButton("SEDesignRoleId", "1", false, new { @tabindex = 19 }) Install
+                                                @Html.RadioButton("SEDesignRoleId", "3", false, new { @tabindex = 20 }) Design & Install
+                                            </div>
+                                        </div>
+                                    </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.FirstName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.FirstName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus", @idClass = "installerRequired" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstaller.FirstName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.LastName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.LastName, new { @class = "form-control", @maxlength = 50, @idClass = "installerRequired" })
+                                        @Html.ValidationMessageFor(m => m.VEECInstaller.LastName)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.Email, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.Phone, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.Phone, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.Mobile, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.Mobile, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.VEECInstaller.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @idClass = "installerNotRequired" })
+                                        @Html.DropDownListFor(m => m.VEECInstaller.IsPostalAddress, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @tabindex = 15 })
+                                        <script>
+                                            IsPostalAddressSelected("VEECInstaller_IsPostalAddress", ('@Model.VEECInstaller.IsPostalAddress').toLowerCase());
+                                        </script>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 PDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.PostalAddressID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(model => model.VEECInstaller.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 PDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.PostalDeliveryNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.UnitTypeID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(model => model.VEECInstaller.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.UnitNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.UnitNumber, new { @class = "form-control", @maxlength = 10, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.StreetNumber, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.StreetNumber, new { @class = "form-control", @maxlength = 15, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.StreetName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.StreetName, new { @class = "form-control", @maxlength = 45, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.StreetTypeID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(model => model.VEECInstaller.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.Town, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.Town, new { @class = "form-control", @maxlength = 80, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.State, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.PostCode, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VEECInstaller.PostCode, new { @class = "form-control", @maxlength = 8, @idClass = "installerNotRequired" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECInstaller.Signature, new { @class = "control-label" })
+                                        <table class="uf" style="margin-left:-10px;">
+                                            <tr>
+                                                <td width="70" style="vertical-align:top;">
+                                                    <div class="fileUpload primary upload_ic">
+                                                        <span>Upload</span>
+                                                        <input id="uploadBtnSignatureInstaller" type="file" class="upload fileUpload" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="bxcont" style="margin-top:7px;">
+                                                        <a id="imgSignatureInstaller" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateInstallerPopupDetails('popupVEECInstaller', 'VEECInstaller', 'VEECInstaller', false, true, false, 'VEECInstaller')"><span class="sprite-img save_ic"></span> Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearInstallerPopupDetails('popupVEECInstaller', 'VEECInstaller')"><span class="sprite-img reset_ic"></span> Reset</button>
+                            </div>
+                            <div class="modal-footer">
+                                    <div class="btn default icon-btn">
+                                        <span class="sprite-img reset_ic"></span>
+                                        <input type="button" id="btnResetVEECInstaller" value="Reset" onclick="ResetVEECInstaller();">
+                                    </div>
+                                    <button type="button" name="addVEECInstaller" class="btn primary icon-btn" id="addVEECInstaller"><span class="sprite-img save_ic"></span>Save Installer</button>
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>*@
+
+
+
+
+
+
+<div class="modal modal-center fade add-visits" tabindex="-1" id="warning">
+    
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                        </button>
+                        <h4 class="modal-title">Warning</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px;text-align:center;">
+                            <ul class="modelBodyMessage"></ul>
+                            <br />
+                            <h5>Are you sure you want to continue ?</h5>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesWarningVEEC">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noWarningVEEC">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>
+<div id="popupAddEditArea" class="modal modal-center fade" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="AddEditArea">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                        </button>
+                        <h4 class="modal-title">Add/Edit Area</h4>
+
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successmessageforaddarea" style="display: none"></div>
+                        <span id="spnError" style="color: Red; display: none">*Valid characters: Numbers and special characters.</span>
+                        <div style="display:block !important;margin-bottom:0px">
+                            @Html.HiddenFor(m => m.VEECArea.VEECAreaId, new { id = "veecareaid" })
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.VEECArea.Name, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.VEECArea.Name, new { id = "areaname", @class = "form-control", @maxlength = 50 })
+                                @Html.ValidationMessageFor(m => m.VEECArea.Name)
+                            </div>
+                            <button type="button" class="btn primary icon-btn" id="btnAddAreaModel"><span class="sprite-img save_ic"></span>Save</button>
+                            <button type="button" class="btn default icon-btn" id="btnCancelEditAreaModel"><span class="sprite-img reset_ic"></span>Clear</button>
+                            <div id="grid"  class="toggle-table-row" style="margin-top:10px">
+                                <table id="AreaNameDatatable" class="table table-hover" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th><span>Area Name</span></th>
+                                            <th class="action">Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>      
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </form>
+            </div>
+        </div>
+</div>
+
+<div id="popupAddBaseLine" class="modal modal-center fade " tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="AddBaselineEquipment">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                        </button>
+                        <h4 class="modal-title">BaseLine Equipment</h4>
+
+                    </div>
+                    <div class="modal-body popupAddBaseLineEquipment">
+                        <div style="display:block !important;margin-bottom:0px">
+                            @Html.HiddenFor(m => m.BaselineEquipment.BaselineEquipmentId, new { id = "BaselineEquipmentId" })
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.BaselineUpgrade, new { id = "baselineupgradelabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.BaselineUpgrade, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Baseline", Value = "Baseline" }, new SelectListItem() { Text = "Upgrade", Value = "Upgrade" } }, new { id = "baselineupgrade", @class = "form-control", @readonly = true })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.BaselineUpgrade)
+                            </div>
+                            <div class="form-group baseline">
+                                @Html.LabelFor(m => m.BaselineEquipment.BaselineAssetLifetimeReference, new { id = "BaselineAssetLifetimeReferenceLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.BaselineAssetLifetimeReference, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "BaselineAssetLifetimeReference", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.BaselineAssetLifetimeReference)
+                            </div>
+                            <div class="form-group upgrade">
+                                @Html.LabelFor(m => m.BaselineEquipment.UpgradeAssetLifetimeReference, new { id = "UpgradeAssetLifetimeReferenceLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.UpgradeAssetLifetimeReference, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "UpgradeAssetLifetimeReference", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.UpgradeAssetLifetimeReference)
+                            </div>
+                            <div class="form-group upgrade">
+                                @Html.LabelFor(m => m.BaselineEquipment.LampType, new { id = "LampTypeLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.LampType,EnumHelper.GetSelectList(typeof(SystemEnums.LampType)) , new { id = "LampType", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.LampType)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.Spacetype, new { id = "spacetypelabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.Spacetype, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "spacetype", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.Spacetype)
+                            </div>
+                            <div class="form-group stu" style="display:none;">
+                                @Html.LabelFor(m => m.BaselineEquipment.SpaceTypeUnlisted, new { id = "spacetypeunlistedlabel", @class = "control-label required" })
+                                @Html.TextAreaFor(m => m.BaselineEquipment.SpaceTypeUnlisted, new { id = "spacetypeunlisted", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.SpaceTypeUnlisted, "", new { id = "SpaceTypeUnlimitedValidate" })
+                            </div>
+                            <div class="form-group bca">
+                                @Html.LabelFor(m => m.BaselineEquipment.BCAClassification, new { id = "bcaclassificationLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.BCAClassification, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "bcaclassification", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.BCAClassification)
+                            </div>
+                            <div class="form-group lbc">
+                                @Html.LabelFor(m => m.BaselineEquipment.LampBallastCombination, new { id = "LampBallastCombinationLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.LampBallastCombination, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "LampBallastCombination", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.LampBallastCombination)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.Lampcategory, new { id = "LampCategoryLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.Lampcategory, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "LampCategory", @class = "form-control", disabled = "disabled" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.Lampcategory)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.Quantity, new { id = "QuantityLabel", @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.BaselineEquipment.Quantity, new { id = "Quantity", @class = "form-control decimal", @maxlength = 8, @onkeypress = "return isDecimal(event,10,3,this);" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.Quantity)
+                            </div>
+                            
+                            <div class="form-group  upgrade product">
+                                @Html.LabelFor(m => m.BaselineEquipment.ProductBrand, new { id = "ProductBrandLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.ProductBrand, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "ProductBrand", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.ProductBrand)
+                            </div>
+                            <div class="form-group  upgrade product">
+                                @Html.LabelFor(m => m.BaselineEquipment.ProductModel, new { id = "ProductModelLabel", @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.ProductModel, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "ProductModel", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.ProductModel)
+                            </div>
+                            <div class="form-group rlh" style="display:none;">
+                                @Html.LabelFor(m => m.BaselineEquipment.RatedLifetimeHours, new { id = "RatedLifetimeHoursLabel", @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.BaselineEquipment.RatedLifetimeHours, new { id = "RatedLifetimeHours", @class = "form-control", @onkeypress = "return isDecimal(event,10,3,this);" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.RatedLifetimeHours)
+                            </div>
+                            <div class="form-group nlp">
+                                @Html.LabelFor(m => m.BaselineEquipment.NominalLampPower, new { id = "NominalLampPowerLabel", @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.BaselineEquipment.NominalLampPower, new { id = "NominalLampPower", @class = "form-control", @onkeypress = "return isDecimal(event,10,3,this);" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.NominalLampPower)
+                            </div>
+                            <div class="form-group toc">
+                                @Html.LabelFor(m => m.BaselineEquipment.TypeOfFirstController, new { id = "FirstControllerLabel", @class = "control-label" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.TypeOfFirstController, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "FirstController", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.TypeOfFirstController)
+                            </div>
+                            <div class="form-group toc">
+                                @Html.LabelFor(m => m.BaselineEquipment.TypeOfSecondController, new { id = "SecondControllerLabel", @class = "control-label" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.TypeOfSecondController, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "SecondController", @class = "form-control" })
+                                @*@Html.ValidationMessageFor(m => m.BaselineEquipment.TypeOfSecondController)*@
+                            </div>
+                            <div class="form-group upgrade">
+                                @Html.LabelFor(m => m.BaselineEquipment.VRUProductBrand, new { id = "VRUProductBrandLabel", @class = "control-label" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.VRUProductBrand, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "VRUProductBrand", @class = "form-control" })
+                                @*@Html.ValidationMessageFor(m => m.BaselineEquipment.VRUProductBrand)*@
+                            </div>
+                            <div class="form-group upgrade">
+                                @Html.LabelFor(m => m.BaselineEquipment.VRUProductModel, new { id = "VRUProductModelLabel", @class = "control-label" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.VRUProductModel, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "VRUProductModel", @class = "form-control" })
+                                @*@Html.ValidationMessageFor(m => m.BaselineEquipment.VRUProductModel)*@
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.HVACAC, new { @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.BaselineEquipment.HVACAC, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { id = "HVAC", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.BaselineEquipment.HVACAC)
+                            </div>
+                            @*<div class="form-group">
+                                @Html.LabelFor(m => m.BaselineEquipment.Definition, new { @class = "control-label " })
+                                @Html.TextAreaFor(m => m.BaselineEquipment.Definition, new { id = "Definition", @class = "form-control" })
+                            </div>*@
+                            <button type="button" class="btn primary icon-btn" id="btnAddBaselineEquipment"><span class="sprite-img save_ic"></span> Save</button>
+                            <button type="button" class="btn default cancel_ic" id="btnClearBaselineEquipment">Clear</button>
+
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="popupMapVEEC">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                    <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                </button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Source</label>
+                                <input type="text" id="txtSourceVEEC" class="form-control" placeholder="Source" tabindex="301" />
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Destination</label>
+                                <input type="text" id="txtDestinationVEEC" class="form-control" placeholder="Destination" tabindex="302" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button type="button" class="btn default pull-right" onclick="GetLocation()" tabindex="303">Get Location</button>
+                            <button type="button" class="btn default pull-right" onclick="GetRoute()" tabindex="304">Get Route</button>
+                            <div id="dvDistance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dvMapVEEC" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+
+<div class="modal fade popupVEECInstaller" tabindex="-1" role="dialog" id="popupVEECInstaller">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title modalTitleVEECInstaller">Find Installer</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionVEECInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionVEECInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <form id="frmVEECInstaller">
+                        <div class="form-box">
+                            <div class="FindVEECInstaller">
+                                <div class="row VEECInstallerOptions">
+                                    <div class="col-md-5">
+                                        <button type="button" class="btn primary icon-btn" id="btnSearchGreenbotVEECInstaller"><span class="search_ic"></span>Search Greenbot Installer</button>
+                                    </div>
+                                    <div class="col-md-1" style="text-align: -webkit-center;color: #222;padding-top: 10px;">
+                                        <h4>OR</h4>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <button type="button" class="btn primary icon-btn" id="btnAddNewVEECInstaller" style="float:left"><span class="sprite-img add_ic"></span>Add New Installer</button>
+                                    </div>
+                                </div>
+                                <div class="SearchGreenbotVEECInstaller" style="display:none;">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @class = "control-label required" })
+                                                @*@Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @id = "FindSWHInstaller_LicenseNumber", @class = "form-control", @maxlength = 20, @onblur = "checkExistSWHInstaller(this,'InstallerDesigner AccreditationNumber',true)" })*@
+                                                @Html.TextBoxFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @id = "SearchGreenbotVEECInstaller_LicenseNumber", @class = "form-control", @maxlength = 20 })
+                                                @Html.ValidationMessageFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber)
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <input type="button" id="btnVEECSearch" value="Search" class="primary search_ic" style="margin-top: 26px;" onclick="checkExistVEECInstaller($('#SearchGreenbotVEECInstaller_LicenseNumber').val())">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="mulitpleVEECInstallerNote control-label" style="display:none; color:red">* There are multiple users</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="veecInstallerList" class="row" style="display:none;">
+                                        @Html.Partial("_VEECInstaller")
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="AddEditVEECInstaller">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @class = "control-label required" })
+                                                @Html.TextBoxFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" ,@idClass = "installerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.VEECInstaller.ElectricalContractorsLicenseNumber)
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.ElectricalComplienceNumber, new { @class = "control-label required" })
+                                                @Html.TextBoxFor(m => m.VEECInstaller.ElectricalComplienceNumber, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                                                @Html.ValidationMessageFor(m => m.VEECInstaller.ElectricalComplienceNumber)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.CompanyName, new { @class = "control-label" })
+                                                @Html.TextBoxFor(m => m.VEECInstaller.CompanyName, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.FirstName, new { @class = "control-label required" })
+                                                @Html.TextBoxFor(m => m.VEECInstaller.FirstName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus", @idClass = "installerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.VEECInstaller.FirstName)
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.VEECInstaller.LastName, new { @class = "control-label required" })
+                                                @Html.TextBoxFor(m => m.VEECInstaller.LastName, new { @class = "form-control", @maxlength = 50, @idClass = "installerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.VEECInstaller.LastName)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn default back-btn" id="btnBackFindInstaller" style="display:none;padding-top:0px;"><span class="sprite-img back-icon"></span>Back</button>
+                                <button type="button" class="btn primary icon-btn AddEditVEECInstaller" id="btnAddUpdateVEECInstaller" tabindex="100" style="display:none"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn primary icon-btn SearchGreenbotVEECInstaller" id="btnAddVEECInstaller" style="display:none"><span class="sprite-img add_ic"></span>Add</button>
+                                <button type="button" class="btn default icon-btn SearchGreenbotVEECInstaller" id="btnClearSearchGreenbotVEECInstaller" style="display:none;width:100px;" onclick="ClearSearchGreenbotVEECInstaller()"><span class="sprite-img reset_ic"></span>Clear</button>
+                                <button type="button" class="btn default icon-btn AddEditVEECInstaller" id="btnClearPopupVEECInstaller" tabindex="101"><span class="sprite-img reset_ic"></span>Reset</button>
+                                
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+
+
+<div class="modal fade popupVEECUpgradeManager" tabindex="-1" role="dialog" id="popupVEECUpgradeManager">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title modalTitleVEECUpgradeManager">Add Upgrade Manager</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionVEECUpgradeManagerPopup" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionVEECUpgradeManagerPopup" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <form id="frmVEECUpgradeManager">
+                    <div class="form-box">
+                        <div class="AddEditVEECUpgradeManager">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.CompanyABN, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.CompanyABN, new { @class = "form-control", @maxlength = 50 })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.CompanyABN)
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.CompanyName, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(m => m.VEECUpgradeManagerDetail.CompanyName,new List<SelectListItem>() { new SelectListItem() { Text = "Select", Value = "Select"} }, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.CompanyName)
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.FirstName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.FirstName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.FirstName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.LastName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.LastName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.LastName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VEECUpgradeManagerDetail.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.VEECUpgradeManagerDetail.Phone, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.VEECUpgradeManagerDetail.Phone)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary icon-btn AddEditVEECUpgradeManager" id="btnAddUpdateVEECUpgradeManager" tabindex="100" style="display:none"><span class="sprite-img save_ic"></span>Save</button>
+                        @*<button type="button" class="btn primary icon-btn SearchGreenbotVEECUpgradeManager" id="btnAddVEECUpgradeManager" style="display:none"><span class="sprite-img add_ic"></span>Add</button>*@
+                        @*<button type="button" class="btn default icon-btn SearchGreenbotVEECUpgradeManager" id="btnClearSearchGreenbotVEECUpgradeManager" style="display:none;width:100px;" onclick="ClearSearchGreenbotVEECUpgradeManager()"><span class="sprite-img reset_ic"></span>Clear</button>*@
+                        <button type="button" class="btn default icon-btn AddEditVEECUpgradeManager" id="btnClearPopupVEECUpgradeManager" tabindex="101"><span class="sprite-img reset_ic"></span>Reset</button>
+                    </div>
+            </div>
+            </form>
+        </div>
+    </div><!-- /.modal-content -->
+</div>

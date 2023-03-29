@@ -1,0 +1,216 @@
+﻿@model FormBot.Entity.Spvmanufacturer
+@using FormBot.Helper
+@{
+    ViewBag.Title = "Index";
+    ViewBag.IsKendo = true;
+}
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .SumoSelect {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #supplierUl {
+        font-size: 15px;
+        margin-top: 10px;
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+
+        #supplierUl li {
+            font-size: 15px;
+            margin-top: 10px;
+            list-style-type: decimal;
+        }
+
+    #popUpSupplier .modal-content {
+        min-height: 300px;
+    }
+
+    .swithcAllowAll {
+        position: relative;
+        top: 0;
+        margin-top: 4px;
+        margin-right: 10px;
+        height: 29px;
+        display: inline-block;
+    }
+
+    #btnSaveManufacturer {
+        /*right: 10px;*/
+        top: 0;
+        position: relative;
+        /*margin-left: 10px;*/
+    }
+
+    .k-grid tr td, .k-pivot-layout .k-grid tr td {
+        border-bottom-width: 1px;
+        border-style: solid;
+        border-left-width: 0px;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="title">
+        <h1>SPV Manufacture</h1>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+
+
+    @using (Html.BeginForm("GetSPVManufacture", "SPVManufacture", FormMethod.Post, new { id = "SPVManufactureForm", @class = "form-block", @style = "margin-bottom:10px;" }))
+    {
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">SPV Manufacture Name:</label>
+                <input type="text" id="txtSPVManufactureName" class="form-control" tabindex="1">
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Service Administrator:</label>
+                <input type="text" id="txtServiceAdministrator" class="form-control" tabindex="1">
+            </div>
+        </div>
+        <div class="form-group col-xs-7" style="margin-left:5px;margin-top:28px;">
+            <input type="button" id="btnSendRequest" value="Search" class="primary search_ic" tabindex="3">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="" tabindex="4">
+            </div>
+        </div>
+    }
+    <br />
+    <div class="row">
+        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+        {
+            <div class="col-lg-10 text-right" style="float:right">
+
+                <div class="control-label ver-text" id="headerTitle" style="vertical-align:top; padding-top:10px;margin-right:10px">
+                    @ViewBag.Version
+                </div>
+                <div class="botpad btn primary icon-btn" style="display:inline-block;">
+                    <span class="sync-h-ic"></span>
+                    <input type="button" id="btnSyncSPVJson" value="Sync Json" class="fileUpload">
+                </div>
+                <div class="fileUpload botpad primary upload_ic" style="display: inline-block;">
+                    <span>Upload Json</span>
+                    <input type="file" id="btnUploadSPVJson" class="upload" value="Upload" />
+                </div>
+
+                <div style="position:relative;display:inline-block;margin-left:10px;">
+                    <div class="control-label ver-text" style="vertical-align:top; padding-top:10px;">
+                        Allow to all SPV
+                    </div>
+
+                    <div class="onoffswitch" style="position:relative!important;margin-top: 4px">
+                        <input type="checkbox" name="onoffswitchAllowSPV" class="onoffswitch-checkbox switch " id="onoffswitchAllowSPV" ison="1">
+                        <label class="onoffswitch-label" for="onoffswitchAllowSPV">
+                            <span class="onoffswitch-inner"></span>
+                            <span class="onoffswitch-switch"></span>
+                        </label>
+                    </div>
+                </div>
+                <button type="button" class="btn primary icon-btn" tabindex="239" id="btnSaveManufacturer">
+                    <span class="sprite-img save_ic"></span>Save
+                </button>
+
+            </div>
+        }
+    </div>
+
+
+    <div id="datatableSpvManufacturerList">
+
+    </div>
+    @*<div style="float:right; margin-top:10px;">
+            <button type="button" class="btn primary icon-btn" tabindex="239" id="btnSaveManufacturer">
+                <span class="sprite-img save_ic"></span>Save
+            </button>
+            <button class="btn default cancel_ic" type="button" onclick="location.href='@Url.Action("Index","SPVManufacture")'">
+                Cancel
+            </button>
+        </div>*@
+
+</div>
+<!-- model for Supplier list -->
+<div class="modal fade popUpSupplier" tabindex="-1" role="dialog" id="popUpSupplier">
+    <div class="vertical-alignment-helper-popup">
+        <div class="modal-dialog vertical-align-center-popup modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Supplier</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                </div>
+                <div class="modal-body">
+                    <ul id="supplierUl"></ul>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<!-- model for Reseller-->
+<div class="modal fade popUpReseller" tabindex="-1" role="dialog" id="popUpReseller">
+    <div class="vertical-alignment-helper-popup">
+        <div class="modal-dialog vertical-align-center-popup">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Exclude Reseller</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                </div>
+                <div class="modal-body" style="height:300px;">
+                    <div id="ResellerDiv">
+                        <div class="form-group">
+                            <label class="control-label">Reseller:</label>
+                            <select class="job-search-box form-control resellerData form-control" id="job-reseller-filter" multiple="multiple" placeholder="All Reseller"></select>
+                        </div>
+                    </div>
+                    <input type="hidden" id="spvManufactureId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary icon-btn" id="excludeReseller" tabindex="239">
+                        <span class="sprite-img save_ic"></span>Exclude Reseller
+                    </button>
+                    <button type="button" class="btn default cancel_ic" id="resetResellerPopup">Reset</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@Styles.Render("~/datatableCSS")
+<link href="~/Content/style.css" rel="stylesheet" />
+<script src="~/Scripts/View/Spv/SPVManufacture.min.js?v="@ProjectConfiguration.ScriptVersion></script>
+
+@section scripts{
+    <script src="~/Scripts/set-number.min.js"></script>
+    <script src="~/Scripts/jquery.sumoselect.min.js"></script>
+    <link href="~/Content/sumoselect.css" rel="stylesheet" />
+    <script>
+        var reseller;
+        var urlGetSpvManufacture = '@Url.Action("GetSPVManufacture", "SPVManufacture")';
+        var urlGetSupplier = '@Url.Action("GetSupplierList", "SPVManufacture")';
+        var urlSaveSPVManufacture = '@Url.Action("saveSpvSetByManufacturerPopUp", "SPVManufacture")';
+        var urlUploadJson = '@Url.Action("UploadSPVJsonFile", "SPVManufacture")';
+        var urlSyncJson = '@Url.Action("SyncSPVJson", "SPVManufacture")';
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+        var urlSaveExcludeReseller = '@Url.Action("SaveExcludeReseller", "SPVManufacture")';
+        var urlGetExcludedReseller = '@Url.Action("GetExcludedReseller", "SPVManufacture")';
+    </script>
+
+}
+
+

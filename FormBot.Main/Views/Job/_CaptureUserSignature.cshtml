@@ -1,0 +1,346 @@
+﻿@model FormBot.Entity.Job.CaptureUserSign
+@{
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+<style type="text/css">
+    .signatureCanvas canvas {
+        width: 220px;
+        height: 80px;
+        border: 1px dotted #000;
+    }
+</style>
+<script src="~/Scripts/GeneralFunction.js"></script>
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<p><input type="checkbox" id="chkTerms" /> I have read and understood these terms and conditions and accept them</p>
+
+<p>
+    <ul>
+        <li>
+            <div class="signature-box" style="max-width: 700px; border: 2px #E6E6E6 solid; min-height: 225px; margin-top: 20px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="control-label" style="background-color: #E4E4E4; width: 100%; padding: 10px;">SIGN HERE:</label>
+
+                    <select class="form-control" id="drpSignatureBy" style="width: 100%; margin: 0 10px; min-width: 94%;">
+                        <option value="1">Upload</option>
+                        <option value="2">Draw</option>
+                    </select>
+
+                </div>
+                <div style="padding:10px">
+                    <table class="uf" style="margin-left:-10px;" id="tblUpload">
+                        <tr>
+                            <td width="70" style="vertical-align:top;">
+                                <div class="fileUpload primary upload_ic" id="divUpload">
+                                    <span>Upload</span>
+                                    <input id="uploadBtnUserSignature" type="file" class="upload fileUpload" tabindex="41" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="bxcont" style="margin-top:7px;">
+                                    <a id="imgOwnerSignatureView" href="javascript:void(0)" style="display:none;text-decoration:none">&nbsp; &nbsp; View Image</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table width="100%" border="0" cellpadding="0" cellspacing="0" id="tblDraw" style="display:none">
+                        <tr>
+                            <td>
+                                <div id="divSignature">
+                                    <div onmouseout='CDMouseOut();' id="cSignature">
+                                    </div>
+                                    <button type="button" class="btn default reset_ic pull-right" onclick="$('#cSignature').jSignature('clear'); $('#IsSignature').val('False'); $('#JobOwnerDetails_OwnerBaseSignature').val('')">Reset</button>
+                                </div>
+                                <div>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+
+
+        </li>
+    </ul>
+</p>
+<div class="clearfix">
+    <button type="button" class="btn primary save_ic pull-right" onclick="SaveUserSignature()">Save</button>
+</div>
+<span id="spansign" class="" style="color: #b94a48;display:none"></span>
+<div class="modal fade" id="popupUserSign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupOwnerSign">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div>
+                        <img src="@Model.signString" id="imgUserSign" class="" style="display:inline;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts
+    {
+
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/jSignature.dev.js"></script>
+    @*<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyASjqp0eu9Ld_jAYWQBZ7NrnQdLtYPM2-I&sensor=false&libraries=places"></script>*@
+
+    <script type="text/javascript">
+        var $ = $.noConflict();
+        $(document).ready(function () {
+
+            var themeId = '@(ViewData.ContainsKey("theme") ? ViewData["theme"] : "green")';
+            $('body').attr('id', themeId);
+            $('#uploadBtnUserSignature').fileupload({
+                url: '@Url.Action("UploadUserSigature","Job")',
+                dataType: 'json',
+                done: function (e, data) {
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+                    if(data){
+                        var signName = $('#imgUserSign').attr('class');
+                        $("[name='UserSignature']").each(function () {
+                            $(this).remove();
+                        });
+
+                        $('#imgOwnerSignatureView').show();
+                        $('#imgUserSign').attr('class',data.result)
+                        SRCUserSign = data;
+                        $(".alert").hide();
+                        $("#errorMsgRegion").hide();
+                        $("#successMsgRegion").html(closeButton + "Signature has been uploaded successfully.");
+                        $("#successMsgRegion").show();
+                    } else {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + "Signature has not been uploaded.");
+                        $("#errorMsgRegion").show();
+                    }
+                },
+                progressall: function (e, data) {
+
+                },
+
+                singleFileUploads: false,
+                send: function (e, data) {
+                    var documentType = data.files[0].type.split("/");
+                    var mimeType = documentType[0];
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                                $(".alert").hide();
+                                $("#successMsgRegion").hide();
+                                $("#errorMsgRegion").html(closeButton + " " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB");
+                                $("#errorMsgRegion").show();
+                                return false;
+                            } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                                ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB");
+                            $("#errorMsgRegion").show();
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[0].name)) {
+                            ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                            return false;
+                        }
+                    }
+                    if (mimeType != "image") {
+                        $(".alert").hide();
+                        $("#errorMsgRegion").html(closeButton + "Please upload a file with .jpg , .jpeg or .png extension.");
+                        $("#errorMsgRegion").show();
+                        $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                        $('body').animate({ scrollTop: 0 }, 'slow');
+                        return false;
+
+
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("");
+                    $("#errorMsgRegion").hide();
+                    return true;
+
+                },
+                formData: { }
+            });
+
+
+            $('#imgOwnerSignatureView').click(function () {
+                $("#loading-image").css("display", "");
+                $('#imgUserSign').attr('src', SRCUserSign.result).load(function () {
+                    logoWidth = this.width;
+                    logoHeight = this.height;
+
+                    $('#popupUserSign').modal({ backdrop: 'static', keyboard: false });
+
+                    if ($(window).height() <= logoHeight) {
+
+                        $("#imgUserSign").closest('div').height($(window).height() - 150);
+                        $("#imgUserSign").closest('div').css('overflow-y', 'scroll');
+                        $("#imgUserSign").height(logoHeight);
+                    }
+                    else {
+                        $("#imgUserSign").height(logoHeight);
+                        $("#imgUserSign").closest('div').removeAttr('style');
+                    }
+
+                    if (screen.width <= logoWidth || logoWidth >= screen.width - 250) {
+
+                        $('#popupUserSign').find(".modal-dialog").width(screen.width - 250);
+                        $("#imgUserSign").width(logoWidth);
+                    }
+                    else {
+                        $("#imgUserSign").width(logoWidth);
+                        $('#popupUserSign').find(".modal-dialog").width(logoWidth);
+                    }
+                    $("#loading-image").css("display", "none");
+                });
+                $("#imgUserSign").unbind("error");
+                $('#imgUserSign').attr('src', SRCUserSign.result).error(function () {
+                    alert('Image does not exist.');
+                    $("#loading-image").css("display", "none");
+                });
+            });
+            $("#btnClosepopupOwnerSign").click(function () {
+                $('#popupUserSign').modal('toggle');
+            });
+            //  JSignature api to render signature area in div whose id is "cSignature"
+            //  and handling mousedown event that sets IsSignature property to true indicating that user initiated writing.
+            $("#cSignature").jSignature({ height: 150, signatureLine: true, mousedown: function () { $('#IsSignature').val('True') } });
+            var cdIsmouseIn = false;
+            if ($('#Signature').val() != '') {
+
+            }
+            $('#drpSignatureBy').change(function () {
+                var signName = $('#imgUserSign').attr('class');
+                $("[name='UserSignature']").each(function () {
+                    $(this).remove();
+                });
+                $('#imgOwnerSignatureView').hide();
+                $('#cSignature').jSignature('clear');
+                if ($(this).val() == 1) {
+                    $("#tblUpload").show();
+                    $("#tblDraw").hide();
+                }
+                else {
+                    $("#tblUpload").hide();
+                    $("#tblDraw").show();
+                    $("#cSignature").find('canvas').css('max-width', '566px');
+                    $("#cSignature").find('canvas').css('width', '100%');
+                    $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").$controlbarLower.css('margin-bottom', '5.0em')
+                    $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").canvas.setAttribute('width', $($('#cSignature').children()[1]).width());
+                    $('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#cSignature').find("canvas.jSignature").add($('#cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['data'])
+
+                }
+            });
+
+        });
+        function CDMouseOut() {
+            cdIsmouseIn = false;
+        }
+        function SaveUserSignature() {
+            //toDo
+
+            var IsUploaded;
+            var OwnerSignature;
+            var StringOwnerBaseSignature;
+            var OwnerBaseSignature;
+            var terms;
+
+            if ($("#chkTerms").is(":checked")) {
+                terms = 1;
+            }
+            else {
+                terms = 0;
+            }
+
+            if (terms == 1) {
+                if ($("#drpSignatureBy").val() == 1) {
+                    IsUploaded = true;
+                    OwnerSignature = $('#imgUserSign').attr('class');
+                    data = {id : '@Model.id', signstring: OwnerSignature, IsImage: true }
+                    if (OwnerSignature == "" && OwnerSignature == null && OwnerSignature == undefined) {
+                        $("#spansign").show().text("Signtaure is required.").fadeOut(5000);
+                        return false;
+                    }
+                }
+                else {
+                    IsUploaded = false;
+                    StringOwnerBaseSignature = $('#cSignature').jSignature('getData', 'base30');
+                    StringOwnerBase64Signature = $('#cSignature').jSignature('getData', 'image');
+                    data = { id : '@Model.id', signstring: StringOwnerBaseSignature.join(','), IsImage: false, base64: StringOwnerBase64Signature.join(',')}
+                    if (StringOwnerBaseSignature == "" && StringOwnerBaseSignature == null && StringOwnerBaseSignature == undefined) {
+                        $("#spansign").show().text("Signtaure is required.").fadeOut(3000);
+                        return false;
+                    }
+                }
+                $.ajax(
+                         {
+                             url: '@Url.Action("UserSignatureSave","Job")',
+                             data: JSON.stringify(data) ,
+                             contentType: 'application/json',
+                             method: 'post',
+                             success: function (data) {
+                                 if (data == true) {
+                                     $(".alert").hide();
+                                     $("#successMsgRegion").html(closeButton + "Signature has been saved successfully.");
+                                     $("#successMsgRegion").show();
+                                     $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                     $('body').animate({ scrollTop: 0 }, 'slow');
+                                     return false;
+                                 }else{
+                                     $(".alert").hide();
+                                     $("#errorMsgRegion").html(closeButton + "Signature has not been saved.");
+                                     $("#errorMsgRegion").show();
+                                 }
+                             }
+                         });
+            }
+            else {
+                $("#spansign").show().text("Please accept terms and conditions").fadeOut(3000);
+            }
+        }
+
+    </script>
+}
+<style type="text/css">
+    #cSignature canvas {
+        /*width: 100% !important;
+        max-width:566px !important;*/
+        height: 80px;
+        border: 1px dotted #000;
+    }
+    .imported {
+        border: 1px dotted #000;
+    }
+
+    .faq-block.fix-width {
+        border: 1px solid #dadada;
+        padding: 15px;
+        max-width: 800px;
+    }
+</style>

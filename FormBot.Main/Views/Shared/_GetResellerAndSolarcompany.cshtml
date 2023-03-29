@@ -1,0 +1,184 @@
+﻿@using FormBot.Helper;
+@{
+    var guid = Guid.NewGuid().ToString();
+}
+<script>
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+    var ResellerId = @ProjectSession.ResellerId;
+    var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+    var urlCheckIsWholeSaler_ByResellerId = '@Url.Action("CheckIsWholeSaler_ByResellerId", "SolarCompany")?id=';
+</script>
+@if (ViewData["IsReseller"] == "true")
+{
+    <select class="form-control temp-reseller-@guid @ViewData["ResellerCustomClass"]" data-val="true" data-val-required="The ResellerId field is required." id="@ViewData["ResellerId"]" name="@ViewData["ResellerControlName"]">
+        <option value="">Select</option>
+    </select>
+    if (ViewData["ResellerIsVelidate"] == "true")
+    {
+        <span class="field-validation-valid" data-valmsg-for="@ViewData["ResellerControlName"]" data-valmsg-replace="true">
+            <span for="@ViewData["ResellerId"]" class="">
+                @ViewData["ResellerVelidationMessage"]
+            </span>
+        </span>
+    }
+        <script>
+            window.onload = function () {
+
+            };
+        $(document).ready(function () {
+            debugger;
+            var ResellerClassName = "temp-reseller-@guid";
+            var NewResellerClassName = "reseller-@guid";
+            if ($("[id='@ViewData["ResellerId"]']").length > 1) {
+                $("." + ResellerClassName).removeClass(ResellerClassName).addClass(NewResellerClassName);
+                ResellerClassName = NewResellerClassName;
+            }
+                var IsResellerExist = false;
+                $.ajax({
+                    type: 'get',
+                    url: urlGetReseller,
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (reseller) {
+                        $.each(reseller, function (i, res) {
+                            $("." + ResellerClassName).append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                            if (IsResellerExist == false && res.Value == localStorage.getItem('JobList_ResellerId')) {
+                                IsResellerExist = true;
+                            }
+                        });
+
+                        if (IsResellerExist) {
+                            document.getElementsByClassName(ResellerClassName).value = localStorage.getItem('JobList_ResellerId')
+                        }
+                        else {
+                            $("." + ResellerClassName).val($("." + ResellerClassName +" option:first").val());
+                            localStorage.setItem('JobList_ResellerId', $("." + ResellerClassName +" option:first").val());
+                        }
+
+                        if ($("." + ResellerClassName).val() > 0) {
+                            BindSolarCompany(document.getElementsByClassName(ResellerClassName).value);
+                        }
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Resellers.' + ex);
+                    }
+                });
+
+
+            $("." + ResellerClassName).change(function () {
+                debugger;
+                if ($("." + ResellerClassName).val() > 0) {
+                    IsServerCallForSearch = true;
+                    BindSolarCompany(document.getElementsByClassName(ResellerClassName).value);
+                        $('#@ViewData["SolarCompanyId"]').focus();
+                    checkIsWholeSaler($('.' + ResellerClassName).val());
+                    }
+                });
+            });
+            
+        </script>
+}
+else
+    {
+        <input type="hidden" id="hdnsolarCompanyid" />
+        <input type="text" id="@ViewData["SolarCompanyId"]" name="@ViewData["SolarCompanyControlName"]" class="temp-solarcompnay-@guid form-control @ViewData["SolarCompanyCustomClass"]" maxlength="50" />
+
+        if (ViewData["SolarCompanyIsVelidate"] == "true")
+        {
+            <span class="field-validation-error" data-valmsg-for="@ViewData["SolarCompanyControlName"]" data-valmsg-replace="true">
+                <span for="@ViewData["SolarCompanyId"]" class="">
+                    @ViewData["SolarCompanyVelidationMessage"]
+                </span>
+            </span>
+        }
+            <script>
+            window.onload = function () {
+                if (document.getElementById("@ViewData["ResellerId"]").value != undefined) {
+                    BindSolarCompany(document.getElementById("@ViewData["ResellerId"]").value);
+                }
+            }
+            var SolarCompnayClassName = "temp-solarcompnay-@guid";
+            var NewSolarCompnayClassName = "solarcompnay-@guid";
+            if ($("[id='@ViewData["SolarCompanyId"]']").length > 1) {
+                $("." + SolarCompnayClassName).removeClass(SolarCompnayClassName).addClass(NewSolarCompnayClassName);
+                SolarCompnayClassName = NewSolarCompnayClassName;
+                }
+                
+            </script>
+    }
+
+<script>
+    function BindSolarCompany(resellerID) {
+                debugger;
+                    $("#@ViewData["SolarCompanyId"]").val("");
+                    var IsCompanyExist = false;
+                    $.ajax({
+                        type: 'POST',
+                        url: urlGetSolarCompanyByResellerId,
+                        dataType: 'json',
+                        async: false,
+                        data: { id: resellerID, isAll: true },
+                        success: function (solarcompany) {
+                            solarCompanyList = [];
+                            $.each(solarcompany, function (i, company) {
+                                solarCompanyList.push({ value: company.Value, text: company.Text });
+
+                                if (IsCompanyExist == false && company.Value == localStorage.getItem('VEECList_SolarCompanyId')) {
+                                    IsCompanyExist = true;
+                                }
+                            });
+                            console.log(solarCompanyList);
+                            if (IsCompanyExist) {
+                                $('#hdnsolarCompanyid').val(localStorage.getItem('VEECList_SolarCompanyId'));
+                            }
+                            else {
+                                $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                                localStorage.setItem('VEECList_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                            }
+
+                            if (localStorage.getItem('VEECList_SolarCompanyId') == '') {
+                                $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                                localStorage.setItem('VEECList_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                            }
+
+                            $.each(solarCompanyList, function (key, value) {
+                                if (value.value == localStorage.getItem('VEECList_SolarCompanyId')) {
+                                    $("#@ViewData["SolarCompanyId"]").val(value.text);
+                                    $('#hdnsolarCompanyid').val(localStorage.getItem('VEECList_SolarCompanyId'));
+                                }
+                            });
+
+
+
+                        },
+                        error: function (ex) {
+                            alert('Failed to retrieve Solar Companies.' + ex);
+                        }
+                    });
+
+                    return false;
+            }
+            function checkIsWholeSaler(rId) {
+                $.ajax({
+                    url: urlCheckIsWholeSaler_ByResellerId + rId,
+                    type: "get",
+                    async: false,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        var response = JSON.parse(data)
+                        if (typeof (response) != "undefined" && response.Table[0] != null) {
+                            if (response.Table[0].IsWholeSaler) {
+                                $('#IsWholeSaler').val(true);
+                                $('#UserId_WholeSaler').val(response.Table[0].UserId);
+                            }
+                            else {
+                                $('#IsWholeSaler').val(false);
+                            }
+                        }
+                    },
+                });
+    }
+   
+</script>

@@ -1,0 +1,251 @@
+﻿@model FormBot.Entity.SPV.SPVFailureReason
+
+@{
+                /**/
+
+                var FailureReasonBatchId = (@Model.lstSPVHistory != null && @Model.lstSPVHistory.Count > 0) ? @Model.lstSPVHistory.Select(a => a.JobID).Distinct().ToList() : null;
+                //var RecSearchFailedBatchId = @Model.lstSPVHistorySearchFailedBatchId.Select(a => a.JobID).Distinct().ToList();
+}
+
+@if ((Model.lstHistoryJobId != null && Model.lstHistoryJobId.Count > 0) || (Model.lstSPVHistory != null && Model.lstSPVHistory.Count > 0))
+{
+
+    <div class="panel-group" id="accordionExample" role="tablist" aria-multiselectable="true">
+
+
+
+        @if (Model.lstSPVHistory != null)
+        {
+            for (var i = 0; i < FailureReasonBatchId.Count; i++)
+            {
+                <div class="panel" id="headingFailureReason@(i)">
+                    <a class="panel-heading collapsed niceScrollReload" type="button" data-toggle="collapse" data-target="#collapseFailureReason@(i)" aria-expanded="false" aria-controls="collapseFailureReason@(i)">
+                        <h4 class="mb-0">
+                            Creation issue report for Job ID: <b> @FailureReasonBatchId[i] </b>
+                        </h4>
+                    </a>
+                    <div id="collapseFailureReason@(i)" class="panel-collapse collapse" aria-labelledby="headingFailureReason@(i)" data-parent="#accordionExample">
+                        <div class="panel-body add-new-column checklist-block p-0 spv-failure-reason">
+                            <ul class="ulRecFailureReason checklist columnmaster niceScroll">
+
+                                @for (var j = 0; j < Model.lstSPVHistory.Count; j++)
+                                {
+                                    if (Model.lstSPVHistory[j].JobID == FailureReasonBatchId[i])
+                                    {
+                                        <li class="collection-item spv-search" data-jobid="@Model.lstSPVHistory[j].JobID" data-refNumber="@Model.lstSPVHistory[j].RefNumber">
+                                            <h5><span>@Model.lstSPVHistory[j].HistoryCategory:</span> @Model.lstSPVHistory[j].CreateDate</h5>
+                                            <span class="dynamic-column-cat">
+                                                <a href="~/Job/Index?id=@Model.lstSPVHistory[j].Id" onclick="removeActiveClass(this)">@Model.lstSPVHistory[j].RefNumber (@Model.lstSPVHistory[j].JobID) : </a><b class="blue-title">@Model.lstSPVHistory[j].ModifiedBy </b> @Html.Raw(Model.lstSPVHistory[j].HistoryMessage)
+                                            </span>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+   
+}
+else
+{
+    <label class="no-record-found" style="padding:70px 15px 0px;"> No records found </label>
+}
+
+<script>
+    $(document).ready(function () {
+        fnNiceScroll();
+
+        $(".niceScrollReload").click(function () {
+            setTimeout(function () { fnNiceScrollResize() },200);
+        })
+    })
+    function FailureReasonClick(tag) {
+        if (event.target.nodeName != "A") {
+            if ($(tag).hasClass("active")) {
+                $(tag).find('span').find(".sprite-img").removeClass("active")
+                $(tag).removeClass("active")
+            } else {
+                $(tag).find('span').find(".sprite-img").addClass("active")
+                $(tag).addClass("active")
+            }
+            selectAllCheckUncheck(tag);
+        }
+    }
+
+    function SelectAllChange(tag) {
+        if (!$(tag).hasClass("active")) {
+            $(tag).find('span').find(".sprite-img").addClass("active")
+            $(tag).addClass("active")
+            $(tag).closest(".panel").find(".collection-item").addClass("active")
+            $(tag).closest(".panel").find(".collection-item").find('.accept').find('.sprite-img').addClass("active")
+        } else {
+            $(tag).find('span').find(".sprite-img").removeClass("active")
+            $(tag).removeClass("active")
+            $(tag).closest(".panel").find(".collection-item").removeClass("active")
+            $(tag).closest(".panel").find(".collection-item").find('.accept').find('.sprite-img').removeClass("active")
+        }
+    }
+    function removeActiveClass(tag) {
+        $(tag).closest('li').removeClass("active");
+        $(tag).closest('li').find('.accept').find('.sprite-img').removeClass("active");
+    }
+
+    function selectAllCheckUncheck(tag) {
+        var chkAll = true;
+        $(tag).closest('ul').find(".collection-item:not(.selectAll)").each(function (k, data) {
+            if (!$(this).hasClass("active")) {
+                chkAll = false;
+                return;
+            }
+        })
+        if (chkAll) {
+            $(tag).closest(".panel").find(".selectAll").addClass("active");
+            $(tag).closest(".panel").find(".selectAll").find('.accept').find('.sprite-img').addClass("active")
+        }
+        else {
+            $(tag).closest(".panel").find(".selectAll").removeClass("active")
+            $(tag).closest(".panel").find(".selectAll").find('.accept').find('.sprite-img').removeClass("active")
+        }
+    }
+
+    @*function RemoveJobFromBatch() {
+        var id = "";
+        $(".collection-item.active").each(function (k, data) {
+            id = id + $(this).data("stcjobdetailsid") + ","
+        })
+        RemoveSelectedJobFromBatch(id);
+    }
+
+    function RemoveSelectedJobFromBatch(id) {
+
+           $.ajax({
+            url: '@Url.Action("RemoveJobFromBatch","Job")',
+            type: 'POST',
+            dataType: 'json',
+            async: false,
+            data: { StcJobdetailsId: id.replace(/,\s*$/, "")},
+            success: function (data) {
+
+                if (data.status) {
+                    if (GridConfig[0].IsKendoGrid)
+                        $('#datatable').data('kendoGrid').dataSource.read();
+                    else
+                        $("#datatable").dataTable().fnDraw();
+                }
+            },
+            error: function (ex) {
+                alert('Failed to retrive.' + ex);
+            }
+        })
+    }*@
+
+    //function DismissAll() {
+
+    //    var recFailureReasonId = "";
+    //    $("#rec-failure-reason .collection-item.active:not(.selectAll)").each(function (k, data) {
+    //        recFailureReasonId = recFailureReasonId + $(this).closest('li').attr('id') + ","
+    //    })
+    //    if (recFailureReasonId == "") {
+    //        alert("Please select jobs")
+    //        return;
+    //    }
+    //    var openPanelId = $("#accordionExample").find(".collapse.in").attr("id");
+    //    $.ajax({
+    //        url: urlDeleteRecFailureReason,
+    //        type: 'post',
+    //        dataType: 'json',
+    //        async: false,
+    //        data: { id: recFailureReasonId.replace(/,\s*$/, "") },
+    //        success: function (data) {
+
+    //            $("#rec-failure-reason-div").load(urlGetRecFailureReason + '?resellerId=' + $("#ResellerId").val(), function () {
+    //                $("#accordionExample").find("#" + openPanelId).addClass("in");
+    //            })
+    //            $("#errorMsgRegionRECFailure").removeClass("alert-danger");
+    //            $("#errorMsgRegionRECFailure").addClass("alert-success");
+    //            $("#errorMsgRegionRECFailure").html(closeButton + "Dismiss failure reason successfully");
+    //            $("#errorMsgRegionRECFailure").show();
+    //        },
+    //        error: function (ex) {
+    //            alert('Failed to retrive.' + ex);
+    //        }
+    //    })
+    //}
+
+    //function ReleaseForRecreation(recUploadId) {
+
+    //            if (confirm('Are you sure you want to release it for recreation?')) {
+    //                $.ajax({
+    //                    url: urlReleaseForRecreation,
+    //                    type: 'POST',
+    //                    dataType: 'json',
+    //                    async: false,
+    //                    data: { recUploadId: recUploadId },
+    //                    success: function (data) {
+
+    //                        if (data.status) {
+    //                            $("#errorMsgRegionRECFailure").removeClass("alert-danger");
+    //                            $("#errorMsgRegionRECFailure").addClass("alert-success");
+    //                            $("#errorMsgRegionRECFailure").html(closeButton + "Released for recreation successfully");
+    //                            $("#errorMsgRegionRECFailure").show();
+    //                            if (GridConfig[0].IsKendoGrid)
+    //                                $('#datatable').data('kendoGrid').dataSource.read();
+    //                            else
+    //                                $("#datatable").dataTable().fnDraw();
+    //                            $("#rec-failure-reason-div").load(urlGetRecFailureReason + '?resellerId=' + $("#ResellerId").val(), function () {
+    //                                $("#accordionExample").find("#" + openPanelId).addClass("in");
+    //                            })
+    //                        } else {
+    //                            $("#errorMsgRegionRECFailure").addClass("alert-danger");
+    //                            $("#errorMsgRegionRECFailure").removeClass("alert-success");
+    //                            $("#errorMsgRegionRECFailure").html(closeButton + "Something happend cannot release for recreation.");
+    //                            $("#errorMsgRegionRECFailure").show();
+    //                        }
+    //                    },
+    //                    error: function (ex) {
+    //                        alert('Failed to retrive.' + ex);
+    //                    }
+    //                })
+    //            }
+    //}
+
+    //function UpdatePvdCodeFromRec(recUploadId) {
+
+    //        $.ajax({
+    //            url: urlUpdatePvdCodeFromRec,
+    //            type: 'POST',
+    //            dataType: 'json',
+    //            async: false,
+    //            data: { recUploadId: recUploadId, resellerId: parseInt($('#ResellerId').val())},
+    //            success: function (data) {
+
+    //                if (data.status) {
+    //                    $("#errorMsgRegionRECFailure").removeClass("alert-danger");
+    //                    $("#errorMsgRegionRECFailure").addClass("alert-success");
+    //                    $("#errorMsgRegionRECFailure").html(closeButton + "PVD code updated successfully");
+    //                    $("#errorMsgRegionRECFailure").show();
+    //                    if (GridConfig[0].IsKendoGrid)
+    //                        $('#datatable').data('kendoGrid').dataSource.read();
+    //                    else
+    //                        $("#datatable").dataTable().fnDraw();
+    //                    $("#rec-failure-reason-div").load(urlGetRecFailureReason + '?resellerId=' + $("#ResellerId").val(), function () {
+    //                        $("#accordionExample").find("#" + openPanelId).addClass("in");
+    //                    })
+    //                } else {
+    //                    $("#errorMsgRegionRECFailure").addClass("alert-danger");
+    //                    $("#errorMsgRegionRECFailure").removeClass("alert-success");
+    //                    $("#errorMsgRegionRECFailure").html(closeButton + "Something happend cannot update PVD code.");
+    //                    $("#errorMsgRegionRECFailure").show();
+    //                }
+    //            },
+    //            error: function (ex) {
+    //                alert('Failed to retrive.' + ex);
+    //            }
+    //        })
+    //}
+
+</script>
+

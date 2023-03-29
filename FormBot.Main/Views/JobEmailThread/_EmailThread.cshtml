@@ -1,0 +1,172 @@
+﻿@model IEnumerable<FormBot.Entity.Email.EmailThread>
+@using FormBot.Helper
+@using FormBot.Email;
+@{
+    string LoggedUserEmailmail = string.Empty;
+    Account acct = Session[Constants.sessionAccount] as Account;
+    if (acct != null)
+    {
+        LoggedUserEmailmail = acct.Email;
+    }
+}
+@if (Model.Count() > 0)
+{
+    foreach (var item in Model)
+    {
+        <div class="panel panel-default panelForSection@(item.EmailThreadId)">
+            <div class="panel-heading emailThread" role="tab" id="heading@(item.EmailThreadId)" emailthreadid="@item.EmailThreadId" acct_id="@item.Id_AcctId" onclick="callbackEmailThread(this);" senderemail="@item.SenderEmail" receiveremail="@item.ReceiverEmail"
+                 sendername="@item.Sender" receivername="@item.Receiver">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" aria-expanded="false" aria-controls="collapse@(item.EmailThreadId)">
+                    <span class="name-text">
+                        <strong>@item.Sender</strong>
+                        <em class="email-link">&lt;@item.SenderEmail&gt;</em>
+                        <strong>and @item.Receiver</strong>
+                        <em class="email-link">&lt;@item.ReceiverEmail&gt;</em>
+                    </span>
+                    <span class="subject">@item.Subject</span>
+                    <span class="created-data">Message thread created : @item.CreatedDate</span>
+                    <div class="message-date-and-time">
+                        @*<span><em>18/05/2016</em><em>10:00 PM</em></span>*@
+                        <span><em>@item.FullDate</em></span>
+                        <span class="message-close archiveEmail" emailthreadid="@item.EmailThreadId" title="Archive"></span>
+                    </div>
+                </a>
+
+            </div>
+            <div id="collapse@(item.EmailThreadId)" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading@(item.EmailThreadId)">
+                <div class="panel-body">
+                    <div class="mCustomScrollbarDiv">
+                        <div class="EmailThreadId@(item.EmailThreadId)">
+                        </div>
+                    </div>
+                    <!-- chat-text-box -->
+                    @if (LoggedUserEmailmail == item.SenderEmail || LoggedUserEmailmail == item.ReceiverEmail)
+                    {
+                        <div class="chat-text-box footerChatBoxClass">
+                            <div class="textarea-box attachment">
+                                <textarea id="txtMessageBody@(item.EmailThreadId)" placeholder="Send a reply..." rows="4"></textarea>
+                                <ul class="attachment-ber">
+                                    <li class="attachment-title"><strong>Attachment :</strong></li>
+                                    <li></li>
+                                    @*<li><a href="#"><img alt="" src='@Url.Content("~/Images/attach_document.png")' class="mCS_img_loaded">pdf (20kb)></a><a class="remove_attach" href="#"></a></li>
+                                        <li><a href="#"><img alt="" src='@Url.Content("~/Images/attach_document.png")' class="mCS_img_loaded">Exl (65kb)></a><a class="remove_attach" href="#"></a></li>*@
+                                </ul>
+                            </div>
+                            <div class="send-block">
+                                <button class="send-msg-btn" title="Send mail"></button>
+                                <button title="Attach a file" class="manage-attachment-btn"></button>
+                                <input type="file" class="upload" style="display:none" />
+
+                            </div>
+                        </div>
+                    }
+                    <!-- chat-text-box -->
+                </div>
+            </div>
+        </div>
+
+    }
+}
+else
+{
+    <div class="panel panel-default" style="text-align:center">
+        <div class="panel-heading emailThread" role="tab">
+            No Record(s) Found.
+        </div>
+    </div>
+}
+
+
+<script>
+    function callbackEmailThread(ele) {
+        var emailThreadId = $(ele).attr("EmailThreadId");
+        selectedMessageThreadId = emailThreadId;
+        //var isExpanded = $("#collapse" + selectedMessageThreadId).css('display');
+        var isExpanded = $("#collapse" + selectedMessageThreadId).attr("aria-expanded")
+        if (isExpanded == undefined || isExpanded == "false") {
+            $(".attachmentList").remove();
+            $("#txtMessageBody" + selectedMessageThreadId).val("");
+            $(".ClearDiv").empty();
+            //var acctId = $(this).attr("Acct_Id");
+            $(".emailThread").removeClass("setBackGroundGreen");
+            $(ele).addClass("setBackGroundGreen");
+            $("#loading-image").show();
+            setTimeout(function () {
+                $.ajax({
+                    url: '@Url.Action("GetEmailThreadByMessageId", "JobEmailThread", new { area = "" })',
+                    type: "GET",
+                    dataType: "HTML",
+                    data: { emailThreadId: emailThreadId },
+                    contentType: 'application/json',
+                    cache: false,
+                    async: false,
+                    success: function (Data) {
+                        $(ele).next('.collapse').collapse('toggle');
+                        $(".EmailThreadId" + emailThreadId).html(Data);
+                        $(".attachmentList").remove();
+                        $("#txtMessageBody" + selectedMessageThreadId).val("");
+                        $(".upload").removeClass("uploadFile");
+                        $('.in').collapse('hide');
+                        $("#collapse" + selectedMessageThreadId).find(".upload").addClass("uploadFile");
+                    }
+                });
+                $("#loading-image").hide();
+            }, 10);
+        } else {
+            $(ele).next('.collapse').collapse('toggle');
+
+        }
+    }
+
+    function SearchMessageBasedOnCriteria() {
+        var jobId = $("#jobId").val();
+        var title = $("#Subjecttitle").val();
+        var isArchived = $("#isArchived").val();
+
+        var threadMembers = $("#ThreadMembers").val();
+        var fromDate = $("#fromDate").val();
+        if (fromDate != "") {
+            fromDate = ConvertDateToTick(fromDate, '@ProjectConfiguration.GetDateFormat');
+            fromDate = moment(fromDate).format("YYYY-MM-DD");
+        }
+
+        var toDate = $("#toDate").val();
+        if (toDate != "") {
+            toDate = ConvertDateToTick(toDate, '@ProjectConfiguration.GetDateFormat');
+            toDate = moment(toDate).format("YYYY-MM-DD");
+        }
+
+        var getUrl = '@Url.Action("GetMessagesOnSearch", "JobEmailThread", new { area = "" })';
+        var isArchivedFlag = isArchived.toLowerCase() == "false" ? false : true;
+        $("#loading-image").show();
+        setTimeout(function () {
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                data: { "jobId": jobId, "threadMembers": threadMembers, "fromDate": fromDate, "toDate": toDate, "title": title, "isArchived": isArchived, "pageIndex": pageIndexInThread },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    $("#accordion").html(Data);
+                    //if ($('.mCustomScrollbarDiv'))
+                    //    $('.mCustomScrollbarDiv').mCustomScrollbar();
+
+                    if ($("#isArchived").val().toLowerCase() == 'true') {
+                        $(".archiveEmail").hide();
+                    }
+
+                    if (isSendMessageRights == 'false') {
+                        $("#SendnewMessage").hide();
+                        $(".archiveEmail").hide()
+
+                        $(".send-msg-btn").hide();
+                        $(".manage-attachment-btn").hide();
+                        $(".upload").hide();
+                    }
+                    pageIndexInThread = pageIndexInThread + 1;
+                }
+            });
+            $("#loading-image").hide();
+        }, 10);
+    }
+</script>

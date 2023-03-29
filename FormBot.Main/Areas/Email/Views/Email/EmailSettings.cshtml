@@ -1,0 +1,163 @@
+﻿@model FormBot.Entity.Email.EmailSignup
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "EmailSettings";
+}
+<style>
+ dt {font-family: 'OpenSansBold'; font-weight:normal; font-size:16px; padding-bottom:5px;}
+</style>
+@section Scripts {
+    <script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+    <script type="text/javascript" src="~/Scripts/respond.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/fastclick.min.js"></script>
+
+    @*<script src="~/Scripts/jquery-1.10.2.js"></script>*@
+    @Scripts.Render("~/bundles/jqueryval")
+
+<script src="~/Scripts/bootstrap.min.js"></script>
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@*<script type="text/javascript" src="~/Scripts/general.js"></script>*@
+@using (Html.BeginForm("EmailSettings", "Email", FormMethod.Post, new { id = "EmailDetails", area = "Email" }))
+{
+    <div class="container-fluid">
+        <div class="title">
+            <h1>Email Settings</h1>
+        </div>
+        <div class="row">
+            <div class="col-sm-offset-9 alignright">
+                <div class="form-group">
+                    <a id="helpIconPopup" title="Help" class="helpic" style="padding-right:19px;padding-left:23px;text-decoration:none" href="javascript:void(0);">Help</a>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @Html.Partial("_EmailSetting", Model)
+
+        <div id="myModal1" class="modal fade" role="dialog" style="font-family:Arial;color:#333;">
+            <div class="modal-dialog  modal-lg">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        @*<button id="CloseHelpPopup" type="button" class="close" data-dismiss="modal">&times;</button>*@
+                        <button id="CloseHelpPopup" title="Close" class="close" type="button" >
+                            <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                        </button>
+                        <h4 class="modal-title">Help</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <dl>
+                                    <dt>Step-1 How to Configure Gmail</dt>
+                                    <dd>1. Sign in to Gmail.</dd>
+                                    <dd>2. Click the gear in the top right.</dd>
+                                    <dd>3. Select Settings.</dd>
+                                    <dd>4. Click Forwarding and POP/IMAP.</dd>
+                                    <dd>5. Select enable POP for mail that arrives from now on.</dd>
+                                    <dd>6. Click Save Changes.</dd>
+                                    <dd>7.Open this url and "https://www.google.com/settings/security/lesssecureapps" and Click on Turn On.</dd>
+                                    <dd>8. Greenbot Email Settings Enter Your Email and Password.</dd>
+                                    <dd>9. Select Type POP3.</dd>
+                                    <dd>10. Incoming Mail : <mark>"pop.gmail.com"</mark> and Port : <mark>"995"</mark>.</dd>
+                                    <dd>11. Outgoing Mail : <mark>"pop.gmail.com"</mark> and Port : <mark>"587"</mark>.</dd>
+                                    <dd>12. Click Save.</dd>
+                                    <br />
+                                    <dt>Step-2 How to Configure Yahoo</dt>
+                                    <dd>1. Sign in to Yahoo.</dd>
+                                    <dd>2. Click the gear in the top right.</dd>
+                                    <dd>3. Select Settings.</dd>
+                                    <dd>4. Click Accounts and select your Email address.</dd>
+                                    <dd>5. Find Access your Yahoo Mail elsewhere select the Pop.</dd>
+                                    <dd>6. Click Save.</dd>
+                                    <dd>7. Click the gear in the top right again and Click on Account Info.</dd>
+                                    <dd>8. Click Account Security and "Allow apps that use less secure sign-in" click on enable.</dd>
+                                    <dd>9. Greenbot Email Settings Enter Your Email and Password.</dd>
+                                    <dd>10. Select Type POP3.</dd>
+                                    <dd>11. Incoming Mail : <mark>"plus.pop.mail.yahoo.com"</mark> and Port : <mark>"995"</mark>.</dd>
+                                    <dd>12. Outgoing Mail : <mark>"smtp.mail.yahoo.com"</mark> and Port : <mark>"465"</mark>.</dd>
+                                    <dd>13. Click Save.</dd>
+                                    <br />
+                                    <dt>Step-3 Confugure your company account</dt>
+                                    <dd>1. Greenbot Email Settings Enter Your Email and Password.</dd>
+                                    <dd>2. Select Type POP3.</dd>
+                                    <dd>3. Incoming Mail : <mark>"mail.yourcompany.com"</mark> and Port : <mark>"110"</mark>.</dd>
+                                    <dd>4. Outgoing Mail : <mark>"mail.yourcompany.com"</mark> and Port : <mark>"25"</mark>.</dd>
+                                    <dd>5. Click Save.</dd>
+                                </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <div class="form-group defaultFormBot">
+            <input type="submit" name="Submit" value="Save" autofocus class="primary" id="btnSubmit" tabindex="25">
+            <input type="button" value="Back" onclick="RedirectToEmail()" class="default" tabindex="26">
+        </div>
+    </div>
+
+    @Html.HiddenFor(model => model.EmailSignature)
+}
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+<script src="~/Scripts/jquery-1.11.0.min.js"></script>*@
+@*@Styles.Render("~/datatableCSS")*@
+@*@section scripts{
+
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/datatableJs")
+}*@
+
+
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+@*<script src="~/Scripts/FormBot.js"></script>*@
+<script type="text/javascript">
+    initSample();
+    function RedirectToEmail() {
+        window.location.href = '@Url.Action("Index", "Email", new { area = "Email" })';
+    }
+    $("#EmailDetails").submit(function () {
+        SetSignature();
+    });
+
+    function SetSignature() {
+        $("#EmailSignature").val(CKEDITOR.instances['editor'].getData());
+    }
+
+    if ('@ViewBag.Signature' != '')
+    {
+        var data = @Html.Raw(Json.Encode(ViewBag.Signature));
+        CKEDITOR.instances['editor'].setData(data.Data.Signature);
+    }
+
+    CKEDITOR.config.height = 200;
+    $("#ProtocolType").change(function () {
+        if ($(this).val() == 0) {
+            $("#IncomingMailPort").val('110');
+        } else {
+            $("#IncomingMailPort").val('143');
+        }
+    });
+
+    $(document).ready(function(){
+        $("#helpIconPopup").click(function(){
+            $('#myModal1').modal({ backdrop: 'static', keyboard: false });
+        });
+
+        $("#CloseHelpPopup").click(function(){
+            $('#myModal1').modal("hide");
+        });
+    });
+    //function ValidateForm(){alert($("#EmailDetails").valid());
+    //    return $("#EmailDetails").valid();
+    //}
+</script>

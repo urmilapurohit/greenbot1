@@ -1,0 +1,741 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">Start Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">End Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="rep_spacer"></div>
+<div class="form-group">
+    <label class="control-label">Filters:</label>
+    <div class="rep-list">
+        <ul>
+            @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+            {
+                <li><a href="javascript:void(0);" id="ResellerID" onclick="Reseller();">Reseller<span id="cntResellers">0</span></a></li>
+                <li><a href="javascript:void(0);" id="UserID" onclick="Users();">Solar Company<span id="cntUsers">0</span></a></li>
+            }
+            <li><a href="javascript:void(0);" id="SalesAgent" onclick="SalesAgent();">Sales Agent<span id="cntSalesAgent">0</span></a></li>
+            <li><a href="javascript:void(0);" id="JobStages" onclick="JobStages();">Job Stages<span id="cntJobStages">0</span></a></li>
+        </ul>
+    </div>
+    @if (FormBot.Helper.ProjectSession.UserTypeId == 1)
+    {
+        <label class="control-label">Restriction:</label>
+        <ul id="Restrictions" class="control-label">
+            <li>
+                Minimum 1 Reseller must be selected.
+            </li>
+            <li>
+                Minimum 1 Solar Company must be selected.
+            </li>
+        </ul>
+    }
+</div>
+<div class="rep-btn">
+    <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" id="btnReset" value="Reset Filters" class="">
+    </div>
+    </div>
+
+<div class="modal fade" id="popupUsers" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" class="close" id="closeUsers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Solar Company</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="AvailableUsers">0/1</label> Selected
+                    </label>
+                </div>
+                @if (FormBot.Helper.ProjectSession.UserTypeId != 4)
+                {
+                    <div class="form-border" id="divSolarCompanyies">
+                        @*@Html.Action("_SolarCompany", "FormBotReport")*@
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupReseller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeResellers">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Reseller</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="ResellerUsers">0/1</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_Reseller", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupJobStages" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeJobStages">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Job Stages</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="JobStagesAvil">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border">
+                    @Html.Action("_JobStages", "FormBotReport")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSalesAgent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" id="closeSalesAgent">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Sales Agent</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-sm-12" style="text-align:center">
+                    <label class="control-label">
+                        Available <label class="control-label" id="SalesAgentAvail">0</label> Selected
+                    </label>
+                </div>
+                <div class="form-border" id="divSalesAgent">
+                    @*@Html.Action("_SalesAgent", "FormBotReport")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    $(document).ready(function () {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+        if (@FormBot.Helper.ProjectSession.UserTypeId == 4)
+        {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+
+        $('#txtFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtToDate").val('');
+                    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                    $('#btnJobStatusBarReport').css('opacity', '0.5');
+                }
+            }
+
+            var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtToDate').data('datepicker')) {
+                $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+    });
+
+    $("#txtToDate").change(function () {
+        if ($("#txtToDate").val() != '') {
+            if ($("#hdnUsers").val() != "" || $("#hdnResellers").val() != "") {
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }
+        }
+    });
+
+    function Reseller() {
+        $('#popupReseller').modal({ backdrop: 'static', keyboard: false });
+        $('#ResellerBit').val('1');
+        $('#ResellerUsers').html($('#LstResellerAssignedUser option').length + '/' + $('#ResellerBit').val());
+        //document.getElementById('UserID').style.pointerEvents = 'auto';
+        //$('#UserID').css('opacity', '1');
+    }
+
+    function Users() {
+        //$('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+        //$('#SCABit').val('1');
+        //$('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + $('#SCABit').val());
+        //document.getElementById('ResellerID').style.pointerEvents = 'auto';
+        //$('#ResellerID').css('opacity', '1');
+
+        var url = '@Url.Action("_SolarCompany", "FormBotReport")';
+        url += '?hdnResellers=' + $("#hdnResellers").val();
+        var assignedUsers = $("#hdnUsers").val();
+
+        $.ajaxSetup({ cache: false });
+        $('#divSolarCompanyies').load(url, function () {
+            $('#popupUsers').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + $('#SCABit').val());
+            $('#SCABit').val('0');
+            SetSelectedSolarCompanies(assignedUsers);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });
+    }
+
+    function SetSelectedSolarCompanies(assignedUsers) {
+        if (assignedUsers != "" && assignedUsers != null) {
+            var array = assignedUsers.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstUsers option[value=' + array[i] + ']').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_SCA").click();
+        }
+    }
+
+    function JobStages() {
+        $('#popupJobStages').modal({ backdrop: 'static', keyboard: false });
+        $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length);
+        $('#JobStagesBit').val('0');
+    }
+
+    function SalesAgent(){
+        //$('#popupSalesAgent').modal({ backdrop: 'static', keyboard: false });
+        //$('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length);
+        //$('#SalesAgentBit').val('0');
+
+        var url = '@Url.Action("_SalesAgent", "FormBotReport")';
+        url += '?hdnSolarCompanies=' +$("#hdnUsers").val();
+        var assignedSalesAgent = $("#hdnSalesAgentAssignedUser").val();
+        
+        $.ajaxSetup({ cache: false });
+        $('#divSalesAgent').load(url, function () {
+            $('#popupSalesAgent').modal({ backdrop: 'static', keyboard: false });
+            $('#cntSalesAgent').html($('#LstSalesAgentAssignedUser option').length + '/' + $('#SCABit').val());
+            $('#SalesAgentBit').val('0');
+            SetSelectedSalesAgent(assignedSalesAgent);
+            //document.getElementById('ResellerID').style.pointerEvents = 'none';
+            //$('#ResellerID').css('opacity', '0.5');
+        });
+    }
+
+    function SetSelectedSalesAgent(assignedSalesAgent) {
+        if (assignedSalesAgent != "" && assignedSalesAgent != null && assignedSalesAgent!= undefined) {
+            var array = assignedSalesAgent.split(',');
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].length > 0) {
+                    $('#LstSalesAgent option[value="' + array[i] + '"]').attr("selected", true);
+                }
+            }
+            $("#btnLtoR_SalesAgent").click();
+        }
+    }
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetSoldByWhoReportList", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                $('#divGrid').show();
+                BindGrid(result.dsSoldByWho);
+                BindChart(result.dsSoldByWhoInnerTable);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function exportToExcel(){
+        @*var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        window.location.href='@Url.Action("GenerateCSV", "FormBotReport")?id=1';*@
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result) {
+        $('#chartbox').hide();
+        var tableHeaders = '';
+        var tableFooters = '';
+        var tableColumns = [];
+        tableColumns.push("Reseller");
+        tableColumns.push("Solar Company");
+        tableColumns.push("Sales Agent");
+        tableColumns.push("Job Ref - Owner Name");
+        tableColumns.push("Creation Date");
+        tableColumns.push("Job Stage");
+
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th>" + val + "</th>";
+        });
+        $("#displayTable").empty();
+
+        // Generate CSV Report Logic (To append export csv button manually and remove export csv button from Datatable initialization)
+        var jsonObj ="["+JSON.stringify($("#FormBotReportDetails").serializeToJson())+"]";
+        var arrayobject = eval('(' + jsonObj + ')');
+        var temparr = [];
+        var data='';
+        for (i in arrayobject )
+        {
+            data="StartDate="+arrayobject [i]["StartDate"]+"&&EndDate="+arrayobject [i]["EndDate"]+"&&hdnFormBotResellerAssignedUser="+arrayobject [i]["hdnFormBotResellerAssignedUser"]
+                +"&&hdnFormBotSolarCompanyAssignedUser="+arrayobject [i]["hdnFormBotSolarCompanyAssignedUser"]+"&&hdnJobStagesAssignedUser="+arrayobject [i]["hdnJobStagesAssignedUser"]+"&&hdnSalesAgentAssignedUser="+arrayobject [i]["hdnSalesAgentAssignedUser"];
+        }
+        var url='@Url.Action("GenerateSoldByWhoReportCSV", "FormBotReport")?'+data;
+        // End here
+
+        $("#displayTable").append('<div class="dt-buttons"><a class="dt-button buttons-excel buttons-html5 primary pull-right" tabindex="0" aria-controls="datatable" href="'+url+'" "><span>Export to Excel</span></a></div><table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead></table>');
+
+        columnsArray = [
+            {
+                'data': 'ResellerName',
+                "orderable": false
+            },
+            {
+                'data': 'SolarCompanyName',
+                "orderable": false
+            },
+            {
+                'data': 'RefNumber',
+                "orderable": false
+            },
+            {
+                'data': 'SoldBy',
+                "orderable": false
+            },
+            {
+                'data': 'creationDate',
+                "orderable": false
+                @*"render": function (data, type, full, meta) {
+                    if(full.creationDate != null){
+                        return ConvertToDateWithFormat(full.creationDate,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                    }
+                    else
+                        return '';
+                }*@
+            },
+             {
+                 'data': 'StageName',
+                 "orderable": false
+             },
+        ];
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            info :false,
+            retrieve: true,
+            columns: columnsArray,
+            //dom: 'Bfrtip',
+            //buttons: [
+            //    {
+            //        extend: 'excel',
+            //        footer: true
+            //    }
+            //],
+            columnDefs: [
+                  { "width": "20%", "targets": 0 },
+                  { "width": "20%", "targets": 1 },
+                  { "width": "20%", "targets": 2 },
+                  { "width": "15%", "targets": 3 },
+                  { "width": "13%", "targets": 4 },
+                  { "width": "12%", "targets": 5 },
+            ],
+            order: [[0, "asc"]],
+            "drawCallback": function ( settings ) {                
+                var api = this.api();
+                var rows = api.rows( {page:'current'} ).nodes();
+                var last=null;
+                if(rows.length > 0)
+                {
+                    var colonne = api.row(0).data().length;
+                }
+                var totale = new Array();
+                totale['Totale']= new Array();
+                var groupid = -1;
+                var subtotale = new Array();
+                if(rows.length > 0){
+                    api.column(0, {page:'current'} ).data().each( function ( group, i ) {
+                        if ( last !== group ) {
+                            groupid++;
+                            $(rows).eq( i ).before(
+                                '<tr class="group"><td colspan="6"></td></tr>'
+                            );
+                            last = group;
+                        }
+
+
+                        val = api.row(api.row($(rows).eq( i )).index()).data();      //current order index
+                        $.each(val,function(index2,val2){
+                            if (typeof subtotale[groupid] =='undefined'){
+                                subtotale[groupid] = new Array();
+                            }
+                            if (typeof subtotale[groupid][index2] =='undefined'){
+                                subtotale[groupid][index2] = 0;
+                            }
+                            if (typeof totale['Totale'][index2] =='undefined'){ totale['Totale'][index2] = 0; }
+
+                            //valore = Number(val2.replace('€',"").replace('.',"").replace(',',"."));
+                            subtotale[groupid][index2] += val2;
+                            totale['Totale'][index2] += val2;
+                        });
+                    } );
+                }
+                $('tbody').find('.group').each(function (i,v) {
+                    var rowCount = $(this).nextUntil('.group').length;
+                    var New_StageCount=0;
+                    var NewInstallation_StageCount=0;
+                    var Preapproval_StageCount=0;
+                    var InProgress_StageCount=0;
+                    var Complete_StageCount=0;
+                    var STCTrade_StageCount=0;
+                    var Aftersales_StageCount=0;
+                    var Cancellations_StageCount=0;
+                    var InstallationCompleted_StageCount = 0;
+
+                    $(this).nextUntil('.group').each(function(){                        
+                        var StageName= $(this).find('td:nth-child(6)').text();
+                        if(StageName=='New')
+                            New_StageCount+=1;
+                        if(StageName=='New Installation')
+                            NewInstallation_StageCount+=1;
+                        if(StageName=='Preapproval')
+                            Preapproval_StageCount+=1;
+                        if(StageName=='In Progress')
+                            InProgress_StageCount+=1;
+                        if(StageName=='Complete')
+                            Complete_StageCount+=1;
+                        if(StageName=='STC Trade')
+                            STCTrade_StageCount+=1;
+                        if(StageName=='Aftersales')
+                            Aftersales_StageCount+=1;
+                        if(StageName=='Cancellations')
+                            Cancellations_StageCount+=1;
+                        if(StageName=='Installation Completed')
+                            InstallationCompleted_StageCount+=1;
+                    })
+                    var TotalCountText='<div> New('+New_StageCount+')'+'<span class="subtotalSpace"> Preapproval('+ Preapproval_StageCount+')</span>'+
+                        '<span class="subtotalSpace"> New Installation('+NewInstallation_StageCount+')</span>'+'<span class="subtotalSpace"> In Progress('+InProgress_StageCount+')</span>'+
+                        '<span class="subtotalSpace"> Complete('+Complete_StageCount+')</span>'+'<span class="subtotalSpace"> STC Trade('+STCTrade_StageCount+')'+'<span class="subtotalSpace"> Aftersales('+Aftersales_StageCount+')</span>'+
+                        '<span class="subtotalSpace"> Cancellations('+Cancellations_StageCount+')</span>'+'<span class="subtotalSpace"> Installation Completed('+InstallationCompleted_StageCount+')</span> </div>';
+
+                    $(this).find('td:first').append($('<span />', { 'class': 'rowCount-grid' }).append($('<b />', { 'html': $.parseHTML(TotalCountText) })));
+                    //var subtd = '';
+                    //for (var a=2;a<colonne;a++)
+                    //{
+                    //    subtd += '<td>'+subtotale[i][a]+' OUT OF '+totale['Totale'][a]+ ' ('+ Math.round(subtotale[i][a]*100/totale['Totale'][a],2) +'%) '+'</td>';
+                    //}
+                    //$(this).append(subtd);
+                });
+            }
+        });
+        $('table thead').css('color', '#383838 !important');
+        $('table thead').css('font-family', 'OpenSansSemibold !important');
+        $('table thead').css('font-size', '13px !important');
+        $('table thead').css('background', '#f8f8f8 none repeat scroll 0 0 !important');
+        //$('.buttons-excel').addClass('primary pull-right');
+        //$('.buttons-excel').html('<span>Export to Excel</span>');
+        $('#datatable tr th').attr('class', 'sorting_disabled table-header');
+    }
+
+
+    //$(".buttons-excel").click(function(){
+    //    alert("1");
+    //})
+
+    function BindChart(resultData) {
+        var chartType = 'bar';
+        var groupedData = {};
+        var innerGroupedData = {};
+        var xAxis = ['xAxis'];
+        var data1 = ['StageName'];
+        var result = [];
+
+        for (var i = 0; i < resultData.length; i++) {
+            var item = resultData[i];
+            if (!groupedData[item.StageName]) {
+                groupedData[item.StageName] = [];
+            }
+            groupedData[item.StageName].push({
+                SoldBy: item.SoldBy,
+                TotalJobs: item.TotalJobs
+            });
+            if ($.inArray(item.SoldBy, xAxis) == -1) {
+                xAxis.push(item.SoldBy);
+            }
+        }
+        var count = 0;
+        var dataGroup = [];
+        var result = [];
+        result.push(xAxis);
+
+        for (var x in groupedData) {
+            if (Object.prototype.hasOwnProperty.call(groupedData, x)) {
+                var temp = [];
+                temp.push(x);
+                dataGroup.push(x);
+                for (var j = 0; j < xAxis.length; j++) {
+                    var t = $.grep(groupedData[x], function (e) { return e.SoldBy == xAxis[j + 1]; });
+                    if (t.length > 0) {
+                        temp.push(t[0].TotalJobs);
+                    }
+                    else {
+                        temp.push(0);
+                    }
+                }
+                result.push(temp);
+            }
+        }
+        result.push(data1);
+
+        $('#chartbox').css('display', 'block');
+        chartdiv = c3.generate({
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if(chartType == 'pie'){
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    function ResetSearchFilters() {
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+        $('#cntUsers').html('0');
+        $('#cntResellers').html('0');
+        $("#hdnUsers").val('');
+        $('#hdnResellers').val('');
+        $('#hdnSalesAgentAssignedUser').val('');
+        $('#cntSalesAgent').html('0');
+        $('#hdnJobStages').val('');
+        $('#cntJobStages').html('0');
+
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+        $('#LstResellerAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstReseller");
+        });
+
+        $('#LstSalesAgentAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSalesAgent");
+        });
+
+        $('#LstJobStagesAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstJobStages");
+        });
+
+        document.getElementById('ResellerID').style.pointerEvents = 'auto';
+        $('#ResellerID').css('opacity', '1');
+
+        document.getElementById('UserID').style.pointerEvents = 'auto';
+        $('#UserID').css('opacity', '1');
+
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dataTables_scrollHeadInner table th {
+        color: #383838 !important;
+        font-family: "OpenSansSemibold" !important;
+        font-size: 13px !important;
+        background: #f8f8f8 none repeat scroll 0 0 !important;
+        padding: 10px 9px !important;
+    }
+
+    .dataTables_scrollHeadInner thead tr {
+        border: 3px solid #e4e4e4;
+        border-bottom: 0px;
+    }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+
+    .dataTables_scrollBody thead {
+        visibility: hidden;
+    }
+
+    .group {
+        background-color: #e6e6e6 !important;
+        font-size: 13px;
+        color: #000 !important;
+        opacity: 0.7;
+    }
+
+    .subtotalSpace {
+        margin-left: 3%;
+    }
+</style>

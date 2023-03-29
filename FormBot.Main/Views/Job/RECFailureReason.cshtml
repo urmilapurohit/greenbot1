@@ -1,0 +1,223 @@
+﻿@model FormBot.Entity.REC
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "RecFailureReason";
+}
+<style>
+    .progressBar {
+        background-color: lightgrey;
+        width: 200px;
+        height: 20px;
+    }
+
+
+    .progress {
+        width: 10%;
+        height: 100%;
+        background-color: blue;
+        animation: color 5s linear 0s alternate;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">
+                REC Creation Status
+            </h1>
+            <div class="col-md-8" style="display:none;">
+                <div class="form-inline pull-right">
+                    <button class="btn primary info-btn icon-btn" type="button" data-target="#modal" data-toggle="modal" onclick="">
+                        View History
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="joblisting_search">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label for="exampleInputName2">Reseller:</label>
+                    @Html.DropDownListFor(model => model.ResellerId, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control mrr10" })
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Bulk Upload Id:</label>
+                    <input type="text" id="txtBulkUploadId" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">REC UserName:</label>
+                    <input type="text" id="txtRECUserName" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">REC Name:</label>
+                    <input type="text" id="txtRECName" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Initiated By:</label>
+                    <input type="text" id="txtInitiatedBy" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="200">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">REC Creation Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCreationFromDate" placeholder="From" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCreationToDate" placeholder="To" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <button type="button" id="btnSearch" class="btn primary icon-btn" onclick="SearchJobSTCRecords();">
+                Search
+                <span class="sprite-img search_ic"></span>
+            </button>
+            @*<div class="default btn icon-btn" onclick="ResetSearchFilters(true);">*@
+            <button type="button" id="btnReset" class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+                Reset <span class="sprite-img reset_ic"></span>
+            </button>
+            @*</div>*@
+        </div>
+    </div>
+
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+
+    @*<div style="margin-bottom:2rem">
+            <h2>ISSUES</h2>
+        </div>*@
+    <div class="gridtop_filters">
+        <div class="submission-filters">
+            <span class="stage_title">Filters:</span>
+            <div class="filters-row" style="padding:0;">
+                <ul>
+                    <li><a id="jobstage_1" href="javascript:void(0);" style="cursor:pointer; background-color:#686868;" onclick="SetStageId('1');">Upload in Progress</a></li>
+                    <li><a id="jobstage_2" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('2');">Successfully Uploaded</a></li>
+                    <li><a id="jobstage_3" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('3');">Issues</a></li>
+                    @*<li><a id="jobstage_4" href="javascript:void(0);" style="cursor:pointer; background-color:#f7f7f7;" onclick="SetStageId('4');">Unknown Status</a></li>*@
+                </ul>
+
+            </div>
+        </div>
+    </div>
+    <div id="grid">
+        <!-- Grid start -->
+        <div class="table-responsive">
+            <table id="datatable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                        <th><span>@Html.DisplayName("Action Status")</span></th>
+                        <th><span>@Html.DisplayName("JobDetails")</span></th>
+                        <th><span>@Html.DisplayName("Bulk Upload ID")</span></th>
+                        <th><span>@Html.DisplayName("Total STC") </span></th>
+                        <th><span> @Html.DisplayName("Rec Username ")</span></th>
+                        <th><span> @Html.DisplayName("Rec Name ")</span></th>
+                        <th><span>@Html.DisplayName(" Reseller Name") </span></th>
+                        <th><span>@Html.DisplayName("REC Company Name") </span></th>
+                        <th><span>@Html.DisplayName("CreatedDate") </span></th>
+                        <th><span>@Html.DisplayName("InitiatedBy") </span></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+@*models*@
+@*<div class="modal fade" id="rec-status" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog modal-lg vertical-align-center">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            REC Status
+                            <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close" tabindex="3">
+                                @* <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="modal-body">
+                        <h1>Checking staus</h1>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>*@
+<div class="modal fade stc-status newemail-modal" id="rec-status" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    @*@Html.Partial("/Views/Job/_RECFailureReason.cshtml")*@
+</div>
+<div class="modal fade stc-status newemail-modal" id="Job-status" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    @*@Html.Partial("/Views/Job/_RECFailureReason.cshtml")*@
+</div>
+<div class="modal fade popUpGetUnknownIssue" tabindex="-1" role="dialog" id="popUpGetUnknownIssue">
+    <div class="vertical-alignment-helper-popup">
+        <div class="modal-dialog vertical-align-center-popup">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Issue</h4>
+
+
+                </div>
+                <div class="modal-body">
+                    <div id="UnknownIssue"></div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+@section scripts
+         {
+    @*<script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>*@
+    <script src="~/Scripts/datetime.min.js"></script>
+    <script>
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+        var urlGetRecFailureReason = '@Url.Action("GetRecStatusData", "STCInvoice")';
+        var urlGetBatchDetails = '@Url.Action("GetRecFailedBatchDetails", "STCInvoice")';
+        var urlGetJobDetailsBatchWise = '@Url.Action("GetJobDetailsBatchWise","STCInvoice")';
+        var urlGetUnknownIssues = '@Url.Action("GetUnknownIssues", "STCInvoice")';
+
+        var chkCount=0;
+        var selectedRows = [];
+        var GridConfig = JSON.parse('@Html.Raw(Json.Encode(((List<FormBot.Entity.KendoGrid.UserWiseGridConfiguration>)ProjectSession.UserWiseGridConfiguration).Where(m=>m.ViewPageId == SystemEnums.ViewPageId.STCSubmissionView.GetHashCode())))');
+        var ViewPageId = '@SystemEnums.ViewPageId.STCSubmissionView.GetHashCode()';
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = dateFormatMoment;
+        var ResellerId = '@Model.ResellerId';
+        var PageSize = @ProjectConfiguration.GetPageSize;
+        var SolarCompanyId = '@ProjectSession.SolarCompanyId';
+        
+    </script>
+    <script src="~/Scripts/View/RECFailuerReason.js"></script>
+    <script src="~/Scripts/jquery.nicescroll.min.js"></script>
+}

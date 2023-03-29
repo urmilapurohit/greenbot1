@@ -1,0 +1,41 @@
+﻿@model FormBot.Entity.RoleView
+@using FormBot.Main
+@using FormBot.Helper
+
+@{
+    ViewBag.Title = "Role";
+}
+
+@Html.HiddenFor(model => model.RoleId)
+@Html.HiddenFor(model => model.Rights, new { id = "hdnRights" })
+<div class="container-fluid">
+    @Html.Partial("_Details", Model)
+</div>
+
+@section scripts{
+    @*@Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        $(function () {
+            //$('input[type=checkbox]').each(function () {
+            //    $(this).addClass('disabled')
+            //});
+
+            $(document).ready(function () {
+                FillDropDownUser('drpUserType', '@Url.Action("GetUserType", "UserType")', '@Model.UserType', true, null);
+                //$("#drpUserType").addClass('disabled');
+            });
+
+            var Rights = $("#hdnRights").attr('value').split(',');
+            $.each(Rights, function (index, menuId) {
+                if (menuId !== undefined && menuId !== '') {
+                    $('input.clsRights[type="checkbox"][value="' + menuId + '"]').prop('checked', true);
+                }
+            });
+            $('#btnReset').click(function () {
+                window.location.href = '@Url.Action("Index","Role")';
+            });
+
+        });
+    </script>
+}

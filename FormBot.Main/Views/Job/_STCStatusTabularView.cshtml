@@ -1,0 +1,1161 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    bool isStcStatus = false;
+    bool isHistory = false;
+    int settlementTerm = 0;
+    int statusId = 0;
+    string term = string.Empty;
+    bool isHistoryView = false;
+
+    bool isChangeSCA = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.STCStatus.GetHashCode()) { isStcStatus = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.History.GetHashCode()) { isHistory = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.ChangeSCA.GetHashCode()) { isChangeSCA = true; }
+        });
+    }
+    else
+    {
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.STCStatus.GetHashCode()) { isStcStatus = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.History.GetHashCode()) { isHistory = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+
+
+                if (d.MenuId == (int)SystemEnums.MenuId.ChangeSCA.GetHashCode()) { isChangeSCA = true; }
+
+            });
+        }
+
+    }
+    if (Model.STCDetailsModel.stcBasicDetails != null)
+    {
+        if (Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm != null && Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm.Value;
+
+            Enum value = (FormBot.Helper.SystemEnums.STCSettlementTerm)(Model.STCDetailsModel.stcBasicDetails.STCSettlementTerm);
+            System.Reflection.FieldInfo fi = value.GetType().GetField(value.ToString());
+
+            System.ComponentModel.DescriptionAttribute[] attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0)
+            {
+                term = attributes[0].Description;
+            }
+            else
+            {
+                term = value.ToString();
+            }
+        }
+        else
+        {
+            term = "24 Hour";
+        }
+        statusId = Model.STCDetailsModel.stcBasicDetails.STCStatusId;
+    }
+}
+@{
+    int currentJobStatus = 0;
+    currentJobStatus = Model.STCDetailsModel.stcBasicDetails.STCStatusId;
+}
+
+<style type="text/css">
+    .default {
+        line-height: 0px !important;
+    }
+</style>
+
+<script>
+    var urlUpdateJobInstallationPropertyType = '@Url.Action("UpdateJobInstallationPropertyType","Job")',
+        modelSTCCertificateCreated = "@Model.JobSTCDetails.CertificateCreated",
+        modelSTCDeemingPeriod = '@Model.JobSTCDetails.DeemingPeriod',
+        deemingperiod = modelSTCDeemingPeriod ? modelSTCDeemingPeriod : 0,
+        finalYear = '',
+        modelIsGSTSetByAdminUser = '@Model.BasicDetails.IsGSTSetByAdminUser',
+        tempIsRegisteredWithGST = modelIsGSTSetByAdminUser,
+        modelBasicJobType = '@Model.BasicDetails.JobType',
+        modelInstallationExistingSystem = '@Model.JobInstallationDetails.ExistingSystem',
+        modelSTCMultipleSGUAddress = '@Model.JobSTCDetails.MultipleSGUAddress',
+        jobId = '@Model.BasicDetails.JobID',
+        BasicDetails_JobID = '@Model.BasicDetails.JobID',
+        USERType = parseInt('@Model.UserType'),
+        oldaddress = '',
+        JOBType = '@Model.BasicDetails.JobType',
+        IsUnderSSC = '@ProjectSession.IsSubContractor',
+        IsLockedSerialNumber = '@Model.BasicDetails.IsLockedSerialNumber.ToString().ToLower()',
+        batteryXml = [],
+        PanelXml = [],
+        InverterXml = [],
+        OldPanelXml = [],
+        OldInverterXml = [];
+        var urlGetSTCSettlementDate = '@Url.Action("GetSTCSettlementDate", "Job", new { area = "" })';
+        var modelIsRegisteredWithGST = '@Model.BasicDetails.IsRegisteredWithGST.ToString().ToLower()';
+        var urlChangeSCA = '@Url.Action("ChangeSCA", "Job")';
+        var resellerID = '@Model.BasicDetails.ResellerId';
+        var SCAName = '@Model.BasicDetails.CompanyName';
+        var SolarCompanyId = '@Model.BasicDetails.SolarCompanyId', JobInstallationYear;
+        var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+        var jobownerdetails_ownertypestc = '';
+        if ($("#jobownerdetails_ownertype").val() != '' && $('#jobownerdetails_ownertype').val() != undefined) {
+            jobownerdetails_ownertypestc = $('#jobownerdetails_ownertype').val().tolowercase();
+        }
+        else {
+            jobownerdetails_ownertypestc = '@Model.JobOwnerDetails.OwnerType'
+            if (jobownerdetails_ownertypestc != '') {
+                jobownerdetails_ownertypestc = jobownerdetails_ownertypestc.toLowerCase();
+
+            }
+        }
+
+    var emailOwner = '';
+    if ($("#JobOwnerDetails_Email").val() != '' && $('#JobOwnerDetails_Email').val() != undefined) {
+        emailOwner = $("#JobOwnerDetails_Email").val();
+    }
+    else {
+        emailOwner = '@Model.JobOwnerDetails.Email';
+    }
+    batterySystemPartOfAnAggregatedControl_Glbl = '@Model.JobSTCDetails.batterySystemPartOfAnAggregatedControl';
+    changedSettingOfBatteryStorageSystem_Glbl = '@Model.JobSTCDetails.changedSettingOfBatteryStorageSystem';
+
+    if ('@Model.BasicDetails.InstallationDate' == '') {
+        JobInstallationYear = null;
+    }
+    else {
+        JobInstallationYear = '@(Model.BasicDetails.InstallationDate.HasValue ? Model.BasicDetails.InstallationDate.Value.Year : 0)';
+    }
+</script>
+
+@Scripts.Render("~/bundles/JobModularSubViews?v=" + ProjectConfiguration.ScriptVersion)
+
+@*<script src="~/Scripts/View/Job/PricingSettlementTerm.dev.js"></script>*@
+<script src="~/Scripts/View/Job/PricingSettlementTerm.min.js"></script>
+@*<script src="~/Scripts/View/Job/_STCDetailTabularView.dev.js"></script>*@
+<script src="~/Scripts/View/Job/_STCDetailTabularView.min.js"></script>
+<script>
+    $(document).ready(function () {        
+        $("#pricing-stc-title").hide();
+        $("#paymentscheduleinfo").hide();
+        $("#JobInstallationDetails_JobID").val('@Model.BasicDetails.JobID');
+
+        $("#selectedSettlementTerm").html('@term' + " Settlement Selected");
+        showhideFailedCode($("#JobSTCDetails_CertificateCreated").val());
+        if ('@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate' == null || '@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate' == '') {
+            $("#setSettlementDate").html(" ");
+        }
+        else {
+            $("#setSettlementDate").html(moment('@Model.STCDetailsModel.stcBasicDetails.STCSettlementDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()));
+        }
+
+        if('@Model.STCDetailsModel.stcBasicDetails.SubmittedDate' != null && '@Model.STCDetailsModel.stcBasicDetails.SubmittedDate' != "")
+        {
+            $("#submittedDate").html(moment('@Model.STCDetailsModel.stcBasicDetails.STCSubmittedDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()) + " AEST");
+        }
+
+        if('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode() || ('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.ReadyToCreate.GetHashCode()))
+        {
+            $("#subDate").hide();
+            $("#subBy").hide();
+        }
+        else
+        {
+            $("#subDate").show();
+            $("#subBy").show();
+        }
+
+
+        if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()' || '@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('RESUBMIT STCs');
+        }
+        else if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.NewSubmission.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('STCS TRADED');
+        }
+        else if ('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.Resubmission.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').hide();
+        }
+        else
+        {
+            $('#btnApplyTradeStc').show();
+            $('#btnApplyTradeStc').val('TRADE STCs');
+        }
+
+        if((@currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()
+            ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode()))
+        {
+            $("#settlementDateText").html('Tentative Settlement Date:');
+        }
+        else
+        {
+            $("#settlementDateText").html('Scheduled Settlement Date:');
+        }
+
+        $("#stcValueForJob").html('@Model.STCDetailsModel.pricingManager.STCAmount');
+        $('#pricingTerm').html('@Model.STCDetailsModel.stcBasicDetails.STCPrice');
+        $('#spanSTCStatus').text('@Model.STCDetailsModel.stcBasicDetails.Status');
+
+        dropDownData.push({ id: 'JobSTCDetails_DeemingPeriod', key: "DeemingPeriod", value: deemingperiod, hasSelect: true, callback: deemingPeriodCallBack, defaultText: null, proc: '', param: [{ jobYear: finalYear }], bText: 'Text', bValue: 'Value' });
+        dropDownData.bindDropdown();
+
+        var installationDate = $("#BasicDetails_strInstallationDate").val();
+        if (installationDate != null && installationDate != undefined && installationDate != '') {
+            finalYear = moment(installationDate).format('yyyy'.toUpperCase());
+        }
+
+        $("#JobSTCDetails_CertificateCreated").change(function (e) {
+            showhideFailedCode($(this).val());
+        });
+
+        $("#JobSTCDetails_MultipleSGUAddress").change(function (e) {
+            if (modelBasicJobType == 1) {
+                if ($("#JobSTCDetails_MultipleSGUAddress").val() != "No" && $("#JobSTCDetails_MultipleSGUAddress").val() != "") {
+                    $("#STCLocation").show();
+                } else {
+                    $("#STCLocation").hide();
+                    //$("#JobSTCDetaiEmaillModelipleSGUAddress").val('');
+                }
+                showhideAdditionalLocationInformation();
+            }
+            if (modelBasicJobType == 2) {
+                if ($("#JobSTCDetails_MultipleSGUAddress").val() == "Yes" || (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 3)) {
+                    $("#additionalInfo").show();
+                } else {
+                    $("#additionalInfo").hide();
+                }
+            }
+
+        });
+
+        ShowHideGSTSection($('#JobInstallationDetails_PropertyType').val().toLowerCase(), jobownerdetails_ownertypestc);
+
+        if (modelBasicJobType == 1) {
+            if (modelSTCMultipleSGUAddress == 'Yes') {
+                $("#STCLocation").show();
+                $("#STCAdditionalLocation").show();
+            } else {
+                $("#STCLocation").hide();
+                $("#STCAdditionalLocation").hide();
+                $("#JobSTCDetails_AdditionalLocationInformation").val('');
+                $("#JobSTCDetails_Location").val('');
+            }
+        }
+        if (modelBasicJobType == 2) {
+            if (modelSTCMultipleSGUAddress == 'Yes' || (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 3)) {
+                $("#additionalInfo").show();
+            } else {
+                $("#additionalInfo").hide();
+            }
+        }
+
+        $("#JobSTCDetails_Location").change(function (e) {
+            if ($("#JobSTCDetails_Location").val() != "") {
+                $("#JobSTCDetails_AdditionalLocationInformation").show();
+            }
+            else {
+                $("#JobSTCDetails_AdditionalLocationInformation").hide();
+            }
+            showhideAdditionalLocationInformation();
+        })
+    });
+</script>
+<div class="job-com-box coc-form-box">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSCAStatementJobScreen" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSCAStatementJobScreen" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="sub-title" style="margin-bottom:0px;padding-bottom:0px!important">
+
+        <h4 style="width:300px">Written Statements Declarations</h4>
+
+        <a href="javascript:void(0)" title="Edit Retailer Declaration" class="icon-link sprite-img edit-icon" id="btnUpdateJobRetailer" name="UpdateJobRetailer" style="display:inline-block;margin-bottom:17px"></a>
+        <div class="title-btn">
+            <div class="btn-group pull-right" role="group">
+
+                <button id="btnAutoSignSetting" type="button" class="btn primary icon-btn" aria-haspopup="true" aria-expanded="false" onclick="AutoSign()">
+                    <span class="sprite-img download_ic"></span>Auto Sign Setting
+                </button>
+            </div>
+            @*<button type="button" data-type="other" id="btnGenerateDocSCStatement" class="btn primary icon-btn pull-right" onclick="">
+                    <span class="sprite-img add_ic"></span>Generate
+                </button>*@
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-8" style="margin-top:25px">
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <label class="control-label" id="lblUserId" style="margin-top:10px">Retailer Representative:</label>
+                </div>
+                <div class="col-sm-6" style="margin-left:-35px">
+                    @Html.TextBoxFor(model => model.JobRetailerSetting.RepresentativeName, new { id = "RepresentativeName", @class = "form-control", @style = "display:inline-block;height:30px;", disabled = "disabled" })
+                </div>
+
+            </div>
+            <div class="form-group row">
+                <div class="col-sm-4">
+                    <label class="control-label" id="lblPositionHeld" style="margin-top:10px">Position Held:</label>
+                </div>
+                <div class="col-sm-6" style="margin-left:-35px">
+                    @Html.TextBoxFor(model => model.JobRetailerSetting.PositionHeldlbl, new { id = "JobRetailerPositionHeldlbl", @class = "form-control", @style = "display:inline-block;height:30px", disabled = "disabled" })
+                </div>
+
+            </div>
+
+            <div class="form-group" style="margin-top:20px;margin-right:15px">
+                <p style="font-size:16px"><span id="statement">@Html.Raw(Model.JobRetailerSetting.Statement)</span></p>
+                @*@Html.LabelFor(model => model.JobRetailerSetting.Statement, new { id = "Statement", @class = "form-control"})*@
+            </div>
+            <div style="margin-top:30px">
+                By Signing this <a href="@Url.Action("GetSCAWrittenStatement", "Job", new { jobId = Model.JobID, solarCompanyId = Model.BasicDetails.SolarCompanyId, companyName = Model.BasicDetails.CompanyName, isRetailerStatement = true })" target="_blank">Written Statement</a>  I declare the statements provided in the documents is true and correct
+            </div>
+            <button type="button" class="btn primary icon-btn" onclick="SignatureInJobAutoSettingFromJobScreen()" style="margin-top:16px;margin-left:0px;float:left">
+                <span class="sprite-img signature-ic"></span>Click To Sign
+            </button>
+            <button type="button" class="btn primary icon-btn" onclick="SetDataFromAutoSignSetting()" style="margin-top:16px;margin-left:0px;float:left;">
+                <span class="sprite-img signature-ic"></span>Set Data From AutoSign
+            </button>
+
+            @Html.HiddenFor(m => m.JobRetailerSetting.Signature)
+            @Html.HiddenFor(m => m.JobRetailerSetting.Latitude)
+            @Html.HiddenFor(m => m.JobRetailerSetting.Longitude)
+        </div>
+        <div class="col-sm-4" style="margin-top:20px">
+
+            <div class="signechar-box scrollSignature" style="width:250px" id="acbcd"><img class="img-responsive" id="imgJobRetailerSignatureJobDetailScreen" alt=""></div>
+            <div style="margin-top:10px;font-size:16px">
+                <p style="display:inline-block" id="JobRetailer_Latitude"><strong> @Model.JobRetailerSetting.Latitude</strong></p>
+                @if (Model.JobRetailerSetting.Latitude != "" && Model.JobRetailerSetting.Longitude != "")
+                {<p style="display:inline-block"><strong>,</strong></p>}
+                <p style="display:inline-block" id="JobRetailer_Longitude"><strong>@Model.JobRetailerSetting.Longitude</strong></p>
+            </div>
+            <div style="margin-top:15px;font-size:14px;margin-right:-15px;width:280px">
+                <p><strong>Signed By : </strong><span id="SignedBy">@Model.JobRetailerSetting.SignedBy</span></p>
+                <p style="margin-top:3px"><strong>Date : </strong><span id="SignedDate">@Model.JobRetailerSetting.SignedDate</span></p>
+                <p style="margin-top:3px"><strong>Retailer Name : </strong><span id="Retailer_CompanyName">@Model.BasicDetails.CompanyName</span></p>
+            </div>
+            @*<div class="SignSavebtnJobRetailer" style="margin-right:13px;display:none">*@
+            @*<button type="button" class="btn primary icon-btn" onclick="SignatureInJobAutoSetting()">
+                        <span class="sprite-img signature-ic"></span>Sign here
+                    </button>
+                    <button type="button" class="btn primary icon-btn" id="saveJobRetailerAutoSign" tabindex="239
+                " onclick="return SaveJobRetailerAutoSign();">
+                        <span class="sprite-img save_ic"></span>Save
+                    </button>*@
+        </div>
+    </div>
+
+
+
+
+
+</div>
+
+<form id="frmStcDetail">
+    <div class="sub-title">
+        <h4>STC Trade</h4>
+    </div>
+    @Html.HiddenFor(m => m.BasicDetails.GB_SCACode, new { @id = "GB_SCACode" })
+    @*<div class="form-group pull-right">
+            @if ((Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "not yet submitted" || Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "submit to trade") && isChangeSCA)
+            {
+                <input type="button" class="btn primary" value="Change SCA" onclick="changeSCAModal()" />
+            }
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div style="position:absolute;right:290px;">
+                    <label class="control-label" style="margin-right: 80px;margin-top: 10px;">Generate REC zip</label>
+                    <div class="onoffswitch" style="top:5%;right:5%;">
+                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchGenerateRecZip" ison="0">
+                        <label class="onoffswitch-label" for="onOffSwitchGenerateRecZip">
+                            <span class="onoffswitch-inner"></span>
+                            <span class="onoffswitch-switch"></span>
+                        </label>
+                    </div>
+                </div>
+            }
+        </div>*@
+
+    @Html.HiddenFor(m => m.JobInstallationDetails.JobID)
+    <div class="row">
+        <div class="col-md-2">
+            <div class="form-group" style="display:none">
+                @Html.LabelFor(m => m.JobInstallationDetails.PropertyType, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.PropertyType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Residential", Value = "Residential" }, new SelectListItem() { Text = "School", Value = "School" }, new SelectListItem() { Text = "Commercial", Value = "Commercial" } }, new { @class = "form-control", @tabindex = 46 })
+            </div>
+            <!--<div class="form-group">
+                @Html.LabelFor(m => m.JobInstallationDetails.SingleMultipleStory, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.SingleMultipleStory, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Single story", Value = "Single story" }, new SelectListItem() { Text = "Multi story", Value = "Multi story" } }, new { @class = "form-control", @tabindex = 47 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.TypeOfConnection, new { @class = "control-label", id = "TypeOfConnection" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.TypeOfConnection, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Connected to an electricity grid without battery storage", Value = "Connected to an electricity grid without battery storage" }, new SelectListItem() { Text = "Connected to an electricity grid with battery storage", Value = "Connected to an electricity grid with battery storage" }, new SelectListItem() { Text = "Stand-alone (not connected to an electricity grid)", Value = "Stand-alone (not connected to an electricity grid)" } }, new { @class = "form-control", @tabindex = 50 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.SystemMountingType, new { @class = "control-label", id = "SystemMountingType" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.SystemMountingType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Building or structure", Value = "Building or structure" }, new SelectListItem() { Text = "Ground mounted or free standing", Value = "Ground mounted or free standing" } }, new { @class = "form-control", @tabindex = 51 })
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.DeemingPeriod, new { @class = "control-label", id = "DeemingPeriod" })
+                @if (Model.UserType == 1 || Model.UserType == 3)
+                {
+                    @Html.DropDownListFor(m => m.JobSTCDetails.DeemingPeriod, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 52 })
+                }
+                else
+                {
+                    @Html.DropDownListFor(m => m.JobSTCDetails.DeemingPeriod, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 52, @disabled = "disabled" })
+                }
+            </div>
+            @if (Model.UserType == 1 || Model.UserType == 3)
+            {
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.CertificateCreated, new { @class = "control-label", id = "CertificateCreated" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.CertificateCreated, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 53 })
+                </div>
+            }
+            <div class="form-group failedReasonDiv">
+                @Html.LabelFor(m => m.JobSTCDetails.FailedReason, new { @class = "control-label", id = "FailedReason" })
+                @Html.TextAreaFor(m => m.JobSTCDetails.FailedReason, new { @class = "form-control" })
+            </div>
+            <div class="form-group DivFailedAccreditationCode">
+                @Html.LabelFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "control-label", id = "FailedAccreditationCode" })
+                @Html.TextBoxFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "form-control", @maxlength = 255, @tabindex = 54 })
+                <span id="spanFailedAccreditationCode" style="display: none; color:#b94a48">Failed accreditation code is required.</span>
+            </div>
+            <div class="form-group" id="divVolumetricCapacity" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.VolumetricCapacity, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.VolumetricCapacity, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 58 })
+            </div>
+            <div class="form-group" id="divStatutoryDeclarations" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.StatutoryDeclarations, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.StatutoryDeclarations, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 59 })
+                <span id="spanStatutoryDeclarations" class="" style="color: #b94a48;display:none">This Field is Required</span>
+            </div>
+            <div class="form-group" id="divSecondhandWaterHeater" style="display:none">
+                @Html.LabelFor(m => m.JobSTCDetails.SecondhandWaterHeater, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.SecondhandWaterHeater, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 60 })
+            </div>
+            @if (Model.BasicDetails.JobType == 2)
+            {
+                <div class="form-group">
+                    <label class="control-label">Installation type:</label>
+                    @Html.DropDownListFor(m => m.JobSystemDetails.InstallationType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New building", Value = "New building" }, new SelectListItem() { Text = "Replaced electric heater", Value = "Replaced electric heater" }, new SelectListItem() { Text = "Replaced solar water heater", Value = "Replaced solar water heater" }, new SelectListItem() { Text = "First solar water heater at existing building", Value = "First solar water heater at existing building" }, new SelectListItem() { Text = "Replaced gas water heater", Value = "Replaced gas water heater" }, new SelectListItem() { Text = "Other", Value = "Other" } }, new { @class = "form-control", @tabindex = 61 })
+                </div>
+            }
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobInstallationDetails.InstallingNewPanel, new { @class = "control-label", @id = "InstallingNewPanel" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.InstallingNewPanel, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New system [the first system installed at the address]", Value = "New" }, new SelectListItem() { Text = "Replacement system [all previous system components removed/decommissioned]", Value = "Replacing" }, new SelectListItem() { Text = "Additional system [new separate system at the same address]", Value = "Adding" }, new SelectListItem() { Text = "Extension system [components added to existing system]", Value = "Extension" } }, new { @class = "form-control", @tabindex = 48 })
+            </div>
+            <div class="form-group" id="installationLocation" style="display:none;">
+                @Html.LabelFor(m => m.JobInstallationDetails.Location, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobInstallationDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 49 })
+                <span id="spanInstallationLocation" style="display: none; color:#b94a48">This Field is Required.</span>
+            </div>
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+            {
+                <div class="form-group" id="additionalCapacityNotes" style="display:none;">
+                    @Html.LabelFor(m => m.JobSTCDetails.AdditionalCapacityNotes, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalCapacityNotes, new { @class = "form-control", rows = "7" })
+                </div>
+            }
+            <div class="form-group">
+                @Html.LabelFor(m => m.JobSTCDetails.MultipleSGUAddress, new { @class = "control-label", id = "MultipleSGUAddress" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.MultipleSGUAddress, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 55 })
+            </div>
+            <div class="form-group" id="STCLocation" style="display:none;">
+                @Html.LabelFor(m => m.JobSTCDetails.Location, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.JobSTCDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 56 })
+                <span id="spanSTCLocation" style="display: none; color:#b94a48">This Field is required.</span>
+            </div>-->
+            @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                {*@
+            <!--<div class="form-group" id="STCAdditionalLocation" style="display:none;">
+                @Html.LabelFor(m => m.JobSTCDetails.AdditionalLocationInformation, new { @class = "control-label" })
+                @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalLocationInformation, new { @class = "form-control", rows = "5" })
+            </div>-->
+            @*}*@
+            @*@if (Model.BasicDetails.JobType == 1)
+                {
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 66 })
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new { @class = "control-label" })
+                        @Html.DropDownListFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 67 })
+                    </div>
+                }*@
+            @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                {*@
+            <!--<div class="form-group">
+                <label class="control-label">Additional Information:</label>
+                <div class="">
+                    @Html.TextAreaFor(m => m.JobSTCDetails.AdditionalSystemInformation, new { @class = "form-control txtField", @maxlength = 1000, @rows = 4, @tabindex = 19, style = "resize:none" })
+                </div>
+            </div>-->
+            @*}*@
+            <!--<div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Latitude</label>
+                        @Html.TextBoxFor(m => m.JobSTCDetails.Latitude, new { @class = "form-control", @tabindex = 20 })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label">Longitude</label>
+                        @Html.TextBoxFor(m => m.JobSTCDetails.Longitude, new { @class = "form-control", @tabindex = 21 })
+                    </div>
+                </div>
+            </div>-->
+        </div>
+        <div class="col-md-12">
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSTCStatus" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTCStatus" style="display: none;padding:15px;">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            @if (ProjectSession.UserTypeId != 8 || isStcStatus)
+            {
+                <div class="assign-an-installer clearfix" id="reloadSTCJobScreen" style="margin: 0px">
+                    @Html.Partial("_STCJobTabularView", Model.STCDetailsModel)
+                </div>
+            }
+        </div>
+    </div>
+    @*<br />
+        <div class="sub-title isGSTRegistered">
+            <h4>Payment Details</h4>
+        </div>*@
+    <!--<div class="row">
+        <div class="col-md-6">
+            <div id="divPaymentDetails">-->
+    @*<input type="hidden" oldfilename id="BasicDetails_GSTDocument" name="BasicDetails.GSTDocument" />*@
+    <!--@Html.HiddenFor(m => m.BasicDetails.GSTDocument, new { @OldFileName = Model.BasicDetails.GSTDocument })
+                <div class="isGSTRegistered">
+                    <div class="form-group">
+                        <label class="control-label" style="font-family:Open Sans Semibold">
+                            GST can only be claimed on Commercial jobs. If you are claiming GST on a commercial job please provide an invoice below.
+                        </label>
+                        @Html.LabelFor(m => m.BasicDetails.IsGst, new { @class = "control-label BasicDetails_IsGst", @style = "display:inline;" })
+                        @Html.CheckBoxFor(m => m.BasicDetails.IsGst, new { @class = "BasicDetails_IsGst", @tabindex = 500 })
+                    </div>
+                    <div id="jobGST" style="display:none;">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BasicDetails.GSTDocument, new { @class = "control-label" })
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic">
+                                            <span>Upload GST Invoice</span>
+                                            <input id="uploadGSTFile" type="file" class="upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="bxcont col-sm-12" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblDocuments">
+                                                    @if (Model.BasicDetails.GSTDocument != null && Model.BasicDetails.GSTDocument != "")
+                                                    {
+                                                        if (System.IO.File.Exists(Path.Combine(ProjectSession.ProofDocumentsURL + "\\" + "JobDocuments" + "\\" + Model.BasicDetails.JobID + "\\" + "GST", Model.BasicDetails.GSTDocument)))
+                                                        {
+                                                            <tr style='margin-top:30px'>
+                                                                <td class="col-sm-10" style="color:#494949;border-bottom:0px !important">@Model.BasicDetails.GSTDocument</td>
+                                                                @if (Model.BasicDetails.MimeType == "image")
+                                                                {
+                                                                    <td class="col-sm-1" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument" title="Preview" onclick="OpenGSTDocument(this)"></td>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <td class="col-sm-1" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument" title="Download" onclick="DownloadGSTDocument(this)"></td>
+                                                                }
+                                                                <td class="col-sm-1" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="GSTDocumentDelete" title="Delete" style="cursor: pointer" onclick="DeleteGSTDocument(this)"></td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>-->
+</form>
+
+
+<div class="modal fade" id="UpdateJobRetailer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center" style="width:39%">
+            <div class="modal-content">
+                <form id="frmJobAutoAssignment">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            Edit Representative Details
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" tabindex="3">
+                                <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSCAStatement" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSCAStatement" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+
+                        <div id="JobAutoAssignmentDiv" class="form-group">
+                            @*@Html.Partial("_AutoSignPopUp",Model.RetailerAutoSetting)*@
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="control-label required" id="lblUserId">Select Representative:</label>
+                                        @Html.DropDownListFor(model => model.JobRetailerSetting.JobRetailerUserId, new List<SelectListItem>(), new { id = "JobRetailerUserId", @class = "form-control", @style = "display:inline-block;height:30px;" })
+                                        @Html.ValidationMessageFor(m => m.JobRetailerSetting.JobRetailerUserId)
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label required" id="lblPositionHeld">Position Held:</label>
+                                        @Html.TextBoxFor(model => model.JobRetailerSetting.PositionHeld, new { id = "JobRetailerPositionHeld", @class = "form-control", @style = "display:inline-block;height:30px" })
+                                        @Html.ValidationMessageFor(m => m.JobRetailerSetting.PositionHeld)
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:5px">
+                                        <label class="control-label required">Installer Relationship To Retailer:</label>
+                                    </div>
+                                    <div class="form-group">
+                                        @*<label class="control-label" id="chkIsEmployee">Installer is an Employee</label>*@
+                                        @*@Html.CheckBoxFor(model => model.JobRetailerSetting.IsEmployee, new { id = "IsEmployee", @class = "form-control", @style = "display:inline-block" })*@
+                                        @Html.DropDownListFor(model => model.JobRetailerSetting.IsEmployee, new List<SelectListItem> { new SelectListItem() { Text = "IsEmployee", Value = "1" }, new SelectListItem() { Text = "IsSubContractor", Value = "2" } }, new { id = "JobWiseIsEmployee", @class = "form-control", @tabindex = 53 })
+                                    </div>
+                                    @*<div class="form-group">
+                                            <label class="control-label" id="chkIsSubContractor">Installer is a subcontractor</label>
+                                            @Html.CheckBoxFor(model => model.JobRetailerSetting.IsSubContractor, new { id = "IsSubContractor", @class = "form-control", @style = "display:inline-block" })
+                                        </div>*@
+
+                                    <div class="form-group">
+                                        @*<label class="control-label" id="chkIsChangedDesign">Installer have changed system design</label>
+                                            @Html.CheckBoxFor(model => model.RetailerAutoSetting.IsChangedDesign, new { id = "IsChangedDesign", @class = "form-control", @style = "display:inline-block" })*@
+                                        <label class="control-label required" id="chkIsChangedDesign">System Design</label>
+                                        @Html.DropDownListFor(model => model.JobRetailerSetting.IsChangedDesign, new List<SelectListItem> { new SelectListItem() { Text = "Installer have changed system design", Value = "1" }, new SelectListItem() { Text = "Installer have not changed system design", Value = "2" } }, new { id = "JobWiseIsChangedDesign", @class = "form-control", @tabindex = 53 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-6" style="margin-top:24px;">
+                                    @*<div class="form-group">
+                                            <label class="control-label required" id="lblSignature">Signature:</label>
+                                            @Html.TextAreaFor(model => model.RetailerAutoSetting.Signature, new { id = "Signature", @class = "form-control", @style = "height:100px" })
+                                        </div>*@
+                                    @*<div class="signechar-box scrollSignature"><img class="img-responsive" id="imgRetailerSignature" alt=""></div>
+                                        <div style="margin-right:13px">
+                                            <button type="button" class="btn primary icon-btn" onclick="SignatureInAutoSetting()">
+                                                <span class="sprite-img signature-ic"></span>Sign here
+                                            </button>
+                                        </div>*@
+                                    <div class="signechar-box scrollSignature" style="width: 100%;"><img class="img-responsive required" id="imgJobRetailerSignature" alt=""></div>
+                                    <div style="margin-right:-7px;margin-top:5px">
+                                        <button type="button" class="btn primary icon-btn" onclick="SignatureInJobAutoSetting()" style="margin-top:5px">
+                                            <span class="sprite-img signature-ic"></span>Sign here
+                                        </button>
+                                        <button type="button" class="btn primary icon-btn" onclick="SignatureInJobFromAutoSetting()" style="margin-top:5px">
+                                            <span class="sprite-img signature-ic"></span>Sign From Auto Setting
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary icon-btn" id="saveJobRetailerAutoSign" tabindex="239
+            " onclick="return SaveJobRetailerAutoSign();">
+                            <span class="sprite-img save_ic"></span>Save
+                        </button>
+                        <button type="button" class="btn default cancel_ic" id="cancelJobAutoSignPopup">Cancel</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="AutoAssignment" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center" style="width:39%">
+            <div class="modal-content">
+                <form id="frmAutoAssignment">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="myModalLabel">
+                            Auto Assignment
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close" tabindex="3">
+                                <img src="../images/close-btn.png" alt="">
+                            </button>
+                        </h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionAutoSetting" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionAutoSetting" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+
+                        <div id="AutoAssignmentDiv" class="form-group">
+                            @*@Html.Partial("_AutoSignPopUp",Model.RetailerAutoSetting)*@
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label class="control-label required" id="lblUserId">Select Representative:</label>
+                                        @Html.DropDownListFor(model => model.RetailerAutoSetting.RetailerUserId, new List<SelectListItem>(), new { id = "RetailerUserId", @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.RetailerAutoSetting.RetailerUserId)
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label required" id="lblPositionHeld">Position Held:</label>
+                                        @Html.TextBoxFor(model => model.RetailerAutoSetting.PositionHeld, new { id = "PositionHeld", @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.RetailerAutoSetting.PositionHeld)
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:5px">
+                                        <label class="control-label required">Installer Relationship To Retailer:</label>
+                                    </div>
+                                    <div class="form-group">
+                                        @*<label class="control-label" id="chkIsEmployee">Installer is an Employee</label>*@
+                                        @*@Html.CheckBoxFor(model => model.RetailerAutoSetting.IsEmployee, new { id = "IsEmployee", @class = "form-control", @style = "display:inline-block" })*@
+                                        @Html.DropDownListFor(model => model.RetailerAutoSetting.IsEmployee, new List<SelectListItem> { new SelectListItem() { Text = "IsEmployee", Value = "1" }, new SelectListItem() { Text = "IsSubContractor", Value = "2" } }, new { id = "IsEmployee", @class = "form-control", @tabindex = 53 })
+                                    </div>
+                                    @*<div class="form-group">
+                                            <label class="control-label" id="chkIsSubContractor">Installer is a subcontractor</label>
+                                            @Html.CheckBoxFor(model => model.RetailerAutoSetting.IsSubContractor, new { id = "IsSubContractor", @class = "form-control", @style = "display:inline-block" })
+                                        </div>*@
+                                    <div class="form-group">
+                                        @*<label class="control-label" id="chkIsChangedDesign">Installer have changed system design</label>
+                                            @Html.CheckBoxFor(model => model.RetailerAutoSetting.IsChangedDesign, new { id = "IsChangedDesign", @class = "form-control", @style = "display:inline-block" })*@
+                                        <label class="control-label required" id="chkIsChangedDesign">System Design</label>
+                                        @Html.DropDownListFor(model => model.RetailerAutoSetting.IsChangedDesign, new List<SelectListItem> { new SelectListItem() { Text = "Installer have changed system design", Value = "1" }, new SelectListItem() { Text = "Installer have not changed system design", Value = "2" } }, new { id = "IsChangedDesign", @class = "form-control", @tabindex = 53 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-6" style="margin-top:24px;">
+                                    @*<div class="form-group">
+                                            <label class="control-label required" id="lblSignature">Signature:</label>
+                                            @Html.TextAreaFor(model => model.RetailerAutoSetting.Signature, new { id = "Signature", @class = "form-control", @style = "height:100px" })
+                                        </div>*@
+                                    <div class="signechar-box scrollSignature" style="width:100%"><img class="img-responsive required" id="imgRetailerSignature" alt=""></div>
+                                    <div style="margin-right:-7px;margin-top:5px">
+                                        <button type="button" class="btn primary icon-btn" onclick="SignatureInAutoSetting()">
+                                            <span class="sprite-img signature-ic"></span>Sign here
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary icon-btn" id="saveAutoSignPopup" tabindex="239
+            " onclick="return SaveAutoSignPopUp();">
+                            <span class="sprite-img save_ic"></span>Save
+                        </button>
+                        <button type="button" class="btn default cancel_ic" id="cancelAutoSignPopup">Cancel</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade popupSignature" tabindex="-1" id="popupAutoSignSignature">
+    @Html.Partial("_SignaturePopup", new ViewDataDictionary { { "isCopySign", false } }););
+</div>
+<div class="modal fade popupSignature" tabindex="-1" id="popupJobAutoSignSignature">
+    @Html.Partial("_SignaturePopup", new ViewDataDictionary { { "isCopySign", false } }););
+</div>
+
+<script src="~/Scripts/jquery.fileupload.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+<script src="../../Scripts/jSignature.dev.js" type="text/javascript"></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;key=AIzaSyC9JGh32nUUr3-ArB0sn_BeP7r3g5pVacw&amp;libraries=places"></script>
+<script src="~/Scripts/View/Job/_SCAWrittenStatement.dev.js"></script>
+
+<script>
+    var JobId = '@Model.BasicDetails.JobID';
+    var urlGetAutoSignSettingsData = '@Url.Action("GetAutoSignSettingsData", "SolarCompany")';
+    var urlGetAutoSignSettingsDataJobWise = '@Url.Action("GetAutoSignSettingsDataForJobWise", "Job")';
+    var urlGetAutoSignSettingsDataRetailerIdWise = '@Url.Action("GetAutoSignSettingsDataRetailerIdWise", "Job")';
+    var urlSaveAutoSignSettingsData = '@Url.Action("SaveAutoSignSettingsData", "SolarCompany")';
+    var SolarCompanyId = '@Model.BasicDetails.SolarCompanyId';
+    var JobRetailerSign = '@Model.JobRetailerSetting.Signature';
+    var JobRetailerId = '@Model.JobRetailerSetting.JobRetailerUserId';
+    var urlSaveJobAutoSignSettingsData = '@Url.Action("SaveJobAutoSignSettingsData","Job")';
+    var urlReloadSCAWrittenStatement = '@Url.Action("GetSCAWrittenStatement", "job")?jobId=';
+    var urlGetSignFromAutoSetting = '@Url.Action("GetSignFromAutoSetting","job")';
+    var urlGetJobRetailerSettingDataByJobId = '@Url.Action("GetJobRetailerSettingDataByJobId","Job")';
+    var urlSetAutoSignSettingsDataInJob='@Url.Action("SetAutoSignSettingsDataInJob", "job")';
+    var isSignFromAutosetting = false;
+    var isFromJobScreen = false;
+    $(document).ready(function () {        
+        FillDropDown('JobRetailerUserId', '@Url.Action("GetRepresentative", "SolarCompany")?JobId=' + jobID, JobRetailerId, true, null);
+        FillDropDown('RetailerUserId', '@Url.Action("GetRepresentative", "SolarCompany")?JobId=' + jobID, 0, true, null);
+
+        if (JobRetailerSign != null && JobRetailerSign != '' && JobRetailerSign != undefined) {
+            var modelJobRetailerSignURL = "UserDocuments/" + JobRetailerId + "/" + JobRetailerSign;
+            $("#imgJobRetailerSignatureJobDetailScreen").attr('src', signatureURL + modelJobRetailerSignURL);
+        }
+        else {
+            $("#imgJobRetailerSignatureJobDetailScreen").attr('src', "");
+        }
+        $("#popupAutoSignSignature #aUploadSign").css("display", "none");
+        $("#popupJobAutoSignSignature #aUploadSign").css("display", "none");
+        GetAutoSignSettingsData(SolarCompanyId, true);
+        getLocation();
+
+             var url = '@Url.Action("UploadRetailerSignature", "SolarCompany")';
+        var logoWidth = 0, logoHeight = 0, SRCOwnerSign;
+        $('#popupAutoSignSignature #uploadBtnSignature').on("click", function () {
+            UploadSignForJobRetailer();
+        });
+        $('#popupJobAutoSignSignature #uploadBtnSignature').on("click", function () {
+            UploadSign();
+        });
+        function UploadSign() {            
+            $('#popupAutoSignSignature #uploadBtnSignature').fileupload({
+                url: url,
+                dataType: 'json',
+                done: function (e, data) {                    
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    for (var i = 0; i < data.result.length; i++) {
+                        if (data.result[i].Status == true) {
+                            var userid = $("#RetailerUserId").val();
+                            var signName = $('#imgUploadSign').attr('class');
+                            var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                            var imagePath = proofDocumentURL + "UserDocuments" + "/" + userid;
+                            var SRC = imagePath + "/" + data.result[i].FileName.replace("%", "$");
+                            SRCOwnerSign = SRC;
+                            $('#imgUploadSign').attr('class', data.result[i].FileName.replace("%", "$"));
+                        }
+                        else {
+                            UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                    }
+                    if (UploadFailedFiles.length > 0) {
+                        showErrorMessageForPopup("Signature has not been uploaded.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                    }
+                    else {
+                        $('#imgUploadSign').show();
+                        $("#imgUploadSign").attr('src', SRCOwnerSign);
+                        $("#deleteSign").show();
+                        showSuccessMessageForPopup("Signature has been uploaded successfully.", $("#successMsgRegionSignPopup"), $("#errorMsgRegionSignPopup"));
+                    }
+                },
+                progressall: function (e, data) { },
+                singleFileUploads: false,
+                send: function (e, data) {
+
+                    var documentType = data.files[0].type.split("/");
+                    var mimeType = documentType[0];
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                                showErrorMessageForPopup(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            showErrorMessageForPopup("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                            return false;
+                        }
+                    }
+                    if (mimeType != "image") {
+                        showErrorMessageForPopup("Please upload a file with .jpg , .jpeg or .png extension.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    if (data.files[0].size > parseInt(1024000)) {
+                        showErrorMessageForPopup("Please upload Signature Within 1 MB otherwise it will slow down your job performance", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("");
+                    $("#errorMsgRegion").hide();
+                    return true;
+                },
+                formData: {  userId: $("#RetailerUserId").val() }
+            });
+        }
+         function UploadSignForJobRetailer() {            
+             $('#popupJobAutoSignSignature #uploadBtnSignature').fileupload({
+                url: url,
+                dataType: 'json',
+                done: function (e, data) {                    
+                    var UploadFailedFiles = [];
+                    UploadFailedFiles.length = 0;
+
+                    for (var i = 0; i < data.result.length; i++) {
+                        if (data.result[i].Status == true) {
+                            var userid = $("#RetailerUserId").val();
+                            var signName = $('#imgUploadSign').attr('class');
+                            var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                            var imagePath = proofDocumentURL + "UserDocuments" + "/" + userid;
+                            var SRC = imagePath + "/" + data.result[i].FileName.replace("%", "$");
+                            SRCOwnerSign = SRC;
+                            $('#imgUploadSign').attr('class', data.result[i].FileName.replace("%", "$"));
+                        }
+                        else {
+                            UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                        }
+                    }
+                    if (UploadFailedFiles.length > 0) {
+                        showErrorMessageForPopup("Signature has not been uploaded.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                    }
+                    else {
+                        $('#imgUploadSign').show();
+                        $("#imgUploadSign").attr('src', SRCOwnerSign);
+                        $("#deleteSign").show();
+                        showSuccessMessageForPopup("Signature has been uploaded successfully.", $("#successMsgRegionSignPopup"), $("#errorMsgRegionSignPopup"));
+                    }
+                },
+                progressall: function (e, data) { },
+                singleFileUploads: false,
+                send: function (e, data) {
+
+                    var documentType = data.files[0].type.split("/");
+                    var mimeType = documentType[0];
+                    if (data.files.length > 1) {
+                        for (var i = 0; i < data.files.length; i++) {
+                            if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                                showErrorMessageForPopup(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                                return false;
+                            }
+                        }
+                    }
+                    else {
+                        if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            showErrorMessageForPopup("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                            return false;
+                        }
+                    }
+                    if (mimeType != "image") {
+                        showErrorMessageForPopup("Please upload a file with .jpg , .jpeg or .png extension.", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    if (data.files[0].size > parseInt(1024000)) {
+                        showErrorMessageForPopup("Please upload Signature Within 1 MB otherwise it will slow down your job performance", $("#errorMsgRegionSignPopup"), $("#successMsgRegionSignPopup"));
+                        return false;
+                    }
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("");
+                    $("#errorMsgRegion").hide();
+                    return true;
+                },
+                formData: {  userId: $("#RetailerUserId").val() }
+            });
+        }
+        $("#deleteSign").on("click", function () {
+             deleteSignature();
+            return false;
+        });
+        function deleteSignature() {            
+            var FolderName = $("#RetailerUserId").val() ;
+            var fileDelete = $('#imgUploadSign').attr('class');
+            if (confirm('Are you sure you want to delete this file ?')) {
+                $.ajax({
+                    url: '@Url.Action("deleteRetailerSignFromFolderandTable", "SolarCompany")',
+                    data: { fileName: fileDelete, FolderName: FolderName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        var sign = $('#imgUploadSign').attr('class');
+                        $('#imgUploadSign').removeAttr('src');
+                        $('#imgUploadSign').removeAttr('class');
+                        $('#deleteSign').hide();
+                        showSuccessMessageForPopup("Signature has been deleted successfully.", $("#successMsgRegionSignPopup"), $("#errorMsgRegionSignPopup"));
+                        return false;
+                    }
+                });
+            }
+        }
+            
+            $('#popupAutoSignSignature').off().on('shown.bs.modal', function () {
+                var widthVal = $('#popupAutoSignSignature #cSignature .jSignature').width();
+                $('#popupAutoSignSignature #cSignature').find("canvas.jSignature").width(widthVal)
+                $('#popupAutoSignSignature #cSignature').find('canvas').attr('width', widthVal + 'px !important');
+                $('#popupAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").$controlbarLower.css('margin-bottom', '3.0em')
+                $('#popupAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#popupAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['data'])
+            });
+        $('#popupJobAutoSignSignature').off().on('shown.bs.modal', function () {
+            var widthVal = $('#popupJobAutoSignSignature #cSignature .jSignature').width();
+            $('#popupJobAutoSignSignature #cSignature').find("canvas.jSignature").width(widthVal)
+            $('#popupJobAutoSignSignature #cSignature').find('canvas').attr('width', widthVal + 'px !important');
+            $('#popupJobAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupJobAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").$controlbarLower.css('margin-bottom', '3.0em')
+            $('#popupJobAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupJobAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").resetCanvas($('#popupJobAutoSignSignature #cSignature').find("canvas.jSignature").add($('#popupJobAutoSignSignature #cSignature').filter("canvas.jSignature")).data("jSignature.this").settings['data'])
+        });
+        var $sigdiv = $("#popupAutoSignSignature #cSignature").jSignature({ height: 220, mousedown: function () { $('#popupAutoSignSignature #IsSignature').val('True') }, signatureLine: true });
+        var cdIsmouseIn = false;
+        var $jobsignDiv = $("#popupJobAutoSignSignature #cSignature").jSignature({ height: 220, mousedown: function () { $('#popupJobAutoSignSignature #IsSignature').val('True') }, signatureLine: true });
+            $("#aDrawSign").click(function () {
+                showHideDrawUploadSection(this);
+            });
+
+        $("#popupAutoSignSignature #aUploadSign").click(function () {
+                showHideDrawUploadSection(this);
+        });
+        $("#popupJobAutoSignSignature #aUploadSign").click(function () {
+            showHideDrawUploadSection(this);
+        });
+        $("#btnUpdateJobRetailer").click(function () {
+            validateFormAutoSign();
+            isFromJobScreen = false;            
+            $.ajax({
+                url: urlGetAutoSignSettingsDataJobWise,
+                type: "GET",
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8', // Not to set any content header
+                data: {
+                    JobId: JobId, SolarCompanyId: SolarCompanyId},
+                cache: false,
+                success: function (result) {                    
+                    if (result.success) {
+                        $("#JobRetailerUserId option[value=" + result.data.JobRetailerUserId + "]").prop('selected', true);
+                        $("#JobRetailerPositionHeld").val(result.data.PositionHeld);
+                        //var isEmployee = result.data.IsEmployee == true ? true : false;
+                        //var isSubContractor = result.data.IsSubContractor == true ? true : false;
+                        // var isChangedDesign = result.data.IsChangedDesign == true ? true : false;
+                        $("#JobWiseIsEmployee option[value=" + result.data.IsEmployee + "]").prop('selected', true);
+                        //$('#IsSubContractor').prop('checked', isSubContractor);
+                        $("#JobWiseIsChangedDesign option[value=" + result.data.IsChangedDesign + "]").prop('selected', true);
+                        //$('#IsChangedDesign').prop('checked', isChangedDesign);                        
+                      //  location.reload(true);
+                        $("#imgJobRetailerSignature").attr('src', result.data.base64Img);
+                    }
+
+                    else {
+                        showErrorMessageForAutoSign("Something wrong happen");
+                    }
+
+                }
+            })
+            setTimeout(function () {
+                $('#UpdateJobRetailer').modal('toggle');
+            }, 100);
+
+            //$(".SignSavebtnJobRetailer").css("display", "block");
+            //$("#JobRetailerUserId").removeAttr("disabled");
+            //$("#JobRetailerPositionHeld").removeAttr("disabled");
+        });
+
+            function showHideDrawUploadSection(obj) {                
+                $(".alert").hide();
+                $("#errorMsgRegionSignPopup").hide();
+                $("#successMsgRegionSignPopup").hide();
+                if ($("#popupAutoSignSignature.in").length == 1) {
+                    if ($(obj).attr('id').toLowerCase() == "auploadsign") {
+                        $("#popupAutoSignSignature #divDraw").hide();
+                        $("#popupAutoSignSignature #divUpload").show();
+                    }
+                    else {
+                        $("#popupAutoSignSignature #divDraw").show();
+                        $("#popupAutoSignSignature #divUpload").hide();
+                    }
+                }
+                else {
+                    if ($(obj).attr('id').toLowerCase() == "auploadsign") {
+                        $("#popupJobAutoSignSignature #divDraw").hide();
+                        $("#popupJobAutoSignSignature #divUpload").show();
+                    }
+                    else {
+                        $("#popupJobAutoSignSignature #divDraw").show();
+                        $("#popupJobAutoSignSignature #divUpload").hide();
+                    }
+                }
+
+
+                $(obj).closest('ul').find('.active').removeClass('active');
+                $(obj).closest('ul').find('.primary').removeClass('primary');
+                $(obj).closest('li').addClass('active');
+                $(obj).closest('li').addClass('primary');
+            }
+
+        $("#popupAutoSignSignature #cSignature").bind('change', function (e) {
+                if ($sigdiv.jSignature('getData', 'native').length > 0)
+                    $("#popupAutoSignSignature #cSignature .signLabel").addClass('hidden');
+                else
+                    $("#popupAutoSignSignature #cSignature .signLabel").removeClass('hidden');
+        });
+        $("#popupJobAutoSignSignature #cSignature").bind('change', function (e) {
+            if ($jobsignDiv.jSignature('getData', 'native').length > 0)
+                $("#popupJobAutoSignSignature #cSignature .signLabel").addClass('hidden');
+            else
+                $("#popupJobAutoSignSignature #cSignature .signLabel").removeClass('hidden');
+        });
+
+            $("#cancelAutoSignPopup").click(function () {
+                $("#RetailerUserId").val('');
+                $("#PositionHeld").val('');
+                $("#IsEmployee").val('');
+                //$("#IsSubContractor").attr("checked", false);
+                $("#IsChangedDesign").val('');
+                $("#imgRetailerSignature").attr("src", "")
+                $("#successMsgRegionAutoSetting").hide();
+                $("#errorMsgRegionAutoSetting").hide();
+                $('#AutoAssignment').modal('toggle');
+            });
+        $("#cancelJobAutoSignPopup").click(function () {
+
+            $("#JobRetailerUserId").val('');
+            $("#JobRetailerPositionHeld").val('');
+            $("#JobWiseIsEmployee").val('');
+            //$("#IsSubContractor").attr("checked", false);
+            $("#JobWiseIsChangedDesign").val('');
+            $("#imgJobRetailerSignature").attr("src", "")
+            $("#successMsgRegionSCAStatement").hide();
+            $("#errorMsgRegionSCAStatement").hide();
+            $('#UpdateJobRetailer').modal('toggle');
+        });
+        $("#popupJobAutoSignSignature #resetSignBtn").click(function () {
+            $('#popupJobAutoSignSignature #cSignature').jSignature('reset');
+            $('#popupJobAutoSignSignature #IsSignature').val('False');
+        });
+        $("#popupAutoSignSignature #resetSignBtn").click(function () {
+            $('#popupAutoSignSignature #cSignature').jSignature('reset');
+            $('#popupAutoSignSignature #IsSignature').val('False');
+        })
+        });
+
+</script>
+
+@*@Scripts.Render("~/bundles/jobmodularsubviews?v=" + ProjectConfiguration.ScriptVersion)*@

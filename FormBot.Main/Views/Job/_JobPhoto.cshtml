@@ -1,0 +1,194 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = null;
+}
+@{
+    ////Todo
+    bool isJobPhotoUpload = false;
+    bool isJobPhotoDelete = false;
+    bool isJobPhotoView = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobPhotoUpload.GetHashCode()) { isJobPhotoUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobPhotoDelete.GetHashCode()) { isJobPhotoDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobPhotoView.GetHashCode()) { isJobPhotoView = true; }
+        });
+    }
+}
+<div class="documents-block">
+    @*<h4 class="hed">Photos</h4>*@
+    <div class="hed download-hed">
+        <h4>Photos</h4>
+        <div class="download-box">
+            <a class="download-btn downloadSerialNumber" href="javascript:void(0);" onclick="DownLoadAllPhotoesAsZip(false);" title="Donwload Serial Number Photo">Download Serial Number</a>
+            <a class="download-btn downloadInstallation" href="javascript:void(0);" onclick="DownLoadAllPhotoesAsZip(true);" title="Donwload Installation Photo">Download Installation</a>
+        </div>
+    </div>
+
+    <div class="documents-inner-block">
+        <div class="installation-title">
+            <h5>Installation <span id="spanPhoto">(@Model.lstUserDocument.Count)</span></h5>
+            @*@if (ProjectSession.UserTypeId == 7 || ProjectSession.UserTypeId == 9 || ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 8 || ProjectSession.UserTypeId == 6)
+                {*@
+            <div class="upload-link">
+                @if (isJobPhotoUpload && !isJobPhotoDelete)
+                {
+                    <input id="uploadBtnPhoto" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    <a href="javascript:void(0)" title="Upload Photos" style="text-decoration:none;" onclick="document.getElementById('uploadBtnPhoto').click(); return false">Upload Photos</a>
+                }
+                @if (isJobPhotoUpload && isJobPhotoDelete)
+                {
+                    <input id="uploadBtnPhoto" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    <a href="javascript:void(0)" title="Upload Photos" style="text-decoration:none;" onclick="document.getElementById('uploadBtnPhoto').click(); return false">Upload Photos |</a>
+                    <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeletePhoto();">Delete Selected</a>
+                }
+                @if (isJobPhotoDelete && !isJobPhotoUpload)
+                {
+                    <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeletePhoto();">Delete Selected</a>
+                }
+            </div>
+            @*}*@
+        </div>
+        <ul class="installation-list" id="intPhoto">
+            @if (Model.JobID != 0)
+            {
+                if (Model.lstUserDocument != null)
+                {
+                    foreach (var Document in @Model.lstUserDocument)
+                    {
+                        <li class='checkbox'>
+                            <label>
+                                <input type='checkbox' name='chkBtnPhoto' value="@Document.DocumentPath" id="@Document.UserDocumentID" />
+                                @if (isJobPhotoView)
+                                {
+                                    <a href="javascript:void(0)" style="text-decoration:none;" title="@Document.DocumentPath" id="@Document.DocumentPath" class="@Document.DocumentPath" onclick="OpenPhoto(this);">@Document.strDocumentPath</a>
+                                }
+                                @if (!isJobPhotoView)
+                                {
+                                    <a href="javascript:void(0)" style="text-decoration:none;" title="@Document.DocumentPath" id="@Document.DocumentPath" class="@Document.DocumentPath">@Document.strDocumentPath</a>
+                                }
+                            </label>
+                        </li>
+                    }
+                }
+            }
+        </ul>
+
+    </div>
+    <div class="documents-inner-block">
+        <div class="installation-title">
+            <h5>Serial Number <span id="spanSerial">(@Model.lstSerialDocument.Count)</span></h5>
+            @*@if (ProjectSession.UserTypeId == 7 || ProjectSession.UserTypeId == 9 || ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 8 || ProjectSession.UserTypeId == 6)
+                {*@
+            <div class="upload-link">
+                @if (isJobPhotoUpload && !isJobPhotoDelete)
+                {
+                    <input id="uploadBtnSerial" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    <a href="javascript:void(0)" title="Upload Photos" style="text-decoration:none;" onclick="document.getElementById('uploadBtnSerial').click(); return false">Upload Photos</a>
+                }
+                @if (isJobPhotoUpload && isJobPhotoDelete)
+                {
+                    <input id="uploadBtnSerial" multiple type="file" class="upload fileUpload" style="display:none;" />
+                    <a href="javascript:void(0)" title="Upload Photos" style="text-decoration:none;" onclick="document.getElementById('uploadBtnSerial').click(); return false">Upload Photos |</a>
+                    <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeleteSerial();">Delete Selected</a>
+                }
+                @if (isJobPhotoDelete && !isJobPhotoUpload)
+                {
+                    <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeleteSerial();">Delete Selected</a>
+                }
+            </div>
+            @*}*@
+        </div>
+        <ul class="installation-list" id="SerialNumber">
+            @if (Model.JobID != 0)
+            {
+                if (Model.lstSerialDocument != null)
+                {
+                    foreach (var Document in @Model.lstSerialDocument)
+                    {
+            <li class='checkbox'>
+                <label>
+                    <input type='checkbox' name='chkBtnSerial' value="@Document.DocumentPath" id="@Document.UserDocumentID" />
+                    @if (isJobPhotoView)
+                                {
+                    <a href="javascript:void(0)" style="text-decoration:none;" title="@Document.DocumentPath" id="@Document.DocumentPath" class="@Document.DocumentPath" onclick="OpenSerial(this);">@Document.strDocumentPath</a>
+                                }
+                    @if (!isJobPhotoView)
+                                {
+                    <a href="javascript:void(0)" style="text-decoration:none;" title="@Document.DocumentPath" id="@Document.DocumentPath" class="@Document.DocumentPath">@Document.strDocumentPath</a>
+                                }
+                </label>
+            </li>
+                    }
+                }
+            }
+        </ul>
+    </div>
+</div>
+@*Popup View*@
+<div class="modal fade" id="popupPhotoBox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpPhotoBox">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Installation</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div style="height:480px;">
+                            <img src="" id="imgPhoto" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+                    <div>
+                        <img src="" id="imgPhoto" class="" style="display:inline;width:100%;height:100%;" />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupSerialBox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpSerialBox">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Serial Number</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div style="height:480px;">
+                            <img src="" id="imgSerial" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+
+                    <div>
+                        <img src="" id="imgSerial" class="" style="display:inline;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    var logoWidth = 0, logoHeight = 0, logoWidth1 = 0, logoHeight1 = 0;
+    var totalInstallation = 0, totalSerialNumber = 0;
+
+    var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath',
+        Model_JobID = '@Model.JobID',
+        isJobPhotoView = '@isJobPhotoView.ToString().ToLower()',
+        urlGetSTCStatusDescription = '@Url.Action("GetSTCStatusDescription", "Job")',
+        urlCheckBusinessRules = '@Url.Action("CheckBusinessRules", "Job")',
+        lstUserDocument_Count = @Model.lstUserDocument.Count,
+        lstSerialDocument_Count = @Model.lstSerialDocument.Count,
+        urlDownLoadAllPhotoesAsZip = '@Url.Action("DownLoadAllPhotoesAsZip", "Job")';
+</script>
+<script src="~/Scripts/View/Job/_JobPhoto.min.js?v=@ProjectConfiguration.ScriptVersion"></script>

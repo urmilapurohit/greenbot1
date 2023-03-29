@@ -1,0 +1,1170 @@
+﻿@model FormBot.Entity.Report
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <form id="UserDetails" method="post">
+        <input type="hidden" name="OwnerAccountBit" id="OwnerAccountBit" value="1" />
+        <input type="hidden" name="minOwnerAccount" id="minOwnerAccount" value="-1" />
+        <div class="title">
+            <h1>REC Report</h1>
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="find_job_leftpanel">
+            <a href="#" class="jtoggle"></a>
+            <div class="frmblock rep-block">
+                <div class="form-group">
+                    @Html.DropDownListFor(model => model.ReportID, new List<SelectListItem>(), new { id = "ReportID", @class = "form-control", @tabindex = "1" })
+                </div>
+                <div class="form-group">
+                    <p class="rep-text"><strong>Description: </strong> <span id="Description">This report shows the actions that are being performed on the RECs belonging to the selected Owner Account. </span>
+                    <p class="rep-text"><strong>Default Input: </strong><span id="DefaultInput">Highest STC creator for the given period. </span>
+                </div>
+                <div class="rep_spacer"></div>
+                <div class="form-group">
+                    <label class="control-label">Date Range:</label>
+                    <div class="btn-group btn-group-justified" role="group" id="DateGroups">
+                        <div class="btn-group" role="group">
+                            <button onclick="setLBD();" type="button" class="btn btn-default" tabindex="2">LBD</button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button onclick="setMTD();" type="button" class="btn primary" tabindex="3">MTD</button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-default" type="button" onclick="setPM();" tabindex="4">PM</button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-default" type="button" onclick="setCFY();" tabindex="5">CFY</button>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-default" type="button" onclick="set12M();" tabindex="6">12M</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label">Start Date:</label>
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="control-label">End Date:</label>
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" id="DateGroup">
+                    <label class="control-label">Date Grouping:</label>
+                    @Html.DropDownListFor(m => m.DateGrouping, new SelectList((ViewBag.DateGrouping) as SelectList, "Value", "Text"), new { @class = "form-control", id = "DateGroup", @tabindex = "9" })
+                </div><br>
+                <div class="rep_spacer"></div>
+                <div class="form-group">
+                    <div>
+                        <label class="control-label">Filters:</label>
+                    </div>
+                    <div class="rep-list">
+                        <ul>
+                            <li><a href="javascript:void(0);" id="ActionTypeID" onclick="ActionType();" tabindex="10">Action Types<span id="cntAction">0</span></a></li>
+                            <li><a href="javascript:void(0);" id="OwnerAccountsID" onclick="OwnerAccounts();" tabindex="11">Owner Accounts<span id="cntOwner">0</span></a></li>
+                            <li><a href="javascript:void(0);" id="StatusTypeID" onclick="StatusType();" tabindex="12">Status Types<span id="cntStatus">0</span></a></li>
+                            <li><a href="javascript:void(0);" id="FuelSourceID" onclick="FuelSource();" tabindex="13">Fuel Source Types<span id="cntFuel">0</span></a></li>
+                        </ul>
+                    </div>
+                    <label class="control-label">Restriction:</label>
+                    <ul id="Restrictions" class="control-label">
+                        <li>
+                            Maximum 1 Owner Account.
+                        </li>
+                    </ul>
+                </div>
+                <div class="rep-btn">
+                    <input type="button" onclick="RunReport();" tabindex="14" id="btnReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" value="Reset Filters" class="" tabindex="15">
+                    </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="popupActionProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" id="closeActionType">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Action Types</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-sm-12" style="text-align:center">
+                            <label class="control-label">
+                                Available <label class="control-label" id="AvailableAction">0</label> Selected
+                            </label>
+                        </div>
+                        <div class="form-border">
+                            @Html.Action("_ActionType", "Report")
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" id="closeOwnerAccount">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Owner Accounts</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-sm-12" style="text-align:center">
+                            <label class="control-label">
+                                Available <label class="control-label" id="Available"> 0/1</label> Selected
+                            </label>
+                        </div>
+                        <div class="form-border">
+                            @Html.Action("_OwnerAccount", "Report")
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="popupStatusProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" id="closeStatusType">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Status Types</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-sm-12" style="text-align:center">
+                            <label class="control-label">
+                                Available <label class="control-label" id="AvailableStatus">0</label> Selected
+                            </label>
+                        </div>
+                        <div class="form-border">
+                            @Html.Action("_StatusType", "Report")
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="popupFuelSourceProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" id="closeFuelSource">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Fuel Sources Types</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="col-sm-12" style="text-align:center">
+                            <label class="control-label">
+                                Available <label class="control-label" id="AvailableFuelSource">0</label> Selected
+                            </label>
+                        </div>
+                        <div class="form-border">
+                            @Html.Action("_FuelSource", "Report")
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="job_calendar" id="divGrid" style="display:none;">
+        <div class="chartbox" id="chartbox" style="display:none;">
+            <b style="color:black;margin-left:40%;" id="chartReportName"></b>
+            <div id="chart" style="height:400px;width:100%;"></div>
+        </div>
+        @*<div class="pull-right">
+                <input type="button" id="btnReset" value="Export to Excel" class="primary" onclick="GenerateExcel();">
+            </div>*@
+        <div class="grid">
+            <div class="table-responsive">
+                <div id="displayTable">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts
+    {
+    @*@Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/datatableJs")
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @Scripts.Render("~/bundles/bootstrap")*@
+    @*<script src="~/Scripts/general.js"></script>*@
+    @Scripts.Render("~/Report_ExportJS")
+    @*<script src="https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.flash.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>*@
+
+    <script type="text/javascript">
+        var columnsArray = [];
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+
+        var chartdiv, chartdiv1;
+
+        $(document).ready(function () {
+
+            $(".jtoggle").click(function (e) {
+                e.preventDefault();
+                $(".find_job_leftpanel").toggleClass("active");
+                $(".jtoggle").toggleClass("active");
+                $(".job_calendar").toggleClass("push");
+                if (chartdiv)
+                    chartdiv.resize();
+                if (chartdiv1)
+                    chartdiv1.resize();
+            });
+
+            $('#txtFromDate').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                if ($("#txtToDate").val() != '') {
+                    var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                    var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                    if (fromDate > toDate) {
+                        $("#txtToDate").val('');
+                    }
+                }
+                var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                if ($('#txtToDate').data('datepicker')) {
+                    $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+                }
+            });
+            $("#txtToDate").datepicker({
+                format: dateFormat,
+                autoclose: true
+            });
+            $('#txtToDate').change(function () {
+                document.getElementById('btnReport').style.pointerEvents = 'auto';
+                $('#btnReport').css('opacity', '1');
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#errorMsgRegion").removeClass("alert-success");
+                    $("#errorMsgRegion").addClass("alert-danger");
+                    $("#errorMsgRegion").html(closeButton + "Start date must be before end date.");
+                    $("#errorMsgRegion").show();
+                    document.getElementById('btnReport').style.pointerEvents = 'none';
+                    $('#btnReport').css('opacity', '0.5');
+                }
+                else {
+                    document.getElementById('btnReport').style.pointerEvents = 'auto';
+                    $('#btnReport').css('opacity', '1');
+                }
+            });
+            FillDropDown('ReportID', '@Url.Action("GetReportDrp", "Report")', 1, true, null);
+
+            setMTD();
+
+            setTimeout(function () {
+                $('#ReportID option').first().remove();
+            }, 1000);
+            setTimeout(function () {
+                $('#ReportID').focus();
+            }, 1000);
+        });
+
+        $("#ReportID").change(function () {
+            var ids = $('#ReportID').val();
+            $('#divGrid').hide();
+            $('#chartbox').css('display', 'none');
+
+            $.ajax({
+                url: '@Url.Action("GetReport", "Report")',
+                type: "GET",
+                data: { reportID: ids },
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    $('#Restrictions').text("");
+                    $("#errorMsgRegion").hide();
+                    $.each(data.reportList, function (key, value) {
+                        $("#Description").text(value.ReportDesc);
+                        $("#DefaultInput").text(value.ReportDefaultInput);
+                        $('#OwnerAccountBit').val(value.OwnerAccountBit);
+                        $('#minOwnerAccount').val(value.minOwnerAccount);
+                        if (value.OwnerAccountBit > 6) {
+                            $('#Restrictions').append("<li>Maximum " + value.OwnerAccountBit + " Owner Accounts can be selected. </li> ");
+                        }
+                        else if (value.OwnerAccountBit <= 5 && value.OwnerAccountBit > 0) {
+                            $('#Restrictions').append("<li>Maximum " + value.OwnerAccountBit + " Owner Accounts. </li>");
+                        }
+                        if (value.minOwnerAccount > 0) {
+                            $('#Restrictions').append("<li>Minimum " + value.minOwnerAccount + " Owner Account must be selected. </li> ");
+                            document.getElementById('btnReport').style.pointerEvents = 'none';
+                            $('#btnReport').css('opacity', '0.5');
+                            if ($('#LstOwnerAccountAssignedUser option').length == 0) {
+                                $("#errorMsgRegion").removeClass("alert-success");
+                                $("#errorMsgRegion").addClass("alert-danger");
+                                $("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+                                $("#errorMsgRegion").show();
+                            }
+                            if ($('#LstOwnerAccountAssignedUser option').length > 0) {
+                                document.getElementById('btnReport').style.pointerEvents = 'auto';
+                                $('#btnReport').css('opacity', '1');
+                            }
+                        }
+                        else {
+                            document.getElementById('btnReport').style.pointerEvents = 'auto';
+                            $('#btnReport').css('opacity', '1');
+                        }
+                        if (value.OwnerAccountBit < $('#LstOwnerAccountAssignedUser option').length && value.OwnerAccountBit > 0) {
+                            $("#errorMsgRegion").removeClass("alert-success");
+                            $("#errorMsgRegion").addClass("alert-danger");
+                            $("#errorMsgRegion").html(closeButton + "Selected owner accounts higher than report allows.");
+                            $("#errorMsgRegion").show();
+                            document.getElementById('btnReport').style.pointerEvents = 'none';
+                            $('#btnReport').css('opacity', '0.5');
+                        }
+                        if (value.ActionTypeBit == -1) {
+                            $('#Restrictions').append("<li>Action Type filter is disabled. </li>");
+                            $('#ActionTypeID').hide();
+                        }
+                        else {
+                            $('#ActionTypeID').show();
+                        }
+                        if (value.FuelSourceTypeBit == -1) {
+                            $('#Restrictions').append("<li>Fuel Source Type filter is disabled. </li>");
+                            $('#FuelSourceID').hide();
+                        }
+                        else {
+                            $('#FuelSourceID').show();
+                        }
+                        if (value.StatusTypeBit == -1) {
+                            $('#Restrictions').append("<li>Status Type filter is disabled. </li>");
+                            $('#StatusTypeID').hide();
+                        }
+                        else {
+                            $('#StatusTypeID').show();
+                        }
+                        if (value.IsDateGroup == false) {
+                            $('#DateGroup').hide();
+                            $('#Restrictions').append("<li>Date Grouping option is not applicable to this report. </li>");
+                        } else {
+                            $('#DateGroup').show();
+                        }
+                    });
+                },
+            });
+        });
+
+        $("#DateGroups").on("click", "button", function () {
+            $('#DateGroups').each(function () {
+                $(this).find('button').each(function () {
+                    $(this).removeClass("primary");
+                    $(this).addClass("btn-default");
+                });
+            });
+
+            $(this).addClass("primary");
+            $(this).removeClass("btn-default");
+        });
+
+        function removeStartDate() {
+            var d = new Date();
+            d.setDate(d.getDate() - 730);
+            $('#txtToDate').data('datepicker').setStartDate(d);
+        }
+        function setLBD() {
+            removeStartDate();
+
+            var d = new Date();
+            d.setDate(d.getDate() - 1);
+
+            var tickStartDate = Date.parse(d);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+
+            $("#txtFromDate").val(fDate);
+            $("#txtFromDate").datepicker("update", fDate);
+            $("#txtToDate").val(fDate);
+            $("#txtToDate").datepicker("update", fDate);
+            $("#errorMsgRegion").hide();
+        };
+
+        function setMTD() {
+            removeStartDate();
+
+            var d = new Date();
+            d.setDate(d.getDate() - (d.getDate() - 1));
+
+            var d1 = new Date();
+            d1.setDate(d1.getDate() - 1);
+
+            var tickStartDate = Date.parse(d);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+            var tickEndDate = Date.parse(d1);
+            tDate = moment(tickEndDate).format(dateFormatMoment);
+            $("#txtFromDate").val(fDate);
+            $("#txtToDate").val(tDate);
+            $("#txtFromDate").datepicker("update", fDate);
+            $("#txtToDate").datepicker("update", tDate);
+            $("#errorMsgRegion").hide();
+        }
+
+        function setPM() {
+            removeStartDate();
+
+            var d = new Date();
+            d.setDate(1);
+            d.setMonth(d.getMonth() - 1);
+
+            var d1 = new Date();
+            d1.setDate(d1.getDate() - (d1.getDate()));
+
+            var tickStartDate = Date.parse(d);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+            var tickEndDate = Date.parse(d1);
+            tDate = moment(tickEndDate).format(dateFormatMoment);
+            $("#txtFromDate").val(fDate);
+            $("#txtToDate").val(tDate);
+            $("#txtFromDate").datepicker("update", fDate);
+            $("#txtToDate").datepicker("update", tDate);
+            $("#errorMsgRegion").hide();
+        }
+
+        function setCFY() {
+            removeStartDate();
+
+            var d2 = new Date();
+            var d = new Date(d2.getFullYear(), d2.getMonth(), "1");
+            d.setDate(1);
+
+            if (d2.getMonth() < 7) {
+                d.setYear(d.getFullYear() - 1);
+                d.setMonth(6);
+            } else {
+                d.setMonth(6);
+            }
+            var d1 = new Date();
+            d1.setDate(d1.getDate() - 1);
+
+            var tickStartDate = Date.parse(d);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+            var tickEndDate = Date.parse(d1);
+            tDate = moment(tickEndDate).format(dateFormatMoment);
+            $("#txtFromDate").val(fDate);
+            $("#txtToDate").val(tDate);
+            $("#txtFromDate").datepicker("update", fDate);
+            $("#txtToDate").datepicker("update", tDate);
+            $("#errorMsgRegion").hide();
+        }
+
+        function set12M() {
+            removeStartDate();
+
+            var d = new Date();
+            d.setYear(d.getFullYear() - 1);
+            d.setDate(d.getDate() - 1);
+
+            var d1 = new Date();
+            d1.setDate(d1.getDate() - 1);
+
+            var tickStartDate = Date.parse(d);
+            fDate = moment(tickStartDate).format(dateFormatMoment);
+            var tickEndDate = Date.parse(d1);
+            tDate = moment(tickEndDate).format(dateFormatMoment);
+            $("#txtFromDate").val(fDate);
+            $("#txtToDate").val(tDate);
+            $("#txtFromDate").datepicker("update", fDate);
+            $("#txtToDate").datepicker("update", tDate);
+            $("#errorMsgRegion").hide();
+        }
+
+        function OwnerAccounts() {
+            $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+            setTimeout(function () {
+                $('#LstOwnerAccountUser').focus();
+            }, 1000);
+            var max = $('#OwnerAccountBit').val();
+            if (max > 0) {
+                $('#Available').html($('#LstOwnerAccountAssignedUser option').length + '/' + max);
+            } else {
+                $('#Available').html($('#LstOwnerAccountAssignedUser option').length);
+            }
+            if (($('#LstOwnerAccountAssignedUser option').length >= parseInt($('#OwnerAccountBit').val())) && $('#OwnerAccountBit').val() > 0) {
+                $('#btnLtoROwnerAcc').css('opacity', '0.5');
+                $('#btnLtoROwnerAcc').css('cursor', 'auto');
+            }
+            else {
+                $('#btnLtoROwnerAcc').css('opacity', '1');
+                $('#btnLtoROwnerAcc').css('cursor', 'poiter');
+            }
+        }
+
+        function ActionType() {
+            $('#popupActionProof').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableAction').html($('#LstActionTypeAssignedUser option').length);
+            setTimeout(function () {
+                $('#LstActionTypeUser').focus();
+            }, 1000);
+        }
+
+        function StatusType() {
+            $('#popupStatusProof').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableStatus').html($('#LstStatusTypeAssignedUser option').length);
+            setTimeout(function () {
+                $('#LstStatusTypeUser').focus();
+            }, 1000);
+        }
+
+        function FuelSource() {
+            $('#popupFuelSourceProof').modal({ backdrop: 'static', keyboard: false });
+            $('#AvailableFuelSource').html($('#LstFuelSourceAssignedUser option').length);
+            setTimeout(function () {
+                $('#LstFuelSourceUser').focus();
+            }, 1000);
+        }
+
+        function RunReport() {
+            var data = JSON.stringify($('#UserDetails').serializeToJson());
+            $.ajax({
+                url: '@Url.Action("GetReportList", "Report")',
+                type: "POST",
+                dataType: "json",
+                data: data,
+                async: true,
+                processData: false,
+                cache: false,
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {
+                    $('#divGrid').show();
+                    BindGrid(result);
+                    BindChart(result);
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+            return false;
+        }
+
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        function BindGrid(result) {
+            if ($('#datatable')) {
+                var table = $('#datatable').DataTable();
+                table.destroy();
+            }
+            var tableHeaders = '';
+            var tableColumns = [];
+
+            if ($('#ReportID').val() == 1) {
+                tableColumns.push("Date");
+                tableColumns.push("Action Type");
+                tableColumns.push("REC Count");
+            }
+            if ($('#ReportID').val() == 2) {
+                tableColumns.push("Date");
+                tableColumns.push("Owner Account");
+                tableColumns.push("REC Count");
+            }
+            if ($('#ReportID').val() == 3) {
+                tableColumns.push("Date");
+                tableColumns.push("Owner Account");
+                tableColumns.push("RECsBought");
+            }
+            if ($('#ReportID').val() == 4) {
+                tableColumns.push("Date");
+                tableColumns.push("Selling Account");
+                tableColumns.push("Buying Account");
+                tableColumns.push("REC Count");
+            }
+            if ($('#ReportID').val() == 8) {
+                tableColumns.push("Date");
+                tableColumns.push("Buying Account");
+                tableColumns.push("Selling Account");
+                tableColumns.push("REC Count");
+            }
+            if ($('#ReportID').val() == 5) {
+                tableColumns.push("Date");
+                tableColumns.push("State");
+                tableColumns.push("STCs Created");
+            }
+            if ($('#ReportID').val() == 6) {
+                tableColumns.push("Owner Account");
+                tableColumns.push("State");
+                tableColumns.push("REC Count");
+            }
+            if ($('#ReportID').val() == 7) {
+                tableColumns.push("Date");
+                tableColumns.push("Owner Account");
+                tableColumns.push("RECs Surrendered");
+            }
+            if ($('#ReportID').val() == 9) {
+                tableColumns.push("Date");
+                tableColumns.push("Status");
+                tableColumns.push("STCs Count");
+            }
+            if ($('#ReportID').val() == 10 || $('#ReportID').val() == 12) {
+                tableColumns.push("Owner Account");
+                tableColumns.push("STCs Created");
+            }
+            if ($('#ReportID').val() == 11) {
+                tableColumns.push("Date");
+                tableColumns.push("Owner Account");
+                tableColumns.push("STCs Created");
+            }
+            $.each(tableColumns, function (i, val) {
+                tableHeaders += "<th>" + val + "</th>";
+            });
+
+            $("#displayTable").empty();
+            $("#displayTable").append('<table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead></table>');
+            //$("#tableDiv").find("table thead tr").append(tableHeaders);
+
+            var orderby = []
+            getColumn($('#ReportID').val());
+            if ($('#ReportID').val() == 10 || $('#ReportID').val() == 12) {
+                orderby = [1, "desc"];
+            }
+            else {
+                orderby = [1, "asc"];
+            }
+            $('#datatable').DataTable({
+                data: result,
+                paging: false,
+                searching: false,
+                retrieve: true,
+                columns: columnsArray,
+                dom: 'Bfrtip',
+                buttons: ['excel'],
+                order: [orderby]
+            });
+            $('#datatable_length').hide();
+            $('#datatable_info').hide();
+            $('#datatable tr th').attr('class', 'sorting_disabled table-header');
+            $('#datatable th:first').attr('style', 'width:30% !important;');
+            $('.buttons-excel').addClass('primary pull-right');
+            $('.buttons-excel').html('<span>Export to Excel</span>');
+            if ($('#ReportID').val() == 10 || $('#ReportID').val() == 12) {
+                $('#datatable th:first').attr('style', 'width:80% !important;');
+            }
+        }
+
+        function getColumn(id) {
+            if (id == 1) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'ActionType',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 2 || id == 3 || id == 7 || id == 11) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'OwnerAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 4) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'SellingAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'BuyingAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 5) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'State',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 6) {
+                columnsArray = [
+                   {
+                       'data': 'OwnerAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'Status',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 8) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'BuyingAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'SellingAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 9) {
+                columnsArray = [
+                   {
+                       'data': 'strDate',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'Status',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+            if (id == 10 || id == 12) {
+                columnsArray = [
+                   {
+                       'data': 'OwnerAccount',
+                       "orderable": false
+                   },
+                   {
+                       'data': 'RECCOUNT',
+                       "orderable": false
+                   }
+                ];
+            }
+        }
+
+        function ConvertToDate(jsonDate) {
+            //return shortDate;
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+        function ToDate(data) {
+            //return data;
+            if (data != null) {
+                var tickStartDate = ConvertDateToTick(data, 'dd/mm/yyyy');
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                //console.log(tDate);
+                var date = new Date(tDate);
+                //console.log(date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2));
+                return date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2);
+            }
+            else {
+                return '';
+            }
+        }
+
+        function ResetSearchFilters() {
+            $("#errorMsgRegion").hide();
+            $('#cntOwner').html('0');
+            $('#cntAction').html('0');
+            $('#cntStatus').html('0');
+            $('#cntFuel').html('0');
+            $("#hdnOwnerAccount").val('');
+            $("#hdnActionType").val('');
+            $("#hdnStatus").val('');
+            $("#hdnFuelSource").val('');
+            $('#LstOwnerAccountAssignedUser option').each(function () {
+                $(this).remove().appendTo("#LstOwnerAccountUser");
+            });
+            $('#LstStatusTypeAssignedUser option').each(function () {
+                $(this).remove().appendTo("#LstStatusTypeUser");
+            });
+            $('#LstActionTypeAssignedUser option').each(function () {
+                $(this).remove().appendTo("#LstActionTypeUser");
+            });
+            $('#LstFuelSourceAssignedUser option').each(function () {
+                $(this).remove().appendTo("#LstFuelSourceUser");
+            });
+            document.getElementById('btnReport').style.pointerEvents = 'auto';
+            $('#btnReport').css('opacity', '1');
+            if ($('#minOwnerAccount').val() > 0 && $('#LstOwnerAccountAssignedUser option').length == 0) {
+                document.getElementById('btnReport').style.pointerEvents = 'none';
+                $('#btnReport').css('opacity', '0.5');
+
+                $("#errorMsgRegion").removeClass("alert-success");
+                $("#errorMsgRegion").addClass("alert-danger");
+                $("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+                $("#errorMsgRegion").show();
+            }
+        }
+        //charts
+        function BindChart(resultData) {
+            var groupedData = {};
+            var xAxis = ['xAxis'];
+            var reportType = $('#ReportID').val();
+            var chartType = 'bar';
+            var xcount = 0;
+            $('#chartReportName').html($('#ReportID option:selected').text());
+            if (reportType == 7) {
+                $('#chartReportName').html('Surrendering Accepted Activity');
+            }
+            if (reportType == 9) {
+                $('#chartReportName').html('STC Counter by Status');
+            }
+            if (reportType == 12) {
+                $('#chartReportName').html('STCs Created');
+            }
+
+            if (reportType == 10 || reportType == 12) {
+                var yAxis = ['OwnersAccounts'];
+                var x = [];
+                for (var i = 0; i < resultData.length; i++) {
+                    var item = resultData[i];
+                    x.push(item.OwnerAccount);
+                    yAxis.push(item.RECCOUNT);
+                }
+                var result = [];
+                result.push(yAxis);
+
+                $('#chartbox').css('display', 'block');
+                chartdiv = c3.generate({
+                    data: {
+                        columns: result,
+                        type: chartType
+                    },
+                    axis: {
+                        x: {
+                            //text: 'X Label123',
+                            type: 'category',
+                            categories: x,
+                            height: 50
+                        }
+                    },
+                    bar: {
+                        width: {
+                            ratio: 0.3,
+                            max: 30
+                        },
+                    }
+                });
+            }
+            else {
+
+                for (var i = 0; i < resultData.length; i++) {
+                    var item = resultData[i];
+
+                    if (reportType == 1) {
+                        if (!groupedData[item.ActionType]) {
+                            groupedData[item.ActionType] = [];
+                        }
+
+                        groupedData[item.ActionType].push({
+                            Date: ToDate(item.strDate),
+                            RECCOUNT: item.RECCOUNT
+                        });
+                        $('#chartbox').css('display', 'block');
+                    }
+                    else if (reportType == 2 || reportType == 3) {
+                        if (!groupedData[item.OwnerAccount]) {
+                            groupedData[item.OwnerAccount] = [];
+                        }
+
+                        groupedData[item.OwnerAccount].push({
+                            Date: ToDate(item.strDate),
+                            RECCOUNT: item.RECCOUNT
+                        });
+                        chartType = 'line'
+                        $('#chartbox').css('display', 'block');
+                    }
+                    else if (reportType == 5) {
+                        if (!groupedData[item.State]) {
+                            groupedData[item.State] = [];
+                        }
+
+                        groupedData[item.State].push({
+                            Date: ToDate(item.strDate),
+                            RECCOUNT: item.RECCOUNT
+                        });
+                        chartType = 'line'
+                        $('#chartbox').css('display', 'block');
+                    }
+                    else if (reportType == 7 || reportType == 11) {
+                        if (!groupedData[item.OwnerAccount]) {
+                            groupedData[item.OwnerAccount] = [];
+                        }
+
+                        groupedData[item.OwnerAccount].push({
+                            Date: ToDate(item.strDate),
+                            RECCOUNT: item.RECCOUNT
+                        });
+                        $('#chartbox').css('display', 'block');
+                        if (reportType == 7) { xcount = 6; }
+                    }
+                    else if (reportType == 9) {
+                        if (!groupedData[item.Status]) {
+                            groupedData[item.Status] = [];
+                        }
+
+                        groupedData[item.Status].push({
+                            Date: ToDate(item.strDate),
+                            RECCOUNT: item.RECCOUNT
+                        });
+                        chartType = 'line'
+                        $('#chartbox').css('display', 'block');
+                    }
+
+                    if ($.inArray(ToDate(item.strDate), xAxis) == -1) {
+                        xAxis.push(ToDate(item.strDate));
+                    }
+                }
+
+                var dataGroup = [];
+                var result = [];
+                result.push(xAxis);
+                for (var x in groupedData) {
+                    if (Object.prototype.hasOwnProperty.call(groupedData, x)) {
+                        var temp = [];
+                        temp.push(x);
+                        dataGroup.push(x);
+                        for (var j = 0; j < xAxis.length; j++) {
+                            var t = $.grep(groupedData[x], function (e) { return e.Date == xAxis[j + 1]; });
+                            if (t.length > 0) {
+                                temp.push(t[0].RECCOUNT)
+                            }
+                            else {
+                                temp.push(0);
+                            }
+                        }
+                        result.push(temp);
+                    }
+                }
+                chartdiv1 = c3.generate({
+                    data: {
+                        columns: result,
+                        type: chartType,
+                        x: 'xAxis',
+                        groups: [dataGroup]
+                    },
+                    axis: {
+                        x: {
+                            type: 'timeseries',
+                            tick: {
+                                format: '%d-%m-%Y',
+                                culling: true,
+                                height: 50,
+                                count: xcount
+                            }
+                        }
+                    },
+                    bar: {
+                        width: {
+                            ratio: 0.2,
+                            max: 20
+                        },
+                    }
+                });
+            };
+        }
+
+        @*function GenerateExcel() {
+            var data = JSON.stringify($('#UserDetails').serializeToJson());
+            var reportID = $('#ReportID').val();
+            var startDate = $('#txtFromDate').val();
+            var endDate = $('#txtToDate').val();
+            var fileName = $('#ReportID option:selected').text().replace(' ', '');
+            var actionType = $('#hdnActionType').val();
+            var ownerAccount = $('#hdnOwnerAccount').val();
+            var fuelSource = $('#hdnFuelSource').val();
+            var status = $('#hdnStatus').val();
+            var DateGroup = $('#DateGroup option:selected').val();
+            window.location.href = '@Url.Action("btnExport_Click", "Report")?reportID=' + reportID + '&startDate=' + startDate + '&endDate=' + endDate + '&fileName=' + fileName + '&actionType=' + actionType + '&ownerAccount=' + ownerAccount + '&fuelSource=' + fuelSource + '&status=' + status + '&DateGroup=' + DateGroup;
+        }*@
+    </script>
+}
+
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+<style>
+    .btn-default {
+        background-color: #fff;
+        border-color: #ccc;
+        color: #333;
+    }
+
+    .filerReport {
+        border: 1px solid #d8dadd !important;
+    }
+
+    #Restrictions li {
+        margin: 5px;
+        margin-left: 0;
+    }
+
+    .btn {
+        -moz-user-select: none;
+        background-image: none;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.42857;
+        margin-bottom: 0;
+        padding: 6px 12px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .search-lable {
+        vertical-align: top;
+        line-height: 35px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 1px solid #ddd !important;
+    }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel {
+        width: 345px !important;
+    }
+
+    .job_calendar {
+        margin-left: 380px !important;
+    }*/
+</style>

@@ -1,0 +1,149 @@
+﻿@using FormBot.SPVMain.Infrastructure
+@using FormBot.SPVMain.Models
+@using FormBot.Helper
+@model LoginViewModel
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<div id="login">
+    <div class="panel login-panel panelHeight">
+        <div class="col-md-5 col-sm-5 loginleft">
+            <div class="panel-heading">
+                <div class="logo">
+                    <a href="#">
+                        @if (Model.Logo == "Images/logo.png")
+                        {
+                            <img src="~/Images/login_logo.png" alt="" id="imgLogo">
+                        }
+                        else
+                        {
+                            <img src='@Url.Content(FormBot.Helper.ProjectSession.UploadedDocumentPath +"UserDocuments" + "/"+Model.Logo)' alt="" id="imgLogo" />
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7 col-sm-7 loginright">
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "loginform", id = "LoginDetails", role = "form" }))
+            {
+                @Html.HiddenFor(m => m.Logo)
+                @Html.HiddenFor(m => m.Theme)
+                <div class="title">
+                    <h1>Please Login</h1>
+                </div>
+                <div id="msgSection">
+                    @Html.RenderMessages()
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+
+                if (Model.isActiveDiv == 1)
+                {
+                    <div id="ValidationSummary" style="background-color: #f2dede; border-color: #ebccd1;color: #a94442;padding-right: 35px;border: 1px solid transparent;border-radius: 4px;margin-bottom: 20px;padding: 15px;" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        <div>
+                            This RA account no longer exists. Please login from
+                            <a href="@Model.DefaultLoginCompanyName" style="text-decoration:none;color:#a94442;"><lable>here</lable></a>
+                        </div>
+                    </div>
+                }
+                <div class="form-group">
+                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", @placeholder = "Username", @autofocus = true, @tabindex = "1" })
+                    @Html.ValidationMessageFor(m => m.Username)
+                </div>
+                <div class="form-group">
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control", @placeholder = "Password", @tabindex = "2" })
+                    @Html.ValidationMessageFor(m => m.Password)
+                </div>
+                <div class="form-group">
+                    @Html.CheckBoxFor(m => m.RememberMe, new { @tabindex = "3" })
+                    @Html.LabelFor(m => m.RememberMe)
+                    <span class="link_password"><a id="ForgotPassword" href="@Url.Action("ForgotPassword", "Account")">Forgot Password?</a></span>
+                </div>
+                if (Model.CompanyName != null)
+                {
+                    <div class="form-group">
+                        @*<span class="link_password"><a id="ResellerSignUp" href="@Url.Action("ResellerSignUp", "Account", new { companyName = Model.CompanyName })">Sign Up</a></span>*@
+                        <span class="link_password"><a id="ResellerSignUp" href="/Account/ResellerSignUp/@Model.CompanyName">Sign Up</a></span>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <span class="link_password"><a href="@Url.Action("GreenbotSignUp", "Account")">Sign Up</a></span>
+                    </div>
+                }
+                <div class="form-group">
+                    <input type="submit" value="Login" class="login-btn primary" tabindex="4" id="btnSubmit">
+                </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        var logo = @Html.Raw(Json.Encode(Model.Logo));
+        var companyName=@Html.Raw(Json.Encode(Model.CompanyName));
+        var theme=@Html.Raw(Json.Encode(Model.Theme));
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize';
+        var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+        var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+
+        if(companyName!=null && companyName!=undefined)
+        {
+
+            if ('@Model.Logo' != null && '@Model.Theme' != null && '@Model.Logo' != '' && '@Model.Theme' != '') {
+                if ('@Model.Logo' == 'Images/logo.png') {
+                    $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + 'Images/login_logo.png'));
+                }
+                else {
+                    var proofDocumentURL = UploadedDocumentPath;
+                    var logo = '@Model.Logo';
+                    var SRC = proofDocumentURL + 'UserDocuments' + '/' + logo;
+                    $('#imgLogo').attr('src', SRC);
+                }
+                $('body').attr('id', '@Model.Theme');
+            }
+
+            $('body').attr('id', theme);
+        }
+        else
+        {
+            //var SRC = '/Images/login_logo.png';
+            //$('#imgLogo').attr('src',SRC);
+        }
+        $(document).ready(function(){
+            $('#LoginDetails').find('input').keypress(function(e){
+                if(e.keyCode == 13 && @Model.isActiveDiv == 1)
+                {
+                    return false;
+                }
+            });
+            if(@Model.isDisableSignUp == 1)
+            {
+                //$('#ForgotPassword').removeAttr("href");
+                $('#ResellerSignUp').removeAttr("href");
+            }
+            if(@Model.isActiveDiv == 1)
+            {
+                $('#ForgotPassword').removeAttr("href");
+                $('#ResellerSignUp').removeAttr("href");
+                document.getElementById('btnSubmit').style.pointerEvents = 'none';
+                $('#btnSubmit').css('opacity', '0.5');
+            }
+            else{
+                document.getElementById('btnSubmit').style.pointerEvents = 'auto';
+                $('#btnSubmit').css('opacity', '1');
+            }
+            //$(".alert-danger").fadeOut(6000);
+            //$(".alert-success").fadeOut(6000);
+        });
+    </script>
+}

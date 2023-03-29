@@ -1,0 +1,115 @@
+﻿@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+@{
+    bool isDownloadJobPack = false;
+
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.GenerateFullJobPack.GetHashCode()) { isDownloadJobPack = true; }
+          
+        });
+    }
+}
+<style>
+    .document-color {
+        color: black !important;
+    }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div>
+       
+    <div class="panel pdf-generated def" id="pnlDoc">
+        <div class="visit-list">
+            <div class="panel-heading submission-add visitParent" style="background-color: #f0f0f0; color:black;" role="photo-tab" id="headingAssets1">
+                @*<input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos" id="ckOtherDocuments">*@
+                <a role="button" class="collapsed" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseallDoc" aria-expanded="false" aria-controls="collapseAssets1">
+                    <i class="sprite-img folder-icon" style="left:20px !important"></i>
+                    <span style="background-color: #f0f0f0; color:black;">All Document<i class="sprite-img submission-icon"></i></span>
+                    <i class="sprite-img arrow-icon"></i>
+                </a>
+            </div>
+        </div>
+        <div id="collapseallDoc" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+            @*<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOther" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionOther" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>*@
+            <div class="sub-title" style="margin-bottom: 0px; border-bottom: 0px;">
+                @*<h4>Document Manager</h4>*@
+                <div class="title-btn">
+                    <div class="btn-group pull-right" role="group">
+
+                        @*<button id="btnGroupDrop1" type="button" class="btn primary icon-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sprite-img add_ic"></span>Add Document
+                        </button>*@
+
+                        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                            <a class="btn" id="btnCreateDoc" href="#">Create</a>
+                            <a class="btn" id="btnUploadOther" href="#">Upload</a>
+                            <input id="uploadOthreBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt,.zip,.heic" multiple type="file" class="upload fileUpload" style="display:none;" />
+                        </div>
+                    </div>
+                    @*<button type="button" data-type="other" id="btnDownloadAllOther" class="btn primary icon-btn pull-right">
+                        <span class="sprite-img download_ic"></span>Download All
+                    </button>*@
+                    @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3) || isDownloadJobPack)
+                    {
+                        @*<button type="button" data-type="other" id="btnDownloadJobFullPack" class="btn primary icon-btn pull-right">
+                            <span class="sprite-img download_ic"></span>Download Job Pack
+                        </button>*@
+                    }
+                    @*<button type="button" data-type="other" id="btnOpenElectricianPage" onclick="getcompliance();" class="btn primary icon-btn pull-right">
+                    <span class="sprite-img preview_ic"></span>Get User Compliance
+                </button>*@
+                    @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                {
+                    <button type="button" data-type="other" id="btnDownloadGPSLogs" class="btn primary icon-btn pull-right" >
+                        <span class="sprite-img download_ic"></span>Download GPSLogs
+                    </button>
+                }*@
+                </div>
+            </div>
+            <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+                <div class="panel">
+
+                    <div class="panel-heading" role="photo-subtab" id="headingpanel-02-Install">
+                        @*<input type="checkbox" class="visit-list-check parentInput defaultPanel" data-type="2">*@
+                        @*<a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial-Installation" data-name="Installation Photos" aria-expanded="false" aria-controls="panel-serial-Installation">
+                        Installation Photos
+                    </a>*@
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <tbody id="tbodyOther"></tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    
+</div>
+    </div>
+</div>
+
+@*<script>
+    function getcompliance() {        
+        if ('@ViewBag.ElectricianId' == "0") {
+            alert("User Does Not Exist");
+            return;
+        }
+        else {
+            window.open('/User/ViewDetail/@(ViewBag.ElectricianId)#horizontalTab3', '_blank');
+        }
+
+    }
+</script>*@

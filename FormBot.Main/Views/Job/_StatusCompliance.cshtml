@@ -1,0 +1,198 @@
+﻿@model Tuple<FormBot.Entity.CreateJob, FormBot.Entity.Job.StcComplianceCheck, FormBot.Entity.Job.STCJobHistory>
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "STCSubmission";
+}
+@section Scripts {
+
+}
+
+<style>
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+        z-index: 999999 !important;
+    }
+
+    .margin-bottom-5 {
+        margin-bottom: 5px !important;
+    }
+</style>
+<div>
+    @Html.HiddenFor(m => m.Item2.JobId)
+    @Html.HiddenFor(m => m.Item2.FileNamesCreate)
+    @Html.HiddenFor(m => m.Item2.CallDateTime)
+
+    <!-- Modal Header -->
+    <div class="modal-header">
+        <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/close-btn.png"></button>
+        <div class="title">
+            <h1>STC Status</h1>
+        </div>
+    </div>
+    <!-- Modal Header End-->
+    <div class="modal-body">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForPopUp" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionForPopUp" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <!-- Current Status-->
+        <div class="row">
+            <div class="col-sm-5 current-status">
+                <h2><span>Current Status:</span>&nbsp;<label id="lblSTCStatus"></label></h2>
+                <p class="audited-text"><label id="lblauditedtext" class="audited-text"></label></p>
+                <p>
+                    <strong class="grcolor">Last Updated:</strong>&nbsp;<label style="color:#757373" id="lblCreatedDate"></label>&nbsp;<strong class="grcolor">Reviewed by:</strong>&nbsp;<label id="lblReviewedBy"></label>
+                    <br><strong class="grcolor">Settlement Term:</strong>&nbsp;<label id="lblSTCSettlementTerm"></label>&nbsp;&nbsp;<strong class="grcolor">Value:</strong>&nbsp;<label id="lblSTCPrice"></label>
+                </p>
+                <p><span class="label">Installation Details:</span> @(ViewData.ContainsKey("address") ? ViewData["address"] : "") </p>
+                <div class="description-box">
+                    <span class="label">Description:</span>
+                    <p id="lblDescription"></p>
+                </div>
+            </div>
+            <div class="col-md-7">
+                @if (Model.Item2.UserTypeId == 1)
+                {
+                    <button class="btn primary icon-btn pull-right margin-bottom-5" type="button" onclick="return GetRecFailureReasonDesc();" id="btngetFailureReasonDesc" style="display:none;">
+                        Get Failure Reason Description
+                        <span class="sprite-img rec-registry-h-ic"></span>
+                    </button>
+                }
+                <div class="pv-system-box" id="pv-system-box">
+                    @Html.Partial("_StcPVSystemCheck", new Tuple<FormBot.Entity.CreateJob>(Model.Item1))
+                </div>
+            </div>
+        </div>
+        <!-- Current Status End-->
+        <!-- Tabs-->
+
+        <div class="panel-group call-checklist-collapse" id="accordion" role="tablist" aria-multiselectable="true">
+            @if (Model.Item2.UserTypeId != 4 && Model.Item2.UserTypeId != 8 && Model.Item2.UserTypeId != 6)
+            {
+                <div class="panel panel-default">
+                    <div class="panel-heading" role="tab" id="headingOne" onclick="LoadComplienceCheckList()">
+                        <a class="collapsed">
+                            <span class="title-subject">Compliance Call Checklist</span>
+                        </a>
+                        @Html.DropDownListFor(m => m.Item2.STCJobDetailsID, new SelectList(Model.Item2.lstSubmission, "Id", "Name"), new { @class = "form-control selectpicker STCJobDetailsID" })
+                    </div>
+
+
+                    <div class="stcJobCompliance">
+                        @Html.Partial("_STCJobCompliance", Model.Item2)
+                    </div>
+
+
+                </div>
+            }
+
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingtow" onclick="LoadStcHistory()">
+                    <a class="collapsed">
+                        <span class="title-subject">STC Job History </span>
+                    </a>
+                </div>
+                <!-- panel-body -->
+                <div id="collapsetow" class="panel-collapse collapse">
+                    <div class="panel-body nopad">
+                        @Html.Partial("_StcJobHistory", Model.Item3)
+                    </div>
+                    <!-- panel-body End -->
+                </div>
+                <!-- Tabl 1 End-->
+            </div>
+
+        </div>
+
+        <!-- Tabl 1 End-->
+        <!-- Tabl 2-->
+        <!-- Current Status End-->
+    </div>
+</div>
+
+
+
+<script>
+
+    var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize';
+    var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+    var MaxLogoSize = '@FormBot.Helper.ProjectSession.MaxLogoSize';
+    USERID = '@Model.Item2.Guid';
+
+    $(document).ready(function () {
+
+        $(".STCJobDetailsID").on('change', function () {
+
+            var jobID = '@Model.Item2.JobId';
+            var STCJobDetailsID = $("#Item2_STCJobDetailsID").val();
+
+
+            $.ajax(
+                {
+                    url: '@Url.Action("GetComplianceCheck", "job")?jobID=' + jobID + '&STCJobDetailsID=' + STCJobDetailsID,
+                    dataType: 'html',
+                    method: "get",
+                    success: function (data) {
+
+                        $(".stcJobCompliance").html(data);
+                        makeDisableField();
+                        LoadComplienceCheckList();
+                    },
+                    error: function () {
+
+                    }
+                });
+
+        });
+
+        $("#Item2_STCJobDetailsID").val($("#STCJobDetailsID").val()).change();
+    });
+
+    $('#Item2_STCJobDetailsID').click(function (e) {
+        e.preventDefault();
+        return false
+
+    });
+
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegionForPopUp").hide();
+        $("#errorMsgRegionForPopUp").html(closeButton + message);
+        $("#errorMsgRegionForPopUp").show();
+        $('#popupStcCompliance').animate({ scrollTop: 0 }, 'slow');
+
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForPopUp").hide();
+        $("#successMsgRegionForPopUp").html(closeButton + message);
+        $("#successMsgRegionForPopUp").show();
+        $('#popupStcCompliance').animate({ scrollTop: 0 }, 'slow');
+
+    }
+
+    function GetRecFailureReasonDesc() {
+        var jobID = '@Model.Item2.JobId';
+        var STCJobDetailsID = '@Model.Item2.STCJobDetailsID';
+        $.ajax({
+            url: '@Url.Action("GetFailureDescription", "STCInvoice")?jobID=' + jobID + '&STCJobDetailsID=' + STCJobDetailsID,
+            dataType: 'json',
+            method: "get",
+            success: function (data) {
+                $("#lblDescription").html(data.FailureDesc);
+            },
+            error: function (result) {
+                showErrorMessage(result.FailureDesc);
+            }
+        });
+    }
+</script>

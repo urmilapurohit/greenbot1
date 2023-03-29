@@ -1,0 +1,318 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+<script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+<script src="~/Scripts/set-number.min.js"></script>
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script src="~/Scripts/jSignature.js"></script>
+<script src="~/Scripts/jqueryrotate.min.js"></script>
+
+<style type="text/css">
+
+    .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
+        background-color: #eee !important;
+    }
+    select.form-control {
+        background-color: #eef0f9 !important;
+    }
+
+    .form-control {
+        background-color: #eef0f9;
+    }
+    .autocompleteChangeUser {
+        z-index: 1000000000 !important;
+    }
+
+    .ui-autocomplete {
+        z-index: 10000 !important;
+    }
+
+    .signatureCanvas canvas {
+        width: 220px;
+        height: 80px;
+        border: 1px dotted #000;
+    }
+
+    #content {
+        background-color: #f2f2f2 !important;
+    }
+
+    .resp-tabs-container {
+        padding: 30px !important;
+    }
+
+    .commonJobDetail {
+        font-size: 14px;
+        color: #766D6D;
+    }
+
+    .nav-pills > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+        color: #fff;
+        background-color: #1b954c;
+    }
+
+    .nav-pills > li > a {
+        border-radius: 0px;
+    }
+
+    .tab-content {
+        border-top: 3px solid #1b954c;
+    }
+
+    .nav-pills > li > a {
+        font-weight: normal;
+        font-size: 14px;
+        color: #474747;
+        display: inline-block;
+        padding: 9px 18px 9px 18px;
+        margin: 0 1px 0 0;
+        list-style: none;
+        cursor: pointer;
+        float: left;
+    }
+
+    .modelBodyMessage > li {
+        position: relative;
+        /*border-bottom: 1px solid #d9d9d9;*/
+        padding: 14px 0px 0px 30px;
+    }
+
+        .modelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .modelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .STCmodelBodyMessage > li {
+        position: relative;
+        padding: 14px 0px 0px 30px;
+    }
+
+        .STCmodelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .STCmodelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .scrollSignature {
+        height: 100px;
+        width: 100%;
+    }
+
+    #dvOwnerSignatureView {
+        margin-top: -20px;
+    }
+
+    #dvOwnerSignatureActions {
+        margin-top: 10px;
+    }
+
+    .signature-05 {
+        background-position: -188px -38px;
+        width: 24px;
+        height: 22px
+    }
+</style>
+
+
+<input type="hidden" id="BasicDetails_JobID" value="@Model.JobID" />
+  
+        <div class="col-sm-11">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <h4 class="sub-title text-uppercase" style="font-family: 'OpenSansSemibold'; font-size: 16px !important; color: black; padding-bottom: 18px; ">Job Summary</h4>
+                            <p id="lblDescription" style="word-break: break-all;"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 ">
+                            <div class="form-group details-block">
+                                <p>
+                                    <strong>
+                                        Owner Details
+                                        @if (Model.JobOwnerDetails != null)
+                                        {
+                                            <span>(@Model.JobOwnerDetails.OwnerType)</span>
+                                        }
+                                        :
+                                    </strong>
+                                </p>
+                                @if (Model.JobOwnerDetails != null)
+                                {
+                                    <p><span>@Model.JobOwnerDetails.DisplayOwnerFullAddress</span></p>
+                                }
+
+                            </div>
+                            <div class="form-group details-block">
+                                <p><strong>Installation Details : </strong></p>
+                                @if (Model.JobInstallationDetails != null)
+                                {
+                                    <p><span>@Model.JobInstallationDetails.AddressDisplay</span></p>
+                                }
+
+                            </div>
+                            <div class="form-group details-block">
+                                <p><strong>STC Details : </strong></p>
+                                @if(Model.JobInstallationDetails!=null) {
+                            <p><span>@Model.JobInstallationDetails.PropertyType - @Model.JobInstallationDetails.SingleMultipleStory - @Model.JobInstallationDetails.InstallingNewPanel</span></p>
+                                }
+                                
+                            </div>
+                            <div class="form-group details-block">
+                                <p><strong>REC System Notes : </strong></p>
+                                @if (Model.JobSTCDetails != null)
+                                {
+                                    <p><span>@Model.JobSTCDetails.AdditionalCapacityNotes</span></p>
+                                }
+
+                            </div>
+                            <div class="form-group details-block">
+                                <p><strong>Connection Type : </strong></p>
+                                @if (Model.JobSTCDetails != null)
+                                {
+                                    <p><span>@Model.JobSTCDetails.TypeOfConnection</span></p>
+                                }
+
+                            </div>
+                            <div class="form-group details-block">
+                                <p>
+                                    <strong>Is There More Than 1 SGU : </strong>
+                                    @if (Model.JobSTCDetails != null)
+                                    {
+                                    <p><span>@Model.JobSTCDetails.MultipleSGUAddress</span></p>
+                                    }
+
+                                </div>
+                            <div class="form-group details-block">
+                                <p><strong>More Than 1 SGU Notes : </strong></p>
+                                @if (Model.JobSTCDetails != null)
+                                {
+                                    <p><span>@Model.JobSTCDetails.AdditionalLocationInformation</span></p>
+                                }
+
+                            </div>
+                        </div>
+                        
+                         
+                        
+                        <div class="col-sm-6">
+                            <div class="form-group details-block">
+                                <p><strong>Installer Details : </strong></p>
+                                <p>Installer Name : 
+                            @if (Model.JobInstallerDetails != null)
+                                {
+                                    <span>
+                                        @(Model.JobInstallerDetails.FirstName!=null? Model.JobInstallerDetails.FirstName:" ")
+                                        @(Model.JobInstallerDetails.Surname !=null? Model.JobInstallerDetails.Surname : " ")
+                                        ( @(Model.JobInstallerDetails.AccreditationNumber != null ? Model.JobInstallerDetails.AccreditationNumber : " ") )
+                                    </span>
+                                        }
+
+                                    </p>
+                                <p>Designer Name : 
+                                @if (Model.InstallerDesignerView != null)
+                                    {
+                                    <span>
+                                        @(Model.InstallerDesignerView.FirstName!=null? Model.InstallerDesignerView.FirstName:" ")
+                                        @(Model.InstallerDesignerView.LastName!=null? Model.InstallerDesignerView.LastName : " ")
+                                        (@(Model.InstallerDesignerView.CECAccreditationNumber != null ? Model.InstallerDesignerView.CECAccreditationNumber : " ") )
+                                    </span>
+                                        }
+
+                                    </p>
+                                <p>
+                                    Electrician Name :
+                                    @if (Model.JobElectricians != null)
+                                    {
+                                    <span>
+                                        @(Model.JobElectricians.FirstName!=null? Model.JobElectricians.FirstName:" ")
+                                        @(Model.JobElectricians.LastName!=null? Model.JobElectricians.LastName : " ")
+                                        (@(Model.JobElectricians.LicenseNumber != null ? Model.JobElectricians.LicenseNumber : " ") )
+                                    </span>
+                                            }
+
+                                        
+                                    </p>
+                            </div>
+                            <div class="form-group details-block">
+                                <p><strong>System Details : </strong></p>
+                                <p></p>
+                                <p>Panel Details : </p>
+                                @if (Model.lstJobPanelDetails != null)
+                                {
+                                    if (Model.lstJobPanelDetails.Count > 0)
+                                    {
+
+                                        foreach (var panel in Model.lstJobPanelDetails)
+                                        {
+                                            <p><span>@panel.Brand, @panel.Model Qty: @panel.NoOfPanel</span></p>
+                                        }
+                                    }
+                                }
+
+
+                                <p></p>
+                                <p>Inverter Details : </p>
+                                @if (Model.lstJobInverterDetails != null)
+                                {
+                                    if (Model.lstJobInverterDetails.Count > 0)
+                                    {
+
+                                        foreach (var inverter in Model.lstJobInverterDetails)
+                                        {
+                                            <p><span>@inverter.Brand, @inverter.Model Qty: @inverter.NoOfInverter</span></p>
+                                        }
+                                    }
+                                }
+
+                                <p></p>
+                                <p>Battery Manufacturer Details : </p>
+                                @if (Model.lstJobBatteryManufacturer != null)
+                                {
+                                    if (Model.lstJobBatteryManufacturer.Count > 0)
+                                    {
+
+                                        foreach (var batteryManufacturer in Model.lstJobBatteryManufacturer)
+                                        {
+                                            <p><span>@batteryManufacturer.Manufacturer, @batteryManufacturer.ModelNumber</span></p>
+                                        }
+                                    }
+                                }
+
+
+                            </div>
+                        </div>
+                    </div>
+                
+            
+        </div>
+    
+
+
+<link rel="stylesheet" href="~/Content/font-awesome/css/all.min.css" crossorigin="anonymous" />

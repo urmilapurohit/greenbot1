@@ -1,0 +1,393 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+
+@{
+    ////Todo
+    bool isPhotos = false;
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.Photos.GetHashCode()) { isPhotos = true; }
+            });
+        }
+    }
+}
+<input type="hidden" data-id="@Model.Header" id="txtDestinationAddForMap" />
+
+@if (ProjectSession.UserTypeId != 8 || isPhotos)
+{
+
+    <div class="col-md-5" id="PhotoListSection">
+        <div id="loadNewJobPhotoTabular">
+            <div class="" id="divJobPhotos">
+                <div class="panel pdf-generated def" id="pnlPhotos">
+                    <div class="visit-list">
+                        <div class="panel-heading submission-add visitParent" style="background-color: #f0f0f0; color:black;" role="photo-tab" id="allphotos1">
+                            <a role="button" class="collapsed" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseallphoto" aria-expanded="false" aria-controls="collapseAssets1">
+                                <i class="sprite-img folder-icon" style="left:20px !important"></i>
+                                <span style="background-color: #f0f0f0; color:black;">Photos<i class="sprite-img submission-icon"></i></span>
+                                <i class="sprite-img arrow-icon"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div id="collapseallphoto" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+                        <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+                            <div class="panel" id="loadallPhotos">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion11" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion11" style="display: none"><button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>Document has been saved successfully.</div>
+    </div>
+
+
+}
+<div class="modal fade" tabindex="-1" role="dialog" id="pMap">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label" id="lblSrcMap">Source</label>
+                                <input type="text" id="txtSource" class="form-control" placeholder="Source" tabindex="301" />
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Destination</label>
+                                <input type="text" id="txtDestination" class="form-control" placeholder="Destination" tabindex="302" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="display:none;">
+                        <div class="col-sm-12">
+                            <button type="button" class="btn default pull-right" onclick="GetLocation()" tabindex="303">Get Location</button>
+                            <button type="button" class="btn default pull-right" onclick="GetRoute()" tabindex="304">Get Route</button>
+                            <div id="distance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dMap" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+<!--<div class="modal fade" tabindex="-1" role="dialog" id="pMap">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="distance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dMap" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+<!-- /.modal-content -->
+<!--</div>--><!-- /.modal-dialog -->
+<!--</div>-->
+
+@Scripts.Render("~/bundles/jqueryval")
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+
+<script>
+    var urlLoadAllPhotos = '@Url.Action("LoadAllPhotos", "Job")';
+    
+    var urlcheckPhotosForViewer = '@Url.Action("CheckPhotoFile", "Job")';
+    var JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)';
+    $(function () {
+        setTimeout(function () {
+            SetViewerMaxHeight();
+            $("#showphotoonPage").niceScroll({
+                cursorcolor: "#c1c1c1",
+                background: "#f2f2f2",
+                cursorwidth: 8,
+                cursorborder: "none",
+                cursorborderradius: 0,
+                autohidemode: false,
+                bouncescroll: false,
+                horizrailenabled: true,
+                railvalign: "bottom"
+            });
+            $("#zoom-in-icon-Photo").click(function () {
+                var zoom = $("#zoom-dropdown-Photo").val().trim('%');
+                var newZoom = (parseInt(zoom) + 25) / 100;
+                $("#showphotoonPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoonPage").css("transform-origin", "top left");
+                $("#zoom-dropdown-Photo").val(newZoom * 100);
+                if ((newZoom * 100) == 150) {
+                    $("#zoom-in-icon-Photo").addClass("disabled");
+                    $("#zoom-out-icon-Photo").removeClass("disabled");
+                } else {
+                    $("#zoom-in-icon-Photo").removeClass("disabled");
+                    $("#zoom-out-icon-Photo").removeClass("disabled");
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#zoom-out-icon-Photo").click(function () {
+                var zoom = $("#zoom-dropdown-Photo").val().trim('%');
+                var newZoom = (parseInt(zoom) - 25) / 100;
+                $("#showphotoonPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoonPage").css("transform-origin", "top left");
+                $("#zoom-dropdown-Photo").val(newZoom * 100);
+                if ((newZoom * 100) == 25) {
+                    $("#zoom-out-icon-Photo").addClass("disabled");
+                    $("#zoom-in-icon-Photo").removeClass("disabled");
+                } else {
+                    $("#zoom-out-icon-Photo").removeClass("disabled");
+                    $("#zoom-in-icon-Photo").removeClass("disabled");
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#zoom-dropdown-Photo").change(function () {
+                debugger
+                var zoom = $("#zoom-dropdown-Photo").val().trim('%');
+                var newZoom = parseInt(zoom) / 100;
+                $("#showphotoonPage").css("transform", "scale(" + newZoom + ")");
+                $("#showphotoonPage").css("transform-origin", "top left");
+                if ((zoom) == 150) {
+                    $("#zoom-in-icon-Photo").addClass("disabled")
+                } else {
+                    $("#zoom-in-icon-Photo").removeClass("disabled")
+                }
+                if (zoom == 25) {
+                    $("#zoom-out-icon-Photo").addClass("disabled")
+                } else {
+                    $("#zoom-out-icon-Photo").removeClass("disabled")
+                }
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+            $("#onpagedivViewer").onPositionChanged(function () {
+                $("#onpagedivViewer").getNiceScroll().resize();
+            });
+        }, 500);
+
+
+    });
+    function SetViewerMaxHeight() {
+        $("#viewer").css("max-height", ($(window).height() - 300) + "px");
+    }
+    $("#allphotos1").click(function () {        
+        $('#loadallPhotos').empty();
+        $.ajax({
+            type: 'GET',
+            url: urlLoadAllPhotos,
+            data: { JobId: JobId },
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {                
+                $('#loadallPhotos').append(result.photoView);
+            }
+        });
+    });
+
+    function viewimgonPage(imgfullPath, dataVCLID) {
+
+        //$('#showphotoonPgae').show();
+        //$('#imgonPageview').attr('src', imgfullPath);
+        $("#onPageImgViewerdiv").show();
+        var checklistPhotoCount = $('[id*=checklistItemPhoto]');
+        $.each(checklistPhotoCount, function (i, e) {
+            $(this).removeClass('Photo-Highlight');
+            if ($(this).attr('data-vclid') == dataVCLID) {                
+                $(this).addClass('Photo-Highlight');
+            }
+        });
+        var imgName = imgfullPath.split('\\');
+        $.ajax({
+            type: "GET",
+            url: urlcheckPhotosForViewer,
+            data: { imgFullPath: imgfullPath, jobId: JobId },
+            dataType: "json",
+            contentType: "application/json",
+            success: function (result) {
+
+                if (result.status) {
+                    $('#imgonPageview').show();
+                    $("#zoom-dropdown-Photo").val(100);
+                    $('#errorMsgRegionPhotoViewer').hide();
+                    $('#lblOpenDocumentName').text(' : ' + imgName[imgName.length - 1]);
+                    $('#onpagephotodivViewer').html('');
+                    $('#onpagephotodivViewer').append('<div class="row" id="showphotoonPage"></div >');
+                    $('<img style="width: -webkit-fill-available;background-color: #f0f0f0" id="imgonPageview"/>').attr('src', "" + imgfullPath + "").attr('alt', "").appendTo($('#showphotoonPage'));
+                    $("#photosActionSection").css('visibility', 'visible');
+                    $("#onpagephotodivViewer").css('visibility', 'visible');
+                    $('#onPageImgViewerdiv').css('border', '18px solid #f0f0f0');
+                    $('#showphotoonPage').show();
+
+                }
+                else {
+                    $('#errorMsgRegionPhotoViewer').show();
+                    $('#imgonPageview').hide();
+                }
+            }
+
+        });
+        var i = 0;
+        $.ajax({
+            type: "GET",
+            url: urlLoadAllPhotosddl,
+            data: { jobId: JobId },
+            dataType: "json",
+            contentType: "application/json",
+            success: function (result) {
+
+                $("#ddlviewphotosName").empty();
+                $("#ddlviewphotosName").append($("<option></option>").val('0').html('Select'));
+                $.each(result, function (data, value) {
+                    var photos = value.Path.split('\\');
+                    var photoName = photos[photos.length - 1];
+                    var attachmentID = value.VisitCheckListPhotoId;
+                    $("#ddlviewphotosName").append($("<option></option>").attr('data-vclid', attachmentID).val(value.Path).html(photoName));
+                    if (value.Path == imgfullPath) {
+
+                        i = data;
+                        $("#ddlviewphotosName").val(value.Path);
+                        $('#ShowlocationandDate').empty();
+                        //var td = $('<div/>')
+                        //    .attr('class', 'col-md-10');
+                        //var td1 = $('<div/>')
+                        //    .attr('class', 'col-md-2');
+                        //$('#ShowlocationandDate').append(td);
+                        //$('#ShowlocationandDate').append(td1);
+                        $('#ShowlocationandDate').append('<label>FileName:' + photoName + '</label>');
+                        $('#ShowlocationandDate').append('<label style="padding-left: 1%;">   Captured:' + value.CreatedDate + '</label>');
+                        $('#ShowlocationandDate').append('<label style="padding-left: 1%;">   GeoLocation: ' + value.Latitude + ', ' + value.Longitude + '</label>');
+                        var div = $('<div class="title-btn btn-group pull-right" role="group" style="display: inline-block;">');
+                        var button = $('<button/>')
+                            .attr('type', 'button')
+                            .attr('data-lat', value.Latitude)
+                            .attr('data-lon', value.Longitude)
+                            .attr('onclick', 'showMap(' + value.Latitude + ',' + value.Longitude + ')')
+                            .attr('id', 'showlocationofPhoto')
+                            .css('width', 'fit-content')
+                            .css('border-radius', '3px')
+                            .css('display', 'inline')
+                            .attr('class', 'btn primary')
+                            .text('Get Location')
+                            .appendTo(div);
+
+                        /*var span = $('<span class="sprite-img"></span>Location').appendTo(button);*/
+                        $('#ShowlocationandDate').append(div);
+                        var previous = i - 1;
+                        var next = i + 1;
+                        if (i == 0) {
+                            previous = result.length - 1;
+                        }
+                        else if (i == result.length - 1) {
+                            next = 0;
+                        }
+                        if (result[next].Path.length > 0) {
+
+                            $('#forward-icon').attr('onclick', 'ViewPreviousNext("' + replacestrings(result[next].Path) + '","' + result[next].VisitCheckListPhotoId + '")');
+                        }
+                        if (result[previous].Path.length > 0) {
+
+                            $('#backwards-icon').attr('onclick', 'ViewPreviousNext("' + replacestrings(result[previous].Path) + '","' + result[previous].VisitCheckListPhotoId + '")');
+                        }
+                    }
+
+
+                })
+
+            }
+
+        });
+        
+    }
+
+    $('#ddlviewphotosName').change(function () {
+        var dataVCLID = $('#ddlviewphotosName').find(':selected').attr('data-vclid')
+        viewimgonPage($('#ddlviewphotosName').val(), dataVCLID);
+    });
+    function ViewPreviousNext(path, dataVCLID) {
+        viewimgonPage(path, dataVCLID);
+    }
+
+    function replacestrings(Replacestring) {
+
+        var oldSubstring = "\\";
+        var newSubstring = "\\\\";
+        var newString = "";
+        var index = 0;
+        while (index < Replacestring.length) {
+            var currentIndex = Replacestring.indexOf(oldSubstring, index);
+            if (currentIndex === -1) {
+                newString += Replacestring.substring(index);
+                break;
+            } else {
+                newString += Replacestring.substring(index, currentIndex) + newSubstring;
+                index = currentIndex + oldSubstring.length;
+            }
+        }
+
+        return newString;
+
+    }
+</script>

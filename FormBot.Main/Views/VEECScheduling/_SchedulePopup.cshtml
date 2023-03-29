@@ -1,0 +1,776 @@
+﻿@model FormBot.Entity.VEEC.VEECScheduling
+@using FormBot.Helper;
+
+<script src="~/Scripts/bootstrap-datetimepicker.min.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+@*<link href="~/Content/datepicker.css" rel="stylesheet" />*@
+
+
+<style type="text/css">
+    textarea {
+        resize: none;
+    }
+
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    /*.modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }*/
+
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .modal {
+        z-index: 9999 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+</style>
+
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+@Html.HiddenFor(m => m.VeecSchedulingID)
+@Html.HiddenFor(m => m.Status)
+@Html.HiddenFor(m => m.VeecTitle)
+@Html.HiddenFor(m => m.TempVeecSchedulingId)
+@Html.HiddenFor(m => m.IsClassic)
+@Html.HiddenFor(m => m.IsFromCalendarView)
+
+@{
+    ////Todo
+    bool isAddEditVeecScheduling = true;
+    bool isDeleteVeecScheduling = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditVeecScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteVeecScheduling = true; }
+        });
+    }
+}
+
+<div class="modal-header">
+    @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+    <h4 class="modal-title">Veec Schedule</h4>
+</div>
+<div class="modal-body">
+    @*<span class="field-validation-error" id="errorSpan"><span id="errorMsg"></span></span>*@
+    <div class="alert alert-success alert-dismissible visitPopupMsg" role="alert" id="successMsgRegionAddEditItem" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible visitPopupMsg" role="alert" id="errorMsgRegionForPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close sprite-img" aria-label="Close"></button>
+    </div>
+    <div class="form-box">
+        <div class="row">
+
+            <div class="col-sm-6">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.visitStartDate, new { @class = "control-label required" })
+                    <div class="input-group">
+                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                      Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                                      Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                      
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                        {
+                            @Html.TextBoxFor(m => m.visitStartDate, new { @class = "form-control  required date-pick", @placeholder = "From", @readonly = "readonly" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(m => m.visitStartDate, new { @class = "form-control required date-pick", @placeholder = "From", @disabled = "disabled" })
+                        }
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                        
+                        @Html.ValidationMessageFor(m => m.visitStartDate)
+                        @*<input type="text" placeholder="From" id="visitStartDate" class="form-control" name="visitStartDate">*@
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="control-label inv">&nbsp;</label>
+                    <div class="input-group">
+                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                        {
+                            @Html.TextBoxFor(m => m.visitStartTime, new { @class = "form-control required", @placeholder = "Time" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(m => m.visitStartTime, new { @class = "form-control required", @placeholder = "Time", @disabled = "disabled" })
+                        }
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                        @Html.ValidationMessageFor(m => m.visitStartTime)
+                        @*<input type='text' class="form-control" placeholder="Time" id="visitStartTime" name="visitStartTime" />*@
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-sm-6">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.visitEndDate, new { @class = "control-label" })
+                    <div class="input-group">
+                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                        {
+                            @Html.TextBoxFor(m => m.visitEndDate, new { @class = "form-control  date-pick", @placeholder = "To", @readonly = "readonly" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(m => m.visitEndDate, new { @class = "form-control  date-pick", @placeholder = "To", @disabled = "disabled" })
+                        }
+                        <span class="input-group-addon sprite-img date-picker"></span>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="form-group">
+                    <label class="control-label inv">&nbsp;</label>
+                    <div class="input-group">
+                        @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                    Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                        {
+                            @Html.TextBoxFor(m => m.visitEndTime, new { @class = "form-control", @placeholder = "Time" })
+                        }
+                        else
+                        {
+                            @Html.TextBoxFor(m => m.visitEndTime, new { @class = "form-control", @placeholder = "Time", @disabled = "disabled" })
+                        }
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                        @*@Html.ValidationMessageFor(m => m.visitEndTime)*@
+                        @*<input type='text' class="form-control" placeholder="Time" id="visitEndTime" name="visitEndTime" disabled="disabled"/>*@
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Label, new { @class = "control-label" })
+                    @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                    {
+                        @Html.TextBoxFor(m => m.Label, new { @class = "form-control", @maxlength = 300 })
+                    }
+                    else
+                    {
+                        @Html.TextBoxFor(m => m.Label, new { @class = "form-control", @maxlength = 300, @disabled = "disabled" })
+                    }
+
+                    @*<input type="text" class="form-control" id="Label" maxlength="50" name="Label">*@
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Detail, new { @class = "control-label" })
+                    @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                    {
+                        @Html.TextAreaFor(m => m.Detail, new { @class = "form-control", @maxlength = 4000 })
+                    }
+                    else
+                    {
+                        @Html.TextAreaFor(m => m.Detail, new { @class = "form-control", @maxlength = 4000, @disabled = "disabled" })
+                    }
+                    @*<textarea class="form-control" id="Detail" rows="5" maxlength="250" name="Detail"></textarea>*@
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.UserId, new { @class = "control-label required" })
+                    @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                    {
+                        @*@Html.DropDownList("SolarElectrician", null, "Select", new { id = "UserId", @class = "form-control required" })
+                        @Html.DropDownList("SolarElectrician", Model.lstjobs, "Select", new { id = "UserId", @class = "form-control required" })*@
+                        @Html.DropDownListFor(m => m.UserId, new SelectList(Model.solarElectrician, "UserId", "Name"), "Select", new { id = "UserId", @class = "form-control required" })
+                    }
+                    else
+                    {
+                        @*@Html.DropDownList("SolarElectrician", null, "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })
+                        @Html.DropDownList("SolarElectrician", Model.lstjobs, "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })*@
+                        @Html.DropDownListFor(m => m.UserId, new SelectList(Model.solarElectrician, "UserId", "Name"), "Select", new { id = "UserId", @class = "form-control required", @disabled = "disabled" })
+                    }
+                    @Html.ValidationMessage("UserId")
+
+                    @*@Html.LabelFor(m => m.ElectricianID, new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.ElectricianID, new List<SelectListItem>(), new { id = "ElectricianID", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.ElectricianID)*@
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.VeecID, new { @class = "control-label required" })
+                    @*@Html.LabelFor(m => m.JobID, new { @class = "control-label" })
+                        @Html.DropDownListFor(model => model.JobID, new List<SelectListItem>(), new { id = "JobID", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.JobID)*@
+                    @if ((Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                                        Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId) && isAddEditVeecScheduling)
+                    {
+                        @*@Html.DropDownList("Job", null, "Select", new { id = "JobID", @class = "form-control required" })*@
+                        @Html.DropDownListFor(m => m.VeecID, new SelectList(Model.veec, "VeecID", "Title"), "Select", new { id = "VeecID", @class = "form-control required" })
+                    }
+                    else
+                    {
+                        @*@Html.DropDownList("Job", null, "Select", new { id = "JobID", @class = "form-control required", @disabled = "disabled" })*@
+                        @Html.DropDownListFor(m => m.VeecID, new SelectList(Model.veec, "VeecID", "Title"), "Select", new { id = "VeecID", @class = "form-control required", @disabled = "disabled" })
+                    }
+                    @Html.ValidationMessage("VeecID")
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+
+        $('#visitStartDate').val('')
+        $('#visitStartDate').datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#visitEndDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#visitStartDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                var toDate = new Date(ConvertDateToTick($("#visitEndDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                if (fromDate > toDate) {
+                    $("#visitEndDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#visitStartDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+            tDate = moment(tickStartDate).format("MM-DD-YYYY");
+            if ($('#visitEndDate').data('datepicker')) {
+                $('#visitEndDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        }).on('change', function () {
+            $(this).valid();
+        });
+
+        $('#visitEndDate').datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            autoclose: true
+            @*startDate: new Date(ConvertDateToTick($('#visitStartDate').val(), '@ProjectConfiguration.GetDateFormat'))*@
+        }).on('change', function () {
+            $(this).valid();
+        });
+
+
+
+        @*$('#date-pick, #date-pick1, .date-pick').datepicker({
+            //format: "dd/mm/yyyy",
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('change', function () {
+            $(this).valid();
+        });*@
+
+        $('#visitStartTime, #visitEndTime').datetimepicker({
+            format: "HH:mm"
+        });
+
+        $("#visitStartDate").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+        $("#visitEndDate").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+
+        $("#visitStartTime").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+        $("#visitEndTime").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+
+
+
+        $("#noNotification").click(function () {
+            $("#notification").modal('hide');
+            $("#popUpJobDetail").modal('hide');
+
+        });
+
+        $("#yesNotification").click(function () {
+            if ($("#alertAssignTime").data('dragData')) {
+                var data = $("#alertAssignTime").data('dragData');
+                SaveScheduleOnDropAndInsertEdit(data.startDate, data.startTime, data.endDate, data.endTime, data.label, data.detail, data.userId, data.veecId, data.veecSchedulingID, true, data.status, data.isDrop, "", "", "", data.IsClassic.toString().toLowerCase());
+                //saveJobSchedule(true);
+            }
+        });
+
+
+        $("#saveVEECSchedule").click(function () {
+            
+            if ($("#jobScheduling").valid()) {
+                saveVEECSchedule(false);
+            }
+        });
+
+    });
+
+
+
+    function saveVEECSchedule(isNotification) {
+        
+        var startDate, startTime, endDate, endTime, label, detail, veecId, userId, veecSchedulingID, url, status, userName, veeccheckListTemplateId = "", tickEndDate = null;
+        startDate = $("#visitStartDate").val();
+        startTime = $("#visitStartTime").val();
+        endDate = $("#visitEndDate").val();
+        endTime = $("#visitEndTime").val();
+        label = $("#Label").val();
+        detail = $("#Detail").val();
+        veecId = $("#VeecID").val();
+        userId = $("#UserId").val();
+        veecSchedulingID = $("#VeecSchedulingID").val();
+        status = $("#Status").val();
+        userName = $("#UserId option:selected").text();
+        var title = $("#JobTitle").val();
+        if (title == '' || title == undefined || title == null) {
+            title = $("#VeecID option:selected").text();
+        }
+
+        veecTitle = title;
+
+        //TODO
+        var tickStartDate = ConvertDateToTick(startDate, '@ProjectConfiguration.GetDateFormat');
+        startDate = moment(tickStartDate).format("YYYY-MM-DD");
+
+        if (endDate != null && endDate != "" && endDate != undefined) {
+            tickEndDate = ConvertDateToTick(endDate, '@ProjectConfiguration.GetDateFormat');
+            endDate = moment(tickEndDate).format("YYYY-MM-DD");
+        }
+
+        if (!isNotification) {
+            var isValid = CompareDate(startDate, endDate, startTime, endTime);
+
+            if (!isValid && message != '' && message != undefined && message != null) {
+                $(".alert").hide();
+                $("#errorMsgRegionForPopUp").html(closeButton + message);
+                
+                $("#errorMsgRegionForPopUp").show();
+
+                return false;
+            }
+        }
+
+
+
+        if ($("#IsClassic").val().toString().toLowerCase() == 'false') {
+            //if ('@Model.IsCheckListView.ToString().ToLower()' == 'true') {
+            if ($("#chkListOfScheduling").find(".checklist").find('li').length < 1) {
+                alert('Please add at least one checklist item.');
+                return false;
+            }
+        }
+
+        $("#loading-image").css("display", "");
+
+
+        //setTimeout(function () {
+        @*SaveScheduleOnDropAndInsertEdit(startDate, startTime, endDate, endTime, label, detail, userId, jobId, jobSchedulingID, isNotification, status, false, userName, "", jobTitle, '@Model.IsCheckListView.ToString().ToLower()')*@
+        SaveScheduleOnDropAndInsertEdit(startDate, startTime, endDate, endTime, label, detail, userId, veecId, veecSchedulingID, isNotification, status, false, userName, "", veecTitle, $("#IsClassic").val().toString().toLowerCase())
+        //}, 500);
+
+
+    }
+
+    function SaveScheduleOnDropAndInsertEdit(startDate, startTime, endDate, endTime, label, detail, userId, veecId, veecSchedulingID, isNotification, status, isDrop, userName, ui, veecTitle, IsClassic) {
+
+
+        var VeeccheckListTemplateId = $("#VEECCheckListTemplateId").val();
+        $.ajaxSetup({ cache: false });
+        var dragData = {
+            startDate: startDate,
+            startTime: startTime,
+            endDate: endDate,
+            endTime: endTime,
+            label: label,
+            detail: detail,
+            userId: userId,
+            veecId: veecId,
+            veecSchedulingID: veecSchedulingID,
+            isNotification: isNotification,
+            status: status,
+            isDrop: isDrop,
+            userName: userName,
+            veecTitle: veecTitle,
+            IsClassic: IsClassic,
+            TemplateId: VeeccheckListTemplateId,
+        };
+        $("#alertAssignTime").data('dragData', dragData);
+        
+        var obj = {};
+        obj.VeecSchedulingID = veecSchedulingID;
+        obj.Label = label;
+        obj.Detail = detail;
+        obj.strVisitStartDate = startDate;
+        obj.strVisitEndDate = endDate;
+        obj.strVisitStartTime = startTime;
+        obj.strVisitEndTime = endTime;
+        obj.VeecId = veecId;
+        obj.UserId = userId;
+        obj.Status = status;
+        obj.isNotification = isNotification;
+        obj.isDrop = isDrop;
+        obj.userName = userName;
+        obj.VeecsTitle = veecTitle;
+        obj.TemplateId = VeeccheckListTemplateId;
+        obj.IsFromCalendarView = $("#IsFromCalendarView").val();
+
+        obj.SolarCompanyId = $("#hdnsolarCompanyid").val();
+
+        //if ($("#IsFromCalendarView").val().toString().toLowerCase() == 'true')
+        //{
+        //    obj.SolarCompanyId = $("#hdnsolarCompanyid").val();
+        //}
+        //else
+        //{
+
+        //}
+
+
+            var veecVisitChecklistItems = []
+
+            $.each($("#chkListOfScheduling").find(".checklist").find('li'), function () {
+                veecVisitChecklistItems.push($(this).data('visitchecklistitemid'));
+            });
+
+            if (veecVisitChecklistItems.length > 0) {
+                obj.VeecVisitCheckListItemIds = veecVisitChecklistItems.toString();
+            }
+
+        obj.TempVeecSchedulingId = $("#TempJobSchedulingId").val();
+
+        var data = JSON.stringify(obj);
+
+        var ret = false;
+        //var data = "{ 'startDate': '"+startDate+"', 'startTime': '"+startTime+"','endDate':'"+endDate +"','endTime':'"+endTime+"','label' :'"+label +"','detail' :'"+detail +"','userId' :'"+userId +"','jobId' :'"+jobId+"' ,'jobSchedulingID' :'"+jobSchedulingID +"','isNotification' :'"+isNotification +"','status' :'"+status+"', 'isDrop':  '"+isDrop+"' }";
+        $.ajax(
+     {
+         url: '@Url.Action("VeecSchedulingDetail", "VEECScheduling")',//?startDate=' + startDate + '&startTime=' + startTime + '&endDate=' + endDate + '&endTime=' + endTime + '&label=' + label + '&detail=' + detail + '&userId=' + userId + '&jobId=' + jobId + '&jobSchedulingID=' + jobSchedulingID + '&isNotification=' + isNotification + '&status=' + status + '&isDrop=' + isDrop,
+         dataType: 'json',
+         contentType: 'application/json; charset=utf-8',
+         type: 'post',
+         data: data,
+         //async: false,
+
+         //beforeSend: function () {
+         //    $("#loading-image1").show();
+         //},
+         success: function (response) {
+             
+             //console.log("0 " + new Date());
+
+             if (response) {
+
+                 //console.log("1 " + new Date());
+
+                 var responseID = response.split('^')[0];
+                 var responseData = response.replace(responseID + '^', '');
+
+                 //console.log("2 " + new Date());
+
+                 ret = ResponseSaveScheduleOnDropAndInsertEdit(response, responseID, responseData, isDrop);
+
+                 if (isDrop) {
+                     if (!ret) {
+                         $("#notification").modal();
+                     }
+                 }
+             }
+
+             if (ui != "" && ui != undefined && ui != null) {
+                 $("#notification").modal('hide');
+                 if (!ret) {
+                     ui.draggable.animate(ui.draggable.data().origPosition, "slow");
+                     return;
+                 }
+             }
+
+
+             //if (IsClassic == "false") {
+             //    ReloadJobPhotoSection(jobId);
+             //    HideInstaller();
+             //}
+         },
+         error: function () {
+             message = "Job Schedule has not been saved."
+             showErrorMessage(message);
+             $("#notification").modal('hide');
+             $("#loading-image1").hide();
+         }
+     });
+        return ret;
+    }
+
+    
+
+    function FillJobSchedulingDetail(jobSchedulingID, jobTitle) {
+        $.ajaxSetup({ cache: false });
+        
+        if (jobSchedulingID > 0) {
+
+            $("#btnJobDelete").css("display", "");
+
+            $.ajax(
+            {
+                url: '@Url.Action("VeecSchedulingDetailById", "VEECScheduling")?veecSchedulingID=' + jobSchedulingID,
+                contentType: 'application/json',
+                method: 'get',
+                cache: false,
+                success: function (response) {
+                    ;
+                    if (response && response.VeecSchedulingID) {
+
+                        if ('@Model.IsFromCalendarView.ToString().ToLower()' == 'true') {
+                            var GetSolarElectricianForVeecTypeURL = '@Url.Action("GetSolarElectricianForVeecType", "VeecScheduling")?SolarCompanyId=' + $("#hdnsolarCompanyid").val();
+                            FillDropDown('UserId', GetSolarElectricianForJobTypeURL, response.UserId, true, null);
+                            @*var GetJobsForJobTypeURL = '@Url.Action("GetVeecForJobType", "JobScheduling")?JobType=' + response.JobType + "&SolarCompanyId=" + $("#hdnsolarCompanyid").val();*@
+                            //FillDropDown('VeecID', GetJobsForJobTypeURL, response.VeecID, true, null);
+                        }
+
+                        var endTime = null, endDate = null;
+
+                        var startTime = response.strVisitStartTime.split(':', 2).join(':');
+                        var startDate = moment(response.strVisitStartDate).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+
+                        if (response.strVisitEndTime != null && response.strVisitEndTime != '') {
+                            endTime = response.strVisitEndTime.split(':', 2).join(':');
+                        }
+                        if (response.strVisitEndDate != null && response.strVisitEndDate != '') {
+                            endDate = moment(response.strVisitEndDate).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+                        }
+
+                        $("#visitStartDate").val(startDate);
+                        $("#visitStartTime").val(startTime);
+                        $("#visitEndDate").val(endDate);
+                        $("#visitEndTime").val(endTime);
+                        $("#Label").val(response.Label);
+                        $("#Detail").val(response.Detail);
+                        $("#UserId").val(response.UserId);
+                        $("#VeecID").val(response.VeecID);
+                        $("#VeecSchedulingID").val(response.VeecSchedulingID);
+                        $("#Status").val(response.Status);
+                        $("#JobTitle").val(jobTitle);
+                        $("#visitStartDate").datepicker("update", startDate);
+                        $("#visitEndDate").datepicker("update", endDate);
+
+                        var tickStartDateSelect = ConvertDateToTick($('#visitStartDate').val(), '@ProjectConfiguration.GetDateFormat');
+                        $('#visitEndDate').data('datepicker').setStartDate(new Date(tickStartDateSelect));
+
+                        ResponseShowJobSchedulingDetail(response);
+
+                        $("#popUpVeecDetail").modal();
+
+                        $("#popUpVeecDetail").find('input[type=text]').each(function () {
+                            $(this).attr('class', 'form-control valid');
+                        });
+                        $("#popUpVeecDetail").find('Select').each(function () {
+                            $(this).attr('class', 'form-control valid');
+                        });
+
+
+
+                            $("#loading-image").show();
+
+                            if (response.VEECCheckListTemplateId > 0)
+                                OpenCheckListItemPopup(response.VEECCheckListTemplateEncodedId);
+                            else
+                                OpenCheckListItemPopup(response.DefaultVEECTemplateId);
+
+
+
+
+                            $("#popUpVeecDetail").find('.field-validation-error').attr('class', 'field-validation-valid');
+                    }
+                    else {
+                        message = "Job Schedule has not been opened."
+                        showErrorMessageCalendar(message);
+                    }
+                },
+                error: function () {
+                    message = "Job Schedule has not been opened."
+                    showErrorMessageCalendar(message);
+                }
+            });
+        }
+    }
+    function CompareDate(startDate, endDate, startTime, endTime) {
+
+        var minutesOfDay = function (m) {
+            return moment(m).minutes() + moment(m).hours() * 60;
+        }
+
+        if (Date.parse(startDate) > Date.parse(endDate)) {
+            message = "Start date should not be greater than end date";
+            return false;
+        }
+        else {
+            if (startDate == endDate) {
+                if (minutesOfDay(startDate + ' ' + startTime) > minutesOfDay(endDate + ' ' + endTime)) {
+                    message = "Start time must be less than end Time";
+                    return false;
+                }
+                else if (minutesOfDay(startDate + ' ' + startTime) == minutesOfDay(endDate + ' ' + endTime)) {
+                    message = "Start time and end time should not be same time";
+                    return false;
+                }
+                else
+                    return true;
+            }
+            else
+                return true;
+        }
+    }
+
+    function DeleteJobSchedulingDetail(jobSchedulingID, userId) {
+        if (confirm('Are you sure you want to delete this job schedule?')) {
+
+
+            $("#loading-image").css("display", "");
+
+            setTimeout(function () {
+                DeleteJSD(jobSchedulingID, userId);
+            }, 500);
+        }
+    }
+
+    function DeleteJSD(jobSchedulingID, userId) {
+        if (jobSchedulingID == null)
+            jobSchedulingID = $("#JobSchedulingID").val();
+
+        if (userId == null)
+            userId = $("#UserId").val();
+
+        //var userId = $("#UserId").val();
+
+        $.ajax(
+       {
+           url: '@Url.Action("DeleteJobSchedule", "JobScheduling")?jobSchedulingID=' + jobSchedulingID + '&userId=' + userId + '&jobTitle=' + $('#JobTitle').val(),
+           contentType: 'application/json',
+           method: 'post',
+           success: function (responseID) {
+               ResponseDelete(responseID, jobSchedulingID);
+           },
+           error: function () {
+               message = "Job schedule has not been deleted."
+               showErrorMessage(message);
+           }
+       });
+    }
+    function OpenCheckListItemPopup(templateId) {
+        
+        $(".alert").hide();
+        $("#successMsgRegionAddEditItem").hide();
+        $("#errorMsgRegionItem").hide();
+        
+        $.get('@Url.Action("GetCheckListItemByTemplateId", "VEECCheckListItem")?id=' + templateId + '&isSetFromSetting=' + true, function (data) {
+            $('#checkListTemplateForm').empty();
+            $('#checkListTemplateForm').append(data);
+            $("#popupCheckListTemplate").modal({ backdrop: 'static', keyboard: false });
+        });
+    }
+
+
+</script>

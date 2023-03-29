@@ -1,0 +1,1332 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@{
+    IEnumerable<User> users = new List<User>();
+    ViewBag.Company = new SelectList(users, string.Empty, string.Empty);
+}
+<style type="text/css">
+    .disabled {
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    .default {
+        line-height: normal !important;
+    }
+</style>
+<div id="horizontalTab">
+    <ul class="resp-tabs-list">
+        <li id="t1">Personal Details</li>
+        <li id="t2" class="RA SCA SSC SE SC">Address Details</li>
+        <li id="t3" class="RA SCA SCO SSC SE SC">Account Details</li>
+    </ul>
+    <div class="resp-tabs-container">
+        <div class="tab1">
+            <!--Tab1 start here-->
+            <div class="form-box">
+
+                @if (string.IsNullOrEmpty(Model.ResellerUrl))
+                {
+                <div class="row">
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            <label class="control-label required">User Work Type:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @*@Html.RadioButton("UserJobType", "1", true) Solar Electrician
+                                    @Html.RadioButton("UserJobType", "2", false) SWH User*@
+                                <label>
+                                    @Html.CheckBox("IsPVDUser", Model.IsPVDUser.HasValue ? Model.IsPVDUser : false) PVD Job
+                                </label>
+                                <label>
+                                    @Html.CheckBox("IsSWHUser", Model.IsSWHUser.HasValue ? Model.IsSWHUser : false) SWH Job
+                                </label>
+                                @*<label>
+                                        @Html.CheckBox("IsVEECUser", Model.IsVEECUser.HasValue ? Model.IsVEECUser : false) VEEC
+                                    </label>*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+                <div class="row">
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                            @Html.ValidationMessageFor(m => m.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.LastName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                            @Html.ValidationMessageFor(m => m.LastName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Email, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 3 })
+                            @Html.ValidationMessageFor(m => m.Email)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Phone, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", @maxlength = 20, @tabindex = 4, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.Phone)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Mobile, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", @maxlength = 20, @tabindex = 5, onkeypress = "return isNumber(event);" })
+                        </div>
+                    </div>
+                    @if (Model.UserId == 0)
+                    {
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC UserPass">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", @maxlength = 256, @tabindex = 6, @id = "UserName", @onblur = "checkExist(this,'user name')" })
+                            @Html.ValidationMessageFor(m => m.UserName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC ViewPassword UserPass">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Password, new { @class = "control-label required" })
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control", @maxlength = 50, @tabindex = 7 })
+                            @Html.ValidationMessageFor(m => m.Password)
+                        </div>
+                    </div>
+                    }
+                </div>
+                <div class="tab_bottomrow">
+                    <div class="RA SCA SSC SE SC">
+                        <a href="javascript:void(0)" class="next_btn" tabindex="9" onclick="return validateForm() ? $('#t2').click() : false;">Next</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab2" style="display:none;">
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CompanyABN, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 12, @id = "CompanyABN" })
+                            @Html.ValidationMessageFor(m => m.CompanyABN)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CompanyName, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.CompanyName, new SelectList((ViewBag.Company) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", id = "CompanyName", @tabindex = 13 })
+                            @Html.ValidationMessageFor(m => m.CompanyName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FromDate, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.strFromDate, new { @class = "form-control", @maxlength = 50, @tabindex = 14, id = "fromDate", @readonly = "readonly" })
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ToDate, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.strToDate, new { @class = "form-control", @maxlength = 50, @tabindex = 15, id = "toDate", @readonly = "readonly" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CompanyWebsite, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CompanyWebsite, new { @class = "form-control", @maxlength = 50, @tabindex = 16 })
+                            @Html.ValidationMessageFor(m => m.CompanyWebsite)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.LoginCompanyName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.LoginCompanyName, new { @class = "form-control", @maxlength = 50, @tabindex = 17 })
+                            @Html.ValidationMessageFor(m => m.LoginCompanyName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            <label class="control-label required">Postal Address Type :</label>
+                            @Html.DropDownListFor(m => m.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", id = "AddressID", @tabindex = 18 })
+                        </div>
+                    </div>
+                </div>
+                <div class="row DPA">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UnitTypeID, new { @class = "control-label", @id = "lblUnitTypeID" })
+                            @Html.DropDownListFor(model => model.UnitTypeID, new List<SelectListItem>(), new { id = "UnitTypeId", @class = "form-control", @tabindex = 19 })
+                            @Html.ValidationMessageFor(m => m.UnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UnitNumber, new { @class = "control-label", @id = "lblUnitNumber" })
+                            @Html.TextBoxFor(m => m.UnitNumber, new { id = "UnitNumber", @class = "form-control", @maxlength = 20, @tabindex = 20 })
+                            @Html.ValidationMessageFor(m => m.UnitNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.StreetNumber, new { @class = "control-label required", @id = "lblStreetNumber" })
+                            @Html.TextBoxFor(m => m.StreetNumber, new { id = "StreetNumber", @class = "form-control", @maxlength = 20, @tabindex = 21 })
+                            @Html.ValidationMessageFor(m => m.StreetNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.StreetName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.StreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 22 })
+                            @Html.ValidationMessageFor(m => m.StreetName)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row PDA">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostalAddressID, new { @class = "control-label required" })
+                            @Html.DropDownListFor(model => model.PostalAddressID, new List<SelectListItem>(), new { id = "PostalAddressID", @class = "form-control", @tabindex = 23 })
+                            @Html.ValidationMessageFor(m => m.PostalAddressID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostalDeliveryNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostalDeliveryNumber, new { id = "PostalDeliveryNumber", @class = "form-control", @maxlength = 50, @tabindex = 24 })
+                            @Html.ValidationMessageFor(m => m.PostalDeliveryNumber)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="DPA">
+                        <div class="col-sm-3 RA SCA SE SSC SC">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.StreetTypeID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.StreetTypeID, new List<SelectListItem>(), new { id = "StreetTypeId", @class = "form-control", @tabindex = 25 })
+                                @Html.ValidationMessageFor(m => m.StreetTypeID)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Town, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 26, id = "txtTown" })
+                            @Html.ValidationMessageFor(m => m.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.State, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.State, new { @class = "form-control", @maxlength = 20, @tabindex = 27, id = "txtState", @readonly = "readonly" })
+                            @Html.ValidationMessageFor(m => m.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostCode, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 28, id = "txtPostCode" })
+                            @Html.ValidationMessageFor(m => m.PostCode)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab_bottomrow">
+                    <a href="javascript:void(0)" tabindex="29" class="prev_btn" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                    <a href="javascript:void(0)" tabindex="30" id="NextTab1" class="next_btn" onclick="return validateForm() ? $('#t3').click() : false;">Next</a>
+                </div>
+            </div>
+        </div>
+        <div class="tab3" style="display:none;">
+            <!--Tab3 start here-->
+            <div class="form-box">
+                <div class="row">
+
+                    @* 05-Jan-2018 : As per discussion with Hus on call, informed to remove BSB,AccountNumber,AccountName for both users SE and SWH  *@
+                    @if (!string.IsNullOrEmpty(Model.ResellerUrl))
+                    {
+                        <div class="col-sm-3 RA SCA SCO SE SSC SC">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.BSB, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.BSB, new { @class = "form-control", @maxlength = 20, @tabindex = 31, onkeypress = "return isNumber(event);" })
+                                @Html.ValidationMessageFor(m => m.BSB)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA SCA SCO SE SSC SC">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.AccountNumber, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.AccountNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 32, onkeypress = "return isNumber(event);" })
+                                @Html.ValidationMessageFor(m => m.AccountNumber)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA SCA SCO SE SSC SC">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.AccountName, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.AccountName, new { @class = "form-control", @tabindex = 33 })
+                                @Html.ValidationMessageFor(m => m.AccountName)
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-sm-3 SCA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.RAMId, new { @class = "control-label" })
+                            @Html.HiddenFor(m => m.RAMId)
+                            <input type="hidden" id="hdnRAMID" />
+                            <input type="text" id="searchRAM" name="searchRAM" class="form-control" maxlength="50" />
+                        </div>
+                    </div>
+
+                    <div class="SCA clearfix visible-lg-block"></div>
+
+                    <div class="col-sm-3 SCA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ClientNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.ClientNumber, new { @class = "form-control", @tabindex = 51, @readonly = "readonly" })
+                            <input type="hidden" id="hdnResellerClientNumber" />
+                        </div>
+                    </div>
+
+                    @*<div class="col-sm-3 chkSCA defaultFormBot ViewPassword chkisSTC">
+                <div class="form-group">
+                    <span class="control-label"> I am a solar installer and want to trade STCs:</span>
+                    <div class="checkbox-box">
+                        @Html.CheckBoxFor(m => m.IsSTC, new { @tabindex = 34, id = "chkSCA" })
+                    </div>
+                </div>
+            </div>*@
+
+                </div>
+                <div class="row chkSCASignUp">
+                    <div class="col-sm-3 SCA SE SSC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CECAccreditationNumber, new { @class = "control-label", @id = "lblCECAccreditationNumber" })
+                            @Html.TextBoxFor(m => m.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 35, @id = "CECAccreditationNumber", @onblur = "checkExist(this,'cec accreditation number')" })
+                            @Html.ValidationMessageFor(m => m.CECAccreditationNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA SE SSC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "control-label", @id = "lblElectricalContractorsLicenseNumber" })
+                            @Html.TextBoxFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 36 })
+                            @Html.ValidationMessageFor(m => m.ElectricalContractorsLicenseNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA SE SSC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CECDesignerNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CECDesignerNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 37 })
+                            @Html.ValidationMessageFor(m => m.CECDesignerNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA SE SSC SERole">
+                        <div class="form-group">
+                            <label class="control-label required">SE Role:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @Html.RadioButton("SEDesigner", "2", true, new { @id = "SEDesign", @tabindex = 38 }) Design
+                                @Html.RadioButton("SEDesigner", "1", false, new { @id = "SEInstall", @tabindex = 39 }) Install
+                                @Html.RadioButton("SEDesigner", "3", false, new { @id = "SEDesignInstall", @tabindex = 40 }) Design & Install
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @*@if (string.IsNullOrEmpty(Model.ResellerUrl))
+        {
+            <div class="row chkSWHSignUp">
+                <div class="col-sm-3 SCA SE SSC">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.SWHLicenseNumber, new { @class = "control-label", @id = "lblSWHLicenseNumber" })
+                        @Html.TextBoxFor(m => m.SWHLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 36 })
+                        @Html.ValidationMessageFor(m => m.SWHLicenseNumber)
+                    </div>
+                </div>
+            </div>
+        }*@
+
+                <div class="row">
+                    <div class="title" style="margin-top: 20px;background: #f2f2f2;padding: 10px;">
+                        <h3>Compliance Identification Checks:</h3>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.ResellerUrl))
+                    {
+                        <div class="col-md-2 SCA SE SSC SC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Directors drivers license:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblDirectorsDriversLicense',1);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblDirectorsDriversLicense">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 1)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)" proofDocumentType="1"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                        }
+                                                                        <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-3 SCA SE SSC SC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label" style="margin-right: 15px;">Accreditation Documentations:</label>
+                                <label class="control-label">(CEC,electricial,contractor license)</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblAccreditationDocumentations',2)" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblAccreditationDocumentations">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 2)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)" proofDocumentType="2"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                        }
+                                                                        <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-3 SCA SE SSC SC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Proof of business address:</label>
+                                <label class="control-label">(Utility bill or bank statement with address detail visible)</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblProofOfBusinessAddress',3);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblProofOfBusinessAddress">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 3)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)" proofDocumentType="3"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                        }
+                                                                        <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-2 SCA SE SSC SC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Public liability insurance:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblPublicLiabilityInsurance',4);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblPublicLiabilityInsurance">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 4)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)" proofDocumentType="4"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                        }
+                                                                        <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="col-md-2 SCA SE SSC SC ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    @Html.LabelFor(m => m.Signature, new { @class = "control-label" })
+                                </div>
+                                <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                <input id="uploadBtnSignature" type="file" class="upload fileUpload" tabindex="49" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgSignature" href="javascript:void(0)" style="display:none;text-decoration:none;" tabindex="50">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-sm-3 SCA SE SSC SC ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    @Html.LabelFor(m => m.Signature, new { @class = "control-label" })
+                                </div>
+                                @*<div class="fileUpload primary col-sm-2" style="margin:0;">
+                        </div>*@
+                                <table class="uf" style="margin-left:-10px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                @*<input id="fileToUploadSignature" tabindex="34" type="file" class="upload" name="file" data-input="true" onchange="ShowPreview(this, 'imgSign', 'fileToUploadSignature')" />*@
+                                                <input id="uploadBtnSignature" type="file" class="upload fileUpload" tabindex="41" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgSignature" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 SCA SE SSC SC ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    <label class="control-label chkSCASignUp" id="lblUpload">
+                                        Proof of Identity (Please upload drivers license, CEC license and electrical license photos):
+                                    </label>
+                                    <label class="control-label chkSWHSignUp" id="lblUpload">
+                                        Proof of Identity (Please upload drivers license and plumbers license):
+                                    </label>
+                                </div>
+                                <table class="uf" style="margin-left:-10px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                <input id="uploadBtn1" type="file" class="upload fileUpload" multiple tabindex="42" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont col-sm-9" id="divDocuments">
+                                                <table id="tblDocuments1" class="table table-striped">
+                                                    <tbody id="tblDocuments">
+                                                        @if (Model.UserId != 0)
+                                                        {
+                                                            if (Model.lstUserDocument != null)
+                                                            {
+                                                                foreach (var Document in @Model.lstUserDocument)
+                                                                {
+                                                                    if (Document.DocumentType != 5)
+                                                                    {
+                                                                        <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                            <td class="tdCount col-sm-2">@Document.index</td>
+                                                                            <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                            @if (Document.MimeType == "image")
+                                                                            {
+                                                                                <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)"></td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                            }
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath')"></td>
+                                                                        </tr>
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.UserTypeID == 7)
+                {
+                <div class="row">
+
+                    <div class="col-sm-3 SCA SE SSC SC ViewPassword">
+                        <div class="form-group">
+                            <div>
+                                @Html.LabelFor(m => m.SESelfie, new { @class = "control-label required" })
+                                @Html.ValidationMessageFor(m => m.SESelfie)
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic">
+                                            <span>Upload</span>
+                                            <input id="uploadBtnSelfie" type="file" class="upload fileUpload" tabindex="41" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="bxcont" style="margin-top:7px;">
+                                            <a id="imgSelfie" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 SCA SE SSC SC ViewPassword">
+                        <div class="form-group">
+                            <label class="control-label">Installers drivers license:</label>
+                        </div>
+                        <table class="uf" style="margin-left:-10px;margin-top:10px;">
+                            <tr>
+                                <td width="150" style="vertical-align:top;">
+                                    <div class="col-md-12" style="padding-left:0px !important">
+                                        <div class="fileUpload primary upload_ic col-md-6" style="width: 145px;">
+                                            <span>Upload Front</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUploadInstaller('Front');" />
+                                        </div>
+
+                                        <div class="fileUpload primary upload_ic col-md-6" style="width: 145px;">
+                                            <span>Upload Back</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="52" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUploadInstaller('Back');" />
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="bxcont col-sm-9" id="divDocuments">
+                                        <table id="tblDocuments1" class="table table-striped">
+                                            <tbody id="tblInstallerDriversLicense">
+                                                @if (Model.UserId != 0)
+                                                {
+                                                    if (Model.lstUserDocument != null)
+                                                    {
+                                                        foreach (var Document in @Model.lstUserDocument)
+                                                        {
+                                                            if (@Document.DocumentType == 5)
+                                                            {
+                                                                <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                    <td class="tdCount col-sm-2">@Document.index</td>
+                                                                    <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                    @if (Document.MimeType == "image")
+                                                                    {
+                                                                        <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Preview" onclick="OpenDocument(this)" proofDocumentType="5"></td>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Download" onclick="DownloadDocument(this)" proofDocumentType="5"></td>
+                                                                    }
+                                                                    <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+                }
+                <div class="tab_bottomrow">
+                    <a href="javascript:void(0)" tabindex="43" class="prev_btn default" onclick="return validateForm() ? $('#t2').click() : false;">Previous</a>
+                    <div class="btn primary icon-btn">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="submit" name="Submit" value="Save" autofocus class="ViewPassword" id="btnSubmit" tabindex="44" onclick="return getDropDownValue();">
+                    </div>
+                    <input type="button" value="Cancel" id="btnCancelLast" class="default ViewPassword cancel_ic" tabindex="45" onclick="DeleteDocumentFolderOnCancel()">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@********Pop up view*********@
+<div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBox">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div style="height:480px;">
+                            <img src="@Model.Signature" id="imgSign" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+
+                    <div>
+                        <img src="@Model.Signature" id="imgSign" class="" style="display:inline;width:100%;height:100%;" />
+                    </div>
+
+                </div>
+                <div class="modal-footer"><p class="remove_ic" onclick="deleteImage('imgSign');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header ">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Proof of Document</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @{
+                        var args = new Dictionary<string, string>();
+                        if (Model.FileCount != null)
+                        {
+                            args["FileCount"] = Model.FileCount.ToString();
+                            args["DivId"] = "MainDiv";
+                        }
+                    }
+                    @if (Model.FileCount != null)
+                    {
+                        @Html.Partial("~/Views/Shared/_DocumentSlider.cshtml", args)
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxSelfie" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBoxSelfie">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Selfie</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.SESelfie" id="imgSelfieImage" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteSelfieImage('imgSelfie', 0);"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var RAMList = [];
+    var DocCount = -1;
+
+    $(document).ready(function () {
+
+        $("#hdnResellerClientNumber").val('@Model.ClientNumber');
+
+        $("#searchRAM").change(function () {
+            if ($("#hdnRAMID").val() == '') {
+                $("#ClientNumber").val($("#hdnResellerClientNumber").val());
+            }
+        });
+
+        if ('@Model.UserTypeID' == 4) {
+            $('#searchRAM').autocomplete({
+                minLength: 0,
+                source: function (request, response) {
+                    var data = [];
+                    $("#hdnRAMID").val('');
+                    $.each(RAMList, function (key, value) {
+                        if (value.text.toLowerCase().indexOf($("#searchRAM").val().toLowerCase()) > -1) {
+                            data.push({ Title: value.text, id: value.value });
+                        }
+                    });
+
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title, id: item.id };
+                    }))
+                },
+                select: function (event, ui) {
+
+                    $("#hdnRAMID").val(ui.item.id); // save selected id to hidden input
+                    var url = '@Url.Action("GetClientNumberOnRAMChange", "Account")';
+                    GetClientNumberOnRAMChange(5, '@Model.ResellerID', $("#hdnRAMID").val(), url);
+                    @*var clientNumber = GetClientNumberOnRAMChange(5, '@Model.ResellerID', $("#hdnRAMID").val(), url);
+                    if (clientNumber && clientNumber != '' && clientNumber != null) {
+                        $("#ClientNumber").val(clientNumber);
+                    }*@
+                }
+            }).on('focus', function () { $(this).keydown(); });
+
+            $("#searchRAM").autocomplete('instance')._renderItem = function (ul, item) {
+                var re = new RegExp($.trim(this.term.toLowerCase()));
+                var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) + "</span>");
+
+                return $("<li style='font-size:14px;'></li>")
+                    .data("item.autocomplete", item)
+                    .append("<a>" + t + "</a>")
+                    .appendTo(ul);
+            };
+
+            BindRAMForSolarCompany('@Model.RAMId');
+        }
+
+        $('#imgSelfie').click(function () {
+            $("#loading-image").css("display", "");
+            $('#imgSelfieImage').attr('src', SRCSelfie).load(function () {
+                logoWidth = this.width;
+                logoHeight = this.height;
+                $('#popupboxSelfie').modal({ backdrop: 'static', keyboard: false });
+
+                if ($(window).height() <= logoHeight) {
+                    //$("#imgSign").height($(window).height() - 205);
+
+                    $("#imgSelfieImage").closest('div').height($(window).height() - 205);
+                    $("#imgSelfieImage").closest('div').css('overflow-y', 'scroll');
+                    $("#imgSelfieImage").height(logoHeight);
+                }
+                else {
+                    $("#imgSelfieImage").height(logoHeight);
+                    $("#imgSelfieImage").closest('div').removeAttr('style');
+                }
+
+                if (screen.width <= logoWidth || logoWidth >= screen.width - 250) {
+                    //$("#imgSign").width(screen.width - 10);
+                    //$('#popupbox').find(".modal-dialog").width(screen.width - 10);
+
+                    $('#popupboxSelfie').find(".modal-dialog").width(screen.width - 250);
+                    $("#imgSelfieImage").width(logoWidth);
+                }
+                else {
+                    $("#imgSelfieImage").width(logoWidth);
+                    $('#popupboxSelfie').find(".modal-dialog").width(logoWidth);
+                }
+                $("#loading-image").css("display", "none");
+            });
+            $("#imgSelfieImage").unbind("error");
+            $('#imgSelfieImage').attr('src', SRCSelfie).error(function () {
+                alert('Image does not exist.');
+                $("#loading-image").css("display", "none");
+            });
+        });
+
+        //signature upload
+        $('#uploadBtnSelfie').fileupload({
+            url: BaseURL + 'Upload/User',
+            dataType: 'json',
+            done: function (e, data) {
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                var UploadFailedFilesName = [];
+                UploadFailedFilesName.length = 0;
+                //formbot start
+                for (var i = 0; i < data.result.length; i++) {
+
+                    if (data.result[i].Status == true) {
+
+                        var guid = USERID;
+                        var signName = $('#imgSelfieImage').attr('class');
+                        $("[name='SESelfie']").each(function () {
+                            $(this).remove();
+                        });
+                        if (signName != null && signName != "") {
+                            DeleteFileFromSelfieOnUpload(signName, guid, oldFileName);
+                        }
+                        var proofDocumentURL = UploadedDocumentPath;
+                        var imagePath = proofDocumentURL + "UserDocuments" + "/" + guid;
+                        var SRC = imagePath + "/" + data.result[i].FileName.replace("%", "$");
+
+                        SRCSelfie = SRC;
+
+                        //$('#imgSign').attr('src', SRCSign).load(function () { logoWidth = this.width; logoHeight = this.height });
+                        $('#imgSelfieImage').attr('class', data.result[i].FileName.replace("%", "$"));
+
+                        $('#imgSelfie').show();
+
+
+                        $('<input type="hidden">').attr({
+                            name: 'SESelfie',
+                            value: data.result[i].FileName.replace("%", "$"),
+                            id: data.result[i].FileName.replace("%", "$"),
+                        }).appendTo('form');
+
+                    }
+                    else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                        UploadFailedFilesName.push(data.result[i].FileName.replace("%", "$"));
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+                    $(".alert").hide();
+                    $("#successMsgRegion").hide();
+                    $("#errorMsgRegion").html(closeButton + UploadFailedFiles.length + " " + "File has not been uploaded.");
+                    $("#errorMsgRegion").show();
+
+                }
+                if (UploadFailedFilesName.length > 0) {
+                    $(".alert").hide();
+                    $("#successMsgRegion").hide();
+                    $("#errorMsgRegion").html(closeButton + UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+                    $("#errorMsgRegion").show();
+
+                }
+                if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0) {
+                    $(".alert").hide();
+                    $("#errorMsgRegion").hide();
+                    $("#successMsgRegion").html(closeButton + "File has been uploaded successfully.");
+                    $("#successMsgRegion").show();
+
+                }
+            },
+
+            progressall: function (e, data) {
+
+            },
+
+            singleFileUploads: false,
+            send: function (e, data) {
+                var documentType = data.files[0].type.split("/");
+                var mimeType = documentType[0];
+                if (data.files.length == 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].name.length > 50) {
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + "Please upload small filename.");
+                            $("#errorMsgRegion").show();
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                            return false;
+                        }
+                    }
+                }
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt(MaxImageSize)) {
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + " " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB");
+                            $("#errorMsgRegion").show();
+
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt(MaxImageSize)) {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB");
+                        $("#errorMsgRegion").show();
+
+                        return false;
+                    }
+                }
+                if (mimeType != "image") {
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html(closeButton + "Please upload a file with .jpg , .jpeg or .png extension.");
+                    $("#errorMsgRegion").show();
+                    $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                    $('body').animate({ scrollTop: 0 }, 'slow');
+
+                    return false;
+
+
+                }
+                $(".alert").hide();
+                $("#errorMsgRegion").html("");
+                $("#errorMsgRegion").hide();
+
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: USERID,
+                    id: USERID,
+                }).appendTo('form');
+                return true;
+
+            },
+            formData: { userId: USERID },
+            change: function (e, data) {
+                $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+            }
+        }).prop('disabled', !$.support.fileInput)
+            .parent().addClass($.support.fileInput ? undefined : 'disabled');
+    });
+
+    function BindRAMForSolarCompany(ramId) {
+        $("#searchRAM").val("");
+        $.ajax({
+            type: 'get',
+            url: '@Url.Action("GetRAMByReseller", "RAMSolarCompany")',
+            dataType: 'json',
+            data: { resellerId: '@Model.ResellerID' },
+            success: function (RAMS) {
+                RAMList = [];
+                $.each(RAMS, function (i, user) {
+                    RAMList.push({ value: user.Value, text: user.Text });
+                });
+
+                if (ramId > 0) {
+                    $('#hdnRAMID').val(ramId);
+                    $.each(RAMList, function (key, value) {
+                        if (value.value == ramId) {
+                            $("#searchRAM").val(value.text);
+                        }
+                    });
+                }
+
+            },
+            error: function (ex) {
+                alert('Failed to retrieve greenbot account manager.' + ex);
+            }
+        });
+        return false;
+    }
+
+    //function GetClientNumberOnRAMChange(userTypeId, resellerId, userId, url) {
+    //    $.ajax({
+    //        type: 'get',
+    //        url: url,
+    //        dataType: 'json',
+    //        data: { userTypeId: userTypeId, resellerId: resellerId, userId: userId },
+    //        success: function (data) {
+    //            if (data) {
+    //                if (userTypeId == data.userTypeIdOfPrefix) {
+    //                    if (data.clientNumber && data.clientNumber != null && data.clientNumber != "")
+    //                        $("#ClientNumber").val(data.clientNumber);
+    //                    else {
+    //                        showErrorMessage("Reseller or RAM don't have client code.");
+    //                        $("#ClientNumber").val("");
+    //                    }
+
+    //                }
+    //                else {
+    //                    if (data.clientNumber && data.clientNumber != null && data.clientNumber != "") {
+    //                        $("#ClientNumber").val(data.clientNumber);
+    //                        showErrorMessage("Selected account manager don't have client code, so displying client number is based on reseller." + '<br/>' + "When account manager set its own client code then client number will be set accordingly.");
+    //                    }
+    //                    else {
+    //                        showErrorMessage("Reseller or RAM don't have client code.");
+    //                        $("#ClientNumber").val("");
+    //                    }
+    //                }
+    //            }
+    //        },
+    //        error: function (ex) {
+    //            alert('Failed to get client number.');
+    //        }
+    //    });
+    //}
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+    }
+
+    function proofUpload(tableId, proofDocumentType) {
+
+        var url = BaseURL + 'Upload/User';
+        $('.btnUploadProofDocs').fileupload({
+            url: url,
+            dataType: 'json',
+            done: function (e, data) {
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                var UploadFailedFilesName = [];
+                UploadFailedFilesName.length = 0;
+                //formbot start
+                for (var i = 0; i < data.result.length; i++) {
+
+                    if (data.result[i].Status == true) {
+                        var rowcount = $('#' + tableId + ' tr').length;
+                        var count = rowcount + 1;
+                        var documentType = data.result[i].MimeType.split("/");
+                        var mimeType = documentType[0];
+                        var documentId = "document" + count;
+                        var content = "<tr style='margin-top:30px'>"
+                        content += '<td class="tdCount col-sm-2" >' + count + '.' + ' </td>';
+                        content += '<td class="col-sm-6" style="color:#494949">' + data.result[i].FileName.replace("%", "$") + ' </td>';
+
+                        if (mimeType == "image") {
+                            content += '<td  class="col-sm-2" style="color:blue"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" class="' + data.result[i].FileName.replace("%", "$") + '" title="Preview" onclick="OpenDocument(this)" proofDocumentType="' + proofDocumentType + '"></td>';
+                        }
+                        else {
+                            content += '<td  class="col-sm-2" style="color:blue"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" class="' + data.result[i].FileName.replace("%", "$") + '" title="Download" onclick="DownloadDocument(this)" proofDocumentType="' + proofDocumentType + '"></td>';
+                        }
+                        var fnDelete = "javascript:DeleteFileFromFolder('" + data.result[i].FileName + "','" + proofDocumentType + "')";
+                        content += '<td style="color:blue"><img src=' + ProjectImagePath + 'images/delete-icon.png style="cursor: pointer id="signDelete" title="Delete" onclick="' + fnDelete + '"></td>';
+                        content += "</tr>"
+                        DocCount += 1;
+                        $('#' + tableId).append(content);
+                        $('<input type="hidden">').attr({
+                            name: 'ProofFileNamesCreate[' + DocCount + '].FileName',
+                            value: data.result[i].FileName.replace("%", "$"),
+                            proofDocumentType: proofDocumentType,
+                            file: data.result[i].FileName.replace("%", "$"),
+                            class: 'ProofFileNamesCreate'
+                        }).appendTo('form');
+                        $('<input type="hidden">').attr({
+                            name: 'ProofFileNamesCreate[' + DocCount + '].ProofDocumentType',
+                            value: proofDocumentType,
+                            proofDocumentType: proofDocumentType,
+                            file: data.result[i].FileName.replace("%", "$"),
+                            class: 'ProofFileNamesCreate'
+                        }).appendTo('form');
+
+                    }
+                    else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                        UploadFailedFilesName.push(data.result[i].FileName.replace("%", "$"));
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName.replace("%", "$"));
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+
+                    $(".alert").hide();
+                    $("#successMsgRegion").hide();
+                    $("#errorMsgRegion").html(closeButton + UploadFailedFiles.length + " " + "File has not been uploaded.");
+                    $("#errorMsgRegion").show();
+
+                }
+                if (UploadFailedFilesName.length > 0) {
+                    $(".alert").hide();
+                    $("#successMsgRegion").hide();
+                    $("#errorMsgRegion").html(closeButton + UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+                    $("#errorMsgRegion").show();
+
+                }
+                if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0) {
+                    $(".alert").hide();
+                    $("#errorMsgRegion").hide();
+                    $("#successMsgRegion").html(closeButton + "File has been uploaded successfully.");
+                    $("#successMsgRegion").show();
+
+                }
+            },
+
+            progressall: function (e, data) {
+
+            },
+
+            singleFileUploads: false,
+            send: function (e, data) {
+                if (data.files.length == 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].name.length > 50) {
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + "Please upload small filename.");
+                            $("#errorMsgRegion").show();
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                            return false;
+                        }
+                    }
+                }
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt(MaxImageSize)) {
+
+                            $(".alert").hide();
+                            $("#successMsgRegion").hide();
+                            $("#errorMsgRegion").html(closeButton + " " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB");
+                            $("#errorMsgRegion").show();
+
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            ShowErrorMsgForFileName("Please upload file that not conatain <> ^ [] .")
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt(MaxImageSize)) {
+                        $(".alert").hide();
+                        $("#successMsgRegion").hide();
+                        $("#errorMsgRegion").html(closeButton + "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB");
+                        $("#errorMsgRegion").show();
+
+                        return false;
+                    }
+                }
+                $(".alert").hide();
+                $("#errorMsgRegion").html("");
+                $("#errorMsgRegion").hide();
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: USERID,
+                }).appendTo('form');
+                return true;
+            },
+            formData: {
+                userId: USERID
+                , ProofDocumentType: parseInt(proofDocumentType)
+                , IsScaProofDocs: true
+            },
+            change: function (e, data) {
+                $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+            }
+        }).prop('disabled', !$.support.fileInput)
+            .parent().addClass($.support.fileInput ? undefined : 'disabled');
+    }
+</script>

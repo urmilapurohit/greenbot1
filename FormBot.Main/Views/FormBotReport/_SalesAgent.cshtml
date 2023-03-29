@@ -1,0 +1,187 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="SalesAgentBit" value="10" id="SalesAgentBit" />
+<input type="hidden" name="minSalesAgent" value="1" id="minSalesAgent" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstSalesAgent, new MultiSelectList(Model.LstSalesAgent, "Value", "Text"), new { id = "LstSalesAgent", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SalesAgent" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SalesAgent" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.SalesAgentAssignedUser, new MultiSelectList(Model.LstSalesAgentAssignedUser, "Value", "Text"), new { id = "LstSalesAgentAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnSalesAgentAssignedUser, new { id = "hdnSalesAgentAssignedUser" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnSalesAgentSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnSalesAgentCancel" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SalesAgent", function () {
+
+        if (parseInt($('#SalesAgentBit').val()) == 0) {
+            $('#LstSalesAgent option:selected').each(function () {
+                $(this).remove().appendTo("#LstSalesAgentAssignedUser");
+            });
+            $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length);
+        }
+        else {
+            var SalesAgent = (($('#LstSalesAgent option:selected').length + $('#LstSalesAgentAssignedUser option').length) <= parseInt($('#SalesAgentBit').val()));
+            if (SalesAgent) {
+                var LstSalesAgent = $('#LstSalesAgentAssignedUser option').length < parseInt($('#SalesAgentBit').val());
+                if (LstSalesAgent) {
+                    $('#LstSalesAgent option:selected').each(function () {
+                        $(this).remove().appendTo("#LstSalesAgentAssignedUser");
+                    });
+                    var max = $('#SalesAgentBit').val();
+                    $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstSalesAgentAssignedUser option').length == parseInt($('#SalesAgentBit').val()))) {
+                    $('#btnLtoR_SalesAgent').css('opacity', '0.5');
+                    $('#btnLtoR_SalesAgent').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SalesAgent').css('opacity', '1');
+                    $('#btnLtoR_SalesAgent').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_SalesAgent", function () {
+        $('#LstSalesAgentAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstSalesAgent");
+        });
+        var max = $('#SalesAgentBit').val();
+        if (max > 0) {
+            $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length + '/' + max);
+        } else {
+            $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstSalesAgentAssignedUser option').length < parseInt($('#SalesAgentBit').val()))) {
+                $('#btnLtoR_SalesAgent').css('opacity', '1');
+                $('#btnLtoR_SalesAgent').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_SalesAgent').css('opacity', '0.5');
+                $('#btnLtoR_SalesAgent').css('cursor', 'auto');
+            }
+        }
+    });
+
+    //$(document).on("click", "#closeSalesAgent", function () {
+    //    $('#popupSalesAgent').modal('hide');
+    //    $('#cntSalesAgent').html($('#LstSalesAgentAssignedUser option').length);
+    //});
+
+    $(document).on("click", "#btnSalesAgentSave", function () {
+
+        var strAssignedAttendeeList = [];
+        $('#LstSalesAgentAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        //if ($('#minSalesAgent').val() > 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSalesAgent').val() > 0 && $('#LstSalesAgentAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        //if (($('#LstSalesAgentAssignedUser option').length <= parseInt($('#SalesAgentBit').val()))) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSalesAgent').val() == 1 && $('#LstSalesAgentAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnSalesAgentAssignedUser").val(strAssignedAttendeeList);
+        $('#cntSalesAgent').html($('#LstSalesAgentAssignedUser option').length);
+        $('#popupSalesAgent').modal('hide');
+    });
+
+    $(document).on("click", "#btnSalesAgentCancel", function () {
+        $('#LstSalesAgentAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSalesAgent");
+        });
+        var max = $('#SalesAgentBit').val();
+        if (max > 0) {
+            $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length + '/' + max);
+        } else {
+            $('#SalesAgentAvail').html($('#LstSalesAgentAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstSalesAgentAssignedUser option').length < parseInt($('#SalesAgentBit').val()))) {
+                $('#btnLtoR_SalesAgent').css('opacity', '1');
+                $('#btnLtoR_SalesAgent').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_SalesAgent').css('opacity', '0.5');
+                $('#btnLtoR_SalesAgent').css('cursor', 'auto');
+            }
+        }
+        $("#hdnSalesAgentAssignedUser").val('');
+    });
+
+    $(document).on("click", "#closeSalesAgent", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstSalesAgentAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        //if ($('#minSalesAgent').val() > 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSalesAgent').val() > 0 && $('#LstSalesAgentAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        //if (($('#LstSalesAgentAssignedUser option').length <= parseInt($('#SalesAgentBit').val()))) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSalesAgent').val() == 1 && $('#LstSalesAgentAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnSalesAgentAssignedUser").val(strAssignedAttendeeList);
+        $('#cntSalesAgent').html($('#LstSalesAgentAssignedUser option').length);
+        $('#popupSalesAgent').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

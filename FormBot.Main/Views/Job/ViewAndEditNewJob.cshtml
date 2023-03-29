@@ -1,0 +1,862 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Entity
+@using FormBot.Entity.Job
+@using FormBot.Helper
+@using System.Web.Script.Serialization;
+@{
+    ////Todo
+    bool isAddJob = false;
+    bool isDeleteJob = false;
+    bool isEditjob = false;
+    bool isAdd = false;
+    bool isDelete = false;
+    bool isAssignSSC = false, isAssignSCO = false, isNotesView = false, isHistoryView = false, isMessageView = false;
+    bool isJobInvoiceView = false, isJobEmailView = false;
+    bool isHistory = false;
+    bool isJobAction = false;
+    bool isMessage = false;
+    bool isPrintJob = false;
+    bool isPreapprovals = false;
+    bool isConnections = false;
+    bool isDocManager = false;
+    bool isCECform = false;
+    bool isSTCform = false;
+    bool isPnlInvoiceform = false;
+    bool isElecBillform = false;
+    bool isLockUnlockSerial = false;
+    bool isSaveJobAfterTrade = false;
+    bool isChangeSCA = false;
+    bool isDisplaySwitchForTabulerView = false;
+
+    var serializerData = new JavaScriptSerializer();
+    var serialNumWithPhotosJson = serializerData.Serialize(Model.SerialNumberwithPhotosAvaibilityList);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAdd) { isAddJob = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDelete) { isDeleteJob = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEdit) { isEditjob = true; }
+
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSSC.GetHashCode()) { isAssignSSC = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSCO.GetHashCode()) { isAssignSCO = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteAdd.GetHashCode()) { isAdd = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteDelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteView.GetHashCode()) { isNotesView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobMessageView.GetHashCode()) { isMessageView = true; }
+            //if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView.GetHashCode()) { isScheduleView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobInvoiceView.GetHashCode()) { isJobInvoiceView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEmailView.GetHashCode()) { isJobEmailView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.History.GetHashCode()) { isHistory = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.jobActions.GetHashCode()) { isJobAction = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.Message.GetHashCode()) { isMessage = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.Printjob.GetHashCode()) { isPrintJob = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.preapprovals.GetHashCode()) { isPreapprovals = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.connections.GetHashCode()) { isConnections = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.DocumentManager.GetHashCode()) { isDocManager = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.PnlInvoiceform.GetHashCode()) { isPnlInvoiceform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.ElecBillform.GetHashCode()) { isElecBillform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SaveJobAfterTrade.GetHashCode()) { isSaveJobAfterTrade = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.LockUnlockSerialNo.GetHashCode()) { isLockUnlockSerial = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.ChangeSCA.GetHashCode()) { isChangeSCA = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.IsAllowVisibleTabulerViewSwitch.GetHashCode()) { isDisplaySwitchForTabulerView = true; }
+
+
+
+        });
+    }
+
+    bool isSendMessage = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobMessageSend.GetHashCode()) { isSendMessage = true; }
+        });
+    }
+
+    STCBasicDetails sTCBasicDetails = new STCBasicDetails();
+    if (ViewBag.STCBasicDetails != null)
+    {
+        sTCBasicDetails = (STCBasicDetails)ViewBag.STCBasicDetails;
+    }
+}
+
+<style type="text/css">
+    .jobMenu li {
+        padding: 0px;
+        border: 1px solid #e4e4e4;
+        border-radius: 3px;
+    }
+    /*Sanck bar gst */
+    #snackbar .action {
+        background: inherit;
+        display: inline-block;
+        border: none;
+        font-size: inherit;
+        text-transform: uppercase;
+        color: black;
+        margin: 0 0 0 24px;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    #snackbar {
+        visibility: hidden;
+        margin-left: -125px;
+        background-color: #1b954c;
+        color: #fff;
+        border-radius: 5px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 20px;
+        font-size: 17px;
+    }
+
+        #snackbar.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s;
+            animation: fadein 0.5s;
+        }
+
+    @@-webkit-keyframes fadein {
+        from {
+            bottom: 0;
+            opacity: 0;
+        }
+
+        to {
+            bottom: 30px;
+            opacity: 1;
+        }
+    }
+
+    @@keyframes fadein {
+        from {
+            bottom: 0;
+            opacity: 0;
+        }
+
+        to {
+            bottom: 30px;
+            opacity: 1;
+        }
+    }
+
+    /*Sanck bar gst */
+    .STCmodelBodyMessage > li {
+        position: relative;
+        padding: 14px 0px 0px 30px;
+    }
+
+        .STCmodelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .STCmodelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .modelBodyMessage > li {
+        position: relative;
+        /*border-bottom: 1px solid #d9d9d9;*/
+        padding: 14px 0px 0px 30px;
+    }
+
+        .modelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .modelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .UpperCaseText {
+        text-transform: uppercase;
+    }
+
+    .jobHeader {
+        vertical-align: middle;
+    }
+</style>
+
+<div id="jobNewScreen">
+    @Html.HiddenFor(x => x.GlobalisAllowedSPV)
+    <input type="hidden" id="IsNewViewer" value="@ProjectSession.IsNewViewer.ToString()" />
+    <script>
+        jQuery(window).load(function () {
+            $('#onOffSwitchNewDocVIewer').prop('checked', (("@ProjectSession.IsNewViewer.ToString()").toLowerCase() == "true"));
+        });
+
+    </script>
+    <div class="container-fluid create-job-details">
+        <div class="row">
+            <div class="title">
+                <span>
+                    <h1 id="jobTitle">
+                        @if (Model.BasicDetails.JobType == 1)
+                        {
+                            @*@Model.BasicDetails.RefNumber<span id="jobHeader" class="jobHeader"><span class="UpperCaseText">@Model.BasicDetails.CompanyName.ToString().Trim()</span> @Model.Header</span><span class="jobHeader" style="margin-left:0px !important">PV SOLAR</span>*@
+                            @Model.BasicDetails.RefNumber
+                            if (ProjectSession.UserTypeId == 1)
+                            {
+                                <span style="font-size: 25px;border-left: none;margin-left: 0;">(@Model.BasicDetails.JobID)</span>
+                            }
+                            <span id="jobHeader" class="jobHeader"> @Model.Header</span><span class="jobHeader" style="margin-left:0px !important">PV SOLAR</span>
+                        }
+                        else
+                        {
+                            @Model.BasicDetails.RefNumber
+                            if (ProjectSession.UserTypeId == 1)
+                            {
+                                <span style="font-size: 25px;border-left: none;margin-left: 0;">(@Model.BasicDetails.JobID)</span>
+                            }
+                            <span id="jobHeader" class="jobHeader"> @Model.Header</span><span class="jobHeader" style="margin-left:0px !important">SWH</span>
+                        }
+                    </h1>
+                </span>
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                {
+                    <span> <button type="button" id="btnWarningNotes" class="btn default" onclick="" tabindex="101" style="float:right;margin-right:-30px;background-color: #f2dede">Warning Notes (0)</button></span>
+                }
+
+                <span><a class="back-btn pull-right" title="Back" id="btnBackNew" href="#"><span class="sprite-img back-icon"></span>Back</a></span>
+            </div>
+        </div>
+        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+        {
+            <div id="warningNotesRegion" style="margin-bottom: 15px;height:auto; max-height:200px; overflow-y:auto; background-color: #f2dede;border-color: #ebccd1;">
+            </div>
+
+            <div>
+                @if (Model.CommonJobsWithSameInstallDateAndInstaller != null && Model.CommonJobsWithSameInstallDateAndInstaller.Count > 0)
+                {
+                    <div class="job-com-box" id="loadCommonJobs">
+                        <div class="warning-notice" id="divWarning" style="background-color: #f0eefa;">
+                            <h5>Warning Notice:</h5>
+                            Installer : <b> @Model.CommonJobsWithSameInstallDateAndInstaller[0].InstallerName </b> has been already assigned the following jobs.
+                            @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallDateAndInstaller)
+                            {
+                                string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) </p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus != null && Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus.Count > 0)
+                {
+                    <div class="job-com-box" id="loadCommonJobsWithFailedStcStatus">
+                        <div class="warning-notice" id="divWarning" style="background-color: #f1e9e9;">
+                            <h5>Warning Notice:</h5>
+                            Installer : <b> @Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus[0].InstallerName </b> has been already assigned the following jobs which have failed stc statuses.
+                            @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus)
+                            {
+                                string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) </p>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Model.CommonJobsWithSameInstallationAddress != null && Model.CommonJobsWithSameInstallationAddress.Count > 0)
+                {
+                    <div class="job-com-box" id="loadCommonJobsWithSameInstallationAddress">
+                        <div class="warning-notice" id="divWarning" style="background-color: #f1e9e9;">
+                            <h5>Warning Notice:</h5>
+                            Same installation address has been already used for the following jobs .
+                            @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallationAddress)
+                            {
+                                string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                string stcStatus = " <b class=commonJobDetail>STC Status : </b>" + lstCommonJobs.Status;
+                                string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) @Html.Raw(HttpUtility.HtmlDecode(stcStatus)) </p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <input type="hidden" id="hasJobID" value="0" />
+        <input type="hidden" id="STCStatusId" value="@ViewBag.STCStatusId" />
+
+
+        <div class="row">
+            <div class="col-md-7">
+                <ul class="create-job-menu jobMenu clearfix">
+                    <li id="ActiveJob" class="active"><a href="#" title="Job Details">Job Details</a></li>
+                    @*<li class="active"><a href="#" title="Job Details">Job Details</a></li>*@
+                    <li id="aInvoice">
+                        @if (isJobInvoiceView)
+                        {
+                            <a href="javascript:void(0);" title="Invoice" style="text-decoration:none;">Invoice</a>
+                        }
+                    </li>
+
+                    <li id="aNotes" style="display:none;">
+                        @if (isNotesView)
+                        {
+                            <a href="javascript:void(0);" title="Notes" style="text-decoration:none;">Notes</a>
+                        }
+                    </li>
+                    <li id="aHistory">
+                        @if (isHistoryView && (ProjectSession.UserTypeId != 8 || isHistory))
+                        {
+                            <a href="javascript:void(0);" title="History" style="text-decoration:none;">History</a>
+                        }
+                    </li>
+                    <li id="aMessage">
+                        @if (isMessageView && (ProjectSession.UserTypeId != 8 || isMessage))
+                        {
+                            <a href="javascript:void(0);" title="Message" style="text-decoration:none;">Message</a>
+                        }
+                    </li>
+                    @if (ProjectSession.UserTypeId != 8 || isJobAction)
+                    {
+                        <li class="dropdown">
+                            <a href="#" title="Job Action" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                                Job Action
+                                <span class="caret"></span>
+                            </a>
+                            <div class="dropdown-menu job-action" aria-labelledby="dropdownMenu1">
+                                <ul id="jobAction">
+
+                                    @if (isDeleteJob)
+                                    {
+                                        <li><a id="aDeleteJob" href="#" title="Delete Job">Delete Job</a></li>
+                                    }
+
+                                    @*<li><a href="#" title="Switch To Classic Job View" onclick="SwitchClassJobView()">Switch To Classic Job View</a></li>*@
+                                    <li><a id="aViewSTCJobHistory" href="#" title="View STC job history">View STC job history</a></li>
+                                    @*<li><a id="aOwnerSignature" href="#" title="Owner signature">Get Owner signature</a></li>*@
+                                    <li role="separator" class="divider"></li>
+                                    @if (ProjectSession.UserTypeId != 8 || isPreapprovals)
+                                    {
+                                        <li class="option-box">
+                                            Preapproval
+                                            <div class="onoffswitch">
+                                                @*<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchPreApproval" checked="" isOn="0">*@
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchPreApproval" ison="0">
+                                                <label class="onoffswitch-label" for="onOffSwitchPreApproval">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                    }
+                                    @if (ProjectSession.UserTypeId != 8 || isConnections)
+                                    {
+                                        <li class="option-box">
+                                            Connection
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchConnection" ison="0">
+                                                <label class="onoffswitch-label" for="onOffSwitchConnection">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                    }
+                                    @if (ProjectSession.UserTypeId != 8 || isDocManager || isSTCform || isCECform || isPnlInvoiceform || isElecBillform)
+                                    {
+                                        <li class="option-box">
+                                            New Doc Viewer
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchNewDocVIewer">
+                                                <label class="onoffswitch-label" for="onOffSwitchNewDocVIewer">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </li>
+                    }
+
+
+                </ul>
+            </div>          
+
+            <div class="col-md-5">
+                @if ((Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "not yet submitted"|| Model.STCDetailsModel.stcBasicDetails.Status.ToLower() == "submit to trade") && isChangeSCA)
+                {
+                    <input type="button" class="btn primary" value="Change SCA" onclick="changeSCAModal()" />
+                }
+            <div class="form-group pull-right">
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                {
+                    <div style="position:absolute;right:290px;">
+                        <label class="control-label" style="margin-right: 80px;margin-top: 10px;">Generate REC zip</label>
+                        <div class="onoffswitch" style="top:5%;right:5%;">
+                            <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchGenerateRecZip" ison="0">
+                            <label class="onoffswitch-label" for="onOffSwitchGenerateRecZip">
+                                <span class="onoffswitch-inner"></span>
+                                <span class="onoffswitch-switch"></span>
+                            </label>
+                        </div>
+                    </div>
+                }
+                @if (isAddJob || isEditjob)
+                {
+                    <div class="btn primary icon-btn pull-left" id="btnSaveJob">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="button" class="" value="Save Job">
+                    </div>
+                }
+                <button type="button" class="btn default cancel_ic" id="cancelSaveJob">Cancel</button>
+                @*<input type="button" value="Cancel" class="default">*@
+                @if (isDisplaySwitchForTabulerView)
+                {
+                    <a href="#" id="aSwitch" title="Switch between Tabular and Modular View anytime. Try it now" class="icon-btn sprite-img comparer-ic"></a>
+
+                }
+                @if (ProjectSession.UserTypeId != 8 || isPrintJob)
+                {
+                    <a href="#" title="print" class="icon-btn sprite-img print-ic" id="btnJobPrint"></a>
+                }
+
+            </div>
+            </div>
+        </div>
+        <div class="row">
+            <div id="createJobView">
+                @*@if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                    {
+                        <div class="col-md-12">
+                            @if (Model.CommonJobsWithSameInstallDateAndInstaller != null && Model.CommonJobsWithSameInstallDateAndInstaller.Count > 0)
+                            {
+                                <div class="job-com-box" id="loadCommonJobs">
+                                    <div class="warning-notice" id="divWarning" style="background-color: #f0eefa;">
+                                        <h5>Warning Notice:</h5>
+                                        Installer : <b> @Model.CommonJobsWithSameInstallDateAndInstaller[0].InstallerName </b> has been already assigned the following jobs.
+                                        @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallDateAndInstaller)
+                                        {
+                                            string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                            string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                            string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                            <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            @if (Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus != null && Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus.Count > 0)
+                            {
+                                <div class="job-com-box" id="loadCommonJobsWithFailedStcStatus">
+                                    <div class="warning-notice" id="divWarning" style="background-color: #f1e9e9;">
+                                        <h5>Warning Notice:</h5>
+                                        Installer : <b> @Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus[0].InstallerName </b> has been already assigned the following jobs which have failed stc statuses.
+                                        @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallDateAndInstallerAndFailedStcStatus)
+                                        {
+                                            string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                            string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                            string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                            <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            @if (Model.CommonJobsWithSameInstallationAddress != null && Model.CommonJobsWithSameInstallationAddress.Count > 0)
+                            {
+                                <div class="job-com-box" id="loadCommonJobsWithSameInstallationAddress">
+                                    <div class="warning-notice" id="divWarning" style="background-color: #f1e9e9;">
+                                        <h5>Warning Notice:</h5>
+                                        Same installation address has been already used for the following jobs .
+                                        @foreach (var lstCommonJobs in Model.CommonJobsWithSameInstallationAddress)
+                                        {
+                                            string companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonJobs.CompanyName;
+                                            string resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonJobs.ResellerName;
+                                            string stcStatus = " <b class=commonJobDetail>STC Status : </b>" + lstCommonJobs.Status;
+                                            string url = "/Job/Index?id=" + lstCommonJobs.Id;
+                                            <p> RefNumber : <a target="_blank" href='@url'> @lstCommonJobs.RefNumber </a> @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName)) @Html.Raw(HttpUtility.HtmlDecode(stcStatus)) </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }*@
+                @Html.Partial("_ViewAndEditNewJob")
+            </div>
+            <div id="createJobNotes" style="display:none;margin-top:25px;">
+            </div>
+            <div id="createJobMessage" style="display: none;">
+            </div>
+            <div id="invoice" style="display: none; margin-top: 25px;">
+
+            </div>
+            <div id="invoiceDetail" style="display: none; margin-top: 25px;">
+                @*<link href="~/Content/InvoiceDetail.css" rel="stylesheet" />*@
+
+                <div id="invoiceDetailList" style="display: block;">
+
+                </div>
+
+            </div>
+            <div id="history" style="display:none;">
+            </div>
+            <div id="EmailConversation" style="display: none;">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="STCwarning">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title">Warning</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <ul class="STCmodelBodyMessage"></ul>
+                            <br />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="CloseWarning">Ok</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="warning">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title">Warning</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <ul class="modelBodyMessage"></ul>
+                            <br />
+                            <h5>Are you sure you want to continue ?</h5>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesWarning">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noWarning">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="popupSTCJobHistory">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">STC Job History</h4>
+                </div>
+                <div class="modal-body" id="STCJobHistoryOfJob">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary" id="closePopupSTCJobHistory">Ok</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+<div class="modal fade newemail-modal" id="emailboxThread" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="padding-top:5px;">
+                <button aria-label="Close" data-dismiss="modal" class="close sprite-img newEmailCloseThread" type="button" title="Close" style="margin: 0 !important;position: absolute;right: 8px;top: 8px;"></button>
+                <div class="email-hed"> <a href="javascript:void(0)" class="admin-id"><i class="mail-icon sprite-img admin-mail-icon"></i><span id="emailBoxEmailId">Admin@tatvasoft.com</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <!--<li class="active"><a href="#" title="Back to List" data-dismiss="modal" aria-label="Close"> <img class="icon" src="images/back-list.png" alt="Back to List">Back to List</a></li>-->
+                    <li class="active" id="SendMail"><a href="javascript:void(0)" title="Send"><i class="mail-icon sprite-img send-mail-icon"></i>Send</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <!-- menu End -->
+                <div class="mail-box-input">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label required">Send To</label>
+                            <div class="col-sm-4">
+                                @if (ViewBag.JobWiseUsers != null)
+                                {
+                                    @Html.DropDownList("JobWiseUsers", (IEnumerable<SelectListItem>)ViewBag.JobWiseUsers, "Select", new { @class = "form-control" })
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group" id="FormGroupToMail" style="display:none">
+                            <label class="col-sm-1 control-label">To</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="ToMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Subject</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="SubjectMail" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Body</label>
+                            <div class="col-sm-11">
+                                <div id="editor1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Selected Files :</label>
+                            <div class="col-sm-11">
+                                <table class="table table-bordered" id="tblSelectedFile">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Attach File :</label>
+                            <div class="col-sm-11">
+                                <table class="uf">
+                                    <tr>
+                                        <td width="70">
+                                            <input id="uploadFile" placeholder="Choose File" class="form-control" disabled="disabled" style="display:none" />
+                                            <div class="fileUpload primary" style="margin:0px;">
+                                                <span>Upload</span>
+                                                <input type="file" class="upload" id="uploadFileFromSendNewMessage" title="Upload" />&nbsp;
+                                                <a href="javascript:void();" id="uplDoc">Upload Documents</a>
+                                            </div>
+                                        </td>
+                                        <td style="vertical-align:top;"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Job Document Files :</label>
+                            <div class="col-sm-11">
+                                <div class="table-responsive" id="div_EmailDoc">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade changeScaModal" tabindex="-1" role="dialog" id="changeScaModal">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Change SCA</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionChangeSCA" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionChangeSCA" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    </div>
+                    <form id="addTemplateForm">
+                        <label class="control-label required" for="inGBSCACode">GBSCA Code:</label>
+                        <input type="text" class="form-control" id="inGBSCACode" name="gbSCACode" />
+                        <span class="field-validation-error" id="gbScaCodeError"></span>
+
+                        <div class="modal-footer" style="border-top:0px !important;">
+                            <button type="button" class="btn primary" onclick="changeSCA()">Change SCA</button>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<button type="button" id="btnScrollToTop" class="top-scroll">
+</button>
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript">
+
+    var IsLockedSerialNumber = '@Model.BasicDetails.IsLockedSerialNumber.ToString().ToLower()';
+    var urlSetSPVOnLockSerialNumber = '@Url.Action("SetSPVOnLockSerialNumber", "Job")';
+    var urlRemoveSPVOnUnlockSerialnumber = '@Url.Action("RemoveSPVOnUnlockSerialnumber", "Job")';
+    var JOBType = '@Model.BasicDetails.JobType';
+    var IsUnderSSC = '@ProjectSession.IsSubContractor';
+    var USERType = '@Model.UserType';
+    var jobID = '@Model.BasicDetails.JobID';
+    var resellerID = '@Model.BasicDetails.ResellerId';
+    var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+    var maxsize = Math.round(documentSizeLimit);
+    var Model_Header = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(Model.Header)))';
+    var IsLockUnlockSerial = '@isLockUnlockSerial';
+    var dropDownData = [];
+    var BasicDetails_ScoID = '@Model.BasicDetails.ScoID',
+        urlGetSCOUser = '@Url.Action("GetSCOUser", "AssignJobToSCO")',
+        urlGetSSCUserInEdit = '@Url.Action("GetSSCUserInEdit", "AssignJobToSCO")?jobID=',
+        GetSSCUserInDropdown = '@Url.Action("GetSSCUserInDropdown", "AssignJobToSCO")?jobID=',
+        GetSTCJobHistory = '@Url.Action("GetSTCJobHistory", "job")?jobId=',
+        Model_JobID = '@Model.JobID',
+        urlGetJobInvoice = '@Url.Action("GetJobInvoice", "Job")',
+        urlIndex = "@Url.Action("Index", "Job", new {@id = "" })",
+        queryStringJobID = '@QueryString.QueryStringEncode("id=" + Convert.ToString(Model.JobID))',
+        urlPrint = '@Url.Action("Print", "Job")?id=',
+        urlCheckBusinessRules = '@Url.Action("CheckBusinessRules", "Job")',
+        ProjectSession_UserTypeId = '@ProjectSession.UserTypeId',
+        urlSendMailForDuplicateAddress = '@Url.Action("SendMailForDuplicateAddress", "Job")',
+        urloadCommonSerialNumber = '@Url.Action("LoadCommonSerialNumber", "Job")',
+        urloadCommonInverterSerialNumber = '@Url.Action("LoadCommonInverterSerialNumber", "Job")',
+        urlGetSTCJobNewScreen = '@Url.Action("GetSTCJobNewScreen", "job")?jobId=',
+        isAssignSSC_LowerString = '@isAssignSSC.ToString().ToLower()',
+        BasicDetails_SSCID = '@Model.BasicDetails.SSCID',
+        isAssignSCO_LowerString = '@isAssignSCO.ToString().ToLower()',
+        isAddJob = '@isAddJob',
+        urlCreate = '@Url.Action("Create", "Job")',
+        isEditjob = '@isEditjob',
+        urlEdit = '@Url.Action("Edit", "Job")',
+        urlLoadPreapprovalConnectionSTC = '@Url.Action("LoadPreapprovalConnectionSTC", "Job")',
+        isNotesView = '@isNotesView',
+        urlGetJobNotes = '@Url.Action("GetJobNotes", "Job")?jobID=',
+        jobIDForScheduling = '@Url.RequestContext.RouteData.Values["id"]',
+        BasicDetails_Title = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(Model.BasicDetails.Title)))',
+        isHistoryView = '@isHistoryView',
+        isHistoryViewForSCO = '@isHistory',
+        urlShowHistory = '@Url.Action("ShowHistory", "Job")?jobID=',
+        ProjectSession_IsUserEmailAccountConfigured = '@ProjectSession.IsUserEmailAccountConfigured',
+        isMessageView = '@isMessageView',
+        isMessageViewForSCO = '@isMessage',
+        urlLoadMessageTab = '@Url.Action("LoadMessageTab", "JobEmailThread")?jobId=',
+        urlGetMessageForJobEmailConversationForPreAndConn = '@Url.Action("GetMessageForJobEmailConversationForPreAndConn", "Job")?jobID=',
+        LogInID = '@ProjectSession.LoggedInUserId',
+        ProjectConfiguration_GetPageSize = @ProjectConfiguration.GetPageSize,
+        ProjectConfiguration_GetDateFormat = '@ProjectConfiguration.GetDateFormat',
+        urlGetInvoiceList = '@Url.Action("GetInvoiceList", "Job")?JobID=',
+        isSendMessageRights = '@isSendMessage.ToString().ToLower()',
+        urlSaveJobNotes = '@Url.Action("SaveJobNotes", "Job")',
+        urlJobList = '@Url.Action("JobList", "Job")',
+        isDelete = '@isDelete.ToString().ToLower()',
+        urlDeleteJobNotes = '@Url.Action("DeleteJobNotes", "Job")',
+        urlGetJobInvoiceDetail = '@Url.Action("GetJobInvoiceDetail", "JobInvoiceDetail")',
+        urlGetInvoiceDetailListing = '@Url.Action("GetInvoiceDetailListing", "JobInvoiceDetail")',
+        urlCreateReport = '@Url.Action("CreateReport", "JobInvoiceDetail")?Filename=Formbot_Invoice&ExportType=Pdf&jobInvoiceID=',
+        urlCreateCSV = '@Url.Action("CreateCSV", "JobInvoiceDetail")?jobInvoiceID=',
+        urlDeleteInvoice = '@Url.Action("DeleteInvoice", "Job")',
+        Model_Id = '@Model.Id',
+        urlDeleteSelectedJobs = '@Url.Action("DeleteSelectedJobs", "Job")',
+        urlGetJobHeader = '@Url.Action("GetJobHeader", "Job")',
+        urlGetDefaultSettingsForJob = '@Url.Action("GetDefaultSettingsForJob", "JobSetting")?JobId=@Model.JobID',
+        urlLogout = '@Url.Action("Logout", "Account")',
+        urlSaveDefaultForJob = '@Url.Action("SaveDefaultForJob", "JobSetting")',
+        urlSaveIsNewViewerUserWise = '@Url.Action("SaveIsNewViewerUserWise", "Job")',
+        BasicDetails_IsWholeSaler = '@Model.BasicDetails.IsWholeSaler',
+        urlLoadCommonJobsWithSameInstallDateAndInstaller = '@Url.Action("LoadCommonJobsWithSameInstallDateAndInstaller", "Job")',
+        urlSPVProductVerification = '@Url.Action("SPVProductVerification", "Job")',
+        urlGetSPVProductionVerificationErrorLog = '@Url.Action("GetSPVProductionVerificationErrorLog", "Job")',
+        urlReloadJobPhoto = '@Url.Action("ReloadJobPhoto", "job")?jobId=',
+        urlLoadCommonJobsWithSameInstallationAddress = '@Url.Action("LoadCommonJobsWithSameInstallationAddress", "Job")',
+        urlCheckSerialNumberPhotoAvailability = '@Url.Action("CheckSerialNumberPhotoAvailability","Job")',
+        urlAddlogsSerialNo = '@Url.Action("AddLogsSerialNo","Job")',
+        urlDeleteNote = '@Url.Action("DeleteNote","Job")',
+        urlEditNote = '@Url.Action("EditNote","Job")',
+        urlReplyNote = '@Url.Action("ReplyNotes","Job")',
+        urlSaveReplyForNote = '@Url.Action("SaveReplyForNote","Job")',
+        jobRefNo = '@Model.BasicDetails.RefNumber';
+    var IsSPVInstallationVerified = '@Convert.ToString(Model.JobSerialNumbers.Any() ? Model.JobSerialNumbers[0].IsSPVInstallationVerified.ToString() : "False")';
+    var basicdetails_IsRegisteredWithGST = '@Model.BasicDetails.IsRegisteredWithGST';
+    var basicdetails_IsGenerateRecZip = '@Model.BasicDetails.IsGenerateRecZip';
+    var generateRECZipJobWise = '@Url.Action("GenerateRecZipJobWise", "Job")';
+    var SerialNumberwithPhotosAvaibilityList = '@serialNumWithPhotosJson';
+    var isSaveJobAfterTrade = '@isSaveJobAfterTrade';
+    var showhistoryUrl = '@Url.Action("ShowFilteredJobHistory","Job")';
+    var userlisturl = '@Url.Action("GetAllUserList","Job")';
+    var getnotestypeurl = '@Url.Action("GetNotesType","Job")';
+    var BaseURLForJob = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+    var urlLoadWarningNotes = '@Url.Action("LoadWarningNotes", "Job")';
+     var urlChangeSCA = '@Url.Action("ChangeSCA", "Job")';
+    var SCAName = '@Model.BasicDetails.CompanyName';
+    var isDuplicateSerialNumber = false,
+        SolarCompanyId = '@Model.BasicDetails.SolarCompanyId', JobInstallationYear;
+     if ('@Model.CommonJobsWithSameInstallationAddress' != null)
+    var isJobWithCommonInstallationAddress = '@Model.CommonJobsWithSameInstallationAddress.Count' > 0 ? true : false;
+    if ('@Model.BasicDetails.InstallationDate' == '') {
+        JobInstallationYear = null;
+    }
+    else {
+        JobInstallationYear = '@(Model.BasicDetails.InstallationDate.HasValue ? Model.BasicDetails.InstallationDate.Value.Year : 0)';
+    }
+    var UrlLoadCustomDetailsAjax = '@Url.Action("LoadCustomDetailsAjax", "Job")';
+    var UrlLoadSystemDetailsAjax = '@Url.Action("LoadSystemDetailsAjax", "Job")';
+    var UrlLoadNotesTabAjax = '@Url.Action("LoadNotesTabAjax", "Job")';
+    var UrlLoadInstallerDesignerElectricianAjax = '@Url.Action("LoadInstallerDesignerElectricianAjax", "Job")';
+    var UrlLoadJobSchedulingVisitAjax = '@Url.Action("LoadJobSchedulingVisitAjax", "Job")';
+    var UrlLoadRetailerAutoSettingAjax = '@Url.Action("LoadRetailerAutoSettingAjax", "Job")';
+    var UrlLoadDocumentManagerNewViewAjax = '@Url.Action("LoadDocumentManagerNewViewAjax", "Job")';
+    var UrlLoadJobDocumentNewAjax = '@Url.Action("LoadJobDocumentNewViewAjax", "Job")';
+    var UrlLoadSTCJobNewScreenAjax = '@Url.Action("LoadSTCJobNewScreenAjax", "Job")';
+    var UrlLoadNewJobPhotoAjax = '@Url.Action("LoadNewJobPhotoAjax", "Job")';
+
+</script>
+
+@Scripts.Render("~/bundles/JobDetailNewScreen?v=" + ProjectConfiguration.ScriptVersion)
+@Scripts.Render("~/bundles/JobDetailsExtra?v=" + ProjectConfiguration.ScriptVersion)
+<script src="~/Scripts/View/Job/ViewAndEditNewJob.min.js"></script>
+@*<script src="~/Scripts/CommonModularAndTabularJob.js"></script>*@

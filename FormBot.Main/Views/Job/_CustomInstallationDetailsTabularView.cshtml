@@ -1,0 +1,170 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@{
+    ////Todo
+    bool isOtherDetails = false;
+    bool isCustomDetails = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.OtherDetails.GetHashCode()) { isOtherDetails = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.CustomDetails.GetHashCode()) { isCustomDetails = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.OtherDetails.GetHashCode()) { isOtherDetails = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.CustomDetails.GetHashCode()) { isCustomDetails = true; }
+            });
+        }
+    }
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+}
+
+@*@Html.HiddenFor(m => m.panelXml)
+    @Html.HiddenFor(m => m.inverterXml)*@
+
+@Html.HiddenFor(m => m.UserType)
+@Html.Hidden("hdnNMI", (@Model != null && @Model.JobInstallationDetails != null) ? @Model.JobInstallationDetails.NMI : "")
+@Html.HiddenFor(m => m.JobInstallationDetails.AddressDisplay)
+@Html.HiddenFor(m => m.Guid)
+@*@Html.HiddenFor(m => m.BasicDetails.SolarCompanyId)
+    @Html.HiddenFor(m => m.BasicDetails.strInstallationDateTemp)
+    @Html.HiddenFor(m => m.GlobalisAllowedSPV)*@
+@*<input type="hidden" id="STCStatusId" value="@ViewBag.STCStatusId" />*@
+
+@Html.HiddenFor(m => m.JobInstallationDetails.PropertyName)
+<input type="hidden" id="BasicDetails_JobID" value="@Model.JobID" />
+
+
+
+<form id="frmCustomDetails">
+
+    <div class="form-con-box">
+        <div class="col-md-12">
+
+            @if (ProjectSession.UserTypeId != 8 || isCustomDetails)
+            {
+                <div class="sub-title">
+                    <h4>Custom Details</h4>
+                </div>
+                <div class="row" id="customDetails">
+                    <div class="col-md-12">
+                        @for (int i = 0; i < @Model.lstCustomDetails.Count; i++)
+                        {
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <label class="control-label ">@Model.lstCustomDetails[i].FieldName :</label>
+                                    @Html.TextAreaFor(m => m.lstCustomDetails[i].FieldValue, new { @class = "spanCustomFields form-control", data_SeperatorId = Model.lstCustomDetails[i].SeparatorId, data_JobCustomFieldId = Model.lstCustomDetails[i].JobCustomFieldId, style = "width:100%; border: 1px solid #d8dadd;", @rows = "3" })
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+
+</form>
+
+
+@Scripts.Render("~/bundles/jqueryval")
+
+<script type="text/javascript">
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+</script>
+@*<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+<script>
+    @*var dropDownData = [];
+    var InstallationJson = [];
+    var fillInstallationAddress;
+    var modelInstallationPostalAddressID = '@Model.JobInstallationDetails.PostalAddressID';
+    var modelInstallationUnitTypeID = '@Model.JobInstallationDetails.UnitTypeID';
+    var modelInstallationStreetTypeID = '@Model.JobInstallationDetails.StreetTypeID';
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+    var modelInstallationElectricityProviderID = '@Model.JobInstallationDetails.ElectricityProviderID';
+    var modelInstallationExistingSystem = '@Model.JobInstallationDetails.ExistingSystem';
+    var modelInstalltionInstallingNewPanel = '@Model.JobInstallationDetails.InstallingNewPanel';
+    var modelInstalltionAddressID = '@Model.JobInstallationDetails.AddressID';
+    var modelInstallationLatitude = '@Model.JobInstallationDetails.Latitude';
+    var modelInstallationLongitude = '@Model.JobInstallationDetails.Longitude';
+    var modelInstallationStreetName = '@Model.JobInstallationDetails.StreetName';
+    var modelInstallationStreetNumber = '@Model.JobInstallationDetails.StreetNumber';
+    var modelInstallationTown = '@Model.JobInstallationDetails.Town';
+    var modelInstallationState = '@Model.JobInstallationDetails.State';
+    var modelInstallationPostCode = '@Model.JobInstallationDetails.PostCode';*@
+    @*var distributorid = modelInstallationDistributorID || 0;
+    var Installationid = modelInstallationElectricityProviderID || 0;
+    var JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)';
+    JobOwnerDetails_OwnerType_Glbl = '@Model.JobOwnerDetails.OwnerType';*@
+    @*var JobInstallationDetails_PropertyType = '';
+    if ($("#JobInstallationDetails_PropertyType").val() != undefined && $("#JobInstallationDetails_PropertyType").val() != '') {
+        JobInstallationDetails_PropertyType = $("#JobInstallationDetails_PropertyType").val();
+    }
+    else {
+        JobInstallationDetails_PropertyType = '@Model.JobInstallationDetails.PropertyType'.toLowerCase();
+    }*@
+
+    $(document).ready(function () {
+
+        DisplayInstallationExtraInfo();
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+            return returnObj;
+        };
+
+    });
+
+
+
+    function DisplayInstallationExtraInfo() {
+
+        $("#lblAdditionalInstallationInformation").html($("#JobInstallationDetails_AdditionalInstallationInformation").val());
+        $('#customFields').find('textarea').each(function () {
+            $('#customDetails').find('[id=' + this.id + ']').text(this.value);
+        });
+    }
+
+
+</script>
+
+
+

@@ -1,0 +1,103 @@
+﻿@model FormBot.Entity.Email.EmailTemplate
+@{
+    ViewBag.Title = "Edit Email Template";
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+@using (Html.BeginForm("Edit", "EmailTemplate", FormMethod.Post, new { id = "EmailTemplate" }))
+{
+    @Html.ValidationSummary(true)
+    @*@Html.AntiForgeryToken()*@
+    <div class="container-fluid">
+        <div class="title">
+            <h1>Edit Email Template</h1>
+            <a href="@Url.Action("Index", "EmailTemplate")" title="Back" class="back-btn pull-right"><img src="~/Images/back-icon.png" alt="" />Back</a>
+        </div>
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-3">
+                <div class="form-group">
+                    @Html.LabelFor(model => model.TemplateName, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.TemplateName, new { id = "txtTemplateName", @class = "form-control", tabindex = "1" })
+                    @Html.ValidationMessageFor(model => model.TemplateName)
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Subject, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.Subject, new { id = "txtSubject", @class = "form-control", tabindex = "2" })
+                    @Html.ValidationMessageFor(model => model.Subject)
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <div class="form-group">
+                    <label class="control-label">Template Fields:</label>
+                    @Html.DropDownList("TemplateFields", null, "Select", new { id = "TemplateField", @class = "form-control", tabindex = "3" })
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Content, new { @class = "control-label" })
+                    @Html.TextAreaFor(model => model.Content, new { @class = "ckeditor", @id = "contenteditor" })
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="btn primary icon-btn">
+                <span class="sprite-img save_ic"></span>
+                <input type="submit" name="Submit" value="Save" autofocus="" class="" id="btnSubmit" tabindex="4">
+            </div>
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" tabindex="5">
+        </div>
+
+        @Html.HiddenFor(m => m.TemplateID)
+
+    </div>
+}
+@section Scripts
+    {
+    <script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+    <script src="~/Scripts/jquery-1.11.0.min.js"></script>
+    <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#txtTemplateName").focus();
+
+            $("#TemplateField").change(function () {
+                var data = CKEDITOR.instances.contenteditor.getData();
+                var field = $("#TemplateField").val();
+                CKEDITOR.instances['contenteditor'].setData(data + '{@@' + field + '}');
+            })
+
+            $('#btnCancel').click(function () {
+                window.location.href = '@Url.Action("Index","EmailTemplate")';
+            });
+        });
+
+    </script>
+}

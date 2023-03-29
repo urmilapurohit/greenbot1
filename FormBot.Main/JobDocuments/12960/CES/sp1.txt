@@ -1,0 +1,24 @@
+USE [FormBot_CR]
+GO
+/****** Object:  StoredProcedure [dbo].[Get_VisitCheckListPhotos_VisitSignature]    Script Date: 08-08-2019 16:36:24 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- Get_VisitCheckListPhotos_VisitSignature '36,37','7,8'  
+ALTER Procedure [dbo].[Get_VisitCheckListPhotos_VisitSignature]  
+(  
+ @VisitCheckListPhotoIds nvarchar(max),  
+ @VisitSignatureIds nvarchar(max)  
+)  
+as  
+  
+select *from  
+ VisitCheckListPhotos  
+where VisitCheckListPhotoId in (select item from dbo.fnSplit(@VisitCheckListPhotoIds,','))
+	  and IsDeleted = 0
+  
+select *from  
+ VisitSignature  
+where VisitSignatureId in (select item from dbo.fnSplit(@VisitSignatureIds,','))
+	  and IsDeleted = 0

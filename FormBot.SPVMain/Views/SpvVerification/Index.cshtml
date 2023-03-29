@@ -1,0 +1,645 @@
+﻿@using FormBot.Helper
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .download_ic {
+        background-image: url(../Images/ic-download.png);
+        background-position: 6px 9px;
+        background-repeat: no-repeat;
+        padding: 0 10px 0 28px !important;
+    }
+</style>
+<script src="~/Scripts/Calendar/moment.min.js"></script>
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.custom.css" rel="stylesheet" />
+<link href="~/Content/KendoGrid.css" rel="stylesheet" />
+@*<link href="~/Content/style.css" rel="stylesheet" />*@
+<div class="container-fluid">
+    <h1 class="title">Upload SpvPanelDetails</h1>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    @using (Html.BeginForm("UploadSpvPanelDetails", "SpvVerification", FormMethod.Post, new
+    {
+        enctype = "multipart/form-data",
+        @class = "form-block",
+        style = "margin-top: 10px;padding-left: 20px;padding-top: 0px;"
+    }))
+    {
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.ValidationSummary()
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <form class="form-block" style="margin-top:10px;">
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Spv Panel Manufacturer:</label>
+                        <select class="form-control" id="spvPanelManufacturer" name="ManufacturerId"></select>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Model Number:</label>
+                        <input type="text" id="txtModel" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Serial Number:</label>
+                        <input type="text" id="txtSerial" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                    </div>
+                </div>
+
+                <div class="form-group col-xs-12">
+                    <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="LoadSpvPanelDetails();">
+
+                    <div class="default btn icon-btn" onclick="ResetSpvPanelDetail();">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" value="Reset" class="">
+                    </div>
+                </div>
+            </form>
+
+
+
+        </div>
+        <br />
+        <div>
+            <div class="btn primary icon-btn pull-left">
+                <span class="sprite-img history_ic"></span>
+                <input type="button" id="btnUploadedHistory" class="history" value="Uploaded data history" />
+            </div>
+            <div class="fileUpload primary upload_ic pull-left" style="margin: inherit;margin-right: 5px;">
+                <span>Upload SpvPanelDetails</span>
+                <input type="file" id="fileUploadSpvPanelDetails" class="upload" value="Upload SpvPanelDetails" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+            </div>
+            <div>
+                <input type="button" id="btnDownloadTemplateUploadSpvPanelDetails" class="primary download_ic  pull-left" value="Download template for uploading SpvPanelDetails" onclick="DownloadTemplateForUploadSpvPanelDetails();" />
+            </div>
+            @if (ProjectSession.UserTypeId != 3)
+            {
+                <div class="btn primary icon-btn pull-left">
+                    <span class="sprite-img release_ic"></span>
+                    <input type="button" id="btnReleaseSerialNumber" class="release" value="Release" onclick="ReleaseSerialNumber();" />
+                </div>
+            }
+        </div>
+    }
+
+    <div class="row" style="margin-top:50px;">
+        <div class="col-md-12">
+            <div id="datatable"></div>
+        </div>
+    </div>
+</div>
+<!-- Modal for upload history -->
+<div id="SpvPanelDetailsUploadHistory" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Spv Panel Details Uploaded History</h4>
+            </div>
+            <div class="modal-body">
+                <div id="datatableUploadedHistory">
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" style="margin-right: 15px;" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/FormBot.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+    function ResetSpvPanelDetail() {
+        $("#txtSerial").val('');
+        $("#txtModel").val('');
+        if ('@ProjectSession.SpvManufacturerName' != '' && '@ProjectSession.UserTypeId' == '3') {
+            $("#spvPanelManufacturer").val('@ProjectSession.LoggedInUserId');
+            $("#spvPanelManufacturer").attr("disabled", true);
+        }
+        else {
+            $("#spvPanelManufacturer").val('');
+        }
+        LoadSpvPanelDetails();
+    }
+    $(document).ready(function () {
+        FillDropDown('spvPanelManufacturer', '@Url.Action("GetSpvPanelManufacturer", "SpvVerification")', 0, true, DisableDropdownForManufacture)
+        $('#fileUploadSpvPanelDetails').click(function () {
+            var spvPanelManufacturer = $("#spvPanelManufacturer").val();
+
+            if (spvPanelManufacturer == null || spvPanelManufacturer == "") {
+                alert("Please select Manufacturer.");
+                return false;
+            }
+            else {
+                BindFileUploadEvent();
+            }
+        });
+        
+        //BindSPVVersion();
+    });
+    $('#btnDownloadLastData').click(function (e) {
+            var data = $("#spvPanelManufacturer").val();
+            var SpvUserId = 0;
+            if (data == null || data == "") {
+                SpvUserId = parseInt(0);
+                alert("Please select Manufacturer.");
+            }
+            else {
+                SpvUserId = parseInt(data);
+                window.location.href = '@Url.Action("DownloadSpvData", "SpvVerification")?SpvUserId=' + SpvUserId;
+            }
+        });
+    $("#spvPanelManufacturer").load(function () {
+        LoadSpvPanelDetails();
+    });
+    function DisableDropdownForManufacture() {
+         if ('@ProjectSession.SpvManufacturerName' != '' && '@ProjectSession.UserTypeId' == '3') {
+            $("#spvPanelManufacturer").val('@ProjectSession.LoggedInUserId');
+            $("#spvPanelManufacturer").attr("disabled", true);
+        }
+        LoadSpvPanelDetails();
+    }
+
+    $("#btnSearch").click(function () {
+        $("#datatable").data("kendoGrid").dataSource.read();
+    });
+    function LoadSpvPanelDetails() {
+
+        $("#datatable").kendoGrid({
+            dataSource: {
+                type: "json",
+                transport: {
+                    read: {
+                        url: "@Url.Action("GetSpvPanelDetailsSearchByManufacturer", "SpvVerification")",
+                        //data: { 'ManufacturerId': $("#spvPanelManufacturer").val() },
+                        data: {},
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        type: 'POST',
+                        async: false
+                    }
+                        ,
+                    parameterMap: function (options) {
+                        var data = $("#spvPanelManufacturer").val();
+                        if (data == null || data == "")
+                            options.SpvUserId = parseInt(0);
+                        else
+                            options.SpvUserId = parseInt(data);
+
+                        options.SerialNumber = $("#txtSerial").val();
+                        options.ModelNumber = $("#txtModel").val();
+
+                        return JSON.stringify(options);
+                        //var data = $("#spvPanelManufacturer").val();
+
+
+                    }
+                },
+                schema: {
+                    data: "data", // records are returned in the "data" field of the response
+                    total: "total"
+                },
+                serverFiltering: true,
+                pageSize: 10,
+            },
+            noRecords: true,
+            pageable: {
+                buttonCount: 5,
+                pageSizes: [10, 25, 50, 100]
+            },
+            dataBound: function () {
+                for (var i = 0; i < this.columns.length; i++) {
+                    this.autoFitColumn(i);
+                }
+            },
+            columns: [
+                {
+                    title: 'Chkbox',
+                    field: 'SpvPanelDetailsId',
+                    encoded: false,
+                    template: '#=kendo_Chkbox(data)#',
+                    filterable: false,
+                    sortable: false,
+                    headerTemplate: '<input type="checkbox" id="chkAll" name="select_all" onclick="selectAllSpv()" class="k-checkbox"><label class="k-checkbox-label" for="chkAll"></label>',
+                    width: 50,
+                    stickyPosition: 0,
+                    reorderable: false,
+                    resizable: false
+                },
+                {
+                template: "#= ++rowNumber #",
+                field: "",
+                title: "No.",
+                width: "60px"
+            }, {
+                //template: "#=data#",
+                field: "ReferenceId",
+                    title: "ReferenceId",
+                    filterable: false
+            }, {
+                field: "Supplier",
+                    title: "Supplier",
+                    filterable: false
+                }, {
+                    field: "Manufacturer",
+                    title: "Manufacturer",
+                    filterable: false
+                }, {
+                    field: "ModelNumber",
+                    title: "ModelNumber",
+                    filterable: false
+                }, {
+                field: "SerialNumber",
+                    title: "SerialNumber",
+                    filterable: false
+                }, {
+                    field: "Wattage",
+                    title: "Wattage",
+                    filterable: false
+                }, {
+                    template: "#= (EndOfWarranty == null)? '' : kendo.toString(kendo.parseDate(EndOfWarranty, 'yyyy-MM-dd'), 'dd/MM/yyyy') #",
+                    field: "EndOfWarranty",
+                    title: "EndOfWarranty",
+                    filterable: false
+                }, {
+                    field: "WarrantyDescription",
+                    title: "WarrantyDescription",
+                    filterable: false
+                }, {
+                    field: "ContactPhoneNumber",
+                    title: "ContactPhoneNumber",
+                    filterable: false
+                }, {
+                    field: "ContactEmail",
+                    title: "ContactEmail",
+                    filterable: false
+                }, {
+                    field: "VOC",
+                    title: "VOC",
+                    filterable: false
+                }, {
+                    field: "ISC",
+                    title: "ISC",
+                    filterable: false
+                }, {
+                    field: "PM",
+                    title: "PM",
+                    filterable: false
+                }, {
+                    field: "VM",
+                    title: "VM",
+                    filterable: false
+                }, {
+                    field: "IM",
+                    title: "IM",
+                    filterable: false
+                }, {
+                    field: "FF",
+                    title: "FF",
+                    filterable: false
+                }, {
+                    field: "BillOfMaterials",
+                    title: "BillOfMaterials",
+                    filterable: false
+                }, {
+                    field: "FactoryName",
+                    title: "FactoryName",
+                    filterable: false
+                }, {
+                    field: "FactoryLocation",
+                    title: "FactoryLocation",
+                    filterable: false
+                },
+                {
+                    title: "IsInstallationVerified",
+                    field: "IsInstallationVerified",
+                    encoded: false,
+                    headerTemplate: '<span> IsInstallationVerified </span>',
+                    width: 30,
+                    template: "#=kendo_IsVerified(data) #",
+                    filterable: {
+                        operators: {
+                            string: {
+                                "eq": "Is equal to"
+                            }
+                        },
+                        extra: false,
+                        ui: filterYesNo
+                    },
+                    sortable: false,
+                    hidden: false
+                }
+                //, {
+                //template: function (data) { return '<button type="button" class="btn primary" userDeviceId="' + data.UserDeviceID + '"onclick="DeviceLogout(' + data.UserDeviceID + ',false);">Logout</button>' },
+                //field: "",
+                //headerTemplate: function (data) { return '<button type="button" class="btn primary" id="allDeviceLogout" onclick="DeviceLogout(' + userID + ',true);">Logout All Devices</button>' },
+                //width: "200px",
+                //attributes: {
+                //    style: "text-align: -webkit-center;"
+                //}
+                //}
+            ],
+            filterable: true,
+            dataBinding: function () {
+                rowNumber = (this.dataSource.page() - 1) * this.dataSource.pageSize();
+            }
+        });
+    }
+    function ConvertToDate(data) {
+        if (data != null) {
+            var date = new Date(parseInt(data.replace('/Date(', '')));
+            return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+        }
+        else {
+            return '';
+        }
+    }
+    function DownloadTemplateForUploadSpvPanelDetails() {
+        window.location.href = '@Url.Action("DownloadTemplateForUploadSpvPanelDetails", "SpvVerification")';
+    }
+
+    function BindFileUploadEvent() {
+              $('#fileUploadSpvPanelDetails').fileupload({
+            url: '@Url.Action("UploadSpvPanelDetails", "SpvVerification")',
+            type: 'POST',
+            //data: { 'ManufacturerId': parseInt($("#spvPanelManufacturer").val()) },
+            dataType: 'json',
+            formData: { 'SpvUserId': parseInt($("#spvPanelManufacturer").val()) },
+            done: function (e, data) {
+                if (data.result.status) {
+                    $("#datatable").data("kendoGrid").dataSource.read();
+                    showSuccessMessage("File has been imported successfully.");
+                    BindSPVVersion();
+                }
+                else {
+                    var errorMsg = [];
+                    var msg = '';
+                    errorMsg = JSON.parse(data.result.msg);
+                    if (errorMsg.length > 0) {
+                        errorMsg.forEach(function (elem) {
+                            //msg += "Row No. " + elem.RowNo + " " + elem.ErrorMsg + "<br >";
+                            msg += elem.ErrorMsg + "<br >";
+                        })
+
+                        showErrorMessage("File has not been imported, please verify following records.<br>" + msg);
+                    }
+                }
+            },
+            progressall: function (e, data) { },
+            singleFileUploads: false,
+            send: function (e, data) {
+                //var mimeType = data.files[0].type;
+
+
+
+
+                if (!checkfile(data.files[0].name)) {
+                //if (!(mimeType == "text/xlsx" || mimeType == "application/xlsx" || mimeType == "xlsx" || mimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+                    showErrorMessage("Please upload a file with .xlsx extension.");
+                    return false;
+                } else if (CheckSpecialCharInFileName(data.files[0].name)) {
+                    showErrorMessage("Please upload file that not conatain<> ^ [].");
+                    return false;
+                }
+                //$('<input type="hidden">').attr({
+                //    name: 'Guid',
+                //    value: USERID,
+                //    id: USERID,
+                //}).appendTo('form');
+                return true;
+            }
+        }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+
+    }
+    function checkfile(fileExt) {
+        var validExts = new Array(".xlsx");
+        fileExt = fileExt.substring(fileExt.lastIndexOf('.'));
+        if (validExts.indexOf(fileExt) < 0) {
+            //showErrorMessage("Please upload a file with .xlsx extension.");
+            return false;
+        }
+        else return true;
+    }
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        //$("#errorMsgRegionForPopUp").html(closeButton + message);
+        //$("#errorMsgRegionForPopUp").show();
+
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+
+        $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+        $('body').animate({ scrollTop: 0 }, 'slow');
+    }
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegion").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+        $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+        $('body').animate({ scrollTop: 0 }, 'slow');
+    }
+
+
+    function ReleaseSerialNumber() {
+        selectedRows = [];
+        $('#datatable tbody input[type="checkbox"]').each(function () {
+            if ($(this).prop('checked') == true) {
+                //var panelDetail = {
+                    selectedRows.push( $(this).attr('id').substring(4))
+                //}
+                //selectedRows.push(panelDetail);
+            }
+        })
+
+       var urlDeleteSelectedSerialNumber = '@Url.Action("ReleaseSelectedSerialNumber", "SpvVerification")';
+
+
+        if (selectedRows != null && selectedRows.length > 0) {
+            var result = confirm("Are you sure you want to release selected panel serial number ?");
+            if (result) {
+                $.ajax({
+                    url: urlDeleteSelectedSerialNumber,
+                    type: "POST",
+                    cache: false,
+                    async: true,
+                    data: JSON.stringify({ serialNumbers: selectedRows }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data.status) {
+                            LoadSpvPanelDetails();
+                           // window.location = '/SpvVerification/Index';
+                        }
+                        else {
+                            showErrorMessage("Serial numbers has not been released.");
+                        }
+                    },
+                });
+            }
+        }
+        else {
+            alert('Please select any serial number for release.');
+        }
+    }
+
+    var kendo_Chkbox = function (data) {
+
+        if ($('#chkAll').prop('checked') == true) {
+            return '<input type="checkbox"  class="k-checkbox" SpvPanelDetailsId="' + data.SpvPanelDetailsId + '" id="chk_' + data.SpvPanelDetailsId + '" checked><label class="k-checkbox-label" for="chk_' + data.SpvPanelDetailsId + '"></label>';
+        }
+        else {
+            return '<input type="checkbox" class="k-checkbox" SpvPanelDetailsId="' + data.SpvPanelDetailsId + '" id="chk_' + data.SpvPanelDetailsId + '"><label class="k-checkbox-label" for="chk_' + data.SpvPanelDetailsId + '"></label>';
+        }
+    };
+
+    function selectAllSpv() {
+        if ($("#chkAll").prop("checked")) {
+            $("#datatable").find("[type='checkbox']").prop("checked", true)
+        } else {
+            $("#datatable").find("[type='checkbox']").prop("checked", false)
+        }
+    }
+    var kendo_IsVerified = function (data) {
+        if (data.IsInstallationVerified != null) {
+            if (data.IsInstallationVerified == 1) {
+                return '<span style="font-weight: bold;color: Green;">Yes</span>';
+            }
+            else {
+                return '<span style="font-weight: bold;color: Red;">No</span>';
+            }
+        }
+        else {
+            return '';
+        }
+    };
+
+    var filterYesNo = function (element) {
+        var data = [
+            { Text: "Yes", Value: "true" },
+            { Text: "No", Value: "false" },
+        ];
+        element.kendoDropDownList({
+            dataTextField: "Text",
+            dataValueField: "Value",
+            dataSource: data,
+            optionLabel: "--Select Value--"
+        });
+    };
+    $("#btnUploadedHistory").click(function () {
+        $('#SpvPanelDetailsUploadHistory').modal('show');
+        $("#datatableUploadedHistory").kendoGrid({
+            dataSource: {
+                type: "json",
+                transport: {
+                    read: {
+                        url: "@Url.Action("GetSpvPanelDetailsUploadedHistory", "SpvVerification")",
+                        data: {},
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        type: 'POST',
+                        async: false
+                    },
+                    parameterMap: function (options) {
+                        var data = $("#spvPanelManufacturer").val();
+                        if (data == null || data == "")
+                            options.manufactureID = parseInt(0);
+                        else
+                            options.manufactureID = parseInt(data);
+
+                        return JSON.stringify(options);
+                    }
+                },
+                schema: {
+                    data: "data", // records are returned in the "data" field of the response
+                    total: "total"
+                },
+                pageSize: 10,
+            },
+            noRecords: true,
+            pageable: {
+                buttonCount: 5,
+                pageSizes: [10, 25, 50, 100]
+            },
+            columns: [
+                {
+                template: "#= ++rowNumber #",
+                field: "",
+                title: "No.",
+                width: "60px"
+                }, {
+                    template: "<a href='" + "@ProjectSession.UploadedDocumentPath" + "SpvPanelDetails/#= FileName#' target='blank'>#= FileName#<a>",
+                    field: "FileName",
+                    title: "FileName",
+                    filterable: false
+            }, {
+                    field: "ManufacturerName",
+                    title: "ManufacturerName",
+                    filterable: false
+                }, {
+                    template: "#= kendo.toString(kendo.parseDate(UploadedOn, 'yyyy-MM-dd'), 'dd/MM/yyyy') #",
+                    field: "UploadedOn",
+                    title: "UploadedOn",
+                    filterable: false
+                }
+            ],
+            dataBinding: function () {
+                rowNumber = (this.dataSource.page() - 1) * this.dataSource.pageSize();
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        @*$.ajax({
+            url: "@Url.Action("GetSpvPanelDetailsUploadedHistory", "SpvVerification")",
+            type: "POST",
+            data: JSON.stringify({ manufactureID: parseInt($("#spvPanelManufacturer").val()) }),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                if (data == null) {
+                    $('#SpvPanelDetailsUploadHistory').modal('show');
+                    var html = "";
+
+                    $(".spv-panel-uploaded-history").html(html);
+                }
+            },
+        });*@
+    });
+</script>

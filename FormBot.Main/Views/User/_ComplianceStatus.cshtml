@@ -1,0 +1,346 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+
+@{
+    bool isSCAComplianceCheck = false, isSEComplianceCheck = false;
+    if (ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotSuperAdmin || ProjectSession.UserTypeId == (int)SystemEnums.UserType.ResellerAdmin || ProjectSession.UserTypeId == (int)SystemEnums.UserType.ResellerAccountManager)
+    {
+        if (TempData.ContainsKey(SystemEnums.TempDataKey.SCAComplianceCheck.ToString()))
+        {
+            ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.SCAComplianceCheck.ToString()]).ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.SCAComplianceChek.GetHashCode()) { isSCAComplianceCheck = true; }
+            });
+        }
+    }
+
+    if (ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotSuperAdmin || ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotComplianceOfficer)
+    {
+        if (TempData.ContainsKey(SystemEnums.TempDataKey.SEComplianceCheck.ToString()))
+        {
+            ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.SEComplianceCheck.ToString()]).ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.SEComplianceChek.GetHashCode()) { isSEComplianceCheck = true; }
+            });
+        }
+    }
+}
+
+<div class="title">
+    <h3>Compliance Status</h3>
+</div>
+<div class="complain">
+
+    <div class="row">
+        <div class="compliance-status">
+            <div class="col-md-3">
+                <label class="control-label"><b>Sign Up Date: </b>@Model.DisplayDate</label>
+            </div>
+            <div class="col-md-6">
+                @if (Model.Status == 2)
+                {
+                    @*<div class="col-md-6">
+                            <label class="control-label"><b>Approved By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                        </div>*@
+                    @*<div class="col-md-4">
+                            <label class="control-label"><b>Approved Date: </b</label>
+                        </div>*@
+                    <label class="control-label"><b>Approved By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                }
+                @if (Model.Status == 3)
+                {
+                    @*<div class="col-md-6">
+                            <label class="control-label"><b>Rejected By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                        </div>*@
+                    @*<div class="col-md-4">
+                            <label class="control-label"><b>Rejected Date: </b></label>
+                        </div>*@
+                    <label class="control-label"><b>Rejected By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                }
+                @if (Model.Status == 4)
+                {
+                    @*<div class="col-md-6">
+                            <label class="control-label"><b>Require More Paperwork By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                        </div>*@
+                    @*<div class="col-md-4">
+                            <label class="control-label"><b>Require More Paperwork Date: </b></label>
+                        </div>*@
+                    <label class="control-label"><b>Require More Paperwork By: </b>@Model.ApprovedBy @Model.ApprovedDisplayDate</label>
+                }
+            </div>
+
+            @if (ProjectSession.UserTypeId == 1 && Model.UserTypeID == 4)
+            {
+                <div class="col-md-3">
+                    <label class="control-label" style="background-color:white;">Want to add custom company name ? </label>
+                    <div class="onoffswitch" style="top:5%;right:5%;">
+                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="onOffSwitchAddCustomCompanyName" ison="0">
+                        <label class="onoffswitch-label" for="onOffSwitchAddCustomCompanyName">
+                            <span class="onoffswitch-inner"></span>
+                            <span class="onoffswitch-switch"></span>
+                        </label>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    @if (Model.UserTypeID != 7)
+    {
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    @Html.HiddenFor(m => m.PreviousStatus)
+                    @Html.LabelFor(m => m.Status, new { @class = "control-label" })
+                    <select name="Status" id="Status" class="selectpicker form-control">
+                        <option value="1" selected>Pending</option>
+                        <option value="2">Approved</option>
+                        <option value="3">Rejected</option>
+                        <option value="4">Require More Paperwork</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3 SCA">
+                <div class=" form-group">
+                    @Html.HiddenFor(m => m.PreviousIsGSTSetByAdminUser)
+                    @Html.LabelFor(m => m.IsGSTSetByAdminUser, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.IsGSTSetByAdminUser, new List<SelectListItem> { new SelectListItem() { Text = "Apply Normal GST Registered Rules", Value = "1" }, new SelectListItem() { Text = "Override & Apply GST to All Jobs", Value = "2" } }, new { @class = "form-control" })
+                </div>
+            </div>
+            @if (ProjectSession.UserTypeId == 1)
+            {
+                <div class="col-md-3">
+                    <div class="form-group">
+                        @Html.HiddenFor(m => m.PreviousRoleID)
+                        @Html.LabelFor(m => m.RoleID, new { @class = "control-label required" })
+                        @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.RoleID)
+                    </div>
+                </div>
+                if (Model.UserTypeID == 4)
+                {
+                    <div class="col-md-3" style="display:none;" id="customCompanyAddDiv">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousCustomCompanyName)
+                            @Html.LabelFor(m => m.CustomCompanyName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(model => model.CustomCompanyName, new { id = "CustomCompanyName", @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.CustomCompanyName)
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="row">
+            @*<div class="col-md-3">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Note, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.Note, new { @class = "form-control noreadonly", @autofocus = true, id = "Note" })
+                </div>
+            </div>*@
+            <div class="col-md-6 status-checkbox">
+                <div class="form-group SCA" style="display:none;">
+                    <div class="checkbox-box">
+                        @Html.CheckBoxFor(m => m.IsSCDetailConfirm)
+                        @Html.HiddenFor(m => m.PreviousIsSCDetailConfirm)
+                        <span class="control-label">I have contacted the solar company and confirmed their details.</span>
+
+                    </div>
+                </div>
+                <div class=" form-group SCA" style="display:none;">
+                    <div class="checkbox-box">
+                        @Html.CheckBoxFor(m => m.IsInstaller)
+                        @Html.HiddenFor(m => m.PreviousIsInstaller)
+                        <span class="control-label">I have contacted their CEC accredited installer if different.</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-9">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousStatus)
+                            @Html.LabelFor(m => m.Status, new { @class = "control-label" })
+                            <select name="Status" id="Status" class="selectpicker form-control">
+                                <option value="1" selected>Pending</option>
+                                <option value="2">Approved</option>
+                                <option value="3">Rejected</option>
+                                <option value="4">Require More Paperwork</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 SCA">
+                        <div class=" form-group">
+                            @Html.HiddenFor(m => m.PreviousIsGSTSetByAdminUser)
+                            @Html.LabelFor(m => m.IsGSTSetByAdminUser, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.IsGSTSetByAdminUser, new List<SelectListItem> { new SelectListItem() { Text = "Apply Normal GST Registered Rules", Value = "1" }, new SelectListItem() { Text = "Override & Apply GST to All Jobs", Value = "2" } }, new { @class = "form-control" })
+                        </div>
+                    </div>
+                    @if (ProjectSession.UserTypeId == 1)
+                    {
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousRoleID)
+                                @Html.LabelFor(m => m.RoleID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.RoleID)
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousIsVerified)
+                                @Html.LabelFor(m => m.IsVerified, new { @class = "control-label" })
+                                <select name="IsVerified" id="IsVerified" class="selectpicker form-control">
+                                    <option value="0" selected>Unverified</option>
+                                    <option value="1">Pending</option>
+                                    <option value="2">Verified</option>
+                                    <option value="3">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    }
+                </div>
+
+                <div class="row" style="margin-top:8px !important">
+                    <div class="col-md-9">
+                        <div class="form-group">
+                            @*@Html.LabelFor(m => m.Note, new { @class = "control-label" })*@
+                            @*@Html.TextAreaFor(m => m.Note, new { @class = "form-control noreadonly", @autofocus = true, id = "Note" })*@
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Reason, new { @class = "control-label" })
+                            @Html.TextAreaFor(m => m.Reason, new { @class = "form-control noreadonly", @autofocus = true, id = "Reason" })
+                            @Html.ValidationMessageFor(m => m.Reason)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                @Html.LabelFor(m => m.SelectAll, new { @class = "control-label" })
+                <div class="SE" style="margin-bottom:3px !important">
+                    <input type="checkbox" id="chkSelectAll" />
+                    <span class="control-label">Select All</span>
+                </div>
+                <div class="SE" style="margin-bottom:3px !important">
+                    @Html.CheckBoxFor(m => m.IsSignatureVerified, new { id = "chkIsSignatureVerified" ,@idclass="docVerification"})
+                    <span class="control-label">Signature</span>
+                </div>
+                <div class="SE" style="margin-bottom:3px !important">
+                    @Html.CheckBoxFor(m => m.IsSelfieVerified, new { id = "chkIsSelfieVerified", @idclass = "docVerification" })
+                    <span class="control-label">Selfie</span>
+                </div>
+                <div class="SE" style="margin-bottom:3px !important">
+                    @Html.CheckBoxFor(m => m.IsDriverLicVerified, new { id = "chkIsDriverLicVerified", @idclass = "docVerification" })
+                    <span class="control-label">Driver's License</span>
+                </div>
+                <div class="SE" style="margin-bottom:15px !important">
+                    @Html.CheckBoxFor(m => m.IsOtherDocVerified, new { id = "chkIsOtherDocVerified", @idclass = "docVerification" })
+                    <span class="control-label">Other Documents</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class=" form-group SE" style="display:none;">
+                    <div class="checkbox-box">
+                        @Html.HiddenFor(m => m.PreviousIsSEDetailConfirm)
+                        @Html.CheckBoxFor(m => m.IsSEDetailConfirm)
+                        <span class="control-label">I have contacted the solar electrician and confirmed their details.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row ComplianceCheck">
+        <div class="col-sm-3">
+            <div class="form-group">
+                @if (Model.Status != 2)
+                {
+                    if ((isSCAComplianceCheck && Model.UserTypeID == (int)SystemEnums.UserType.SolarCompanyAdmin) || (isSEComplianceCheck && Model.UserTypeID == (int)SystemEnums.UserType.SolarElectricians) || ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotSuperAdmin)
+                    {
+                        <div class="btn primary icon-btn">
+                            <span class="sprite-img save_ic"></span>
+                            <input type="submit" name="Submit" value="Save" autofocus="" class="btnSubmit" id="btnSubmit" onclick="return validateForm();">
+                        </div>
+                    }
+                }
+                else if (ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotComplianceOfficer || ProjectSession.UserTypeId == (int)SystemEnums.UserType.FormBotSuperAdmin && isSEComplianceCheck)
+                {
+                    <div class="btn primary icon-btn">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="submit" name="Submit" value="Save" autofocus="" class="btnSubmit" id="btnSubmit" onclick="return validateForm();">
+                    </div>
+                }
+
+                <input type="button" value="Cancel" id="btnViewCancel" class="default cancel_ic" onclick="DeleteDocumentFolderOnCancel()">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        if(@Model.AccreditedInstallerId > 0)
+        {
+            $('.ComplianceCheck').css('display','none');
+        }
+        else
+        {
+            $('.ComplianceCheck').css('display','block');
+        }
+        if ('@Model.CustomCompanyName' == null || '@Model.CustomCompanyName' == '') {
+            $("#onOffSwitchAddCustomCompanyName").prop('checked', false);
+        } else {
+            $("#onOffSwitchAddCustomCompanyName").prop('checked', true);
+            $("#customCompanyAddDiv").show();
+        }
+        $("#chkSelectAll").change(function () {
+            if (this.checked) {
+                $('#chkIsSignatureVerified').prop('checked', true);
+                $('#chkIsSelfieVerified').prop('checked', true);
+                $('#chkIsDriverLicVerified').prop('checked', true);
+                $('#chkIsOtherDocVerified').prop('checked', true);
+            }
+            else {
+                $('#chkIsSignatureVerified').prop('checked', false);
+                $('#chkIsSelfieVerified').prop('checked', false);
+                $('#chkIsDriverLicVerified').prop('checked', false);
+                $('#chkIsOtherDocVerified').prop('checked', false);
+            }
+        });
+        $("#onOffSwitchAddCustomCompanyName").on('change.bootstrapSwitch', function (event, state) {
+            if (!$("#onOffSwitchAddCustomCompanyName").prop('checked')) {
+                $("#customCompanyAddDiv").hide();
+            }
+            else {
+                $("#customCompanyAddDiv").show();
+            }
+        });
+        $('#UserDetails').find('input').keypress(function(e){
+            if(e.keyCode == 13 && @Model.Status == 2)
+            {
+                return false;
+            }
+            if(e.keyCode==13 && '@isSCAComplianceCheck.ToString().ToLower()'=='false' && @Model.UserTypeID == 4)
+            {
+                return false;
+            }
+            if(e.keyCode==13 && '@isSEComplianceCheck.ToString().ToLower()'=='false' && @Model.UserTypeID == 7)
+            {
+                return false;
+            }
+        });
+    });
+</script>

@@ -1,0 +1,349 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper;
+@{
+    int currentJobStatus = 0;
+    if (ViewBag.CurrentSTCJobStatus != null)
+    {
+        currentJobStatus = ViewBag.CurrentSTCJobStatus;
+    }
+}
+<style>
+    .LiSettlement {
+        cursor: pointer;
+    }
+
+    .settlement-contain-box1 {
+        padding: 10px;
+        background-color: #ececec;
+        min-height: 400px;
+    }
+
+    .settlement-term .table {
+        border: none;
+    }
+</style>
+
+
+<script type="text/javascript">
+    function EnableTradeButton() {
+        $("#tradeButton").css("visibility", 'visible');
+    }
+
+    function DisableTradeButton() {
+        $("#tradeButton").css("visibility", 'hidden');
+    }
+
+    function calculateTotal(obj) {
+        var calculatedSTC = parseFloat($("#lblTotalSTCSelected").text()) * parseFloat(obj.data("price"));
+        $("#lblTotalSTCValue").html(parseFloat(calculatedSTC).toFixed(2));
+    }
+
+</script>
+
+@if (Model != null)
+{
+    <div class="settlement-term">
+        <h3 class="sca-heding">STCs READY FOR TRADE</h3>
+        @if (!Model.HaveNotCustomPrice)
+        {
+            @Html.Partial("~/Views/Job/_PricingSettlementTerm.cshtml", Model)
+
+            if (!Model.IsGridView)
+            {
+                <h2 class="stc-value" id="calculatedSTCParent">STC VALUE: $<span id="spancalculatedSTC"></span></h2>
+            }
+            <div id="tradeButton">
+                <div class="text-center clearfix term">
+                    <input id="btnApplyTradeStc" type="button" value="TRADE STCs" class="primary trade-btn center-box" onclick="ApplyTradeStc();">
+                </div>
+                <br />
+                <div class="text-center term">By trading on the Geenbot Portal, you agree to the following</div><br />
+                <div class="text-center term">
+                    <a href="https://greenbot.com.au/index.php/terms-and-conditions" target="_blank">terms and conditions</a> @*<span>I AGREE </span><input type="checkbox" id="chkAgree" />*@
+                </div>
+            </div>
+        }
+        else
+        {
+            <br />
+            <h2 class="stc-value" style="color:red">Please set custom price for this job to trade.</h2>
+        }
+
+    </div>
+}
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#pricing-Block").addClass('settlement-contain-box');
+        $("#pricing-Block").attr('style', 'height:auto;');
+
+        $("#PricingBlock").addClass('style', 'margin-bottom:10px !important');
+    });
+
+</script>
+
+
+
+<script type="text/javascript">
+
+    var chkCount1 = 0;
+
+    $(document).ready(function () {
+
+        if ($('#btnApplyTradeStc').length && $('#BasicDetails_IsAllowTrade').length && $('#BasicDetails_IsAllowTrade').val().toLowerCase() == "false") {
+            $('.term').remove();
+        }
+
+        $("#mdlSettlement").click(function (e) {
+            $('#settlements').modal({ backdrop: 'static', keyboard: false });
+        });
+
+        ID = '@ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower()' == "bindjobstcpriceview" ? 0 : '@ProjectSession.SolarCompanyId';
+
+        if ('@Model.IsGridView.ToString().ToLower()' == "true") {
+            $('#datatable1').DataTable({
+                "bPaginate": false,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_",
+                },
+
+                "aaSorting": [],
+
+                columns: [
+                    {
+                        'data': 'Id',
+                        "className": "checkbox-col",
+                        "orderable": false,
+
+                        "render": function (data, type, full, meta) {
+                            // return '<input type="checkbox"s JobId="' + full.JobID + '" id="chk_' + full.JobID + '" IsTraded="' + full.IsTraded + '" IsReadyToTrade="' + full.IsReadyToTrade + '" IsCustomPrice="' + full.IsCustomPrice + '" PriceDay1="' + full.PriceDay1 + '" UpFront="' + full.UpFront + '" PriceDay3="' + full.PriceDay3 + '" PriceDay7="' + full.PriceDay7 + '" PriceOnApproval="' + full.PriceOnApproval + '" RapidPay="' + full.RapidPay + '" OptiPay="' + full.OptiPay + '" Commercial="' + full.Commercial + '" Custom="' + full.Custom + '" InvoiceStc="' + full.InvoiceStc + '"checked>';
+                            if ($('#chkAll1').prop('checked') == true) {
+                                return '<input type="checkbox"s JobId="' + full.JobID + '" id="chk_' + full.JobID + '" IsTraded="' + full.IsTraded + '" IsReadyToTrade="' + full.IsReadyToTrade + '" IsCustomPrice="' + full.IsCustomPrice +
+                                               '" PriceDay1="' + full.PriceDay1 + '" UpFront="' + full.UpFront + '" PriceDay3="' + full.PriceDay3 + '" PriceDay7="' + full.PriceDay7 + '" PriceOnApproval="' + full.PriceOnApproval +
+                                               '" RapidPay="' + full.RapidPay + '" OptiPay="' + full.OptiPay + '" Commercial="' + full.Commercial + '" Custom="' + full.Custom + '" InvoiceStc="' + full.InvoiceStc + '" PeakPay="' + full.PeakPay +
+                                               '" isAllowKW="' + full.UnderKW + '" jobSizeForOptiPay="' + full.KWValue + '" isCommercialJob="' + full.CommercialJob + '" isNonCommercialJob="' + full.NonCommercialJob +
+                                               '" isCustomAllowKW="' + full.IsCustomUnderKW + '" jobCustomSizeForOptiPay="' + full.CustomKWValue + '" isCustomCommercialJob="' + full.IsCustomCommercialJob + '" isCustomNonCommercialJob="' + full.IsCustomNonCommercialJob +
+                                               '" modelIsGSTSetByAdminUser="' + full.IsGstSetByAdminUser + '" isGst="' + full.IsGst + '" gstDocument="' + full.GSTDocument + '" propType="' + full.PropertyType + '" ownerType="' + full.OwnerType + '" jobSystemSize="' + full.JobSystemSize +
+                                    '" isPeakPayNonCommercialJob="' + full.IsPeakPayNonCommercialJob + '" isPeakPayCommercialJob="' + full.IsPeakPayCommercialJob + '" isCustomPeakPayNonCommercialJob="' + full.IsCustomPeakPayNonCommercialJob + '" isCustomPeakPayCommercialJob="' + full.IsCustomPeakPayCommercialJob + '" isApproachingExpiryDate="' + full.IsApproachingExpiryDate +'"checked>';
+                            }
+                            else {
+                                return '<input type="checkbox"s JobId="' + full.JobID + '" id="chk_' + full.JobID + '" IsTraded="' + full.IsTraded + '" IsReadyToTrade="' + full.IsReadyToTrade + '" IsCustomPrice="' + full.IsCustomPrice +
+                                               '" PriceDay1="' + full.PriceDay1 + '" UpFront="' + full.UpFront + '" PriceDay3="' + full.PriceDay3 + '" PriceDay7="' + full.PriceDay7 + '" PriceOnApproval="' + full.PriceOnApproval +
+                                               '" RapidPay="' + full.RapidPay + '" OptiPay="' + full.OptiPay + '" Commercial="' + full.Commercial + '" Custom="' + full.Custom + '" InvoiceStc="' + full.InvoiceStc + '" PeakPay="' + full.PeakPay +
+                                               '" isAllowKW="' + full.UnderKW + '" jobSizeForOptiPay="' + full.KWValue + '" isCommercialJob="' + full.CommercialJob + '" isNonCommercialJob="' + full.NonCommercialJob +
+                                               '" isCustomAllowKW="' + full.IsCustomUnderKW + '" jobCustomSizeForOptiPay="' + full.CustomKWValue + '" isCustomCommercialJob="' + full.IsCustomCommercialJob + '" isCustomNonCommercialJob="' + full.IsCustomNonCommercialJob +
+                                               '" modelIsGSTSetByAdminUser="' + full.IsGstSetByAdminUser + '" isGst="' + full.IsGst + '" gstDocument="' + full.GSTDocument + '" propType="' + full.PropertyType + '"ownerType="' + full.OwnerType + '" jobSystemSize="' + full.JobSystemSize +
+                                    '" isPeakPayNonCommercialJob="' + full.IsPeakPayNonCommercialJob + '" isPeakPayCommercialJob="' + full.IsPeakPayCommercialJob + '" isCustomPeakPayNonCommercialJob="' + full.IsCustomPeakPayNonCommercialJob + '" isCustomPeakPayCommercialJob="' + full.IsCustomPeakPayCommercialJob + '" isApproachingExpiryDate="' + full.IsApproachingExpiryDate +'">';
+                            }
+                        }
+                    },
+                        { 'data': 'RefNumberOwnerName' },
+
+                        {
+                            'data': 'InstallationDate',
+                            "render": function (data, type, full, meta) {
+                                return ConvertToDateWithFormat(data, '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+
+                       {
+                           'data': 'STC',
+                           "render": function (data, type, full, meta) {
+                               return '<lable class="clsLabel1">' + full.STC + '</lable>';
+                           }
+                       }
+                ],
+
+                dom: "",
+
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetJobListForTradeSTCPopUp", "Job")',
+                "fnDrawCallback": function () {
+
+                    $("#lbljobsSelected").html('0/0');
+                    $("#lblTotalSTCSelected").html(0);
+                    if ($(".dataTables_empty").length == 1) {
+                        document.getElementById("chkAll1").checked = false;
+                    }
+                    datatable1Chkbox($('#chkAll1').prop('checked'), false);
+                    $(".popupgrid-bottom").hide();
+                    $("#datatable1_length").hide();
+
+                },
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "jobids", "value": '@Model.jobIDS' });
+                    aoData.push({ "name": "solarCompanyId", "value": ID });
+                }
+            });
+
+            $('#chkAll1').on('click', function () {
+
+                if ($(".dataTables_empty").length == 0) {
+                    var table1 = $('#datatable1').DataTable();
+                    var rows = table1.rows({ 'search': 'applied' }).nodes();
+                    $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                    datatable1Chkbox(this, false);
+                }
+            });
+
+            $('#datatable1 tbody').on('change', 'input[type="checkbox"]', function () {
+                datatable1Chkbox(this, true);
+            });
+        }
+    });
+
+    function CompareJobData() {
+        return true;
+    }
+
+    function showMessageForSTC(msg, isError) {
+        $("#errorMsgRegionSTCStatus").html(closeButton + msg);
+        $("#errorMsgRegionSTCStatus").show();
+    }
+
+    function ReloadSTCJobScreen(jobId) {
+        if (ID == 0) {
+            $('#StcModal').modal("hide");
+            $('html').animate({ scrollTop: 0 }, 'slow');
+            $('body').animate({ scrollTop: 0 }, 'slow');
+
+            if ('@Model.IsGridView.ToString().ToLower()' != 'true') {
+                $.ajax({
+                    url: '@Url.Action("GetSTCStatusDescription", "Job")',
+                    type: "GET",
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    processData: false,
+                    data: "id=" + $("#BasicDetails_JobID").val(),
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            if (result.STCStatusName != null && result.STCStatusName != undefined && result.STCStatusName != '') {
+                                $('#spanSTCStatus').text(result.STCStatusName.trim());
+                            }
+
+                            if (result.STCDescription != null && result.STCDescription != undefined && result.STCDescription != '') {
+                                $('#STCDescription').html(result.STCDescription.trim());
+                            }
+
+                            if (result.STCStatusId != null && result.STCStatusId != undefined && result.STCStatusId != '') {
+                                $('#STCStatusId').val(result.STCStatusId.trim());
+                            }
+                        }
+                    }
+                });
+            }
+            
+            if (!GridConfig[0].IsKendoGrid) {
+                $("#datatable").dataTable().fnDraw();
+                                
+            } else {
+                filterKendo = $('#datatable').data('kendoGrid').dataSource.filter();
+                $('#datatable').kendoGrid('destroy').empty();
+                datatableInfo();
+                drawJobIndex(filterKendo);
+                //$('#datatable').data('kendoGrid').dataSource.filter(filter);
+            }
+            
+        }
+        else {
+
+            if ('@Model.IsGridView.ToString().ToLower()' == 'true') {
+                $("#datatable1").dataTable().fnDraw();
+                document.getElementById("chkAll1").checked = true;
+            }
+            else {
+                $.ajax({
+                    url: '@Url.Action("GetSTCStatusDescription", "Job")',
+                    type: "GET",
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    processData: false,
+                    data: "id=" + $("#BasicDetails_JobID").val(),
+                    success: function (result) {
+                        if (result.IsSuccess) {
+                            if (result.STCStatusName != null && result.STCStatusName != undefined && result.STCStatusName != '') {
+                                $('#spanSTCStatus').text(result.STCStatusName.trim());
+                            }
+
+                            if (result.STCDescription != null && result.STCDescription != undefined && result.STCDescription != '') {
+                                $('#STCDescription').html(result.STCDescription.trim());
+                            }
+
+                            if (result.STCStatusId != null && result.STCStatusId != undefined && result.STCStatusId != '') {
+                                $('#STCStatusId').val(result.STCStatusId.trim());
+                            }
+                        }
+                        $('#StcModal').modal("hide");
+                    }
+                });
+            }
+        }
+    }
+
+
+    function datatable1Chkbox(objChk, isChkSingle) {
+        var tSTC = 0;
+        var cSTC = 0;
+
+        if (isChkSingle) {
+            if (objChk.checked) {
+                //chkCount1++;
+                chkCount1 = $('#datatable1 tbody input[type="checkbox"]:checked').length;
+                if (chkCount1 + 1 == $('#datatable1 >tbody >tr:visible').length) {
+                    $('#chkAll1').prop('checked', objChk.checked)
+                }
+                $("#lbljobsSelected").html(chkCount1 + '/' + $('#datatable1 >tbody >tr:visible').length);
+                cSTC = ($(objChk).parent().parent().find('.clsLabel1').text() == '' || $(objChk).parent().parent().find('.clsLabel1').text() == undefined) ? 0 : $(objChk).parent().parent().find('.clsLabel1').text();
+                tSTC = $("#lblTotalSTCSelected").html();
+                $("#stcAmountHeader").html(parseFloat(parseFloat(cSTC) + parseFloat(tSTC)).toFixed(2));
+                $("#lblTotalSTCSelected").html(parseFloat(cSTC) + parseFloat(tSTC));
+                $("#lblTotalSTCValue").html(parseFloat(parseFloat($("#lblTotalSTCValue").html()) + (parseFloat($("ul.SettlementTerms").find('li.active').data("price")) * parseFloat(cSTC))).toFixed(2));
+            }
+            else {
+                //chkCount1--;
+                chkCount1 = $('#datatable1 tbody input[type="checkbox"]:checked').length;
+                $("#lbljobsSelected").html(chkCount1 + '/' + $('#datatable1 >tbody >tr:visible').length);
+                $('#chkAll1').prop('checked', objChk.checked)
+                cSTC = ($(objChk).parent().parent().find('.clsLabel1').text() == '' || $(objChk).parent().parent().find('.clsLabel1').text() == undefined) ? 0 : $(objChk).parent().parent().find('.clsLabel1').text();
+                tSTC = $("#lblTotalSTCSelected").html();
+                $("#lblTotalSTCSelected").html(parseFloat(tSTC) - parseFloat(cSTC));
+                $("#stcAmountHeader").html(parseFloat(parseFloat(tSTC) - parseFloat(cSTC)).toFixed(2));
+                $("#lblTotalSTCValue").html(parseFloat(parseFloat($("#lblTotalSTCValue").html()) - (parseFloat($("ul.SettlementTerms").find('li.active').data("price")) * parseFloat(cSTC))).toFixed(2));
+
+            }
+        }
+        else {
+            if ($('#chkAll1').prop('checked') || objChk.checked == true) {
+                if ('@Model.IsDashboardPricing.ToString().ToLower()' == 'true') {
+                    $('#datatable1 tbody input[type="checkbox"]:visible').prop('checked', true);
+                    chkCount1 = $('#datatable1 >tbody >tr:visible').length;
+                    $('#datatable1 tbody input[type="checkbox"]:visible').each(function () {
+                        cSTC = ($(this).parent().parent().find('.clsLabel1').text() == '' || $(this).parent().parent().find('.clsLabel1').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabel1').text();
+                        tSTC = (parseFloat(tSTC) + parseFloat(cSTC));
+                    })
+                }
+                else {
+                    // chkCount1 = $('#datatable1 >tbody >tr:visible').length;
+                    chkCount1 = objChk ? $('#datatable1 >tbody >tr').length : 0;
+                    $('#datatable1 tbody input[type="checkbox"]').each(function () {
+                        cSTC = ($(this).parent().parent().find('.clsLabel1').text() == '' || $(this).parent().parent().find('.clsLabel1').text() == undefined) ? 0 : $(this).parent().parent().find('.clsLabel1').text();
+                        tSTC = (parseFloat(tSTC) + parseFloat(cSTC));
+                    })
+                }
+                $("#lbljobsSelected").html(chkCount1 + '/' + chkCount1);
+                $("#stcAmountHeader").html(parseFloat(tSTC).toFixed(2));
+                $("#lblTotalSTCSelected").html(tSTC);
+                var calculatedSTC = parseFloat(tSTC) * parseFloat($("ul.SettlementTerms").find('li.active').data("price"));
+                $("#lblTotalSTCValue").html(parseFloat(calculatedSTC).toFixed(2))
+            }
+            else {
+                $("#lbljobsSelected").html('0/0');
+                $("#stcAmountHeader").html(parseFloat(0).toFixed(2));
+                $("#lblTotalSTCSelected").html(0);
+                $("#lblTotalSTCValue").html(0)
+            }
+        }
+    }
+</script>

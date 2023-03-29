@@ -1,0 +1,48 @@
+diff a/FormBot.VendorAPI/Service/Job/JobDetails.cs b/FormBot.VendorAPI/Service/Job/JobDetails.cs	(rejected hunks)
+@@ -873,25 +873,38 @@
+ 
+             if (!string.IsNullOrEmpty(jobDocumentDeleteRequest.VendorJobDocumentId))
+             {
++
+                 DataSet ds = _job.DeleteDocuments_VendorApi(jobDocumentDeleteRequest.VendorJobDocumentId, jobDocumentDeleteRequest.IsClassic);
+                 if (ds != null && ds.Tables[0].Rows.Count > 0)
+                 {
+                     DataTable dt = new DataTable();
+                     foreach (DataRow dr in ds.Tables[0].Rows)
+                     {
+-                        var filePath = dr["Path"].ToString();
+-                        string vendorJobDocumentID = dr["VendorJobDocumentId"].ToString();
+-                        string sourcePath = Path.Combine(ProjectSession.ProofDocumentsURL, filePath);
+-                        destPath = "JobDocuments\\" + MoveDeletedDocuments(sourcePath);
+-
+-                        _job.MoveDeletedDocuments_VendorApi(vendorJobDocumentID, destPath);
++                        if (jobDocumentDeleteRequest.IsClassic)
++                        {
++                            var JobID = dr["JobID"].ToString();
++                            //var DocumentId = dr["DocumentId"].ToString();
++                            var Stage = dr["Stage"].ToString();
++                            var fileName = dr["Name"].ToString();
++                            string sourcePath = Path.Combine(ProjectSession.ProofDocumentsURL, "JobDocuments", JobID, Stage, fileName);
++                            destPath = "JobDocuments\\" + MoveDeletedDocuments(sourcePath);
++                            //DeleteDirectory(Path.Combine(ProjectSession.ProofDocumentsURL, "JobDocuments", JobID, Stage, fileName));
++                        }
++                        else
++                        {
++                            var filePath = dr["Path"].ToString();
++                            string sourcePath = Path.Combine(ProjectSession.ProofDocumentsURL, filePath);
++                            destPath = "JobDocuments\\" + MoveDeletedDocuments(sourcePath);
++                            //DeleteDirectory(Path.Combine(ProjectSession.ProofDocumentsURL, filePath));
++                        }
++                        _job.MoveDeletedDocuments_VendorApi(jobDocumentDeleteRequest.VendorJobDocumentId, destPath);
+                     }
+                 }
+-                objJobDocumentDeleteResponse = JobResponse(jobDocumentDeleteRequest.VendorJobDocumentId, "Document deleted successfully");
++                objJobDocumentDeleteResponse = JobResponse(Convert.ToInt32(jobDocumentDeleteRequest.VendorJobDocumentId), "Document deleted successfully");
+             }
+             else
+             {
+-                objJobDocumentDeleteResponse = JobResponse(jobDocumentDeleteRequest.VendorJobDocumentId, "Document not deleted");
++                objJobDocumentDeleteResponse = JobResponse(0, "Document not deleted");
+             }
+             return objJobDocumentDeleteResponse;
+         }

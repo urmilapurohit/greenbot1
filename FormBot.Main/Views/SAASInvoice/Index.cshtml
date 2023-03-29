@@ -1,0 +1,714 @@
+﻿@model FormBot.Entity.SAASInvoice
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "BillingInvoices";
+}
+@{
+    bool isAllScaJobView = false;
+}
+@Styles.Render("~/kendoCSS")
+
+<style>
+    .k-grid .k-group-col, .k-grid .k-hierarchy-col {
+        width: 12px !important;
+    }
+
+    #grid .table-responsive td:first-child {
+        white-space: nowrap;
+        width: 45px;
+    }
+
+
+    #grid .table-responsive th:last-child {
+        border-right: 0px;
+    }
+
+    #grid .table-responsive td {
+        border-right: 1px solid #e4e4e4;
+    }
+
+        #grid .table-responsive td:last-child {
+            border-right: 0px;
+        }
+
+    tfoot {
+        display: table-header-group;
+    }
+
+    #datatable thead th {
+        cursor: pointer;
+    }
+
+    #grid .table-responsive th:first-child {
+        padding-left: 9px !important;
+    }
+</style>
+
+<input id="IsWholeSaler" type="hidden" name="IsWholeSaler">
+<input id="UserId_WholeSaler" type="hidden" name="UserId_WholeSaler">
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <div class="row">
+            <h1 class="col-md-4" style="font-size: 25px;font-weight: 400;line-height: 20px">Billing Invoices</h1>
+        </div>
+    </div>
+    <div class="joblisting_search">
+        <div class="row">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">SAAS Users:</label>
+                    <input type="hidden" id="hdnresellerId" />
+                    <input type="hidden" id="hdnResellerIdForFilter" />
+                    <input type="text" id="SAASUserId" name="SAASUserId" class="form-control" maxlength="50" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Job ID Number/Ref Number :</label>
+                    <input type="text" id="searchJobid" name="searchJobid" class="form-control" maxlength="50" />
+                </div>
+            </div>
+            @*<div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="form-group">
+                        <label class="control-label">Settlement Term :</label>
+                        @Html.DropDownListFor(model => model.SettlementTermId, new SelectList((ViewBag.lstSettlementTerm.Items), "Value", "Text"), "Select", new { @class = "form-control" })
+                    </div>
+                </div>*@
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Settlement Term :</label>
+                    <select id="SettlementTermId" class="form-control">
+                        <option value="">Select</option>
+                        <option value="1">PerSTC-S</option>
+                        <option value="2">PerJob-S</option>
+                        <option value="3">PerUser-S</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Owner:</label>
+                    <input type="text" id="searchOwner" name="searchOwner" class="form-control" maxlength="50" />
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Invoice Id:</label>
+                    <input type="text" id="txtInvoiceId" class="form-control" maxlength="50">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Invoice Due Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtInvoiceDueFromDate" placeholder="From">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtInvoiceDueToDate" placeholder="To">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Billing Period:</label>
+                    <select id="ddlBillingPeriod" class="form-control">
+                        <option value="0">Select</option>
+                        <option value="1">Monthly</option>
+                        <option value="2">Weekly</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Created Date Range:</label>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCreatedFromDate" placeholder="From">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                        <div class="col-xs-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="txtCreatedToDate" placeholder="To">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="input-group">
+                    <label class="checkbox-inline" style="margin-right:10px;"><input type="checkbox" id="chkSentInvoice">Sent Invoice</label>
+                </div>
+            </div>
+            <div class="col-sm-12" style="margin-top:10px;">
+                <div class="form-group">
+                    <input type="button" id="btnSearch" class="primary search_ic" value="Search" onclick="drawSAASInvoiceKendoGrid();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters(true);">
+                        <span class="sprite-img reset_ic"></span>
+                        <input type="button" id="btnReset" class="" value="Reset">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid_topbar mag-top-20">
+        <div class="row" style="margin-right: 0px !important;">
+            @if (Model.UserTypeId == 1 || Model.UserTypeId == 2 || Model.UserTypeId == 5)
+            {
+                <div class="col-ṣm-6 rigth-btn">
+                    @*<input type="button" id="btnCreateNewInvoice" class="primary" value="Create Invoice">*@
+
+                    @*<button id="btnmark" class="btn default icon-btn mark-ic btn-sm" type="button" title="Mark" onclick="MarkUnMarkSelectedAsSentForPaymentSAAS(1);"></button>
+                        <button id="btnUnmark" class="btn default unmark-ic icon-btn btn-sm" type="button" title="UnMark" onclick="MarkUnMarkSelectedAsSentForPaymentSAAS(0);"></button>*@
+
+                    @*<button id="btnRemoveSelectedSAASInvoice" class="btn default icon-btn btn-sm remove-ic" type="button" title="Remove" onclick="RemoveSelectedSAASInvoice();"></button>*@
+                </div>
+            }
+        </div>
+    </div>
+    <div class="table-responsive kendo-grid">
+        <div id="datatable">
+        </div>
+    </div>
+
+    <div class="total-amount-rigth-btn">
+        @if (ProjectSession.UserTypeId == 1)
+        {
+            <a href="javascript:void(0);" id="btnSyncInvoice" class="btn default pull-right sync-ic" onclick="SyncWithXero();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Send STC Invoice">Sync with Xero</a>
+            <a href="javascript:void(0);" id="btnSendSTCInvoice" class="btn default pull-right send-ic" onclick="SendXeroDrafts();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Send STC Invoice">Send to Xero Draft</a>
+        }
+        @*<a href="javascript:void(0);" id="exportAllCSV" class="btn default pull-right export-ic" onclick="ExportAllCsv();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Export All CSV">Export All CSV</a>
+            <a href="javascript:void(0);" id="exportCSV" class="btn default pull-right export-ic" onclick="ExportCsv();" style="margin-right:0; margin-top:10px;margin-right:10px;" title="Export CSV">Export CSV</a>*@
+        @*@if (ProjectSession.UserTypeId == 1)
+            {
+                <div class="fileUpload btn default import-ic pull-right" id="divImportCSV" title="Import CSV" style="margin-right:0; margin-top:10px;margin-right:10px;">
+                    <span>Import CSV</span>
+                    <input id="importCSV" type="file" class="upload fileUpload" title="Import CSV" name="Import CSV" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                </div>
+            }*@
+    </div>
+</div>
+<div class="modal fade add-part-modal" id="popupboxContact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" id="LoadContactDetail">
+        </div>
+    </div>
+</div>
+
+@*Stc-Compliane Popup*@
+<div class="modal fade stc-status newemail-modal" id="popupStcCompliance" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modalContentStcCompliance">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupCreateNewInvoice" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:250px">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+
+                <button type="button" id="btnpopupCreateNewInvoiceClose" class="close" data-dismiss="modal" aria-label="Close">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Create New Invoice</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div class="container-fluid">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 col-md-4 col-lg-7">
+                                <div class="form-group">
+                                    <label class="control-label">SAAS Users:</label>
+                                    @*<input type="hidden" id="hdnresellerId" />
+                                        <input type="hidden" id="hdnResellerIdForFilter" />*@
+                                    @*<input type="text" id="popSaasUsers" name="popSaasUsers" class="form-control" maxlength="50" />*@
+                                    <select id="ddlPopSaasUsers" class="form-control"></select>
+                                    <h5 id="ddlPopSaasUsersCheck" style="color: red;"></h5>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-md-4 col-lg-5">
+                                <div class="form-group">
+                                    <label class="control-label">Term Code: </label>
+                                    <select id="ddlPopTermCode" class="form-control" onchange="BindPrice(this)"></select>
+                                    <h5 id="ddlPopTermCodeCheck" style="color: red;"></h5>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-md-4 col-lg-6">
+                                <div class="form-group">
+                                    <label class="control-label">Price: </label>
+                                    <input type="text" id="txtpopPrice" name="Price" class="form-control" maxlength="50" autocomplete="off" />
+                                    <h5 id="txtpopPriceCheck" style="color: red;"></h5>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-md-4 col-lg-6">
+                                <div class="form-group">
+                                    <label class="control-label">Quantity: </label>
+                                    <input type="text" id="txtpopQuantity" name="Quantity" class="form-control" maxlength="50" autocomplete="off" />
+                                    <h5 id="txtpopQuantityCheck" style="color: red;"></h5>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-md-4 col-lg-6">
+                                <div class="form-group">
+                                    <label class="control-label">IsGST: </label>
+                                    <div class="checkbox-box">
+                                        <input data-val="true" data-val-required="The Is Active: field is required." id="IspopGlobalGST" name="IspopGlobalGST" tabindex="8" type="checkbox" value="true"><input name="IsGlobalGST" type="hidden" value="false">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="form-group defaultFormBot tab_bottomrow">
+                            <input type="button" name="CreateInvoice" value="Create Invoice" class="primary save_ic" id="btnpopCreatInvoice" onclick="CreateNewInvoice()" tabindex="15">
+                            <button type="button" class="btn default cancel_ic" id="btnCancelCreateInvoicePopup">Cancel</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Scripts.Render("~/bundles/STCSubmission")
+<script src="~/Scripts/View/SAASInvoice.dev.js"></script>
+@*<script src="~/Scripts/View/SAASInvoice.min.js"></script>*@
+<script>
+    var TempInvoiceId = '', TempIsSent = false;
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+        url_GetReseller = '@Url.Action("GetReseller", "Reseller")?IsPeakPay=true',
+        PageSize = @ProjectConfiguration.GetPageSize,
+        UserTypeID = @Model.UserTypeId,
+        ProjectSession_LoggedInUserId = '@FormBot.Helper.ProjectSession.LoggedInUserId',
+        ProjectSession_ResellerId = '@FormBot.Helper.ProjectSession.ResellerId',
+        ProjectSession_SolarCompanyId = '@FormBot.Helper.ProjectSession.SolarCompanyId',
+        urlImportCSV = '@Url.Action("ImportCSV", "PeakPay")',
+        urlExportCSV = '@Url.Action("GenerateCSVForSelectedJobs", "PeakPay")?jobs=',
+        urlConnect = '@Url.Action("Connect", "XeroConnect")',
+        urlSAASInvoiceIndex = '@Url.Action("GetSAASInvoiceList", "SAASInvoice")',
+        url_StatusCompliance = '@Url.Action("_StatusCompliance", "Job")',
+        urlSAASInvoiceDetail = '@Url.Action("GetSAASInvoiceDetail", "SAASInvoice")',
+        //urlDownloadSaasInvoice = '@Url.Action("DownloadSAASInvoice", "SAASInvoice")?InvoiceId=' + TempInvoiceId + '&IsSent=' + TempIsSent + '';
+        urlDownloadSaasInvoice = '@Url.Action("DownloadSAASInvoice", "SAASInvoice")?InvoiceId=',
+        urlCreateNewInvoice = '@Url.Action("CreateNewInvoice", "SAASInvoice")';
+    var ResellerId = '@ProjectSession.ResellerId';
+    var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+    var GridConfig = JSON.parse('@Html.Raw(Json.Encode(((List<FormBot.Entity.KendoGrid.UserWiseGridConfiguration>)ProjectSession.UserWiseGridConfiguration).Where(m=>m.ViewPageId == SystemEnums.ViewPageId.SAASInvoiceView.GetHashCode())))')
+    var ViewPageId = 3;
+
+    $(document).ready(function () {
+        SAASInvoiceKendoIntialiize();
+        setTimeout(function () {
+            drawSAASInvoiceKendoGrid();
+        }, 2000);
+
+        $('#txtInvoiceDueFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtInvoiceDueToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtInvoiceDueFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtInvoiceDueToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtInvoiceDueToDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#txtInvoiceDueFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtInvoiceDueToDate').data('datepicker')) {
+                $('#txtInvoiceDueToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtInvoiceDueToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtInvoiceDueToDate').change(function () {
+            var fromDate = new Date(ConvertDateToTick($("#txtInvoiceDueFromDate").val(), dateFormat));
+            var toDate = new Date(ConvertDateToTick($("#txtInvoiceDueToDate").val(), dateFormat));
+        });
+
+        $('#txtCreatedFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtCreatedToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtCreatedFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtCreatedToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtCreatedToDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#txtCreatedFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtCreatedToDate').data('datepicker')) {
+                $('#txtCreatedToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtCreatedToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtCreatedToDate').change(function () {
+            var fromDate = new Date(ConvertDateToTick($("#txtCreatedFromDate").val(), dateFormat));
+            var toDate = new Date(ConvertDateToTick($("#txtCreatedToDate").val(), dateFormat));
+        });
+        $(document).on("change", "#chkAll", function () {
+            $("#datatable").find("[type='checkbox']").prop("checked", this.checked)
+            chkCount = this.checked ? $('#datatable tbody').find('tr').length : 0;
+        });
+    });
+
+    function CheckInXero(isAllowInsert,isSendDraftsToXero, UserId){
+        var UserId,isSendDrafts;
+        if(isSendDraftsToXero == true)
+            isSendDrafts == true;
+        else
+            isSendDrafts == false;
+
+        $.ajax({
+            url: '@Url.Action("CheckInXero", "User")',
+            data: { userId : UserId, isAllowInsert : isAllowInsert},
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: 'get',
+            success: function (response) {
+                if (response && response.status == false) {
+                    if(response.isAllowInsert == false) {
+                        var result = confirm("This contact is not found, would you like to create this contact in XERO?");
+                        if(result) {
+                            CheckInXero(true,isSendDrafts,UserId);
+                            return false;
+                        }
+                        else
+                            return false;
+                    }
+
+                    if (typeof (response.error) != 'undefined' && (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'unauthorizedexception' || response.error.toLowerCase() == 'invalid_grant')) {
+                        window.close();
+                        window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                    }
+                    else if(typeof (response.error) != 'undefined' && response.error.toLowerCase() == 'sessiontimeout')
+                        window.location.href = '@Url.Action("Logout", "Account")';
+                    else if (typeof (response.error) != 'undefined' && response.error)
+                        showErrorMessage(response.error);
+                    else {
+                        if(isSendDraftsToXero == true)
+                            SendDraftsToXero();
+                        else
+                            showSuccessMessage("Contact has been checked.");
+
+                        return true;
+                    }
+                }
+                else {
+                    var obj = jQuery.parseJSON(response.data);
+                    $('#LoadContactDetail').html('');
+                    $('#LoadContactDetail').load('@Url.Action("_XeroContact", "User")',{Data: obj});
+                    setTimeout(function(){
+                        $('#popupboxContact').modal({ backdrop: 'static', keyboard: false });
+                        $("#LoadContactDetail").load();
+                    },1000);
+                }
+            },
+            error: function (response) {
+                showErrorMessage("Contact has not been checked.");
+            }
+        });
+    }
+
+    function SendXeroDrafts() {
+        SendDraftsToXero();
+    }
+
+    function SendDraftsToXero() {
+        var stcInvoiceIds = null;
+        var stcInvoiceTrue = 0;
+        var stcInvoicePriceQuantityAndId = [];
+        var isCancelled = 0;
+
+        $.each($("#datatable").find('input[type="checkbox"]:checked'), function (i, e) {
+            if ($(e).attr('id') && $(e).attr('isInvoice') == 'false') {
+                var id = $(e).attr('id').split('_')[1];
+
+                var quantity = $(e).attr('Quantity');
+                var price = $(e).attr('Price').split('$')[1];
+                var isTax = $(e).attr('IsGst') == "true" ? 1 : 0;
+
+                stcInvoicePriceQuantityAndId.push({ Id: id, Price: price, Quantity: quantity, IsTax: isTax, TaxRate: 0, STCPVDCode: "", IsCreditNote: false });
+
+                if (stcInvoiceIds == null)
+                    stcInvoiceIds = id;
+                else
+                    stcInvoiceIds += ',' + id;
+            }
+            if ($(e).attr('isInvoice') == 'true')
+                stcInvoiceTrue = 1;
+        });
+        if (stcInvoicePriceQuantityAndId.length > 0) {
+            var invoices = JSON.stringify(stcInvoicePriceQuantityAndId);
+            $.ajax({
+                url: '@Url.Action("GetSelectedIdsRecord", "SAASInvoice")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'post',
+                data: JSON.stringify({ stcInvoiceIds: stcInvoiceIds, drafts: 1, invoices: invoices }),
+                success: function (response) {
+                    debugger;
+                    if (response && response.status == false) {
+                        if (response.error && response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == "invalid_grant") {
+                            window.close();
+                            window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                        }
+                        else if (response.error.toLowerCase() == 'sessiontimeout')
+                            logOutSession();
+                        else if (response.error.toLowerCase() == "error")
+                            showErrorMessage("Xero drafts has not been sent.");
+                        else if (response.error)
+                            showErrorMessage(response.error);
+                        else
+                            showErrorMessage("Xero drafts has not been sent.");
+
+                        if ($('#popupboxContact').is(":visible"))
+                            $('#popupboxContact').modal('toggle');
+                    }
+                    else {
+                        filter = $('#datatable').data('kendoGrid').dataSource.filter()
+                        SAASInvoiceKendoIntialiize();
+                        drawSAASInvoiceKendoGrid(filter);
+
+                        if ($('#popupboxContact').is(":visible"))
+                            $('#popupboxContact').modal('toggle');
+                        showSuccessMessage("Xero drafts has been sent successfully.");
+                    }
+                },
+                error: function (response) {
+                    if ($('#popupboxContact').is(":visible"))
+                        $('#popupboxContact').modal('toggle');
+                    showErrorMessage("Xero drafts has not been sent.");
+                }
+            });
+        }
+        else {
+            if (stcInvoicePriceQuantityAndId.length == 0 && stcInvoiceTrue == 0)
+                alert("Please select atleast one SAAS Invoice.");
+            else if (stcInvoiceTrue == 1)
+                alert("Draft is already sent for selected SAAS Invoice.");
+            else if (isCancelled == 1)
+                alert("Draft is not sent for cancelled SAAS Invoice.");
+        }
+    }
+
+    function ResetSearchFilters(ShowAll) {
+        $("#SAASUserId").val('');
+        $("#hdnresellerId").val("");
+        $("#searchJobid").val('');
+        $("#SettlementTermId").val('');
+        $("#searchOwner").val('');
+        $("#txtInvoiceId").val('');
+        $("#txtInvoiceDueFromDate").val('');
+        $("#txtInvoiceDueToDate").val('');
+        $("#ddlBillingPeriod").val('');
+        $("#txtCreatedFromDate").val('');
+        $("#txtCreatedToDate").val('');
+
+        $("#hdnResellerIdForFilter").val("");
+        drawSAASInvoiceKendoGrid();
+    }
+
+    function SyncWithXero() {
+        debugger;
+        var resellerId = $("#hdnresellerId").val();
+        var invoiceIDs = 0;
+
+        $.each($("#datatable").find('input[type="checkbox"]:checked'), function (i, e) {
+            if (invoiceIDs == 0)
+                invoiceIDs = $(e).attr('invoicenumber');
+            else
+                invoiceIDs += ',' + $(e).attr('invoicenumber');
+        });
+
+        if (invoiceIDs.length > 0) {
+            $.ajax(
+            {
+                url: '@Url.Action("SyncWithXero", "SAASInvoice")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'get',
+                //data: { resellerId: resellerId },
+                    data: { invoiceNumbers: invoiceIDs },
+                success: function (response) {
+                    if (response && response.status == false) {
+                        if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() =='invalid_grant') {
+                            window.close();
+                            window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                        }
+                        else if(response.error.toLowerCase() == 'sessiontimeout')
+                            logOutSession();
+                        else if(response.error)
+                            showErrorMessage(response.error);
+                        else
+                            showErrorMessage("Xero has not been synced.");
+                    }
+                    else {
+                        var msg;
+                        if(response.msg)
+                            msg = response.msg;
+                        else
+                            msg = "Xero has been synced successfully."
+
+                        drawSAASInvoiceKendoGrid();
+                        showSuccessMessage(msg);
+                    }
+                },
+                error: function (response) {
+                    showErrorMessage("Xero has not been synced.");
+                }
+            });
+        }
+        else {
+            alert("Please select atleast one SAAS Invoice.");
+        }
+    }
+
+    function MarkUnMarkSelectedAsSentForPaymentSAAS(markbit){
+            selectedRows=[];
+            var xeroInvoiceIds=[];
+            var stcInvoiceTrue = 0;
+            var stcInvoiceFalse = 0;
+            var isCancelled = 0;
+
+            //var isOutstanding = true;
+            $('#datatable tbody input[type="checkbox"]').each(function(){
+                if($(this).prop('checked')==true){
+                    if($(this).attr('id') && (($(this).attr('isInvoice') == 'false' && markbit == 1) || ($(this).attr('isInvoice') == 'true' && markbit == 0)) && $(this).attr('PaymentStatusID') !=2)
+                    {
+                        selectedRows.push({ InvoiceNumber: $(this).attr('InvoiceNumber'), SAASInvoiceId: $(this).attr('id').substring(4), JobID: $(this).attr('jobId')});
+                        if($(this).attr('XeroInvoiceId')!='' && $(this).attr('XeroInvoiceId')!=null && $(this).attr('XeroInvoiceId')!=undefined)
+                            xeroInvoiceIds.push({ InvoiceNumber: $(this).attr('InvoiceNumber'), XeroInvoiceId: $(this).attr('XeroInvoiceId'), JobID: $(this).attr('jobId')});
+                    }
+                    if($(this).attr('isInvoice') == 'true' && markbit == 1)
+                        stcInvoiceTrue = 1;
+                    if($(this).attr('isInvoice') == 'false' && markbit == 0)
+                        stcInvoiceFalse = 1;
+                    if($(this).attr('PaymentStatusID') == 2)
+                        isCancelled = 1;
+                }
+            });
+            //if(isOutstanding){
+            if (selectedRows != null && selectedRows.length > 0) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("MarkUnMarkSelectedAsSentForPayment", "SAASInvoice")',
+                    //async: false,
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ markbit: markbit, saasinvoiceids: JSON.stringify(selectedRows) , xeroInvoiceIdsArray: JSON.stringify(xeroInvoiceIds)}),
+                    success: function (data) {
+                        if (data && data.status == false) {
+                            if (data.error.toLowerCase() == 'specified method is not supported.' || data.error.toLowerCase() == 'renewtokenexception' || data.error.toLowerCase() == 'invalid_grant') {
+                                window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                            }
+                            else if(data.error.toLowerCase() == 'sessiontimeout')
+                                logOutSession();
+                            else if (data.error)
+                                showErrorMessage(data.error);
+                            else
+                            {
+                                if(markbit == 0)
+                                    msg = "Selected STC Invoice(s) has not been unmarked."
+                                else
+                                    msg = "Selected STC Invoice(s) has not been marked."
+
+                                showErrorMessage(msg);
+                            }
+                        }
+                        else
+                        {
+                            if (data.success) {
+                                var msg;
+                                var confirm_msg;
+                                if(data.InvoiceNum)
+                                {
+                                    if(data.count == xeroInvoiceIds.length && markbit == 0)
+                                    {
+                                        confirm_msg = "Selected STC Invoice(s) has not been unmarked as its approved or paid in xero.Do you want to unmark that invoice?"
+                                        var r = confirm(confirm_msg);
+                                        if (r == true) {
+                                            MarkUnmarkApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, 0);
+                                        } else {
+                                            msg = " Selected STC Invoice(s) has not been unmarked as its approved or paid in xero.";
+                                        }
+                                            showSuccessMessage(msg);
+                                    }
+                                    else if(markbit == 0)
+                                    {
+
+                                        confirm_msg = data.InvoiceNum + " has not been unmarked as its approved or paid in xero. Do you want to unmark that invoices?";
+                                        var r = confirm(confirm_msg);
+                                        if (r == true) {
+                                            MarkUnmarkApprovedDeletedInvoices(data.notdeletedStcInvoiceIDs, 0);
+                                        } else {
+                                            msg = data.InvoiceNum + " has not been unmarked as its approved or paid in xero. Other(s) has been unmarked successfully.";
+                                            showSuccessMessage(msg);
+                                        }
+
+                                    }
+
+                                }
+                                else
+                                {
+                                if(markbit == 0)
+                                    msg = "Selected STC Invoice(s) has been unmarked successfully."
+                                else
+                                    msg = "Selected STC Invoice(s) has been marked successfully."
+
+                                showSuccessMessage(msg);
+                                }
+
+                                GetSTCInvoicePaymentStatusStageCount();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        }
+                    },
+                    error: function (ex) {
+
+                    }
+                });
+            }
+            else{
+
+                if(stcInvoiceTrue==1 && markbit == 1)
+                    alert("Please select any STC invoice which has status unmark for payment.");
+                else if(stcInvoiceFalse==1 && markbit == 0)
+                    alert("Please select any STC invoice which has status mark for payment.");
+                else if(isCancelled == 1)
+                    alert("Can not mark/unmark for cancelled STC Invoice.");
+                //alert('Please select any STC Invoice to update status of Sent For Payment.');
+            }
+            //}
+        }
+</script>

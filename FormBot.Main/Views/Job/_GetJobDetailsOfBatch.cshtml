@@ -1,0 +1,68 @@
+﻿@model FormBot.Entity.REC
+@using Newtonsoft.Json
+<form id="RECFailureReasonForm" enctype="multipart/form-data">
+    <div class="vertical-alignment-helper jobstatus">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row" style="background:#48b373">
+                        <div class="col-md-2 topmargbtn">
+                            <a href="javascript:" style="color:White !important; font-size:15px !important;vertical-align:middle !important;font-weight:bold; padding-bottom:5px !important" data-dismiss="modal">
+                                <i class="glyphicon glyphicon-circle-arrow-left small" style="color:white !important"></i>&nbsp;Back
+                            </a>
+                        </div>
+                        <div class="col-md-10" style="vertical-align:middle !important">
+                            <label class="col-md-6 pull-right topmargbtn" style="color:White !important">TOTAL JOBS: @Model.TotalJob</label>
+                            <label class="col-md-6 pull-right topmargbtn" style="color:White !important">BATCH ID: <span id="batchId">@Model.BatchId</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" style="padding:0px !important">
+                    <div class="panel-group" style="margin-bottom:0px!important">
+                        <div class="panel-body">
+                            <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion_FailedJob" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                        <div id="gridJobs" class="box-border batchDetails">
+                                            <!-- Grid start -->
+                                            <div class="table-responsive">
+                                                <table id="datatable_FailedJobs" class="table table-hover blueBorder">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="10%"><span>@Html.DisplayName("Job Id")</span></th>
+                                                            <th width="20%"><span>@Html.DisplayName("Reference Number")</span></th>
+                                                            <th width="15%"><span>@Html.DisplayName("STCStatus")</span></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @if (Model.lstREC != null)
+                                                        {
+                                                            for (var i = 0; i < Model.lstREC.Count; i++)
+                                                            {
+                                                                <tr class="togglerow">
+                                                                    <td>@Model.lstREC[i].JobId</td>
+                                                                    <td><a href="@Url.Action("Index", "Job",new { id = Model.lstREC[i].Id })" style="text-decoration:none;" target="_blank">@Model.lstREC[i].RefNumber</a></td>
+                                                                    <td>@Model.lstREC[i].STCStatus</td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

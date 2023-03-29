@@ -1,0 +1,177 @@
+﻿@model FormBot.Entity.Job.JobParts
+@using FormBot.Helper;
+
+<style>
+    .hide_column {
+        display: none;
+    }
+</style>
+
+
+
+<form class="form-block" style="margin-top:10px;">
+    <div id="appendClass">
+        <div class="col-lg-6">
+            <div class="form-group">
+                <input type="text" id="txtItemCode" placeholder="Search by item code or description" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="form-group">
+                <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchJobParts();">
+                <div class="btn default icon-btn" onclick="ResetSearchFilters();">
+                    <span class=" sprite-img reset_ic"></span>
+                    <input type="button" id="btnReset" value="Reset" class="">
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="grid_topbar">
+    <p class="job_result" id="numRecords"></p>
+</div>
+
+<div class="row">
+    <div id="grid" class="col-xs-12">
+        <!-- Grid start -->
+        <div class="table-responsive">
+            <table id="datatable" class="table table-hover datatableParts" style="width:100% !important;">
+                <thead>
+                    <tr>
+                        <th width="20%"><span>@Html.DisplayName("Item Code")</span></th>
+                        <th width="40%"><span>@Html.DisplayName("Description ")</span></th>
+                        <th width="20%"><span>@Html.DisplayName("Sale")</span></th>
+                        <th width="20%"><span>@Html.DisplayName("Purchase")</span></th>
+                        <th width="5%" class="action" style="display:none">@Html.DisplayName("Action")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    var selectedRows = [];
+
+    $(document).ready(function () {
+
+        $("form").submit(function() { return false; });
+
+        $("#txtItemCode").keyup(function(e){
+            if(e.keyCode == 13)
+                SearchJobParts();
+        });
+
+        if('@Model.SyncValue' == 1)
+            showSuccessMessage("Job parts has been sync successfully.");
+        else if('@Model.SyncValue' == 2)
+            showErrorMessage("Job parts has not been sync.");
+
+        var chkCount=0;
+        $("#txtItemCode").focus();
+        $('.datatableParts').DataTable({
+            iDisplayLength: 10,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+            columns: [
+
+
+                    { 'data': 'ItemCode' },
+
+                     { 'data': 'Description'},
+
+                    { 'data': 'Sale'},
+
+                     { 'data': 'Purchase'},
+
+                    {
+                        'data': 'JobPartID',
+                        className:'hide_column',
+                        "render": function (data, type, full, meta) {
+
+                            imgedit = 'background:url(../Images/edit-icon.png) no-repeat center; text-decoration:none;';
+                            var editHref = ("@Url.Action("Edit", "XeroOrganisation")" + "/" + full.JobPartID);
+
+                            //imgdelete = 'background:url(../Images/delete-icon.png) no-repeat center; text-decoration:none;';
+                            //var deleteHref = "javascript:DeleteJobParts('" + full.Id + "')";
+
+                            var returnHTML = '';
+
+                            returnHTML +=  '<a href="' + editHref + '" class="action edit" style="' + imgedit + '" title="Edit" jobPartId="'+full.JobPartID+'" >' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>' + '&nbsp;&nbsp;';
+                            //returnHTML +=  '<a href="' + deleteHref + '" class="action delete" style="' + imgdelete + '" title="Delete">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+
+                            return returnHTML;
+                        },
+                        "orderable": false
+                    }
+            ],
+
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetJobPartsList", "JobInvoiceDetail")',
+
+            "fnDrawCallback": function () {
+                chkCount=0;
+                $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+
+                if ($(".paging").find("span").length > 1) {
+                    $("#datatable_length").show();
+                } else if ($(".datatableParts").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                //--------To show display records from total records-------------------
+                var table = $('.datatableParts').DataTable();
+                var info = table.page.info();
+
+                if(info.recordsTotal==0){
+                    document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Job Part(s) found';
+                }
+                else{
+                    document.getElementById("numRecords").innerHTML = '<b>' + $('.datatableParts >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Job Part(s) found';
+                }
+                //------------------------------------------------------------------------------------------------------------------------------
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+            },
+
+            "fnServerParams": function (aoData) {  //These are the extra parameters for our custom filters
+                aoData.push({ "name": "itemCodeOrDescription", "value": $("#txtItemCode").val() });
+                aoData.push({ "name": "isAllPart", "value": '@Model.isAllPart' });
+                //aoData.push({ "name": "description", "value": $("#txtDescription").val() });
+            }
+        });
+
+        var table = $('.datatableParts').DataTable();
+
+    });
+
+    function SearchJobParts() {
+        $(".datatableParts").dataTable().fnDraw();
+    }
+
+    function ResetSearchFilters() {
+        $("#txtItemCode").val('');
+        //$("#txtDescription").val('');
+        $(".datatableParts").dataTable().fnDraw();
+    }
+
+
+
+</script>

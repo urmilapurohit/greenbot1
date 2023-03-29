@@ -1,0 +1,1323 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+
+@*add-installationDetail*@
+<div class="modal fade popupAddress " tabindex="-1" role="dialog" id="popupAddress">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Address Detail</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="JobInstallationAddress">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobInstallationDetails.AddressID, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1" } }, new { @class = "form-control InstallationAddress", @tabindex = 701 })
+                                    </div>
+                                </div>
+                                <div class="InstallationPDA" style="display:none">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalAddressID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.PostalAddressID, new List<SelectListItem>
+                                                    (), new { @class = "form-control", @tabindex = 702 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalAddressID)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 703 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalDeliveryNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallationUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobInstallationDetails.UnitTypeID, new List<SelectListItem>
+                                                (), new { @class = "form-control", @tabindex = 704 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallationUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 705 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitNumber)
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="InstallationDPA">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallationStreetNumber" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 706 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetNumber)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 708 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetTypeID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.StreetTypeID, new List<SelectListItem>
+                                                    (), new { @class = "form-control", @tabindex = 709 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetTypeID)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 710, })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 711, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 712 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostCode)
+                                    </div>
+                                </div>
+                                <div class="row">
+                                </div>
+                                <div class="alert" id="JobInstallationDetails_LocationValidation" style="display: none;color: #a94442;">
+                                    "Please enter valid state,town and postcode."
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupInstallation()" tabindex="714">
+                                    <span class="sprite-img reset_ic"></span> Reset
+                                </button>
+                                <button type="button" class="btn primary icon-btn" onclick="validateInstallation()" tabindex="713">
+                                    <span class="sprite-img save_ic"></span> Save
+                                </button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*popupmap*@
+<div class="modal fade" tabindex="-1" role="dialog" id="popupMap">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label" id="lblSrcMap">Source</label>
+                                <input type="text" id="txtSource" class="form-control" placeholder="Source" tabindex="301" />
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Destination</label>
+                                <input type="text" id="txtDestination" class="form-control" placeholder="Destination" tabindex="302" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button type="button" class="btn default pull-right" onclick="GetLocation()" tabindex="303">Get Location</button>
+                            <button type="button" class="btn default pull-right" onclick="GetRoute()" tabindex="304">Get Route</button>
+                            <div id="dvDistance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dvMap" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+@*popup Panel brand*@
+<div class="modal fade" id="popupboxPanelBrand" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <input type="hidden" id="hdnPanelRowId" />
+
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxPanelBrand"></button>
+                    <h4 class="modal-title" id="myModalLabel">Panel Brand</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsPanelModel">Panel Model:</label>
+                            <input type="hidden" id="hdnPanelModel" />
+                            <input type="text" id="searchPanelModel" name="searchPanelModel" class="form-control" maxlength="50" />
+                            <span id="spanJobPanelDetails_Model" style="color: #b94a48;display:none">Panel Model is required.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsPanelBrand">Panel Brand:</label>
+                            <input type="hidden" id="hdnPanelBrand" />
+                            <input type="text" id="searchPanelBrand" name="searchPanelBrand" disabled="disabled" class="form-control" maxlength="50" />
+                            <span id="spanJobPanelDetails_Brand" style="color: #b94a48;display:none">Panel Brand is required.</span>
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-12 col-md-12 col-lg-12 job-panel-supplier-popup-drpsupplier" style="display:none;">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsSupllier">Supplier:</label>
+                            <select id="drpSupplier" class="form-control" disabled></select>
+                            <span id="spanJobPanelDetails_Supplier" style="color: #b94a48;display:none">Supplier is required.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg-6 job-panel-StartDate">
+                        <div class="form-group">
+                            <label class="control-label" id="PanelStartDate">CECApprovedDate:</label>
+                            <input type="text" id="txtpanelStartDate" class="form-control" disabled />
+                            <span id="spanJobPanelDetails_CECApprovedDate" style="color: #b94a48;display:none">CECApprovedDate is requires.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg- job-panel-EndDate">
+                        <div class="form-group">
+                            <label class="control-label" id="PanelEndDate">ExpiryDate:</label>
+                            <input type="text" id="txtpanelEndDate" class="form-control" disabled />
+                            <span id="spanJobPanelDetails_ExpiryDate" style="color: #b94a48;display:none">ExpiryDate is requires.</span>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsNumberOfPanel">Number Of Panel:</label>
+                            @Html.TextBoxFor(m => m.JobPanelDetails.NoOfPanel, new { @class = "form-control", @data_val = "false", @maxlength = 5, @onkeypress = "return isNumber(event);", @disabled = "disabled" })
+                            <span id="spanJobPanelDetails_NoOfPanel" class="" style="color: #b94a48;display:none">Number Of Panel is required.</span>
+                            <span id="spanNoOfPanelValue" class="" style="color: #b94a48;display:none">Number Of panel is between 1 to 10000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default icon-btn" id="resetPanelBrand"><span class="sprite-img reset_ic"></span>Reset</button>
+                    <button type="button" class="btn primary icon-btn" id="btnAddPanel"><span class="sprite-img save_ic"></span>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup Inverter brand*@
+<div class="modal fade" id="popupboxInverterBrand" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <input type="hidden" id="hdnInverterRowId" />
+
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxInverterBrand"></button>
+                    <h4 class="modal-title" id="myModalLabel">Inverter Brand</h4>
+                </div>
+                <div class="modal-body">
+                      <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">Inverter Model:</label>
+                            <input type="hidden" id="hdnInverterModel" />
+                            <input type="text" id="searchInverterModel" name="searchInverterModel" class="form-control" maxlength="50"  />
+                            <span id="spanJobInverterDetails_Model" style="color: #b94a48;display:none">Inverter model is required.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">Inverter Brand:</label>
+                            <input type="hidden" id="hdnInverterBrand" />
+                            <input type="text" id="searchInverterBrand" name="searchInverterBrand" class="form-control" maxlength="50" disabled="disabled"/>
+                            <span id="spanJobInverterDetails_Brand" style="color: #b94a48;display:none">Inverter Brand is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">Inverter Series:</label>
+                            <input type="hidden" id="hdnInverterSeries" />
+                            <input type="text" id="searchInverterSeries" name="searchInverterSeries" class="form-control" maxlength="50" disabled="disabled" />
+                            <span id="spanJobInverterDetails_Series" style="color: #b94a48;display:none">Inverter Series is required.</span>
+                        </div>
+                    </div>
+
+                  
+                    <div class="col-sm-6 col-md-6 col-lg-6 job-inverter-StartDate">
+                        <div class="form-group">
+                            <label class="control-label" id="inverterStartDate">CECApprovedDate:</label>
+                            <input type="text" id="txtInverterStartDate" class="form-control" disabled />
+                            <span id="spanJobInverterDetails_CECApprovedDate" style="color: #b94a48;display:none">CECApprovedDate is required.</span>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg- job-inverter-EndDate">
+                        <div class="form-group">
+                            <label class="control-label" id="inverterEndDate">ExpiryDate:</label>
+                            <input type="text" id="txtInverterEndDate" class="form-control" disabled />
+                            <span id="spanJobInverterDetails_ExpiryDate" style="color: #b94a48;display:none">ExpiryDate is required.</span>
+
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">No of Inverter:</label>
+                            <input type="text" id="searchInverterNumber" name="searchInverterNumber" class="form-control" maxlength="50" disabled="disabled" onkeypress="return isNumber(event);" />
+                            <span id="spanNoOfInverterValue" class="" style="color: #b94a48;display:none">Number Of Inverter is between 1 to 10000</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default icon-btn" id="resetInverterBrand"><span class="sprite-img reset_ic"></span>Reset</button>
+                    <button type="button" class="btn primary icon-btn" id="btnAddInverter"><span class="sprite-img save_ic"></span>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup Battery Manufacturer*@
+<div class="modal fade" id="popupboxBatteryManufacturer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <input type="hidden" id="hdnBatteryManufacturerRowId" />
+
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxBatteryManufacturer"></button>
+                    <h4 class="modal-title" id="myModalLabel">Battery Manufacturer</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">Manufacturer:</label>
+                            <input type="hidden" id="hdnBatteryManufacturer" />
+                            <input type="text" id="searchBatteryManufacturer" name="searchBatteryManufacturer" class="form-control" maxlength="200" />
+                            <span id="spanJobBatteryManufacturer" style="color: #b94a48;display:none">Manufacturer is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label">Model Number:</label>
+                            <input type="hidden" id="hdnBatteryModelNumber" />
+                            <input type="text" id="searchBatteryModelNumber" name="searchBatteryModelNumber" class="form-control" maxlength="200" disabled="disabled" />
+                            <span id="spanJobBatteryModelNumber" style="color: #b94a48;display:none">Model Number is required.</span>
+                        </div>
+                    </div>
+
+                    <div class="batteryManufacturerDetails">
+                        <div class="col-sm-12 col-md-12 col-lg-12">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new { @class = "control-label" })
+                                @Html.DropDownListFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 66 })
+                                <span id="spanBatterySystemPartOfAnAggregatedControl" style="color: #b94a48;display:none">Please select Yes or No.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-12">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new { @class = "control-label" })
+                                @Html.DropDownListFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 67 })
+                                <span id="spanChangedSettingOfBatteryStorageSystem" style="color: #b94a48;display:none">Please select Yes or No.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default icon-btn" id="resetBatteryManfacturer"><span class="sprite-img reset_ic"></span>Reset</button>
+                    <button type="button" class="btn primary icon-btn" id="btnAddBatteryManfacturer"><span class="sprite-img save_ic"></span>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup System brand*@
+<div class="modal fade" id="popupboxSystemBrand" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <input type="hidden" id="hdnSystemRowId" />
+
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxSystemBrand"></button>
+                    <h4 class="modal-title" id="myModalLabel">System Brand</h4>
+                </div>
+                <div class="modal-body">
+
+
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsSystemModel">System Model:</label>
+                            <input type="hidden" id="hdnSystemModel" />
+                            <input type="text" id="searchSystemModel" name="searchSystemModel" class="form-control" maxlength="50"  />
+                            <span id="spanJobSystemDetails_Model" style="color: #b94a48;display:none">System Model is required.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsSystemBrand">System Brand:</label>
+                            <input type="hidden" id="hdnSystemBrand" />
+                            <input type="text" id="searchSystemBrand" name="searchSystemBrand" class="form-control" maxlength="50" disabled="disabled" />
+                            <span id="spanJobSystemDetails_Brand" style="color: #b94a48;display:none">System Brand is required.</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg-6 job-swhpanel-StartDate">
+                        <div class="form-group">
+                            <label class="control-label" id="SWHPanelStartDate">CECApprovedDate:</label>
+                            <input type="text" id="txtSWHpanelStartDate" class="form-control" disabled />
+                            <span id="spanJobSystemDetails_CECApprovedDate" style="color: #b94a48;display:none">CECApprovedDate is required.</span>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg- job-swhpanel-EndDate">
+                        <div class="form-group">
+                            <label class="control-label" id="SWHPanelEndDate">ExpiryDate:</label>
+                            <input type="text" id="txtSWHpanelEndDate" class="form-control" disabled />
+                            <span id="spanJobSystemDetails_ExpiryDate" style="color: #b94a48;display:none">ExpiryDate is required.</span>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label class="control-label" id="JobSystemDetailsNumberOfPanel">Number Of Panel:</label>
+                            @Html.TextBoxFor(m => m.JobSystemDetails.NoOfPanel, new { @id = "JobSystemDetails_NoOfPanel1", @class = "form-control", @data_val = "false", @maxlength = 5, @onkeypress = "return isNumber(event);", @tabindex = 72, @disabled = "disabled" })
+                            <span id="spanJobSystemDetails_NoOfPanel" class="" style="color: #b94a48;display:none">Number Of Panel is required.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn default icon-btn" id="resetSystemBrand"><span class="sprite-img reset_ic"></span>Reset</button>
+                    <button type="button" class="btn primary icon-btn" id="btnAddSystem"><span class="sprite-img save_ic"></span>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup serial number*@
+<div class="modal fade popupSerialNumber" tabindex="-1" id="popupSerialNumber">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Serial Numbers</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-box">
+                        <div style="width: 12px; height: 12px; background-color: rgba(30, 121, 204, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in master file.</span><br />
+                        <div style="width: 12px; height: 12px; background-color: rgba(220, 82, 109, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in jobs.</span>
+                        <hr style="margin-left: -15px; margin-right: -15px; margin-bottom: 10px; margin-top: 10px; " />
+                        <ul id="serialNumberPopup"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Popup Electrician Detail*@
+<div class="modal fade popupElectrician" tabindex="-1" role="dialog" id="popupElectrician">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title">Electricians Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="frmJobElectricians">
+                        <div class="form-box">
+                            @Html.HiddenFor(m => m.JobElectricians.JobElectricianID)
+                            @Html.HiddenFor(m => m.JobElectricians.InstallerID)
+                            @Html.HiddenFor(m => m.JobElectricians.ElectricianID)
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.LicenseNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.LicenseNumber, new { @class = "form-control", @maxlength = 100 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.LicenseNumber)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.CompanyName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.CompanyName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus", @idClass = "electricianRequired" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.CompanyName)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.FirstName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.FirstName, new { @class = "form-control", @maxlength = 100, @idClass = "electricianRequired" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.FirstName)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.LastName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.LastName, new { @class = "form-control", @maxlength = 100 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.LastName)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Email, new { @class = "control-label " })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Email, new { @class = "form-control", @maxlength = 255 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Email)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Phone, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Phone)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Mobile, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Mobile, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Mobile)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobElectricians.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control ElectriciansAddress" })
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 PDA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.PostalAddressID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.JobElectricians.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.PostalAddressID)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 PDA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.PostalDeliveryNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.PostalDeliveryNumber)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.UnitTypeID, new { @class = "control-label", @id = "lblElectriciansUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobElectricians.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.UnitTypeID)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.UnitNumber, new { @class = "control-label", @id = "lblElectriciansUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.UnitNumber, new { @class = "form-control", @maxlength = 10 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.UnitNumber)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.StreetNumber, new { @class = "control-label required", @id = "lblElectriciansStreetNumber" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.StreetNumber, new { @class = "form-control", @maxlength = 15 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.StreetNumber)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.StreetName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.StreetName, new { @class = "form-control", @maxlength = 45 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.StreetName)
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-4 DPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.JobElectricians.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Town, new { @class = "form-control", @maxlength = 80 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.PostCode, new { @class = "form-control", @maxlength = 8 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.PostCode)
+                                    </div>
+                                </div>
+                                <div class="alert" id="JobElectricians_LocationValidation" style="display: none;color: #a94442;">
+                                    "Please enter valid state,town and postcode."
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group"></div>
+                                    <div>
+                                        @Html.LabelFor(m => m.JobElectricians.Signature, new { @class = "control-label" })
+                                    </div>
+                                    <div class="fileUpload btn primary upload_ic" id="divUpload" style="margin-left: 0px;">
+                                        <span>Upload</span>
+                                        <input id="uploadBtnJobSignature" type="file" class="upload fileUpload" />
+                                    </div>
+                                    @Html.HiddenFor(m => m.JobElectricians.Signature)
+                                    <a id="imgSignature" href="javascript:void(0)" style="display:none;">&nbsp; &nbsp; View Image</a>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupElectrician()"><span class="sprite-img reset_ic"></span>Reset</button>
+                                <button type="button" class="btn primary icon-btn" id="btnSaveElectrician"><span class="sprite-img save_ic"></span>Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*Signature*@
+<div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:100px;">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosePopUpBox"></button>
+                    <h4 class="modal-title" id="myModalLabel">Signature</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            <img id="imgSign" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer"><p class="remove_ic " onclick="deleteImageJob('imgSign');" style="margin-right:10px"><a class="sprite-img delete" href="#" id="signDelete"></a>Remove</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup SWH installer*@
+<div class="modal fade popupSWHInstaller" tabindex="-1" role="dialog" id="popupSWHInstaller">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    <h4 class="modal-title modalTitleSWHInstaller">Find Installer</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSWHInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSWHInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <form id="frmSWHInstaller">
+                        @*@Html.HiddenFor(m => m.JobInstallerDetails.JobInstallerId)*@
+                        @Html.HiddenFor(m => m.JobInstallerDetails.SWHInstallerDesignerId)
+                        @*@Html.HiddenFor(m => m.JobInstallerDetails.SolarCompanyId)*@
+                        @Html.HiddenFor(m => m.JobInstallerDetails.IsPostalAddress)
+                        @Html.HiddenFor(m => m.JobInstallerDetails.SESignature)
+                        @Html.HiddenFor(m => m.JobInstallerDetails.AccreditationNumber)
+                        @*@Html.HiddenFor(m=>m.JobInstallerDetails.AccreditedInstallerId)*@
+                        <div class="form-box">
+                            <div class="FindSWHInstaller">
+                                <div class="row SWHInstallerOptions">
+                                    <div class="col-md-5">
+                                        <button type="button" class="btn primary icon-btn" id="btnSearchGreenbotSWHInstaller"><span class="sprite-img add_ic"></span>Search Greenbot Installer</button>
+                                    </div>
+                                    <div class="col-md-1" style="text-align: -webkit-center;color: #222;padding-top: 10px;">
+                                        <h4>OR</h4>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <button type="button" class="btn primary icon-btn" id="btnAddNewSWHInstaller" style="float:left"><span class="sprite-img add_ic"></span>Add New Installer</button>
+                                    </div>
+                                </div>
+                                <div class="SearchGreenbotSWHInstaller" style="display:none;">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "control-label required" })
+                                                @*@Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @id = "FindSWHInstaller_LicenseNumber", @class = "form-control", @maxlength = 20, @onblur = "checkExistSWHInstaller(this,'InstallerDesigner AccreditationNumber',true)" })*@
+                                                @Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @id = "SearchGreenbotSWHInstaller_LicenseNumber", @class = "form-control", @maxlength = 20 })
+                                                @Html.ValidationMessageFor(m => m.JobInstallerDetails.LicenseNumber)
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <input type="button" id="btnSWHSearch" value="Search" class="primary search_ic" style="margin-top: 26px;" onclick="checkExistSWHInstaller($('#SearchGreenbotSWHInstaller_LicenseNumber').val())">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="mulitpleSWHInstallerNote control-label" style="display:none; color:red">* There are multiple users</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="swhInstallerList" class="row" style="display:none;">
+                                        @Html.Partial("_SWHInstaller")
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="AddEditSWHInstaller">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "control-label required" })
+                                            @*@Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 35, @onblur = "checkExistSWHInstaller(this,'InstallerDesigner LicenseNumber')", @readonly = "readonly", @idClass = "swhInstallerRequired" })*@
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 35, @readonly = "readonly", @idClass = "swhInstallerRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.LicenseNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.FirstName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 401, @idClass = "swhInstallerRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.FirstName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.Surname, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.Surname, new { @class = "form-control", @maxlength = 100, @tabindex = 402, @idClass = "swhInstallerRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.Surname)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.Email, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 403, @readonly = "readonly", @idClass = "swhInstallerRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.Email)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.Phone, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 404, onkeypress = "return isValidPhone(event,this);", @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.Phone)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.Mobile, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 405, onkeypress = "return isValidPhone(event,this);", @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.Mobile)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <label class="control-label required">Postal Address Type :</label>
+                                            @Html.DropDownListFor(m => m.JobInstallerDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control InstallerAddress", @tabindex = 406, @idClass = "swhInstallerNotRequired" })
+                                        </div>
+                                    </div>
+                                    <div class="PDA" style="display:none">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.JobInstallerDetails.PostalAddressID, new { @class = "control-label required" })
+                                                @Html.DropDownListFor(model => model.JobInstallerDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 407, @idClass = "swhInstallerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostalAddressID)
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.JobInstallerDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                                @Html.TextBoxFor(m => m.JobInstallerDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 408, @idClass = "swhInstallerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostalDeliveryNumber)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="DPA">
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.JobInstallerDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallerUnitTypeID" })
+                                                @Html.DropDownListFor(model => model.JobInstallerDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 409, @idClass = "swhInstallerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.JobInstallerDetails.UnitTypeID)
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                @Html.LabelFor(m => m.JobInstallerDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallerUnitNumber" })
+                                                @Html.TextBoxFor(m => m.JobInstallerDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 410, @idClass = "swhInstallerNotRequired" })
+                                                @Html.ValidationMessageFor(m => m.JobInstallerDetails.UnitNumber)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row DPA">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallerStreetNumber" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 411, @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetNumber)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.StreetName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 412, @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.StreetTypeID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallerDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 413, @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetTypeID)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.Town, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 414, @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.Town)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.State, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 415, @readonly = "readonly", @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.State)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.PostCode, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 416, @idClass = "swhInstallerNotRequired" })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostCode)
+                                        </div>
+                                    </div>
+                                    <div class="alert" id="JobInstallerDetails_LocationValidation" style="display: none;color: #a94442;">
+                                        "Please enter valid state,town and postcode."
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.SESignature, new { @class = "control-label" })
+                                            <table class="uf" style="margin-left:-10px;">
+                                                <tr>
+                                                    <td width="70" style="vertical-align:top;">
+                                                        <div class="fileUpload primary upload_ic">
+                                                            <span>Upload</span>
+                                                            <input id="uploadBtnSignatureSWHInstaller" type="file" class="upload fileUpload" />
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="bxcont" style="margin-top:7px;">
+                                                            <a id="imgSWHSignatureInstaller" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn default icon-btn AddEditSWHInstaller" id="btnClearPopupSWHInstaller" tabindex="101"><span class="sprite-img reset_ic"></span>Reset</button>
+                                <button type="button" class="btn primary icon-btn AddEditSWHInstaller" id="btnAddUpdateSWHInstaller" tabindex="100" style="display:none"><span class="sprite-img save_ic"></span>Save</button>
+
+                                <button type="button" class="btn default icon-btn SearchGreenbotSWHInstaller" id="btnClearSearchGreenbotSWHInstaller" style="display:none;width:100px;" onclick="ClearSearchGreenbotSWHInstaller()"><span class="sprite-img reset_ic"></span>Clear</button>
+                                <button type="button" class="btn primary icon-btn SearchGreenbotSWHInstaller" id="btnAddSWHInstaller" style="display:none"><span class="sprite-img add_ic"></span>Add</button>
+                                <button type="button" class="btn default back-btn" id="btnBackFindInstaller" style="display:none;padding-top:0px;"><span class="sprite-img back-icon"></span>Back</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*Popup SWH Installer view image*@
+<div class="modal fade" id="popupboxSWHInsaller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" id="btnClosePopUpBoxSWHInsaller"></button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.JobInstallerDetails.SESignature" id="imgSignSWHInstall" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteSignature(2);"><a class="sprite-img delete" href="#" id="signDelete"></a>Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupProof"></button>
+                    <h4 class="modal-title" id="myModalLabel">View File</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            <img id="imgViewImage" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Popup default visit sign/profile sign*@
+<div class="modal fade" id="popupboxSetSignature" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title" id="myModalLabel">Get Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <input type="hidden" id="installerDesignerType" />
+                    <label class="radio-inline"><input type="radio" value="1" name="getSign" checked>From default visit </label>
+                    @*@if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                    {
+                        <label class="radio-inline"><input type="radio" value="2" name="getSign">From installer profile</label>
+                    }*@
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn primary" id="btnSetSignature">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" id="mdlGetSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                        <h4 class="modal-title">Get Signature</h4>
+                    </div>
+                    <div class="modal-body" id="divSignature">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSignaturePopup" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSignaturePopup" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Send To:</label>
+                            <div class="form-group">
+                                @if (@Model.BasicDetails.JobType == 1)
+                                {
+                                    <select class="form-control valid" id="drpSendMail">
+                                        <option value="1">Owner</option>
+                                        <option value="2">Installer</option>
+                                        <option value="3">Electrician</option>
+                                        <option value="4">Designer</option>
+                                    </select>
+                                }
+                                @if (@Model.BasicDetails.JobType == 2)
+                                {
+                                    <select class="form-control valid" id="drpSendMail">
+                                        <option value="1">Owner</option>
+                                        <option value="2">Installer</option>
+                                    </select>
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="radio-inline"><input type="radio" value="M" name="optType" checked>Mail</label>
+                            <label class="radio-inline"><input type="radio" value="S" name="optType">SMS</label>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="btnSendMail">Send</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@* Popup InstallerDetails Help *@
+<div id="popupInstallerDetailsHelp" class="modal fade" role="dialog" style="font-family:OpenSansRegular;color:#333;">
+    <div class="modal-dialog  modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Help</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <dl>
+                            <dt>How to use Find Installer functionality</dt>
+                            <br />
+                            <dd>1. Click on Find Installer icon.</dd>
+                            <br />
+                            <img src="~/Images/FindInstaller%201.png" style="width: 90%;height:fit-content;" />
+                            <br />
+                            <br />
+                            <dd>2. Find Installer/Designer pop up will be opened.</dd>
+                            <dd>3. Enter the CEC Accreditation number of Installer/Designer you want to add.</dd>
+                            <dd>4. On entering CEC Accreditation Number, First name, Last name and SE Role will get auto filled.</dd>
+                            <br />
+                            <img src="~/Images/Entering%20CEC%20Number.PNG" style="width: 90%; margin-left:40px;" />
+                            <br />
+                            <br />
+                            <dd>5. Click on clear button to clear all the fields.</dd>
+                            <dd>6. Click on save button to add that particular Installer/Designer.</dd>
+                            <dd>7. Select Installer/Designer from the drop down to schedule visit and to add installer/designer for the job.</dd>
+                            <br />
+                            <img src="~/Images/Installer%20dropdown.png" style="margin-left: 75px;" />
+                            <br />
+                            <br />
+                            <dd>8. On selecting Greenbot user it will show the pop up to schedule auto visit</dd>
+                            <br />
+                            <img src="~/Images/schedule%20visit.PNG" style="margin-left:120px;" />
+                            <br />
+                            <br />
+                            <dd>9. Click on “OK” to schedule visit.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="pMap">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="distance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dMap" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+@Html.HiddenFor(m => m.JobElectricians.JobElectricianID)
+@Html.Partial("~/Views/Job/_InstallerDesignerPopup.cshtml", Model.InstallerDesignerView)
+<script type="text/javascript">
+
+    var modelGSTValue = '@Model.BasicDetails.IsGst.ToString().ToLower()';
+    var modelIsGSTSetByAdminUser = '@Model.BasicDetails.IsGSTSetByAdminUser';
+    var modelIsRegisteredWithGST = '@Model.BasicDetails.IsRegisteredWithGST.ToString().ToLower()';
+    var modelIsOwnerRegisteredWithGST = '@Model.JobOwnerDetails.IsOwnerRegisteredWithGST.ToString().ToLower()';
+    var tempIsRegisteredWithGST = modelIsGSTSetByAdminUser;
+    var id = '@Model.Id';
+    var jobId = '@Model.BasicDetails.JobID'
+    var modelGuid = '@Model.Guid';
+    var modelJobId = '@Model.JobID';
+    //Owner detail
+    var modelOwnerSign = '@Model.BasicDetails.OwnerSignature';
+    var modelOwnerSignURL = '@Model.BasicDetails.OwnerSignature.Replace("\\", "/")' + "?" + new Date().getTime();
+    var modelOwnerPostalAddressID = '@Model.JobOwnerDetails.PostalAddressID';
+    var modelOwnerUnitTypeID = '@Model.JobOwnerDetails.UnitTypeID';
+    var modelOwnerStreetTypeID = '@Model.JobOwnerDetails.StreetTypeID';
+    var modelOwnerAddressID = '@Model.JobOwnerDetails.AddressID';
+    var modelOwnerCompanyName = '@Model.JobOwnerDetails.CompanyName';
+    var modelOwnerCompanyABN = '@Model.JobOwnerDetails.CompanyABN';
+    var modelOwnerStreetName = '@Model.JobOwnerDetails.StreetName';
+    var modelOwnerStreetNumber = '@Model.JobOwnerDetails.StreetNumber';
+    var modelOwnerTown = '@Model.JobOwnerDetails.Town';
+     var modelOwnerState = '@Model.JobOwnerDetails.State';
+     var modelOwnerPostCode= '@Model.JobOwnerDetails.PostCode';
+    //Installtion Detail
+    var modelInstallationPostalAddressID = '@Model.JobInstallationDetails.PostalAddressID';
+    var modelInstallationUnitTypeID = '@Model.JobInstallationDetails.UnitTypeID';
+    var modelInstallationStreetTypeID = '@Model.JobInstallationDetails.StreetTypeID';
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+    var modelInstallationElectricityProviderID = '@Model.JobInstallationDetails.ElectricityProviderID';
+    var modelInstallationExistingSystem = '@Model.JobInstallationDetails.ExistingSystem';
+    var modelInstalltionInstallingNewPanel = '@Model.JobInstallationDetails.InstallingNewPanel';
+    var modelInstalltionAddressID = '@Model.JobInstallationDetails.AddressID';
+    var modelInstallationLatitude = '@Model.JobInstallationDetails.Latitude';
+    var modelInstallationLongitude = '@Model.JobInstallationDetails.Longitude';
+    var modelInstallationStreetName = '@Model.JobInstallationDetails.StreetName';
+    var modelInstallationStreetNumber = '@Model.JobInstallationDetails.StreetNumber';
+    var modelInstallationTown = '@Model.JobInstallationDetails.Town';
+    var modelInstallationState = '@Model.JobInstallationDetails.State';
+    var modelInstallationPostCode= '@Model.JobInstallationDetails.PostCode';
+    //Jobdetails
+    var modelElectriciansElectricianID = '@Model.JobElectricians.ElectricianID';
+    var modelElectriciansInstallerID = '@Model.JobElectricians.InstallerID';
+    var modelBasicInstallerID = '@Model.BasicDetails.InstallerID';
+    var modelBasicJobType = '@Model.BasicDetails.JobType';
+    var modelBasicDetailJobStage = '@Model.BasicDetails.JobStage';
+    var modelSTCDeemingPeriod = '@Model.JobSTCDetails.DeemingPeriod';
+    var modelSTCMultipleSGUAddress = '@Model.JobSTCDetails.MultipleSGUAddress';
+    var modelSTCCertificateCreated = "@Model.JobSTCDetails.CertificateCreated";
+    var modelSTCVolumetricCapacity = '@Model.JobSTCDetails.VolumetricCapacity';
+    var signatureURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)';
+    var dateFormat = '@ProjectConfiguration.GetDateFormat';
+    var modelUploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var loginLink = "@FormBot.Helper.ProjectSession.LoginLink";
+    var actionJobSchedulingDetail = '@Url.Action("JobSchedulingDetail","JobScheduling")';
+    var actionGetUnitType = '@Url.Action("GetUnitType", "UnitType")';
+    var actionGetStreetType = '@Url.Action("GetStreetType", "StreetType")';
+    var actionGetPostalAddress = '@Url.Action("GetPostalAddress", "User")';
+    var actionGetDestributors = '@Url.Action("GetDestributors", "Job")';
+    var actionGetElectricityProvider = '@Url.Action("GetElectricityProvider", "Job")';
+    var actionGetJobStage = '@Url.Action("GetJobStage", "Job")';
+    var actionGetSoldBy = '@Url.Action("GetSoldBy", "Job")';
+    var actionProcessRequest = '@Url.Action("ProcessRequest","User")';
+    var actionGetElectrician = '@Url.Action("GetElectrician", "Job")?JobID=' + $("#BasicDetails_JobID").val() + '&solarCompanyId=' + $("#BasicDetails_SolarCompanyId").val();
+    var actionGetInstallerDesignerWithStatus = '@Url.Action("GetInstallerDesignerWithStatus", "Job")';
+    var actionUploadInvoice = '@Url.Action("UploadInvoice", "Job")';
+    var actionDeleteGSTFile = '@Url.Action("DeleteGSTFile", "Job")';
+    var actionDownloadGSTDocument = '@Url.Action("DownloadGSTDocument", "Job")';
+    var actionSaveCustomField = '@Url.Action("SaveCustomField", "Job")';
+    var actionReloadCustomFields = '@Url.Action("ReloadCustomFields", "job")';
+    var actionGetJobCustomFields = '@Url.Action("GetJobCustomFields", "job")';
+    var actionMailForCollectSignature = '@Url.Action("MailForCollectSignature", "Job")';
+    var actionCheckListItemForTrade = '@Url.Action("_CheckListItemForTrade", "Job")' + '?id=' + id;
+    var BasicDetails_JobStage = '@Model.BasicDetails.JobStage';
+    var BasicDetails_Priority = '@Model.BasicDetails.Priority';
+    var urlGetCompanyABN = '@Url.Action("GetCompanyABN", "User")';
+    var urlUpdateJobOwnerDetails = '@Url.Action("UpdateJobOwnerDetails","Job")';
+    var urlUpdateJobInstallationPropertyType = '@Url.Action("UpdateJobInstallationPropertyType","Job")';
+    var urlGetDeemingPeriod = '@Url.Action("GetDeemingPeriod", "Job")';
+    var urlGetSupplierByManufacturer = '@Url.Action("GetSupplierByManufacturer", "Job")';
+    var urlGetserialnumberWithSpvStatus = '@Url.Action("GetSerialnumberWithSpvStatus","Job")';
+    var IsSPVRequired = '@Model.BasicDetails.IsSPVRequired';
+    var serialNumber = JSON.parse('@Html.Raw(Json.Encode(Model.JobSerialNumbers))');
+    var ElectrianAddressJson = [];
+    var SRCSign, logoWidth = 0, logoHeight = 0;
+    var SRCSignInstall, logoHeightSignInstall = 0, logoWidthSignInstall = 0;
+    var SRCSignDesigner, logoHeightSignDesigner = 0, logoWidthSignDesigner = 0;
+    var isDrawSignatureOn = 0;
+    var SRCSignSWHInstall, logoHeightSignSWHInstall = 0, logoWidthSignSWHInstall = 0;
+    var InstallerJson = [];
+    var fillInstallerAddress = '';
+    var InstallerEmailFromJson;
+    var InstallerFirstNameFromJson;
+    var InstallerLastNameFromJson;
+    var //jobTypeNewScreen = '@Model.BasicDetails.JobType',
+        JobElectricians_PostalAddressID = '@Model.JobElectricians.PostalAddressID',
+        JobElectricians_UnitTypeID = '@Model.JobElectricians.UnitTypeID',
+        JobElectricians_StreetTypeID = '@Model.JobElectricians.StreetTypeID',
+        GetUnitTypeURL = '@Url.Action("GetUnitType", "UnitType")',
+        GetStreetTypeURL = '@Url.Action("GetStreetType", "StreetType")',
+        GetPostalAddressURL = '@Url.Action("GetPostalAddress", "User")',
+        BasicDetails_JobElectricianID = '@Model.BasicDetails.JobElectricianID',
+        BasicDetails_InstallerID = '@Model.BasicDetails.InstallerID',
+        GetInstallerDesignerWithStatus = '@Url.Action("GetInstallerDesignerElectricianWithStatus", "Job")',
+        InstallerView_UnitTypeID = '@Model.InstallerView.UnitTypeID',
+        InstallerView_StreetTypeID = '@Model.InstallerView.StreetTypeID',
+        BasicDetails_JobID = '@Model.BasicDetails.JobID',
+        InstallerView_PostalAddressID = '@Model.InstallerView.PostalAddressID',
+        DesignerView_UnitTypeID = '@Model.DesignerView.UnitTypeID',
+        DesignerView_StreetTypeID = '@Model.DesignerView.StreetTypeID',
+        DesignerView_PostalAddressID = '@Model.DesignerView.PostalAddressID',
+        BasicDetails_DesignerID = '@Model.BasicDetails.DesignerID',
+        JobInstallerDetails_PostalAddressID = '@Model.JobInstallerDetails.PostalAddressID',
+        JobInstallerDetails_UnitTypeID = '@Model.JobInstallerDetails.UnitTypeID',
+        JobInstallerDetails_StreetTypeID = '@Model.JobInstallerDetails.StreetTypeID',
+        GetElectricianURL = '@Url.Action("GetElectrician", "Job")',
+        JobElectricians_ElectricianID = '@Model.JobElectricians.ElectricianID',
+        JobInstallerDetails_AddressID = '@Model.JobInstallerDetails.AddressID',
+        JobElectricians_AddressID = '@Model.JobElectricians.AddressID',
+        InstallerView_SERole = '@Model.InstallerView.SERole',
+        DesignerView_SERole = '@Model.DesignerView.SERole',
+        ProcessRequest_User = '@Url.Action("ProcessRequest", "User")',
+        GetElectricianDetailbyInstallerURL = '@Url.Action("GetElectricianDetailbyInstaller", "Job")',
+        GetElectricianDetailbySolarcompanyURL = '@Url.Action("GetElectricianDetailbySolarcompany", "Job")',
+        InstallerView_SESignature = '@(!string.IsNullOrEmpty(Model.InstallerView.SESignature)? HttpUtility.JavaScriptStringEncode(Model.InstallerView.SESignature.Replace("\\", "/")) : Model.InstallerView.SESignature)',
+        DesignerView_SESignature = '@(!string.IsNullOrEmpty(Model.DesignerView.SESignature) ? HttpUtility.JavaScriptStringEncode(Model.DesignerView.SESignature.Replace("\\", "/")) : Model.DesignerView.SESignature)',
+        JobInstallerDetailsSWH_SESignature = '@Model.JobInstallerDetails.SESignature',
+        DeleteInstallerDesignerSignature = '@Url.Action("DeleteInstallerDesignerSignature", "Job")',
+        DeleteFileFromFolderAndElectricianURL = '@Url.Action("DeleteFileFromFolderAndElectrician", "Job")',
+        JobElectricians_Signature= '@(!string.IsNullOrEmpty(Model.JobElectricians.Signature) ? HttpUtility.JavaScriptStringEncode(Model.JobElectricians.Signature.Replace("\\", "/")) : Model.JobElectricians.Signature)',
+        Model_Guid = '@Model.Guid',
+        ProjectSession_UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+        BasicDetails_ElectricianSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.ElectricianSignature)',
+        BasicDetails_ElectricianSignature_Replace = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.ElectricianSignature.Replace("\\", "/"))',
+        BasicDetails_InstallerSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature)',
+        BasicDetails_InstallerSignature_Replace = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature.Replace("\\", "/"))',
+        UploadURL = '@Url.Action("Upload", "Job")',
+        ProjectSession_MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize',
+        UploadJobSignatureURL = '@Url.Action("UploadJobSignature", "Job")',
+        Model_JobID = '@Model.JobID',
+        UpdateJobSignatureURL = '@Url.Action("UpdateJobSignature", "Job")',
+        GetSignatureFromVisitURL = '@Url.Action("GetSignatureFromVisit", "Job")',
+        DrawJobSignatureURL = '@Url.Action("DrawJobSignature", "Job")',
+        company_Id = $("#BasicDetails_SolarCompanyId").val(),
+        CheckUserExistURL = '@Url.Action("CheckUserExist", "User")',
+        CheckSWHUserExistURL = '@Url.Action("CheckSWHUserExist", "User")',
+        ProjectSession_LoggedInUserId = '@ProjectSession.LoggedInUserId',
+        Upload_User = '@Url.Action("Upload", "User")',
+        BasicDetails_DesignerSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.DesignerSignature)',
+        BasicDetails_DesignerSignature_Replace = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.DesignerSignature.Replace("\\", "/"))',
+        AddInstallerDesignerURL = '@Url.Action("AddInstallerDesigner", "User")',
+        FillInstallerDesignerURL = '@Url.Action("FillInstallerDesigner", "User")',
+        IsSubContractor = '@ProjectSession.IsSubContractor',
+        companyId = 0,
+        isSCADashboard = false;
+
+    if ('@ProjectSession.UserTypeId' == 4)
+        companyId = '@ProjectSession.SolarCompanyId';
+    else
+        companyId = $("#BasicDetails_SolarCompanyId").val() ? parseInt($("#BasicDetails_SolarCompanyId").val()) : 0;
+
+    var urlInstallerDesignerView = '@Url.Action("_InstallerDesignerView", "Job")';
+    InstallerDesignerView_UnitTypeID = '@Model.InstallerDesignerView.UnitTypeID',
+    InstallerDesignerView_StreetTypeID = '@Model.InstallerDesignerView.StreetTypeID',
+    InstallerDesignerView_PostalAddressID = '@Model.InstallerDesignerView.PostalAddressID',
+    urlUpdateJobDetailInstallerDesigner = '@Url.Action("UpdateJobDetailInstallerDesigner", "User")';
+    urlUpdateJobDetailJobElectrician = '@Url.Action("UpdateJobDetailJobElectrician", "User")';
+    url_JobSchedulingDetail = '@Url.Action("JobSchedulingDetail", "JobScheduling")';
+    BasicDetails_InstallationDate = '@Model.BasicDetails.InstallationDate';
+    defaultTemplateId = '@Model.JobScheduling.DefaultTemplateId';
+    getDateFormat = '@ProjectConfiguration.GetDateFormat';
+    InstallerView_IsSystemUser = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.IsSystemUser':'@Model.JobInstallerDetails.IsSystemUser';
+    DesignerView_IsSystemUser = '@Model.DesignerView.IsSystemUser';
+    InstallerView_IsVisitScheduled = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.IsVisitScheduled':'@Model.JobInstallerDetails.IsVisitScheduled';
+    InstallerView_SEStatus = '@Model.BasicDetails.JobType' == 1?'@Model.InstallerView.SEStatus':'@Model.JobInstallerDetails.SEStatus';
+    urlGetElectricianListForJob = '@Url.Action("GetElectricianListForJob", "Job")';
+    urlDeleteCustomElectrician = '@Url.Action("DeleteCustomElectrician", "Job")';
+    urlCheckExistingCustomElectrician = '@Url.Action("CheckExistingCustomElectrician", "Job")';
+    ProjectConfiguration_GetPageSize=-@ProjectConfiguration.GetPageSize;
+    urlSWHInstallerList = '@Url.Action("SWHInstallerList","User")';
+    urlJobElectricians = '@Url.Action("JobElectricians", "Job")';
+    JobInstallerDetails_SWHInstallerDesignerId = '@Model.JobInstallerDetails.SWHInstallerDesignerId';
+    var SRCSignInstallerDesigner;
+    var installationAddValidFlagChange = '@Url.Action("InstallationAddressValidationChange", "job")',
+        OwnerAddValidFlagChange = '@Url.Action("OwnerAddressValidationChange", "job")';
+    var jobInsd_IsInstallationAddressValid = '@Model.JobInstallationDetails.IsInstallationAddressValid';
+    var jobOwd_IsOwnerAddressValid = '@Model.JobOwnerDetails.IsOwnerAddressValid';
+    var oldaddress;
+</script>
+@*<script src="~/Scripts/CommonModularAndTabularJob.js"></script>*@

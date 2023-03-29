@@ -1,0 +1,237 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+@using FormBot.Helper;
+@{
+    int settlementTerm = 0;
+    int statusId = 0;
+    string term = string.Empty;
+    if (Model.stcBasicDetails != null)
+    {
+        if (Model.stcBasicDetails.STCSettlementTerm != null && Model.stcBasicDetails.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.stcBasicDetails.STCSettlementTerm.Value;
+
+            Enum value = (FormBot.Helper.SystemEnums.STCSettlementTerm)(Model.stcBasicDetails.STCSettlementTerm);
+            System.Reflection.FieldInfo fi = value.GetType().GetField(value.ToString());
+
+            System.ComponentModel.DescriptionAttribute[] attributes = (System.ComponentModel.DescriptionAttribute[])fi.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0)
+            {
+                term = attributes[0].Description;
+            }
+            else
+            {
+                term = value.ToString();
+            }
+        }
+        else
+        {
+            term = "24 Hour";
+        }
+        statusId = Model.stcBasicDetails.STCStatusId;
+    }
+}
+@{
+    int currentJobStatus = 0;
+    currentJobStatus = Model.stcBasicDetails.STCStatusId;
+    int checklistitemCount = Model.lstCheckListItem.Count;
+}
+
+<style type="text/css">
+    .default {
+        line-height: 0px !important;
+    }
+</style>
+
+<div class="job-com-box STC-block">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="sub-title STC-sub-title bor-none">
+                <h4>STC Status:</h4>
+                <span class="applied-select color-text" id="spanSTCStatus">
+                </span>
+            </div>
+            <p id="lblDescription" style="word-break: break-all;"></p>
+            <div id="checkListItemForTrade">
+                @Html.Partial("_CheckListItemForTrade", Model)
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            @*<div class="sub-title STC-sub-title bor-none subTitleSTCPricing">
+                    <h4 class="color-text">STC Pricing:</h4>
+                </div>*@
+
+            @Html.Partial("_PricingSettlementTerm", Model.pricingManager)
+            <div class="row">
+                <div class="col-lg-6">
+                    @if (Model.stcBasicDetails.STCStatusId != 10 && Model.stcBasicDetails.STCStatusId != 12)
+                    {
+                        <div class="STC-summary">
+                            <h3 class="traded-as">STC SUMMARY</h3>
+                            <p class="traded-as color-text"><span id="selectedSettlementTerm"></span></p>
+                            <p class="traded-as"><strong><span id="settlementDateText">Tentative settlement date: </span></strong><span class="color-b" id="setSettlementDate"></span></p>
+                            <p class="traded-as color-text"><span id="stcValueForJob"></span> - $<span id="pricingTerm"></span></p>
+                            <p class="total-amt" id="calculatedSTCParent"><strong>TOTAL AMOUNT : </strong>$<span id="spancalculatedSTC">@Model.stcBasicDetails.TotalAmount</span></p>
+                        </div>
+                    }
+                </div>
+                <div class="col-lg-6">
+                    <div class="text-center term" id="displayPriceDetail" style="display:table;margin-left:auto; margin-right:auto; margin-top:15px;">
+
+                        <input id="btnApplyTradeStc" type="button" class="primary trade-btn center-box term" onclick="ApplyTradeStc();">
+                        <br />
+                        <div class="text-center term">By trading on the Geenbot Portal, you agree to the following</div>
+                        <div class="text-center term"><a href="https://greenbot.com.au/index.php/terms-and-conditions" target="_blank">terms and conditions</a> @*<span>I AGREE </span><input type="checkbox" id="chkAgree" />*@</div>
+
+                        <div class="STC-summary-date">
+                            <p id="subDate"><strong>Submitted Date : </strong><span id="submittedDate"></span></p>
+                            <p id="subBy"><strong>Submitted by : </strong><span id="submittedBy">@Model.stcBasicDetails.SubmittedBy</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        //$("#pricing-stc-title").hide();
+        $("#paymentscheduleinfo").hide();
+    });
+
+</script>
+@Scripts.Render("~/bundles/JobModularSubViews?v=" + ProjectConfiguration.ScriptVersion)
+
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#selectedSettlementTerm").html('@term' + " Settlement Selected");
+        if ('@Model.stcBasicDetails.STCSettlementDate' == null||'@Model.stcBasicDetails.STCSettlementDate' == '') {
+            $("#setSettlementDate").html(" ");
+        }
+        else {
+            $("#setSettlementDate").html(moment('@Model.stcBasicDetails.STCSettlementDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()));
+        }
+
+        if('@Model.stcBasicDetails.SubmittedDate' != null && '@Model.stcBasicDetails.SubmittedDate' != "")
+        {
+            $("#submittedDate").html(moment('@Model.stcBasicDetails.STCSubmittedDate').format('@ProjectConfiguration.GetDateFormat'.toUpperCase()) + " AEST");
+        }
+
+        if ('@checklistitemCount' < '0') {
+            $("#checkListItemForTrade").hide();
+
+        }
+
+        if('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode() || ('@currentJobStatus' == @FormBot.Helper.SystemEnums.STCJobStatus.ReadyToCreate.GetHashCode()))
+        {
+            $("#subDate").hide();
+            $("#subBy").hide();
+        }
+        else
+        {
+            $("#subDate").show();
+            $("#subBy").show();
+        }
+
+
+        if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()' || '@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').val('RESUBMIT STCs');
+        }
+        else if('@currentJobStatus' == '@FormBot.Helper.SystemEnums.STCJobStatus.NewSubmission.GetHashCode()')
+        {
+            $('#btnApplyTradeStc').val('STCS TRADED');
+        }
+        else
+        {
+            $('#btnApplyTradeStc').val('TRADE STCs');
+        }
+
+        if((@currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                        ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()
+            ||  @currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode()))
+        {
+            $("#settlementDateText").html('Tentative Settlement Date:');
+        }
+        else
+        {
+            $("#settlementDateText").html('Scheduled Settlement Date:');
+        }
+
+        $("#stcValueForJob").html('@Model.pricingManager.STCAmount');
+        @*$("#stcValueForJob").html('@Model.pricingManager.TradedSTCAmount');*@
+        @*$('#pricingTerm').html('@Model.pricingManager.STCPrice');*@
+        $('#pricingTerm').html('@Model.stcBasicDetails.STCPrice');
+        @*$("#spancalculatedSTC").text(parseFloat(@Model.pricingManager.STCAmount * parseFloat(@Model.stcBasicDetails.STCPrice)).toFixed(2));*@
+        $('#spanSTCStatus').text('@Model.stcBasicDetails.Status');
+
+        @*if('@ViewData["IsUpdateProgressBar"]' == '1')
+        {
+            UpdatePercentage('@ViewData["GetCount"]');
+        }*@
+
+
+    });
+
+    function CompareJobData() {
+        return true;
+    }
+
+    function showMessageForSTC(msg, isError) {
+        $(".alert").hide();
+        var visible = isError ? "errorMsgRegionSTCStatus" : "successMsgRegionSTCStatus";
+        var inVisible = isError ? "successMsgRegionSTCStatus" : "errorMsgRegionSTCStatus";
+        $("#" + inVisible).hide();
+        $("#" + visible).html(closeButton + msg);
+        $("#" + visible).show();
+    }
+
+    function GetSTCSettlementDate(settlementterm) {
+        $.ajax({
+            url: '@Url.Action("GetSTCSettlementDate", "Job", new { area = "" })',
+            type: "GET",
+            data: { settlementTerm: settlementterm,CustomSettlementTerm : $("#CustomSettlementTerm").val() },
+            success: function (Data) {
+
+                if (Data.status) {
+                    $("#selectedSettlementTerm").html(Data.Days + " Settlement Selected");
+                    if(Data.SettlementDate !=null && Data.SettlementDate !="")
+                    {
+                        $("#setSettlementDate").html(moment(Data.SettlementDate).format('@ProjectConfiguration.GetDateFormat'.toUpperCase()));
+                    }
+                    else
+                    {
+                        $("#setSettlementDate").html('');
+                    }
+                }
+            }
+        });
+    }
+
+    function DisableTradeButton() {
+        $('#btnApplyTradeStc').addClass('default');
+        $('#btnApplyTradeStc').removeClass('primary');
+        $('#btnApplyTradeStc').css('pointer-events','none');
+        $(".STC-summary").addClass('lock');
+    }
+
+    function EnableTradeButton() {
+        $('#btnApplyTradeStc').addClass('primary');
+        $('#btnApplyTradeStc').removeClass('default');
+        $('#btnApplyTradeStc').css('pointer-events','');
+        $(".STC-summary").addClass('unlock');
+    }
+
+    function calculateTotal(obj) {
+        $('#pricingTerm').html(obj.data("price"));
+        GetSTCSettlementDate(obj.data('settlementterm'));
+    }
+
+</script>

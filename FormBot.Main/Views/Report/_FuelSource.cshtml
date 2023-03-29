@@ -1,0 +1,96 @@
+﻿@model FormBot.Entity.Report
+@{
+    Layout = null;
+}
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstFuelSourceUser, new MultiSelectList(Model.LstFuelSourceUser, "Value", "Text"), new { id = "LstFuelSourceUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoRFuel" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoLFuel" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.RECFuelSourceAssignedUser, new MultiSelectList(Model.LstFuelSourceAssignedUser, "Value", "Text"), new { id = "LstFuelSourceAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnRECFuelSourceAssignedUser, new { id = "hdnFuelSource" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnFuelSource" tabindex="6">
+    <input type="button" value="Clear" id="btnClearFuel" class="default reset_ic" tabindex="7">
+</div>
+
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+<script src="~/Scripts/jquery-1.11.0.min.js"></script>
+<link href="~/Content/jquery-ui.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+<script type="text/javascript">
+    $(document).on("click", "#btnLtoRFuel", function () {
+        $('#LstFuelSourceUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstFuelSourceAssignedUser");
+        });
+        $('#AvailableFuelSource').html($('#LstFuelSourceAssignedUser option').length);
+    });
+
+    $(document).on("click", "#btnRtoLFuel", function () {
+        $('#LstFuelSourceAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstFuelSourceUser");
+        });
+        $('#AvailableFuelSource').html($('#LstFuelSourceAssignedUser option').length);
+    });
+
+    //$(document).on("click", "#closeFuelSource", function () {
+    //    $('#popupFuelSourceProof').modal('hide');
+    //});
+
+    $(document).on("click", "#btnFuelSource", function () {
+        var strAssignedFuelSourceList = [];
+        $('#LstFuelSourceAssignedUser option').each(function (i) {
+            strAssignedFuelSourceList.push($(this).val().trim());
+        });
+
+        $("#hdnFuelSource").val(strAssignedFuelSourceList);
+        $('#cntFuel').html($('#LstFuelSourceAssignedUser option').length);
+        $('#popupFuelSourceProof').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearFuel", function () {
+        $('#LstFuelSourceAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstFuelSourceUser");
+        });
+        $("#hdnFuelSource").val('');
+        $('#AvailableFuelSource').html($('#LstFuelSourceAssignedUser option').length);
+    });
+
+    $(document).on("click", "#closeFuelSource", function () {
+        var strAssignedFuelSourceList = [];
+        $('#LstFuelSourceAssignedUser option').each(function (i) {
+            strAssignedFuelSourceList.push($(this).val().trim());
+        });
+
+        $("#hdnFuelSource").val(strAssignedFuelSourceList);
+        $('#cntFuel').html($('#LstFuelSourceAssignedUser option').length);
+        $('#popupFuelSourceProof').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

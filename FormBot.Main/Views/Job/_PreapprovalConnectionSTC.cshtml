@@ -1,0 +1,134 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    bool isPreapprovals = false;
+    bool isConnections = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.preapprovals.GetHashCode()) { isPreapprovals = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.connections.GetHashCode()) { isConnections = true; }
+
+        });
+    }
+}
+@Html.Hidden("PreApprovalConnOrStcClicked")
+<!-- =job-com-box===================================== -->
+<div class="job-com-box" style="display:none">
+</div>
+
+@if (ProjectSession.UserTypeId != 8||isPreapprovals)
+{
+    <!-- =job-com-box===================================== -->
+    <div class="job-com-box" id="preApprovalBox">
+        <div class="sub-title">
+            <h4>Preapproval Status:</h4>
+            <span>
+                @Html.DropDownList("JobStatusForPreApproval", (IEnumerable<SelectListItem>)ViewBag.listJobStatusPreapproval, new { @class = "applied-select" })
+            </span>
+        </div>
+        <p>
+            <span id="spanPreapprovalComment">
+            </span>
+            <a href="#" class="icon-btn pull-right add-btn-icon sprite-img" id="btnPopupPreApproval">
+
+            </a>
+            @*Haven't applied due to spAusnet approval needing more attention. - Hus 19/07/2017*@
+        </p>
+        <ul class="applied-list" id="preapprovalUL">
+            @if (Model.lstPreApprovalDocumentSteps != null && Model.lstPreApprovalDocumentSteps.Count > 0)
+            {
+                foreach (var item in Model.lstPreApprovalDocumentSteps)
+                {
+                    <li documentstepid="@item.DocumentStepId">
+                        <span class="list-arrow sprite-img"></span>
+                        <div class="heading">
+                            <h5>@item.StepName</h5>
+                            <span id="spanComment@(item.DocumentStepId)" class="subtext"> @(string.IsNullOrEmpty(item.Comment) ? "" : " - " + item.Comment) </span>
+                            @Html.Hidden("hdnComment" + item.DocumentStepId, item.Comment)
+                            @if (item.IsApplied)
+                            {
+                                <span>Submited : <em>@item.CommentDate</em><em></em></span>
+                            }
+
+
+                            @*<a href="#" title="view email" class="view-email">View email</a>*@
+                        </div>
+                        <input type="hidden" isapplied="@item.IsApplied" id="hdnIsApplied" />
+                        <div class="btn-group">
+                            <button type="button" class="btn icon-btn primary sprite-img resend-ion appliedApprovalButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Resend" email="@item.ToEmailid" link="@item.OnlineLink" documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,1)">
+                                @*<img src='@Url.Content("~/images/resend-ion.png")' alt="">*@
+                            </button>
+                            <button type="button" class="btn icon-btn primary applied right-icon sprite-img appliedApprovalButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Applied" style="cursor:default">
+                                @*<img src='@Url.Content("~/images/ic-assign.png")' alt="">*@
+                            </button>
+                            <button type="button" class="btn icon-btn primary right-icon sprite-img applyApprovalButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Apply Now" email="@item.ToEmailid" link="@item.OnlineLink" documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,1)">
+                                @*<img src='@Url.Content("~/images/ic-assign.png")' alt="">*@
+                            </button>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+}
+
+@if (ProjectSession.UserTypeId != 8|| isConnections)
+{
+    <!-- =job-com-box===================================== -->
+    <div class="job-com-box" id="connectionBox">
+        <div class="sub-title">
+            <h4>Connection Status:</h4>
+            <span>
+                @Html.DropDownList("JobStatusForConnection", (IEnumerable<SelectListItem>)ViewBag.listJobStatusConnection, new { @class = "applied-select" })
+            </span>
+        </div>
+        <p>
+            <span id="spanConnectionComment">
+            </span>
+            <a href="#" class="icon-btn pull-right add-btn-icon sprite-img" id="btnPopupConnection">
+            </a>
+            @*Haven't applied due to spAusnet approval needing more attention. - Hus 19/07/2017*@
+        </p>
+        <ul class="applied-list" id="connectionUL">
+            @if (Model.lstConnectionDocumentSteps != null && Model.lstConnectionDocumentSteps.Count > 0)
+            {
+                foreach (var item in Model.lstConnectionDocumentSteps)
+                {
+                    <li documentstepid="@item.DocumentStepId">
+                        <div class="heading">
+                            <h5>@item.StepName</h5>
+                            <span id="spanComment@(item.DocumentStepId)" class="subtext"> @(string.IsNullOrEmpty(item.Comment) ? "" : " - " + item.Comment) </span>
+                            @Html.Hidden("hdnComment" + item.DocumentStepId, item.Comment)
+                            @if (item.IsApplied)
+                            {
+                                <span>Submited : <em>@item.CommentDate</em><em></em></span>
+                            }
+                        </div>
+                        <input type="hidden" isapplied="@item.IsApplied" id="hdnIsApplied" />
+                        <div class="btn-group">
+                            <button type="button" class="btn icon-btn primary sprite-img resend-ion appliedConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Resend" email='@(item.ToEmailid == null ? "" : item.ToEmailid)' link='@(item.OnlineLink == null ? "" : item.OnlineLink)' documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,2)"></button>
+                            <button type="button" class="btn icon-btn primary applied right-icon sprite-img appliedConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Applied" style="cursor:default"></button>
+                            <button type="button" class="btn icon-btn primary right-icon sprite-img applyConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Apply Now" email='@(item.ToEmailid == null ? "" : item.ToEmailid)' link='@(item.OnlineLink == null ? "" : item.OnlineLink)' documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,2)"></button>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+}
+
+<script type="text/javascript">
+    var viewBagPreApprovalComment = '@Html.Raw(HttpUtility.JavaScriptStringEncode(ViewBag.PreApprovalComment))';
+    var viewBagConnectionComment = '@Html.Raw(HttpUtility.JavaScriptStringEncode(ViewBag.ConnectionComment))';
+    var viewBagPreApprovalStatus = '@ViewBag.PreApprovalStatus';
+    var viewBagConnectionStatus = '@ViewBag.ConnectionStatus';
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+    var GetEmailSendViewForPreApprovalAndConnectionURL = '@Url.Action("GetEmailSendViewForPreApprovalAndConnection", "JobEmailThread", new { area = "" })';
+    var AddUpdateJobCommentForPreApprAndConnURL = '@Url.Action("AddUpdateJobCommentForPreApprAndConn", "JobEmailThread", new { area = "" })';
+
+ 
+
+</script>
+<script src="~/Scripts/View/Job/PreApprovalConnectionSTC.min.js"></script>

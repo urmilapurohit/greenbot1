@@ -1,0 +1,1294 @@
+﻿@model FormBot.Entity.Job.StcComplianceCheck
+@using FormBot.Helper;
+<!-- Tabl 1-->
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+
+
+<!-- panel-body -->
+
+
+
+<form id="complianceForm" enctype="multipart/form-data">
+
+    @Html.HiddenFor(m => m.STCJobDetailsID)
+    @Html.HiddenFor(m => m.STCJobComplianceID)
+    @Html.HiddenFor(m => m.FileName)
+    @Html.HiddenFor(m => m.JobId)
+    @Html.HiddenFor(m => m.CallDateTime)
+    @Html.HiddenFor(m => m.CallMadeBy)
+
+
+
+    <div id="collapseOne" class="panel-collapse collapse">
+        <div class="panel-body">
+            <div class="form-horizontal">
+                <div class="row">
+                    <div class="col-md-9 checklist-form">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Is owner’s name correct?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsNameCorrect, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control", @id = "drpOwnerName", @tabindex = 1 })
+
+                                    </div>
+
+
+                                </div>
+                                @if (ViewData["OwnerType"].ToString() == "Organisation")
+                                {
+                                    <div class="form-group">
+                                        <label class="col-sm-9 control-label">Is owner’s organisation name correct?</label>
+                                        <div class="col-sm-3">
+                                            @Html.DropDownListFor(m => m.IsOrganisationNameCorrect, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control", @id = "drpOwnerorganisationName", @tabindex = 2 })
+
+                                        </div>
+
+
+                                    </div>
+
+                                }
+                                <div class="form-group ">
+                                    <label class="col-sm-9 control-label">Is the installation address correct?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsAddressCorrect, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @id = "drpAddress", @tabindex = 3 })
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 FirstName">
+                                <div class="form-group" id="ownername" style="visibility:hidden">
+                                    <div class="col-sm-6 sm-mag-15">
+                                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control txtField", @maxlength = 100, @placeholder = "First Name", @tabindex = 11 })
+                                        @Html.ValidationMessageFor(m => m.FirstName)
+
+                                    </div>
+                                    <div class="col-sm-6">
+                                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control txtField", @maxlength = 100, @placeholder = "Last Name", @tabindex = 12 })
+                                        @Html.ValidationMessageFor(m => m.LastName)
+
+
+                                    </div>
+                                </div>
+                                @if (ViewData["OwnerType"].ToString() == "Organisation")
+                                {
+                                    <div class="form-group" id="divOrganisationName">
+                                        <div class="col-md-12">
+                                            @Html.TextBoxFor(m => m.OrganisationName, new { @class = "form-control txtField", @maxlength = 100, @placeholder = "Organisation Name", @tabindex = 13 })
+                                            @Html.ValidationMessageFor(m => m.OrganisationName)
+
+                                        </div>
+                                    </div>
+
+                                }
+                                <div class="form-group Address" id="Address" style="visibility:hidden">
+                                    <div class="col-md-12">
+                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control txtField", @maxlength = 200, @placeholder = "Address", @id = "Address1", @tabindex = 14 })
+                                        @Html.ValidationMessageFor(m => m.Address)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- row 2 -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Installer signature visible on STC Form?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsInstallerSignatureVisible, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 4 })
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Designer signature visible on STC Form?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsDesignerSignatureVisible, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 5 })
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Electrician details visible on STC Form?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsElectriciandetailsvisible, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 6 })
+
+
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">No. of panel:</label>
+                                    <div class="col-sm-8">
+                                        @Html.TextBoxFor(m => m.NoOfPanel, new { @class = "form-control txtField", @placeholder = "No Of Panel", @onkeypress = "return isInt(event);", @onpaste = "return false;", @tabindex = 15 })
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Installation type:</label>
+                                    <div class="col-sm-8">
+
+                                        @Html.DropDownListFor(m => m.InstallationType, new SelectList((ViewBag.InstallationTypes) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", id = "InstallationType", @tabindex = 16 })
+
+                                    </div>
+                                </div>
+
+                                @if (Model.JobType == 1)
+                                {
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Connection Type:</label>
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.ConnectionType, new SelectList((ViewBag.ConnectionType) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", id = "ConnectionType", @tabindex = 17 })
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-4 control-label">Mounting Type:</label>
+                                        <div class="col-sm-8">
+                                            @Html.DropDownListFor(m => m.MountingType, new SelectList((ViewBag.MountingType) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", id = "MountingType", @tabindex = 18 })
+
+                                        </div>
+                                    </div>
+                                }
+
+
+                            </div>
+                        </div>
+                        <!-- row 3 -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Is the amount of serial numbers match and sighted? </label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsSerialNumbersMatch, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 7 })
+
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Does the STC amount match on the STC form?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsSTCAmountMatch, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 8 })
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Does the homeowner details on STC form match the CES form? </label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsOwnerDetailsMatch, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 9 })
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-9 control-label">Does the description on the CES accurately describe the work that has been carried out?</label>
+                                    <div class="col-sm-3">
+                                        @Html.DropDownListFor(m => m.IsDescriptionCES, new List<SelectListItem> { new SelectListItem() { Text = "Yes", Value = "Y" }, new SelectListItem() { Text = "No", Value = "N" } }, new { @class = "form-control ", @tabindex = 10 })
+
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-3">
+                                        <label class="control-label">&nbsp;</label>
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-sm-3">
+                                        <label class="control-label">&nbsp;</label>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group" id="additionalInfo">
+                                    <label class="col-sm-6 control-label">Additional Information:</label>
+                                    <div class="col-sm-12">
+                                        @Html.TextAreaFor(m => m.AdditionalInformation, new { @class = "form-control txtField", @maxlength = 1000, @rows = 4, @tabindex = 19, style = "resize:none" })
+                                    </div>
+                                </div>
+                                @*commented for failed reason - (fail PVD code)*@
+                                @*@if (ViewData["STCStatus"].ToString() == "CERFailed")
+                                    {
+                                        <div class="form-group" id="ExplanatoryNote">
+                                            <label class="col-sm-6 control-label">Explanatory Note:</label>
+                                            <div class="col-sm-12">
+                                                @Html.TextAreaFor(m => m.ExplanatoryNotes, new { @class = "form-control txtField", @maxlength = 1000, @rows = 4, @tabindex = 20, style = "resize:none" })
+                                            </div>
+                                        </div>
+                                    }*@
+                                <div class="form-group">
+                                    <div class="col-sm-12">
+                                        <label class="control-label"> Compliance Notes:</label>
+                                        @Html.TextAreaFor(m => m.Notes, new { @class = "form-control txtField", @maxlength = 1000, @rows = 4, @tabindex = 21, style = "resize:none" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <ul class="request-autorize">
+                            <li>
+                                <h3>Log Call <a href="#"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/ic_calllog.png" alt="" id="btnCall" class="btnField"></a></h3>
+                                <p>
+                                    <label>Date: </label>
+                                    <label id="lblDateVal"></label>
+                                </p>
+                                <p>
+                                    <label>Time: </label>
+                                    <label id="lblTimeVal"></label>
+                                </p>
+                                <p>
+                                    <label>Call made by: </label>
+                                    <label id="lblCallby"></label>
+                                </p>
+                            </li>
+                            <li>
+                                <label id="lblUpload"></label>
+                                <div class="fileUpload btn primary upload_ic btnField" id="divUpload" style="padding-left:22px !important;">
+                                    <span></span>
+                                    <input id="uploadBtnDocs" type="file" class="upload fileUpload" multiple />
+                                </div>
+                                <div>
+
+
+                                    <table id="tblDocuments1" class="tblDoc" width="100%">
+                                        <tbody id="tblDocuments">
+                                            @if (Model.STCJobComplianceID != 0)
+                                            {
+                                                if (Model.lstUserDocument != null)
+                                                {
+                                                    foreach (var Document in @Model.lstUserDocument)
+                                                    {
+                                                        <tr id=@Document.UserDocumentID>
+                                                            <td class="tdCount" style="width:24px;">@Document.index</td>
+                                                            <td><div class="dcl_title">@Document.DocumentPath</div></td>
+                                                            @if (Document.MimeType == "image")
+                                                            {
+                                                                <td style="width:24px;"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)"></td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td style="width:24px;"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                            }
+                                                        </tr>
+                                                    }
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                                <p class="recordings">(call recordings,images)</p>
+
+                            </li>
+                            <li>
+                                <h3>STC Documents:</h3>
+                                @if (Model.lstStcDocuments != null)
+                                {
+                                    <ul class="serail-number">
+                                        @foreach (var Document in Model.lstStcDocuments)
+                                        {
+
+                                            <li filename="@Document" onclick="OpenPdf(e)"><a href="#" onclick="OpenPdf(this)">@Document</a></li>
+
+                                        }
+                                    </ul>
+                                }
+                            </li>
+                            <li>
+                                <div class="status-select-box">
+                                    <label class="control-label">Status :</label>
+                                    @Html.DropDownListFor(m => m.Status, new SelectList(Model.lstStcStatus, "Id", "Status"), "Select", new { @class = "form-control required", @tabindex = 24 })
+                                    @Html.ValidationMessageFor(m => m.Status)
+                                </div>
+                                <div>
+
+                                    <div id="divRequestAuthorize">
+                                        <label class="control-label">Request to authorized:</label>
+
+                                        @Html.CheckBoxFor(m => m.IsRequestedAuthorize, new { @class = "txtField", style = "margin-top:08px", @tabindex = 25 })
+                                    </div>
+
+                                    @*<button type="button" class="primary request-autorize-ic pull-left">Request to autorize</button>*@
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="btn-block checklist-btn-block">
+                    <div class="btn primary icon-btn dropdown-toggle btnField">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="button" value="Save" id="saveCompliance" tabindex="26">
+                    </div>
+                    <input type="button" value="Cancel" class="btn default cancel_ic btnField" id="CancelCompliance" tabindex="27">
+
+                    <p class="last-updated-text"><strong>Last updated by:</strong><label id="lblLastUpdatedby"></label></p>
+                </div>
+
+            </div>
+        </div>
+        <!-- panel-body End -->
+    </div>
+
+</form>
+
+
+
+
+@*Popup call*@
+
+<div class="modal fade" id="popupboxDateTime" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin-top: 300px">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupboxlogo">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <div class="title">
+                    <h1>Date Time</h1>
+                </div>
+                @*<h4 class="modal-title" id="myModalLabel">Date Time</h4>*@
+            </div>
+            <div class="modal-body" style="overflow:visible !important">
+                <div class="form-border">
+                    <div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>DateTime</label>
+                                <div class="input-group">
+                                    @Html.TextBoxFor(m => m.CallDate, new { @class = "form-control  required", @placeholder = "Call Date" })
+                                    <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="control-label inv">&nbsp;</label>
+                                <div class="input-group">
+                                    @Html.TextBoxFor(m => m.CallTime, new { @class = "form-control TimeAdded" })
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-time"></span>
+                                    </span>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="btn-block checklist-btn-block">
+                        <input type="button" value="Save" class="btn primary dropdown-toggle save_ic" onclick="GetDateAndTime()">
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="modal-footer">
+
+                </div>*@
+
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin-top: 300px">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <div class="title">
+                    <h1>Proof of Document</h1>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div id="signMyProfile" style="height:480px;">
+                            <img src="" id="imgFile" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+
+                    <div id="signMyProfile">
+                        <img src="" id="imgFile" class="" style="display:inline;" />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<style type="text/css">
+    .checkBoxSetting {
+        float: left;
+        width: auto !important;
+    }
+</style>
+
+@Scripts.Render("~/bundles/jqueryval")
+
+<script type="text/javascript">
+    var CreatedDate;
+    var logoWidth = 0, logoHeight = 0;
+
+    $(document).ready(function () {
+
+        $("#CallDate").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+
+
+
+        var date = $("#CallDate").val();
+        if (date == '0001/01/01') {
+            date = $("#CallDate").val('');
+        }
+        if (date != null && date != undefined && date != '') {
+            $('#CallDate').val('').removeAttr('value');
+            $('#CallDate').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+            var dateEdit = moment(date).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+            $('#CallDate').val(dateEdit);
+        } else {
+            $('#CallDate').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+        }
+
+
+
+
+
+
+        if ('@Model.IsNameCorrect' == "N") {
+            $("#ownername").css("visibility", "visible");
+        }
+        else {
+            $("#ownername").css("visibility", "hidden");
+        }
+        if ('@Model.IsAddressCorrect' == "N") {
+            $("#Address").css("visibility", "visible");
+        }
+        else {
+            $("#Address").css("visibility", "hidden");
+        }
+        if ('@Model.IsOrganisationNameCorrect' == "N") {
+            $("#OrganisationName").css("visibility", "visible");
+        }
+        else {
+            $("#OrganisationName").css("visibility", "hidden");
+        }
+
+        $("#drpOwnerName").change(function () {
+
+            if ($(this).val() == "N") {
+                $("#FirstName").val('');
+                $("#LastName").val('');
+
+                $("#ownername").css("visibility", "visible");
+
+            }
+            else {
+                $("#ownername").css("visibility", "hidden");
+            }
+        })
+        $("#drpAddress").change(function () {
+
+            if ($(this).val() == "N") {
+                $("#Address1").val('');
+                $("#Address").css("visibility", "visible");
+            }
+            else {
+                $("#Address").css("visibility", "hidden");
+            }
+        })
+        $("#drpOwnerorganisationName").change(function () {
+
+            if ($(this).val() == "N") {
+                $("#OrganisationName").val('');
+
+                $("#OrganisationName").css("visibility", "visible");
+                $("#divOrganisationName").css("visibility", "visible");
+
+
+            }
+            else {
+                $("#OrganisationName").css("visibility", "hidden");
+                $("#divOrganisationName").css("visibility", "hidden");
+            }
+        })
+
+        if ('@Model.InstallationType' > 0) {
+            $("#InstallationType").val('@Model.InstallationType').change();
+        }
+
+        if ('@Model.ConnectionType' > 0) {
+            $("#ConnectionType").val('@Model.ConnectionType').change();
+        }
+        if ('@Model.MountingType' > 0) {
+            $("#MountingType").val('@Model.MountingType').change();
+        }
+
+        @*var Description = "@Html.Raw(ViewData.ContainsKey("Description") ?Convert.ToString(ViewData["Description"]).Replace(Environment.NewLine, @"\").TrimEnd(new char[] { '\\' }) : "")";*@
+
+        var Description = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Convert.ToString(ViewData["Description"]).Replace("\"", "").Replace(" ", "&nbsp;").Replace("\r\n","<br>").Replace("\n", "<br>").Replace("\r", "<br>")))';
+
+        if (Description != '') {
+            x = document.createElement('div');
+            x.innerHTML = Description;
+            $("#lblDescription").html($(x).html());
+            //$("#lblDescription").html(x.childNodes[0].nodeValue);
+        }
+        else {
+            $("#lblDescription").html(Description);
+        }
+
+
+
+        CreatedDate = '@(ViewData.ContainsKey("STCSettlementDate") ? ViewData["STCSettlementDate"] : "")';
+
+
+        $("#lblCreatedDate").text(CreatedDate);
+
+        var STCStatus = '@(ViewData.ContainsKey("STCStatus") ? ViewData["STCStatus"] : "")';
+
+        $("#lblSTCStatus").text(STCStatus);
+
+        var isClassic = '@(ViewData.ContainsKey("isClassic") ? ViewData["isClassic"] : "")';
+        if (isClassic.toLowerCase() == 'false' || isClassic == null) {
+            $("#additionalInfo").hide();
+        }
+
+        if (STCStatus == "CERApproved") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Orange');
+            $("#lblSTCStatus").text("CER Approved");
+            $("#lblauditedtext").text("Your job has been approved by REC Registry..");
+            $("#lblauditedtext").css('color', 'Orange');
+
+        }
+
+
+        if (STCStatus == "CERFailed") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Red');
+            $("#lblSTCStatus").text("CER Failed");
+            $("#lblauditedtext").text("Your job has been failed by the REC Registry. See failure notice below.");
+            $("#lblauditedtext").css('color', 'Red');
+            $("#btngetFailureReasonDesc").css("display", "block");
+
+        }
+
+
+        if (STCStatus == "AwaitingAuthorization") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Orange');
+            $("#lblSTCStatus").text("Awaiting Authorization");
+            $("#lblauditedtext").text("Requires authorization from Admin.");
+            $("#lblauditedtext").css('color', 'Orange');
+
+        }
+
+        if (STCStatus == "Cannotrecreate") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'grey');
+            $("#lblSTCStatus").text("Cannot re-create");
+            $("#lblauditedtext").text("Your job cannot be created in Rec Registry.");
+            $("#lblauditedtext").css('color', 'grey');
+
+        }
+
+
+        if (STCStatus == "UnderReview") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Orange');
+            $("#lblSTCStatus").text("Under Review");
+            $("#lblauditedtext").text("Your job is currently being reviewed.");
+            $("#lblauditedtext").css('color', 'Orange');
+
+        }
+        if (STCStatus == "Resubmission") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'red');
+            $("#lblSTCStatus").text("Re-submission");
+            $("#lblauditedtext").text("This is a resubmission as a result of compliance issues.");
+            $("#lblauditedtext").css('color', 'red');
+
+        }
+        if (STCStatus == "SubmittoTrade") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'green');
+            $("#lblSTCStatus").text("Ready To Trade");
+            $("#lblauditedtext").text("You have all documents required for trade.");
+            $("#lblauditedtext").css('color', 'green');
+
+        }
+        if (STCStatus == "ComplianceIssues") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'red');
+            $("#lblSTCStatus").text("Compliance Issues");
+            $("#lblauditedtext").text("There are some issues with your submission.");
+            $("#lblauditedtext").css('color', 'red');
+
+        }
+        if (STCStatus == "RequiresCallBack") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Orange');
+            $("#lblSTCStatus").text("Requires Call Back");
+            $("#lblauditedtext").text("Your job is currently being reviewed.");
+            $("#lblauditedtext").css('color', 'Orange');
+        }
+        if (STCStatus == "ReadyToCreate") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'Orange');
+            $("#lblSTCStatus").text("Ready To Create");
+            $("#lblauditedtext").text("Your job has successfully passed compliance checks and is awaiting REC creation.");
+            $("#lblauditedtext").css('color', 'Orange');
+        }
+        if (STCStatus == "PendingApproval") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'green');
+            $("#lblSTCStatus").text("Pending Approval");
+            $("#lblauditedtext").text("You have successfully traded you STCs with Emerging Energy.");
+            $("#lblauditedtext").css('color', 'green');
+        }
+        if (STCStatus == "NewSubmission") {
+            $("#lblSTCStatus").css('font-size', '20px')
+            $("#lblSTCStatus").css('color', 'green');
+            $("#lblSTCStatus").text("New Submission");
+            $("#lblauditedtext").text("You job has just Submitted.");
+            $("#lblauditedtext").css('color', 'green');
+        }
+
+        var STCSettlementTerm = '@(ViewData.ContainsKey("STCSettlementTerm") ? ViewData["STCSettlementTerm"] : "")';
+        $("#lblSTCSettlementTerm").text(STCSettlementTerm);
+
+
+        var STCPrice = '@(ViewData.ContainsKey("STCPrice") ? ViewData["STCPrice"] : "")';
+        $("#lblSTCPrice").text(STCPrice);
+
+        var CallDate = '@(ViewData.ContainsKey("CallDate") ? ViewData["CallDate"] : "")';
+        $("#lblDateVal").text(CallDate);
+        var CallTime = '@(ViewData.ContainsKey("CallTime") ? ViewData["CallTime"] : "")';
+        $("#lblTimeVal").text(CallTime);
+
+        var CallMadeBy = '@(ViewData.ContainsKey("CallMadeBy") ? ViewData["CallMadeBy"] : "")';
+        $("#lblCallby").text(CallMadeBy);
+        $("#lblReviewedBy").text(CallMadeBy);
+
+
+        $("#lblLastUpdatedby").text(CallMadeBy + " " + CreatedDate);
+        $('#Status option').first().remove();
+
+        Array.prototype.pushArray = function () {
+            var toPush = this.concat.apply([], arguments);
+            for (var i = 0, len = toPush.length; i < len; ++i) {
+                this.push(toPush[i]);
+            }
+        };
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        //todo
+        $("#IsNameCorrect").on('change', function () {
+
+            if ($("#IsNameCorrect").val() != "N") {
+                $("#FirstName").attr('class', 'form-control valid');
+                $(".FirstName").find('.field-validation-error').attr('class', 'field-validation-valid');
+                $("#LastName").attr('class', 'form-control valid');
+            }
+
+        });
+        $("#IsAddressCorrect").on('change', function () {
+            if ($("#IsAddressCorrect").val() != "N") {
+                $("#Address").attr('class', 'form-control valid');
+                $(".Address").find('.field-validation-error').attr('class', 'field-validation-valid');
+
+            }
+        });
+
+        $('#btnCall').click(function () {
+
+            $('#popupboxDateTime').modal({ backdrop: 'static', keyboard: false });
+        });
+        $("#btnClosepopupboxlogo").click(function () {
+            $('#popupboxDateTime').modal('toggle');
+        });
+        $("#btnClosepopupProof").click(function () {
+
+            $('#popupProof').modal('toggle');
+        });
+
+        $("#CancelCompliance").click(function () {
+
+            $("#popupStcCompliance").modal('hide');
+        })
+
+        $('.modal').on('hidden.bs.modal', function (e) {
+            if ($('.modal').hasClass('in')) {
+                $('body').addClass('modal-open');
+            }
+        });
+
+        $('#uploadBtnDocs').fileupload({
+
+            url: '@Url.Action("Upload", "Job")',
+            dataType: 'json',
+            done: function (e, data) {                
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                var UploadFailedFilesName = [];
+                UploadFailedFilesName.length = 0;
+                //formbot start
+                for (var i = 0; i < data.result.length; i++) {
+
+                    if (data.result[i].Status == true) {
+                        var rowcount = $('#tblDocuments tr').length;
+                        var count = rowcount + 1;
+                        var documentType = data.result[i].MimeType.split("/");
+                        var mimeType = documentType[0];
+                        var documentId = "document" + count;
+                        var content = "<tr id= " + data.result[i].FileName + " >"
+                        content += '<td  class="tdCount" style="width:24px;">' + count + '.' + ' </td>';
+                        content += '<td><div class="dcl_title">' + data.result[i].FileName + ' </div></td>';
+
+                        if (mimeType == "image") {
+                            content += '<td style="width:24px;"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" id="' + data.result[i].FileName + '"  class="' + data.result[i].FileName + '" title="Preview" onclick="OpenDocument(this)"></td>';
+                        }
+                        else {
+                            content += '<td style="width:24px;"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" id="' + data.result[i].FileName + '" class="' + data.result[i].FileName + '" title="Preview" onclick="DownloadDocument(this)"></td>';
+                        }
+                        content += '<td style="width:24px;"><img src=' + ProjectImagePath + 'images/delete-icon.png style="cursor: pointer" id="signDelete" title="Delete" onclick="DeleteFileFromFolder(\'' + data.result[i].FileName + '\')"></td>';
+                        content += "</tr>"
+
+                        //var content = "<tr id= " + data.result[i].FileName + " >"
+                        //content += '<td style=width:20px;text-a  >' + count + '.' + ' </td>';
+                        //content += '<td >' + data.result[i].FileName + ' </td>';
+
+                        //if (mimeType == "image") {
+                        //    content += '<td><a href="javascript:void(0)"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" id="' + data.result[i].FileName + '"  class="' + data.result[i].FileName + '" title="Preview" onclick="OpenDocument(this)"></a>';
+                        //}
+                        //else {
+                        //    content += '<td><a href="javascript:void(0)"><img src=' + ProjectImagePath + 'images/view-icon.png style="cursor: pointer" id="' + data.result[i].FileName + '" class="' + data.result[i].FileName + '" title="Preview" onclick="DownloadDocument(this)"></a>';
+                        //}
+                        //content += '<a href="javascript:void(0)"><img src=' + ProjectImagePath + 'images/delete-icon.png style="cursor: pointer id="signDelete" title="Delete" onclick="DeleteFileFromFolder(\'' + data.result[i].FileName + '\')"></a></td>';
+                        //content += "</tr>"
+
+
+                        $('#tblDocuments').append(content);
+                        $('<input type="hidden">').attr({
+
+                            name: 'FileNamesCreate',
+                            value: data.result[i].FileName,
+                            id: data.result[i].FileName,
+                        }).appendTo('form');
+
+                    }
+                    else if (data.result[i].Status == false && data.result[i].Message == "BigName") {
+                        UploadFailedFilesName.push(data.result[i].FileName);
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName);
+
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+
+                    showErrorMessage(UploadFailedFiles.length + " " + "File has not been uploaded.");
+
+
+                }
+                if (UploadFailedFilesName.length > 0) {
+
+                    showErrorMessage(UploadFailedFilesName.length + " " + "Uploaded filename is too big.");
+
+
+                }
+                if (UploadFailedFilesName.length == 0 && UploadFailedFiles.length == 0) {
+
+                    showSuccessMessage("File has been uploaded successfully.");
+
+
+                }
+            },
+
+            progressall: function (e, data) {
+
+            },
+
+            singleFileUploads: false,
+            send: function (e, data) {
+                if (data.files.length == 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].name.length > 50) {
+                            showErrorMessage("Please upload small filename.");
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            return false;
+                        }
+                    }
+                }
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt(MaxImageSize)) {
+                            showErrorMessage(" " + data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxLogoSize + "MB");
+                            return false;
+                        } else if (CheckSpecialCharInFileName(data.files[i].name)) {
+                            showErrorMessage("Please upload file that not conatain <> ^ [] .");
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt(MaxImageSize)) {
+                        showErrorMessage("Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxLogoSize + "MB");
+
+                        return false;
+                    }
+                }
+                $(".alert").hide();
+                $("#errorMsgRegionForPopUp").html("");
+                $("#errorMsgRegionForPopUp").hide();
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: USERID,
+                    id: USERID,
+                }).appendTo('form');
+                return true;
+            },
+            formData: { userId: USERID },
+            change: function (e, data) {
+                $("#uploadFile").val("C:\\fakepath\\" + data.files[0].name);
+            }
+        }).prop('disabled', !$.support.fileInput)
+.parent().addClass($.support.fileInput ? undefined : 'disabled');
+
+
+
+
+
+        $("#CallDate").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+        $('#CallTime').datetimepicker({
+            format: "HH:mm"
+        });
+
+        $(".TimeAdded").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+
+        $("#saveCompliance").click(function () {
+            addRulesSTC();
+            Enablefiels();
+
+            if ($("#complianceForm").valid()) {
+                
+                var json = {};
+
+                var lstFileName = [];
+
+                if ($("#complianceForm [name='FileNamesCreate']").length == 0)
+                    lstFileName = null;
+                else {
+                    for (var i = 0; i < $("#complianceForm [name='FileNamesCreate']").length; i++) {
+                        lstFileName.push({ Name: $("#complianceForm [name='FileNamesCreate']")[i].id });
+                    }
+                }
+
+                $("#CallDateTime").val($("#CallDateTime").val());
+
+                var fileName = $("#complianceForm [name='FileNamesCreate']").val();
+                $("#Logo").val(fileName);
+
+                $("#STCJobDetailsID").val($("#STCJobDetailsID").val());
+                if (('@ProjectSession.UserTypeId' == 2 || '@ProjectSession.UserTypeId' == 5)) {
+                    $('#IsRequestedAuthorize').val('false');
+                }
+
+                var data = JSON.stringify($('form').serializeToJson());
+                data = JSON.parse(data);
+                
+                data.FileName = lstFileName == null ? null : JSON.stringify(lstFileName);
+
+                $.ajax(
+                {
+                    url: '@Url.Action("SaveSTCComplainceCheck", "Job")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8', // Not to set any content header
+                    type: 'post',
+                        data: JSON.stringify({ stcComplianceCheck: data, isMultipleRecords : $("#isMultipleRecords").val()}),
+                    success: function (responseId) {
+                        if (responseId && responseId.toString().indexOf('#') < 0 && responseId > 0) {
+                            $("#STCJobComplianceID").val(responseId);
+                            $("#popupStcCompliance").modal('hide');
+
+                            $(".alert").hide();
+                            $("#errorMsgRegion").removeClass("alert-danger");
+                            $("#errorMsgRegion").addClass("alert-success");
+                            $("#errorMsgRegion").html(closeButton + "STC job compliance has been saved successfully.");
+                            $("#errorMsgRegion").show();
+                            $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                            $('body').animate({ scrollTop: 0 }, 'slow');
+                            makeDisableField();
+                            if (GridConfig[0].IsKendoGrid)
+                                $('#datatable').data('kendoGrid').dataSource.read();
+                            else
+                                $("#datatable").dataTable().fnDraw();
+                            GetSTCJobStageCount();
+                        }
+                        else {
+                            var msg;
+                            if (responseId.toString().indexOf('#') > 0)
+                                msg = responseId.split('#')[1];
+                            else
+                                msg = "STC job compliance has not been saved.";
+
+                            showErrorMessage(msg);
+                            makeDisableField();
+                        }
+                    },
+                    error: function () {
+                        showErrorMessage("STC job compliance has not been saved.");
+                    }
+                });
+            }
+        });
+    });
+
+    function makeDisableField() {
+
+        var STCStatus = '@(ViewData.ContainsKey("STCStatus") ? ViewData["STCStatus"] : "")';
+        var changedBy = '@(ViewData.ContainsKey("changedBy") ? ViewData["changedBy"] : "")';
+        var createdby = '@(ViewData.ContainsKey("createdby") ? ViewData["createdby"] : "")';
+
+        var IsLastSubmission = '@(ViewData.ContainsKey("IsLastSubmission") ? ViewData["IsLastSubmission"] : "")';
+        var CallMadeBy = '@(ViewData.ContainsKey("CallMadeBy") ? ViewData["CallMadeBy"] : "")';
+
+        if (($("#STCJobComplianceID") && $("#STCJobComplianceID").val() > 0) || ('@Model.CallMadeUserId' != '@ProjectSession.LoggedInUserId')) {
+            //if (($("#STCJobComplianceID") && $("#STCJobComplianceID").val() > 0)) {
+            $('#complianceForm').find('select').attr("disabled", "disabled");
+            $('#complianceForm').find('.txtField').attr("disabled", "disabled");
+            $(".btnField").hide();
+            $("#lblUpload").text("Uploaded File:");
+
+        }
+        else {
+            $("#lblUpload").text("Upload File:");
+        }
+
+        if (IsLastSubmission == "Yes" && CallMadeBy != null && CallMadeBy != "") {
+
+            $("#Status").removeAttr("disabled");
+            $("#saveCompliance").show();
+            $("#CancelCompliance").show();
+            $("#IsRequestedAuthorize").removeAttr("disabled");
+
+
+
+        }
+        if (IsLastSubmission == "Yes" && STCStatus == "UnderReview") {
+            Enablefiels();
+        }
+        //for RA and RAM
+        if (('@ProjectSession.UserTypeId' == 2 || '@ProjectSession.UserTypeId' == 5)) {
+            $("#divRequestAuthorize").hide();
+
+
+            if (STCStatus == "RequiresCallBack") {
+                $('#complianceForm').find('select').attr("disabled", "disabled");
+                $('#complianceForm').find('.txtField').attr("disabled", "disabled");
+                $(".btnField").hide();
+                $("#lblUpload").text("Uploaded File:");
+            }
+            if (STCStatus == "AwaitingAuthorization" || (createdby == '@ProjectSession.LoggedInUserId' && STCStatus != "RequiresCallBack")) {
+                Enablefiels();
+            }
+            else {
+
+                $('#complianceForm').find('select').attr("disabled", "disabled");
+                $('#complianceForm').find('.txtField').attr("disabled", "disabled");
+                $(".btnField").hide();
+                $("#lblUpload").text("Uploaded File:");
+
+            }
+
+
+        }
+
+
+    }
+    function Enablefiels() {
+        $('#complianceForm').find('select').removeAttr("disabled");
+        $('#complianceForm').find('.txtField').removeAttr("disabled");
+        $(".btnField").show();
+        $("#lblUpload").text("Upload File:");
+
+    }
+
+    function addRulesSTC() {
+        var ownerType = '@(ViewData.ContainsKey("OwnerType") ? ViewData["OwnerType"] : "")';
+        if ($("#drpOwnerName").val() == "N") {
+            $("#FirstName").rules("add", {
+                required: true,
+                messages: {
+                    required: "First Name  is required."
+                }
+            });
+            $("#LastName").rules("add", {
+                required: true,
+                messages: {
+                    required: "Last Name  is required."
+                }
+            });
+        }
+        else {
+            $("#FirstName").rules("add", {
+                required: false,
+            });
+            $("#LastName").rules("add", {
+                required: false,
+            });
+        }
+        if ($("#drpAddress").val() == "N") {
+            $("#Address1").rules("add", {
+                required: true,
+                messages: {
+                    required: "Address  is required."
+                }
+            });
+        }
+        else {
+            $("#Address1").rules("add", {
+                required: false,
+            });
+        }
+        if (ownerType == "Organisation") {
+            if ($("#drpOwnerorganisationName").val() == "N") {
+                $("#OrganisationName").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Organisation name is required."
+                    }
+                });
+            }
+            else {
+                $("#OrganisationName").rules("add", {
+                    required: false,
+                });
+            }
+        }
+    }
+
+    //Proof of Open upload
+    function OpenDocument(e) {
+        var guid = USERID;
+        var proofDocumentURL = UploadedDocumentPath;
+        var imagePath = proofDocumentURL + "/" + "JobDocuments" + "/" + guid;
+        var SRC = imagePath + "/" + e.className;
+        $("#loading-image").css("display", "");
+        $('#imgFile').attr("src", SRC).load(function () {
+            logoWidth = this.width;
+            logoHeight = this.height;
+            $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+
+            if ($(window).height() <= logoHeight) {
+                //$("#imgDocument").height($(window).height() - 150);
+                $("#imgDocument").closest('div').height($(window).height() - 150);
+                $("#imgDocument").closest('div').css('overflow-y', 'scroll');
+                $("#imgDocument").height(logoHeight);
+            }
+            else {
+                $("#imgDocument").height(logoHeight);
+                $("#imgDocument").closest('div').removeAttr('style');
+
+            }
+
+            if (screen.width <= logoWidth || logoWidth >= screen.width - 250) {
+                //$("#imgDocument").width(screen.width - 10);
+                //$('#popupProof').find(".modal-dialog").width(screen.width - 10);
+
+                $('#popupProof').find(".modal-dialog").width(screen.width - 250);
+                $("#imgDocument").width(logoWidth);
+            }
+            else {
+                $("#imgDocument").width(logoWidth);
+                $('#popupProof').find(".modal-dialog").width(logoWidth);
+            }
+
+            $("#loading-image").css("display", "none");
+        });
+        $("#imgDocument").unbind("error");
+        $('#imgDocument').attr('src', SRC).error(function () {
+            alert('Image does not exist.');
+            $("#loading-image").css("display", "none");
+        });
+
+    }
+
+    //$('#popupProof').on('shown.bs.modal', function () {
+    //    if ($(window).height() <= logoHeight)
+    //        $("#imgDocument").height($(window).height() - 150);
+    //    else
+    //        $("#imgDocument").height(logoHeight);
+
+    //    if (screen.width <= logoWidth) {
+    //        $("#imgDocument").width(screen.width - 10);
+    //        $('#popupProof').find(".modal-dialog").width(screen.width - 10);
+    //    }
+    //    else {
+    //        $("#imgDocument").width(logoWidth);
+    //        $('#popupProof').find(".modal-dialog").width(logoWidth);
+    //    }
+    //});
+
+    //Proof of Download Document
+    function DownloadDocument(e) {
+        //$("#loading-image").show();
+        var foldername = USERID;
+        var FileName = e.id;
+        window.location.href = BaseURL + 'ViewDownloadFileForStc/Job?FileName=' + e.className + '&FolderName=' + foldername;
+
+        //$("#loading-image").hide();
+    }
+    function DeleteFileFromFolder(fileDelete) {
+        var FolderName = USERID;
+        if (confirm('Are you sure you want to delete this file ?')) {
+            $.ajax(
+            {
+                url: BaseURL + 'DeleteFileFromFolder/User',
+                data: { fileName: fileDelete, FolderName: FolderName },
+                method: 'get',
+                success: function () {
+                    document.getElementById("tblDocuments").deleteRow(fileDelete);
+                    $("#tblDocuments tr").each(function () {
+                        var trNumber = $(this).index() + 1;
+                        $(this).find('td.tdCount').html(trNumber);
+                    });
+                    $("[name='FileNamesCreate']").each(function () {
+
+                        if ($(this).attr('id') == fileDelete)
+                            $(this).remove();
+                    });
+                    showSuccessMessage("File has been Deleted successfully.");
+                    return false;
+                }
+            });
+        }
+    }
+    function isInt(evt) {
+        evt = (evt) ? evt : window.event;
+        var charCode = (evt.which) ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+            return false;
+        }
+        return true;
+    }
+
+
+    function GetDateAndTime() {
+        var Date = $("#CallDate").val();
+        var Time = $("#CallTime").val();
+        $("#lblDateVal").text(Date);
+        $("#lblTimeVal").text(Time);
+        var CallDateTime = Date + " " + Time;
+        $("#CallDateTime").val(CallDateTime);
+        $("#popupboxDateTime").modal('toggle');
+
+    }
+    function OpenPdf(e) {
+
+        var JobId = '@Model.JobId';
+        var stage = '@FormBot.Helper.SystemEnums.JobStage.STCTrade.ToString()';
+        var STCJobDetailsID = '@Model.STCJobDetailsID';
+        FileName = stage + "/" + STCJobDetailsID + "/" + e.innerHTML;
+
+        //var documentPath = JobId + "/" + stage + "/" + e.innerHTML;
+        var guid = USERID;
+        var proofDocumentURL = UploadedDocumentPath;
+        var imagePath = proofDocumentURL + "/" + "JobDocuments" + "/" + JobId;
+        var SRC = imagePath + "/" + FileName;
+
+        window.open(SRC);
+
+    }
+    function htmlUnescape(str) {
+        return str
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+    }
+
+
+</script>

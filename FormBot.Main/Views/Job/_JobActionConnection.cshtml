@@ -1,0 +1,151 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    bool isPreapprovals = false;
+    bool isConnections = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.preapprovals.GetHashCode()) { isPreapprovals = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.connections.GetHashCode()) { isConnections = true; }
+
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.preapprovals.GetHashCode()) { isPreapprovals = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.connections.GetHashCode()) { isConnections = true; }
+            });
+        }
+    }
+}
+@Html.Hidden("PreApprovalConnOrStcClicked")
+<!-- =job-com-box===================================== -->
+
+@if (ProjectSession.UserTypeId != 8 || isConnections)
+{
+    <!-- =job-com-box===================================== -->
+    <div class="job-com-box" id="connectionBox">
+        <div class="sub-title">
+            <h4>Connection Status:</h4>
+            <span>
+                @Html.DropDownList("JobStatusForConnection", (IEnumerable<SelectListItem>)ViewBag.listJobStatusConnection, new { @class = "applied-select" })
+            </span>
+        </div>
+        <p>
+            <span id="spanConnectionComment">
+            </span>
+            @*Haven't applied due to spAusnet approval needing more attention. - Hus 19/07/2017*@
+        </p>
+        <ul class="applied-list" id="connectionUL">
+            @if (Model.lstConnectionDocumentSteps != null && Model.lstConnectionDocumentSteps.Count > 0)
+            {
+                foreach (var item in Model.lstConnectionDocumentSteps)
+                {
+                    <li documentstepid="@item.DocumentStepId">
+                        <div class="heading">
+                            <h5>@item.StepName</h5>
+                            <span id="spanComment@(item.DocumentStepId)" class="subtext"> @(string.IsNullOrEmpty(item.Comment) ? "" : " - " + item.Comment) </span>
+                            @Html.Hidden("hdnComment" + item.DocumentStepId, item.Comment)
+                            @if (item.IsApplied)
+                            {
+                                <span>Submited : <em>@item.CommentDate</em><em></em></span>
+                            }
+                        </div>
+                        <input type="hidden" isapplied="@item.IsApplied" id="hdnIsApplied" />
+                        <div class="btn-group">
+                            <button type="button" class="btn icon-btn primary sprite-img resend-ion appliedConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Resend" email='@(item.ToEmailid == null ? "" : item.ToEmailid)' link='@(item.OnlineLink == null ? "" : item.OnlineLink)' documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,2)"></button>
+                            <button type="button" class="btn icon-btn primary applied right-icon sprite-img appliedConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Applied" style="cursor:default"></button>
+                            <button type="button" class="btn icon-btn primary right-icon sprite-img applyConnectionButton" data-toggle="tooltip" data-placement="top" title="" data-original-title="Apply Now" email='@(item.ToEmailid == null ? "" : item.ToEmailid)' link='@(item.OnlineLink == null ? "" : item.OnlineLink)' documentstepid="@item.DocumentStepId" documentsteptype="@item.Type" onclick="ApplyPreapprovalConnection(this,2)"></button>
+                        </div>
+                    </li>
+                }
+            }
+        </ul>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <input type="hidden" id="preApprovalConnectionVal" />
+                    <label class="control-label">Comment :</label>
+                    <textarea name="" rows="4" class="form-control" id="txtConnComment" maxlength="500"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade preapprovals newemail-modal newScreenPreapprovalConnection" id="popupboxPreapprovalConnectionApply" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog  modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header email-hed">
+                    <div class="title">
+                        <h1 id="myModalLabel">Apply Document Step</h1>
+                        <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="popupDocumentStepId" />
+                    <div id="loadPreapprovalConnectionStepApply" class="Preapprovals-collapse">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="popupboxPreapprovalConnectionComment" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog vertical-align-center modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                        <h4 class="modal-title" id="myModalLabel">Comment</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="frmComment">
+                            <div class="form-box">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <input type="hidden" id="preApprovalConnectionVal" />
+                                            <label class="control-label">Comment :</label>
+                                            <textarea name="" rows="4" class="form-control" id="txtPreOrConnComment" maxlength="500"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn primary icon-btn" onclick="SavePreapprovalConnectionComment()"> <span class="sprite-img save_ic"></span>Save</button>
+                                    <button type="button" class="btn default cancel_ic" onclick="ClearComment()">Clear</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    var viewBagPreApprovalComment = '@Html.Raw(HttpUtility.JavaScriptStringEncode(ViewBag.PreApprovalComment))';
+    var viewBagConnectionComment = '@Html.Raw(HttpUtility.JavaScriptStringEncode(ViewBag.ConnectionComment))';
+    var viewBagPreApprovalStatus = '@ViewBag.PreApprovalStatus';
+    var viewBagConnectionStatus = '@ViewBag.ConnectionStatus';
+    var modelInstallationDistributorID = '@Model.JobInstallationDetails.DistributorID';
+    var GetEmailSendViewForPreApprovalAndConnectionURL = '@Url.Action("GetEmailSendViewForPreApprovalAndConnection", "JobEmailThread", new { area = "" })';
+    var AddUpdateJobCommentForPreApprAndConnURL = '@Url.Action("AddUpdateJobCommentForPreApprAndConn", "JobEmailThread", new { area = "" })';
+
+
+
+</script>
+<script src="~/Scripts/View/Job/PreApprovalConnectionSTC.min.js"></script>

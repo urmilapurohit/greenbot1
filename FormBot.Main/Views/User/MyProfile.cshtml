@@ -1,0 +1,115 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "MyProfile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="modal fade" id="popupbox1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document" style="width:70%; height:70%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 style="display:none;">My Profile</h1>
+                <h4 class="modal-title" id="myModalLabel">My Profile</h4>
+            </div>
+            <div id="msgSection" style="margin:15px;">
+                @Html.RenderMessages()
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none;">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="modal-body" style="margin-top:-30px;">
+                <div class="form-border">
+                    @using (Html.BeginForm("MyProfile", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+                    {
+                        @Html.HiddenFor(m => m.AspNetUserId)
+                        @Html.HiddenFor(m => m.RoleID)
+                        @Html.HiddenFor(m => m.SolarCompanyId)
+                        @Html.HiddenFor(m => m.ResellerID)
+                        @Html.HiddenFor(m => m.hiddenTheme)
+                        @Html.HiddenFor(m => m.Signature)
+                        @Html.Hidden("EmailSignature", Model.EmailSignup.EmailSignature)
+                        @Html.HiddenFor(m => m.Logo)
+                        @Html.HiddenFor(m => m.Theme)
+                        @Html.HiddenFor(m => m.UserTypeID)
+
+                        if (@FormBot.Helper.ProjectSession.UserTypeId == 7)
+                        {
+                            @Html.HiddenFor(m => m.FromDate)
+                            @Html.HiddenFor(m => m.ToDate)
+                            @Html.HiddenFor(m => m.CompanyName, new { id = "hdnCompanyName" })
+                            @Html.HiddenFor(m => m.AddressID, new { id = "hdnAddressID" })
+                            @Html.HiddenFor(m => m.UnitTypeID, new { id = "hdnUnitTypeID" })
+                            @Html.HiddenFor(m => m.StreetTypeID, new { id = "hdnStreetTypeID" })
+                            @Html.HiddenFor(m => m.PostalAddressID, new { id = "hdnPostalAddressID" })
+                        }
+
+                        @*@Html.HiddenFor(m => m.State)
+                            @Html.HiddenFor(m => m.CompanyABN, new { id = "hdnCompanyABN" })
+                            @Html.HiddenFor(m => m.FromDate)
+                            @Html.HiddenFor(m => m.ToDate)
+                            @Html.HiddenFor(m => m.FirstName, new { id = "hdnFirstName" })
+                            @Html.HiddenFor(m => m.LastName, new { id = "hdnFirstName" })
+                            @Html.HiddenFor(m => m.Email, new { id = "hdnEmail" })
+                            @Html.HiddenFor(m => m.Phone, new { id = "hdnPhone" })
+                            @Html.HiddenFor(m => m.CompanyName, new { id = "hdnCompanyName" })
+                            @Html.HiddenFor(m => m.CompanyWebsite, new { id = "hdnCompanyWebsite" })
+                            @Html.HiddenFor(m => m.AddressID, new { id = "hdnAddressID" })
+                            @Html.HiddenFor(m => m.Town, new { id = "hdnTown" })
+                            @Html.HiddenFor(m => m.State, new { id = "hdnState" })
+                            @Html.HiddenFor(m => m.PostCode, new { id = "hdnPostCode" })
+                            @Html.HiddenFor(m => m.UnitTypeID, new { id = "hdnUnitTypeID" })
+                            @Html.HiddenFor(m => m.UnitNumber, new { id = "hdnUnitNumber" })
+                            @Html.HiddenFor(m => m.StreetNumber, new { id = "hdnStreetNumber" })
+                            @Html.HiddenFor(m => m.StreetName, new { id = "hdnStreetName" })
+                            @Html.HiddenFor(m => m.StreetTypeID, new { id = "hdnStreetTypeID" })
+                            @Html.HiddenFor(m => m.PostalAddressID, new { id = "hdnPostalAddressID" })
+                            @Html.HiddenFor(m => m.PostalDeliveryNumber, new { id = "hdnPostalDeliveryNumber" })
+                            @Html.HiddenFor(m => m.BSB, new { id = "hdnBSB" })
+                            @Html.HiddenFor(m => m.AccountNumber, new { id = "hdnAccountNumber" })
+                            @Html.HiddenFor(m => m.AccountName, new { id = "hdnAccountName" })
+                            @Html.HiddenFor(m => m.ElectricalContractorsLicenseNumber, new { id = "hdnElectricalContractorsLicenseNumber" })
+                            @Html.HiddenFor(m => m.CECAccreditationNumber, new { id = "hdnCECAccreditationNumber" })
+                            @Html.HiddenFor(m => m.CECDesignerNumber, new { id = "hdnCECDesignerNumber" })*@
+                        @Html.Partial("_Details", Model)
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+    {
+    <script type="text/javascript">
+        var pageType = 'myprofile';
+        var resellerID=@FormBot.Helper.ProjectSession.ResellerId;
+        var userID =@FormBot.Helper.ProjectSession.LoggedInUserId;
+        var USERID =@Model.UserId;
+        var oldLogo ='@Model.Logo';
+        var logoWidthSign = 0, logoHeightSign = 0, logoWidthLG = 0, logoHeightLG = 0, SRCSign, SRCLG;
+        var sessionLogo = '@ProjectSession.Logo';
+        var sessionTheme = '@ProjectSession.Theme';
+        var sessionSiteURLBase = '@ProjectSession.SiteUrlBase' ;
+        var viewBagSignature = '@ViewBag.Signature';
+        var viewBagRECEmailSign = '@ViewBag.RecEmailSignature';
+        var dataSignature = @Html.Raw(Json.Encode(ViewBag.Signature));
+        var dataRECEmailSign = @Html.Raw(Json.Encode(ViewBag.RecEmailSignature)); 
+        var modelTheme = '@Model.Theme';
+        var modelConfigPassword = '@Model.EmailSignup.ConfigurationPassword';
+    </script>
+    @Scripts.Render("~/Scripts/FormBot.js")
+    @Scripts.Render("~/bundles/UserMyProfile")
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+}
+<style>
+    .ui-autocomplete {
+        z-index: 10000;
+    }
+</style>

@@ -1,0 +1,154 @@
+﻿@model FormBot.Entity.RoleView
+@using FormBot.Main
+@using FormBot.Helper
+@{
+    ViewBag.Title = "Role";
+}
+
+<div class="container-fluid">
+    @using (Html.BeginForm("Create", "Role", FormMethod.Post, new { id = "frmCreateRole" }))
+    {
+        @Html.Hidden("test")
+        @Html.Partial("_Details", Model)
+    }
+</div>
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+    @*<script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>*@
+    @*<script src="~/Scripts/bootstrap.min.js"></script>*@
+    @*<script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")*@
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+    @*@Scripts.Render("~/Scripts/FormBot.js")
+        @Scripts.Render("~/bundles/bootstrap")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <style>
+        #datatable .dataTables_empty {
+            text-align: center !important;
+        }
+    </style>
+    <script>
+
+        $(function () {
+            $('input[type=checkbox][cat="chkView"]').each(function () {
+                ToggleCheckBox(this);
+            });
+
+            $('input[type=checkbox][cat="chkView"]').change(function () {
+                ToggleCheckBox(this);
+            });
+
+            $('input[type=checkbox][cat="chkSAASUser"]').change(function () {
+                debugger;
+                ShowHideSaasUserInvoicer();
+            });
+        });
+
+        $(document).ready(function () {
+            var dropDownData = [];
+
+            FillDropDownUser('drpUserType', '@Url.Action("GetUserType", "UserType")', null, true, null);
+
+            dropDownData.push(
+                { id: 'Invoicer', key: "InvoicerName", value: "0", hasSelect: true, callback: null, defaultText: null, proc: 'Invoicer_BindDropdown', param: [], bText: 'InvoicerName', bValue: 'InvoicerId' });
+            dropDownData.bindDropdown();
+
+            /* For show hide invoicer drop down based on ssaas user checked */
+            var Rightsval = $("#hdnRights").attr('value').split(',');
+            $.each(Rightsval, function (index, menuId) {
+                if (menuId !== undefined && menuId !== '') {
+                    if ($('input.clsRights[type="checkbox"][value="' + menuId + '"]').attr('cat') == 'chkSAASUser') {
+                        IsSAASUser = $('input.clsRights[type="checkbox"][value="' + menuId + '"]').is(':checked');
+
+                        if (IsSAASUser) {
+                            $(".SAASUSERINVOICER").show();
+                        }
+                    }
+                }
+            });
+        });
+
+        $('#btnSubmit').click(function () {
+            var obj = $('.clsRights')
+            var SelectedRights = obj && $(obj).map(function () { if ($(this).is(':checked')) return this.value; }).get().join();
+            $("#hdnRights").attr('value', SelectedRights);
+        });
+
+        function validateForm() {
+            $.validator.unobtrusive.parse("#frmCreateRole");
+
+            if ($("#frmCreateRole").valid()) {
+                //$("#drpUserType").removeAttr("disabled");
+                //$("#drpUserType").prop("disabled", true);
+                return true;
+            }
+            else {
+                return false;
+            } $('select#drpUserType option:selected').val();
+        }
+
+        function validateExtraFields() {
+            var selectedCount = $("input[name='RoleIds']:checked").length;
+            if (selectedCount == 0) {
+                $(".alert").hide();
+                $("#errorMsgRegion").html(closeButton + "Please select at least one role.");
+                $("#errorMsgRegion").show();
+                validateForm();
+                return false;
+            }
+            else if ($('#drpUserType').val() == '' || $('#drpUserType').val() == undefined) {
+                $(".alert").hide();
+                $("#errorMsgRegion").html(closeButton + "Please select at least one user type.");
+                $("#errorMsgRegion").show();
+                validateForm();
+                return false;
+            }
+            else {
+                $(".alert").hide();
+                return validateForm();
+                return true;
+            }
+        }
+
+        $('#btnReset').click(function () {
+            window.location.href = '@Url.Action("Index","Role")';
+        });
+
+        $('#drpUserType').change(function () {
+
+            var value = $('#drpUserType').val();
+
+            $.ajax({
+                url: '@Url.Action("GetRoleMenusOnDropdownChange", "Role")',
+                type: "GET",
+                data: { id: value },
+                success: function (result) {
+                    $("#dynamicRole").html('');
+                    $("#dynamicRole").append(result.result);
+
+                    $('input[type=checkbox][cat="chkView"]').each(function () {
+                        ToggleCheckBox(this);
+                    });
+
+                    $('input[type=checkbox][cat="chkView"]').change(function () {
+                        ToggleCheckBox(this);
+                    });
+                }
+            });
+
+
+
+        });
+
+        function ShowHideSaasUserInvoicer() {
+            if ($('input[type=checkbox][cat="chkSAASUser"]').is(':checked')) {
+                $(".SAASUSERINVOICER").show();
+            }
+            else {
+                $(".SAASUSERINVOICER").hide();
+            }
+        }
+    </script>
+}

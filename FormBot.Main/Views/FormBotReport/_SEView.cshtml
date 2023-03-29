@@ -1,0 +1,176 @@
+﻿
+@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="SEBit" value="10" id="SEBit" />
+<input type="hidden" name="minSE" value="1" id="minSE" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstSE, new MultiSelectList(Model.LstSEUsers, "Value", "Text"), new { id = "LstSE", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SE" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SE" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.FormBotSEAssignedUser, new MultiSelectList(Model.LstSEAssignedUser, "Value", "Text"), new { id = "LstSEAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnFormBotSEAssignedUser, new { id = "hdnSE" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnSESave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnClearSE" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SE", function () {
+        if (parseInt($('#SEBit').val()) == 0) {
+            $('#LstSE option:selected').each(function () {
+                $(this).remove().appendTo("#LstSEAssignedUser");
+            });
+            $('#AvailableSE').html($('#LstSEAssignedUser option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstSE option:selected').length + $('#LstSEAssignedUser option').length) <= parseInt($('#SEBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstSEAssignedUser option').length < parseInt($('#SEBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstSE option:selected').each(function () {
+                        $(this).remove().appendTo("#LstSEAssignedUser");
+                    });
+                    var max = $('#SEBit').val();
+                    $('#AvailableSE').html($('#LstSEAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstSEAssignedUser option').length == parseInt($('#SEBit').val()))) {
+                    $('#btnLtoR_SE').css('opacity', '0.5');
+                    $('#btnLtoR_SE').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SE').css('opacity', '1');
+                    $('#btnLtoR_SE').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_SE", function () {
+        $('#LstSEAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstSE");
+        });
+        var max = $('#SEBit').val();
+        if (max > 0) {
+            $('#AvailableSE').html($('#LstSEAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableSE').html($('#LstSEAssignedUser option').length);
+        }
+        if (($('#LstSEAssignedUser option').length < parseInt($('#SEBit').val()))) {
+            $('#btnLtoR_SE').css('opacity', '1');
+            $('#btnLtoR_SE').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SE').css('opacity', '0.5');
+            $('#btnLtoR_SE').css('cursor', 'auto');
+        }
+    });
+
+    //$(document).on("click", "#closeSE", function () {
+    //    $('#popupSE').modal('hide');
+    //    $('#cntSE').html($('#LstSEAssignedUser option').length);
+    //});
+
+    $(document).on("click", "#btnSESave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstSEAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        //if ($('#minSE').val() > 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSE').val() > 0 && $('#LstSEAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        //if (($('#LstSEAssignedUser option').length <= parseInt($('#SEBit').val()))) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minSE').val() == 1 && $('#LstSEAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        if ($('#ReportID').val() == 10) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        $("#hdnSE").val(strAssignedAttendeeList);
+        $('#cntSE').html($('#LstSEAssignedUser option').length);
+        $('#popupSE').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearSE", function () {
+        $('#LstSEAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstSE");
+        });
+        var max = $('#SEBit').val();
+        if (max > 0) {
+            $('#AvailableSE').html($('#LstSEAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableSE').html($('#LstSEAssignedUser option').length);
+        }
+        //if (($('#LstSEAssignedUser option').length < parseInt($('#SEBit').val()))) {
+        //    $('#btnLtoR_SE').css('opacity', '1');
+        //    $('#btnLtoR_SE').css('cursor', 'poiter');
+        //}
+        //else {
+        //    $('#btnLtoR_SE').css('opacity', '0.5');
+        //    $('#btnLtoR_SE').css('cursor', 'auto');
+        //}
+        $('#btnLtoR_SE').css('opacity', '1');
+        $('#btnLtoR_SE').css('cursor', 'poiter');
+
+        $("#hdnSE").val('');
+    });
+
+    $(document).on("click", "#closeSE", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstSEAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        
+        if ($('#ReportID').val() == 10) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+        $("#hdnSE").val(strAssignedAttendeeList);
+        $('#cntSE').html($('#LstSEAssignedUser option').length);
+        $('#popupSE').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

@@ -1,0 +1,210 @@
+﻿@model FormBot.Entity.SolarElectricianView
+@using FormBot.Entity;
+
+<div id="horizontalTab">
+    <ul class="resp-tabs-list">
+        @if (Model.SolarElectricianId > 0)
+        {
+            <li id="t1">View Request Details</li>
+        }
+        else
+        {
+            <li id="t1">Send Request Details</li>
+        }
+    </ul>
+    <div class="resp-tabs-container">
+        @Html.HiddenFor(m => m.UserTypeID)
+        @Html.HiddenFor(m => m.IsSendRequest)
+        @Html.HiddenFor(m => m.SolarCompanyId)
+        @Html.HiddenFor(m => m.SendBy)
+        <div class="tab1">
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                            @Html.ValidationMessageFor(m => m.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.LastName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                            @Html.ValidationMessageFor(m => m.LastName)
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3 SE">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CECAccreditationNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 3, @id = "CECAccreditationNumber" })
+                            @Html.ValidationMessageFor(m => m.CECAccreditationNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SWH">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.SWHLicenseNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.SWHLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 4, @id = "SWHLicenseNumber" })
+                            @Html.ValidationMessageFor(m => m.SWHLicenseNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 5 })
+                            @Html.ValidationMessageFor(m => m.Email)
+                        </div>
+                    </div>
+                    @*<div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            <label class="control-label required">Postal Address Type :</label>
+                            @Html.DropDownListFor(m => m.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", id = "AddressID", @tabindex = 4 })
+                        </div>
+                    </div>*@
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 SE">
+                        <div class="form-group">
+                            <label class="control-label required">SE Role:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @Html.RadioButton("SEDesignRoleId", "2", true, new { @id = "SEDesignRoleId2", @tabindex = 6 }) Design
+                                @Html.RadioButton("SEDesignRoleId", "1", false, new { @id = "SEDesignRoleId1", @tabindex = 7}) Install
+                                @Html.RadioButton("SEDesignRoleId", "3", false, new { @id = "SEDesignRoleId3", @tabindex = 8}) Design & Install
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @*<div class="row DPA">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UnitTypeID, new { @class = "control-label", @id = "lblUnitTypeID" })
+                            @Html.DropDownListFor(model => model.UnitTypeID, new List<SelectListItem>(), new { id = "UnitTypeId", @class = "form-control", @tabindex = 5 })
+                            @Html.ValidationMessageFor(m => m.UnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UnitNumber, new { @class = "control-label", @id = "lblUnitNumber" })
+                            @Html.TextBoxFor(m => m.UnitNumber, new { id = "UnitNumber", @class = "form-control", @maxlength = 20, @tabindex = 6 })
+                            @Html.ValidationMessageFor(m => m.UnitNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.StreetNumber, new { @class = "control-label required", @id = "lblStreetNumber" })
+                            @Html.TextBoxFor(m => m.StreetNumber, new { id = "StreetNumber", @class = "form-control", @maxlength = 20, @tabindex = 7 })
+                            @Html.ValidationMessageFor(m => m.StreetNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.StreetName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.StreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 8, id = "StreetName" })
+                            @Html.ValidationMessageFor(m => m.StreetName)
+                        </div>
+                    </div>
+                </div>*@
+                @*<div class="row PDA">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostalAddressID, new { @class = "control-label required" })
+                            @Html.DropDownListFor(model => model.PostalAddressID, new List<SelectListItem>(), new { id = "PostalAddressID", @class = "form-control", @tabindex = 9 })
+                            @Html.ValidationMessageFor(m => m.PostalAddressID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostalDeliveryNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostalDeliveryNumber, new { id = "PostalDeliveryNumber", @class = "form-control", @maxlength = 50, @tabindex = 10 })
+                            @Html.ValidationMessageFor(m => m.PostalDeliveryNumber)
+                        </div>
+                    </div>
+                </div>*@
+
+                @*<div class="row">
+                    <div class="DPA">
+                        <div class="col-sm-3 RA SCA SE SSC SC">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.StreetTypeID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.StreetTypeID, new List<SelectListItem>(), new { id = "StreetTypeId", @class = "form-control", @tabindex = 11 })
+                                @Html.ValidationMessageFor(m => m.StreetTypeID)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Town, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 12, id = "txtTown" })
+                            @Html.ValidationMessageFor(m => m.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.State, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.State, new { @class = "form-control", @maxlength = 20, @tabindex = 13, id = "txtState", @readonly = "readonly" })
+                            @Html.ValidationMessageFor(m => m.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostCode, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 14, id = "txtPostCode" })
+                            @Html.ValidationMessageFor(m => m.PostCode)
+                        </div>
+                    </div>
+                </div>*@
+
+                <div class="row">
+                    @*<div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CECAccreditationNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 15, @id = "CECAccreditationNumber" })
+                            @Html.ValidationMessageFor(m => m.CECAccreditationNumber)
+                        </div>
+                    </div>*@
+                    @*<div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 16 })
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CECDesignerNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CECDesignerNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 17 })
+                        </div>
+                    </div>*@
+                    @*<div class="col-sm-3">
+                        <div class="form-group">
+                            <label class="control-label required">SE Role:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @Html.RadioButton("SEDesignRoleId", "1", true, new { @tabindex = 18 }) Design
+                                @Html.RadioButton("SEDesignRoleId", "2", false, new { @tabindex = 19 }) Install
+                                @Html.RadioButton("SEDesignRoleId", "3", false, new { @tabindex = 20 }) Design & Install
+                            </div>
+                        </div>
+                    </div>*@
+                </div>
+                <div class="tab_bottomrow">
+                    @if (Model.SolarElectricianId == 0)
+                    {
+                        <div class="btn primary icon-btn">
+                            <span class="sprite-img save_ic"></span>
+                            <input type="submit" name="Submit" value="Save" autofocus class="" id="btnSubmit" tabindex="9" onclick="return getDropDownValue();">
+                        </div>
+                    }
+                    <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" tabindex="10">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#CECAccreditationNumber").rules('remove', 'required');
+        $("#SWHLicenseNumber").rules('remove', 'required');
+        $("#UserTypeID").val(7);
+    });
+</script>

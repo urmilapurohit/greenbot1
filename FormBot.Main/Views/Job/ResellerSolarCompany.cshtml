@@ -1,0 +1,37 @@
+﻿@{
+    ViewBag.Title = "ResellerSolarCompany";
+
+}
+<div class="col-md-6">
+    <h3>ResellerSolarCompany</h3>
+    @Html.TextBox("JobID", null, new { @class = "form-control" })
+
+    <button type="button" class="btn btn-primary" id="btnSearch" style="margin-top:10px; background-color:#30b765">Search</button>
+
+    <h2 style="margin-top:10px;">Reseller Name: </h2><span id="spanReseller" ></span>
+    <h2 style="margin-top:10px;">Solar Company Name: </h2><span id="spanSolarCompany" ></span>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#btnSearch").click(function () {
+            var id = $("#JobID").val();
+            if (id != "" && id != 0) {
+                $.ajax({
+                    url: '@Url.Action("GetResellerSolarCompany", "Job")',
+                    type: 'GET',
+                    data: { id: id },
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (result) {
+                        $("#spanReseller").text(result.data.ResellerName);
+                        $("#spanSolarCompany").text(result.data.CompanyName);
+                    }
+                });
+            }
+            else {
+                alert("Empty or Zero JobID is not allowed");
+            }
+        });
+    });
+</script>

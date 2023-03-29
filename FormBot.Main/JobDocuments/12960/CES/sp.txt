@@ -1,0 +1,91 @@
+USE [FormBot_CR]
+GO
+/****** Object:  StoredProcedure [dbo].[JobHistory_Select]    Script Date: 11-07-2019 14:07:57 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- EXEC JobHistory_Select 272,0,'DESC',544,null,null  
+ALTER PROCEDURE [dbo].[JobHistory_Select]  --'874',8,'DESC',0  
+ @JobID VARCHAR(MAX) = NULL,  
+ @CategoryID int = 0,  
+ @Order VARCHAR(5) = 'DESC',  
+ @UserID int = NULL,  
+ @FromDate datetime = NULL,  
+ @ToDate datetime = NULL  ,
+ @PageSize int = 10,
+ @PageIndex int =1 
+AS  
+BEGIN  
+ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;  
+ --- temp table  
+ DECLARE @tJobs TABLE (  
+  tJobID INT   
+ )  
+  
+ INSERT INTO @tJobs (tJobID) (SELECT item FROM dbo.fnSplit(@JobID,','))  
+  
+ DECLARE @UserType INT  
+ DECLARE @UserCompany INT  
+ SELECT @UserType = u.UserTypeID,  
+   @UserCompany = ISNULL(u.SolarCompanyId,0)  
+ FROM dbo.Users u WHERE u.UserId = @UserID  
+   
+ ;WITH CTE AS    
+         ( 
+ select
+ Row_number() OVER(order by CASE WHEN @Order = 'DESC' THEN JH.ModifiedDate END DESC
+					, CASE WHEN @Order = 'ASC' THEN JH.ModifiedDate END ASC ) as rownum,  
+
+  JD.Title,  
+   JD.RefNumber,  
+   JH.JobHistoryID,  
+   JH.JobID,  
+   CASE WHEN @UserCompany <> u.SolarCompanyId AND JH.HistoryCategoryID = 9 THEN REPLACE(JH.HistoryMessage,'#UserName#',(SELECT ut.UserTypeName FROM dbo.users u INNER JOIN dbo.UserType ut ON ut.UserTypeID = u.UserTypeID WHERE u.UserId = ISNULL(JH.AssignTo,0)))  
+     WHEN JH.AssignTo IS NOT NULL AND (@UserType = 1 OR @UserType = 2 OR @UserType = 3 OR @UserType = 4 OR @UserType = 5 OR @UserCompany = U.SolarCompanyId) THEN REPLACE(JH.HistoryMessage,'#UserName#',(SELECT FirstName +' '+ LastName FROM dbo.users WHERE UserId = ISNULL(JH.AssignTo,0)))  
+   ELSE JH.HistoryMessage  
+   END AS HistoryMessage,  
+   ISNULL(JH.IsSSC,0) as IsSSC,  
+   JH.ModifiedDate,  
+   CONVERT(VARCHAR,JH.ModifiedDate,100) AS CreateDate,  
+   HC.HistoryCategory,  
+   HC.HistoryCategoryID as CategoryID,  
+   JH.ModifiedBy,  
+   CASE WHEN @UserCompany <> U.SolarCompanyId AND (@UserType = 4 OR @UserType = 6) THEN U.FirstName +' '+ U.LastName  
+     WHEN @UserCompany <> U.SolarCompanyId THEN U.FirstName +' '+ U.LastName --ut.UserTypeName  
+     WHEN @UserType = 1 OR @UserType = 2 OR @UserType = 3 OR @UserType = 4 OR @UserType = 5 OR @UserCompany = U.SolarCompanyId THEN U.FirstName +' '+ U.LastName  
+   ELSE 'User'  
+   END as Modifier  
+ from dbo.JobHistory JH  
+   INNER JOIN dbo.HistoryCategory HC on JH.HistoryCategoryID = HC.HistoryCategoryID  
+   INNER JOIN dbo.JobDetails JD on JH.JobID = JD.JobID  
+   LEft JOIN dbo.Users U on ( JH.ModifiedBy = U.UserId) --For Svae Signature function  
+   Left JOIN dbo.UserType ut ON (ut.UserTypeID = U.UserTypeID)  
+   INNER JOIN @tJobs tj ON tj.tJobID = JH.JobID  
+ where   
+   --JH.JobID = @JobID  
+   --AND   
+   (JH.HistoryCategoryID IN (SELECT hcfm.HistoryCategoryID FROM dbo.HistoryCategoryFilterMapping hcfm WHERE hcfm.FilterCategoryID = @CategoryID) or @CategoryID = 0)  
+   AND (@FromDate IS NULL OR Convert(date, JH.ModifiedDate) >= @FromDate)  
+   AND (@ToDate IS NULL OR Convert(date, JH.ModifiedDate) <= @ToDate)  
+   --and (U.UserTypeID = @UserTypeID or @UserTypeID is null)  
+ --order by  
+ --CASE WHEN @Order = 'DESC' THEN JH.ModifiedDate END DESC,  
+ --CASE WHEN @Order = 'ASC' THEN JH.ModifiedDate END ASC  
+    ),    
+       TotalRecordCount AS    
+       (    
+        SELECT COUNT(1) AS TotalRecords FROM CTE    
+       )    
+       Select * into #temp from CTE, TotalRecordCount     
+       --WHERE rownum between ((@PageIndex*@PageSize)-(@PageSize-1)) and (@PageIndex*@PageSize)   
+
+	   if(@PageIndex > 0 and @PageSize > 0)
+			select * from #temp WHERE rownum between ((@PageIndex*@PageSize)-(@PageSize-1)) and (@PageIndex*@PageSize) 
+	   else
+			Select * from #temp
+	 
+ SELECT @UserType,@UserCompany  
+   
+END 
+

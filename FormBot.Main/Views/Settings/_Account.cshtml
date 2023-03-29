@@ -1,0 +1,121 @@
+﻿@model FormBot.Entity.Settings.XeroAccount
+@using FormBot.Helper;
+
+@*<style>
+        .hide_column {
+            display: none;
+        }
+    </style>*@
+
+@*<div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegionSyncAccount" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSyncAccount" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>*@
+
+<div class="grid_topbar">
+    <p class="job_result" id="numRecords"></p>
+</div>
+
+<div class="row">
+    <div id="grid" class="col-xs-12">
+        <div class="table-responsive">
+            <table id="datatable" class="table table-hover datatableAccount">
+                <thead>
+                    <tr>
+                        <th width="20%"><span>@Html.DisplayName("Code")</span></th>
+                        <th width="40%"><span>@Html.DisplayName("Name")</span></th>
+                        <th width="20%"><span>@Html.DisplayName("Tax")</span></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    var selectedRows = [];
+
+    $(document).ready(function () {
+
+        var chkCount=0;
+        $('.datatableAccount').DataTable({
+            iDisplayLength: 10,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+            columns: [
+
+                    { 'data': 'Code' },
+
+                     { 'data': 'Name'},
+
+                    { 'data': 'Tax'},
+
+            ],
+
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetAccountList", "Settings")',
+
+            "fnDrawCallback": function () {
+                chkCount=0;
+                $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+
+                if ($(".paging").find("span").length > 1) {
+                    $("#datatable_length").show();
+                } else if ($(".datatableAccount").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                //--------To show display records from total records-------------------
+                var table = $('.datatableAccount').DataTable();
+                var info = table.page.info();
+
+                if(info.recordsTotal==0){
+                    document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Job Part(s) found';
+                }
+                else{
+                    document.getElementById("numRecords").innerHTML = '<b>' + $('.datatableAccount >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Job Part(s) found';
+                }
+                //------------------------------------------------------------------------------------------------------------------------------
+
+                $('[data-toggle="tooltip"]').tooltip();
+
+            },
+
+            "fnServerParams": function (aoData) {  //These are the extra parameters for our custom filters
+            }
+        });
+
+        var table = $('.datatableAccount').DataTable();
+
+    });
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionSyncAccount").html(closeButton + message);
+        $("#errorMsgRegionSyncAccount").show();
+      
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegionSyncAccount").html(closeButton + message);
+        $("#successMsgRegionSyncAccount").show();
+        
+    }
+
+</script>

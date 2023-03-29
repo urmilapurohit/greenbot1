@@ -1,0 +1,657 @@
+﻿@*@model int*@
+@model FormBot.Entity.Documents.DocumentStepType
+@if (Model.Type == 1)
+{
+    <input type="hidden" value="@ViewBag.guid" id="guid-email" />
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegionpopup" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="form-border">
+        <ul class="navbar-nav">
+            <li class="active" id="PreApprAndConnSendMail"><a href="javascript:void(0)" title="Send"> <img class="icon" src='@Url.Content("~/Images/send-icon.png")' alt="Send">Send</a></li>
+            <li class="active">
+                <a class="CloseEmailPreApproval" title="Close" href="javascript:void(0)"><img class="icon" src='@Url.Content("~/Images/ic-close.png")' alt="Save">Close</a>
+            </li>
+        </ul>
+    </div>
+    <form class="form-horizontal">
+        <div class="col-md-9" id="divSendForm">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">To</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="preApproTo">
+                </div>
+            </div>
+            <div class="form-group cc-input-box">
+                <label class="col-sm-2 control-label">Cc</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="preApproCc">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Subject</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="preApproSubject" maxlength="255">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Attach File :</label>
+                <div class="col-sm-10">
+                    <div class="fileUpload primary upload_ic" style="display:inline-block; margin-left:0; ">
+                        <span>Upload</span>
+                        <input type="file" class="upload" id="uploadBtnPreAppro">
+                    </div>
+                    <script type="text/javascript">
+                        document.getElementById("uploadBtnPreAppro").onchange = function () {
+                            //document.getElementById("uploadFile").value = this.value;
+                        };
+                    </script>
+
+                    <div class="">
+                        <ul class="attachment-ber with_close" style="display:block;min-height:30px;" id="ulAttachForPreAppro"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label">&nbsp;</label>
+                <div class="col-sm-10">
+                    <div id="editor1" class="ckeditor">
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="edit-img"><img src='@Url.Content("~/Images/edit-img.jpg")' alt=""></div>*@
+        </div>
+        <div class="col-md-3">
+            <div class="documents">
+                <h4>Documents</h4>
+                <div class="form-group" id="divDocType">
+                    <select class="form-control" id="drpDocument">
+                        <option value="@FormBot.Helper.SystemEnums.JobStage.PreApprovals">PreApprovals</option>
+                        <option value="@FormBot.Helper.SystemEnums.JobStage.Connections">Connections</option>
+                        <option value="@FormBot.Helper.SystemEnums.JobStage.STC">STC</option>
+                        <option value="@FormBot.Helper.SystemEnums.JobStage.Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div id="divDocumentsAttachment" style="max-height:575px;overflow-y:auto">
+
+                    </div>
+                    @*<div class="checkbox-box">
+                            <label>
+                            <input type="hidden" name="hdnPath" value="C:\\Users\\pci239\\Desktop\\ar_green.png" />
+                                <input class="selectedDocumentForUpload" type="checkbox" value="ar_green" name="ar_green">Document 1</label>
+                        </div>
+                        <div class="checkbox-box">
+                            <label>
+                                <input type="hidden" name="hdnPath" value="C:\\Users\\pci239\\Desktop\\SIG24.png" />
+                                <input class="selectedDocumentForUpload" type="checkbox" value="SIG24" name="SIG24">Document 1</label>
+                        </div>*@
+                    <button id="btnAddasattachment" type="button" class="default add-attachment-ic pull-left" style="display:none;margin-top:8px;">Add as attachment</button>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+else if (Model.Type == 2)
+{
+    <div class="topbord"></div>
+    using (Html.BeginForm("Foo", "Bar", FormMethod.Post, new { id = "frmAddFolder", @class = "form-horizontal" }))
+    {
+        @*<form class="form-horizontal">*@
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Reference No</label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" id="txtCommentOnReference" maxlength="20" required="required">
+            </div>
+            <div class="col-sm-1 removeleftspac">
+                <input type="submit" class="btn primary save_ic" value="Save" onclick="return SaveDocumentForReference('@FormBot.Helper.SystemEnums.JobDocumentType.RefNo.GetHashCode()')">
+            </div>
+            <div class="col-sm-5 removeleftspac">
+                <label class="control-label"><a href="javascript:Void();" id="onlineLink" target="_blank">Online Link</a></label>
+            </div>
+        </div>
+        @*</form>*@
+    }
+}
+else if (Model.Type == 3)
+{
+    <div class="topbord"></div>
+    using (Html.BeginForm("Foo1", "Bar1", FormMethod.Post, new { id = "frmAddDoc", @class = "form-horizontal" }))
+    {
+        @*<form class="form-horizontal">*@
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Comment</label>
+            <div class="col-sm-4">
+                @Html.DropDownList("DrpAlreadyApplied", new List<SelectListItem> { new SelectListItem { Text = "Yes", Value = "Yes" }, new SelectListItem { Text = "No", Value = "No" } }, "Select", new { @class = "form-control", @required = "required" })
+            </div>
+            <div class="col-sm-6 removeleftspac">
+                <input type="submit" class="primary save_ic" value="Save" onclick="return SaveDocumentForAlreadySubmitted('@FormBot.Helper.SystemEnums.JobDocumentType.Submitted.GetHashCode()')">
+            </div>
+        </div>
+        @*</form>*@
+    }
+}
+
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+
+<script type="text/javascript">
+    if ('@Model.Type' == '1') {
+        CKEDITOR.replace('editor1');
+        CKEDITOR.add
+    }
+    var IsClassic = ('@Model.IsClassic.ToString().ToLower()' == 'true');
+    var JobId = $('#JobID').val();
+    $(document).ready(function () {
+        if ('@Model.Type' == '1') {
+            var stage = ($("#PreApprovalConnOrStcClicked").val() == '@FormBot.Helper.SystemEnums.JobStage.Connections.GetHashCode()' ? '@FormBot.Helper.SystemEnums.JobStage.Connections.ToString()' : '@FormBot.Helper.SystemEnums.JobStage.PreApprovals.ToString()');
+            if (IsClassic) {
+                $("#drpDocument").val(stage);
+                getDocumentListByJobId(stage);
+            }
+            else {
+                $('#divDocType').css('display', 'none');
+                getAllDocumentListByJobId();
+            }
+            var documentstepid = $(".DocumentStep.opened").data("documentstepid");
+            var randomString = 'FBDoc' + $("#BasicDetails_JobID").val() + "_RefId" + documentstepid;
+            $("#preApproSubject").val('[' + randomString.toUpperCase() + "] ");
+        }
+
+        @*$("#uploadBtnPreAppro").change(function () {
+            var fileInput = document.getElementById('uploadBtnPreAppro');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+
+            var uploadedFileName = fileInput.files[0].name;
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var uploadedResult = JSON.parse(xhr.response);
+                    var tmp_name = uploadedResult.tmp_name;
+                    var uploadedFullPath = uploadedResult.filenameWithFullPath;
+                    //var result = "<tr class='success' data-tmpname='" + tmp_name + "' data-filename='" + fileInput.files[0].name + "'><td>" + fileInput.files[0].name + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                    var result = "<li data-tmpname='" + tmp_name + "' data-filename='" + uploadedFileName + "'><a href='@(Url.Action("DownloadFileFromTheServer", "Email", new { area = "Email" }))?fileFullPath=" + uploadedFullPath + "&file_name=" + tmp_name + "'><img alt='' src='@(FormBot.Helper.ProjectConfiguration.ProjectImagePath)Images/attach_document.png' class='mCS_img_loaded'>" + uploadedFileName + "</a><a class='remove_attach' href='javascript:void(0)' data-tmpname='" + tmp_name + "' data-filename='" + uploadedFileName + "'></a></li>";
+                    $("#ulAttachForPreAppro").append(result);
+                }
+            }
+            return false;
+        });*@
+        $("#uploadBtnPreAppro").change(function () {
+            var fileInput = document.getElementById('uploadBtnPreAppro');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+
+            var uploadedFileName = fileInput.files[0].name;
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            @*xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');*@
+            xhr.open('POST', '@Url.Action("UploadFiles", "EmailManage", new {area = "QueuedEmail" })?Guid=' + $("#guid-email").val());
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    
+                    var uploadedResult = JSON.parse(xhr.response);
+                var fileName = uploadedResult.filenameWithFullPath;
+                if (uploadedResult.status == 1) {
+                    var FullPathWithFileName = uploadedResult.FullPathWithFileName;
+                    var result = "<li data-tmpname='" + fileName + "' data-filename='" + fileName + "'><a href='@(Url.Action("DownloadFileFromTheServer", "EmailManage", new { area = "QueuedEmail" }))?fileFullPath=" + FullPathWithFileName + "&file_name=" + fileName + "'><img alt='' src='@(FormBot.Helper.ProjectConfiguration.ProjectImagePath)Images/attach_document.png' class='mCS_img_loaded'>" + fileName + "</a><a class='remove_attach delete-attechement' href='javascript:void(0)' data-id=" + uploadedResult.Id +" data-tmpname='" + fileName + "' data-filename='" + fileName + "'></a></li>";
+                        $("#ulAttachForPreAppro").append(result);
+                        DeleteAttechementBind();
+                    }
+                }
+            }
+            return false;
+        });
+        $(document).on("click", ".remove_attach", function () {
+            $(this).parent("li").remove();
+        });
+        function DeleteAttechementBind() {
+            $(".delete-attechement").click(function () {
+                $.ajax({
+                    url: '@Url.Action("DeleteAttechment", "EmailManage", new { area = "QueuedEmail" })',
+                    type: "POST",
+                    data: JSON.stringify({ "Id": parseInt($(this).attr("data-id")) }),
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data == "1") {
+                            alert("File is Remove!!");
+                        }
+                        else {
+                            alert("File is not Remove!!");
+                        }
+                    },
+                    error: function (data) {
+                        alert("File is not Remove!!");
+                    }
+                });
+            });
+        }
+        function validateFormForPreApproval(emailList, message, lengthExceedMessage) {
+            var flag = true;
+            var testing;
+            emailList.forEach(function (i, j) {
+                var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+                testing = i.trim();
+                if (filter.test(testing)) {
+                }
+                else {
+                    flag = false;
+                }
+            });
+
+            if (emailList.length == 0) {
+                flag = false;
+            }
+
+            if (flag == false) {
+                alert(message);
+            } else {
+                if (emailList.length > 25) {
+                    alert(lengthExceedMessage);
+                    flag = false;
+                }
+            }
+
+            return flag;
+        }
+
+        function CreateCommaSeparetedArrayPreApproval(element) {
+            var x = element;
+            x = x.replace(/,/g, ";");
+            var emailList = x.trim().replace(/(^;)|(;$)/g, "").split(";");
+            emailList = cleanArrayPreApproval(emailList);
+            return emailList;
+        }
+        function cleanArrayPreApproval(actual) {
+            var newArray = new Array();
+            for (var i = 0; i < actual.length; i++) {
+                if (actual[i]) {
+                    newArray.push(actual[i]);
+                }
+            }
+            return newArray;
+        }
+
+        $("#preApproTo,#preApproCc").keypress(function (event) {
+            if (event.which == 44) {
+                event.preventDefault();
+                $(this).val($(this).val() + ";");
+            }
+
+            if (event.which == 9) {
+                $(this).val($(this).val().replace(",", ";"));
+            }
+        });
+
+        $("#preApproTo,#preApproCc").blur(function (event) {
+            $(this).val($(this).val().replace(/,/g, ";"));
+        });
+
+        $("#PreApprAndConnSendMail").click(function () {
+            if ('@FormBot.Helper.ProjectSession.IsUserEmailAccountConfigured' != 'False') {
+                var flag = true;
+                var toEmailArray, ccEmailArray, bccEmailArray;
+                if ($("#preApproTo").val() == '') {
+                    alert('You cannot leave "To" field blank.');
+                    flag = false;
+                } else {
+                    toEmailArray = CreateCommaSeparetedArrayPreApproval($("#preApproTo").val());
+                    flag = validateFormForPreApproval(toEmailArray, 'The specified email address for "To" is invalid.', 'Maximum 25 emails are allowed in "To" field.');
+                }
+
+                if ($("#preApproCc").val() != "" && flag == true) {
+                    ccEmailArray = CreateCommaSeparetedArrayPreApproval($("#preApproCc").val());
+                    flag = validateFormForPreApproval(ccEmailArray, 'The specified email address for "Cc" is invalid.', 'Maximum 25 emails are allowed in "Cc" field.');
+                }
+
+                if (flag == true && $("#preApproSubject").val() == "") {
+                    var flag = confirm("The subject field is empty. Do you wish to continue?");
+                }
+
+                if (flag) {
+                    var JsonRequestData = {
+                        QueuedEmailId: "",
+                        FromEmail: "",
+                        ToEmail: "",
+                        CC: "",
+                        Bcc: "",
+                        Subject: "",
+                        Body: "",
+                        Guid: "",
+                        IsSent: "",
+                        SentTries: "",
+                        SentOn: "",
+                        CreatedDate: "",
+                        ModifiedDate: ""
+                    };
+                    var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                    var attachmentObject = [];
+                    var selectedFiles = $("#ulAttachForPreAppro li");
+
+                    for (var i = 0; i < selectedFiles.length; i++) {
+                        var tmp_name = $(selectedFiles[i]).data('tmpname');
+                        var filename = $(selectedFiles[i]).data('filename');
+                        attachmentObject.push({ GeneratedName: tmp_name, FileName: filename });
+                    }
+
+                    var selectedFolder = $("#FolderStructure li.active");
+                    var selectedMessage = -1;
+                    if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                        var selectedMessage = $("#SelectedMessageId").val();
+                    }
+
+                    var toEmailString = toEmailArray.length > 0 ? toEmailArray.join(";") : "";
+                    var ccEmailString = ccEmailArray != undefined ? ccEmailArray.join(";") : "";
+
+                    var data = JSON.stringify({ "From": "", "To": toEmailString, "Cc": ccEmailString, "Bcc": "", "Subject": $("#preApproSubject").val(), "Body": { "body": CKEDITOR.instances['editor1'].getData() }, "Attachment": "", "IsSave": "false", "Attachments": attachmentObject, SaveMailFolderId: 1, eventType: 'send' });
+                    JsonRequestData.ToEmail = toEmailString;
+                    JsonRequestData.CC = ccEmailString;
+                    //JsonRequestData.Bcc = bccMailEmailString;
+                    JsonRequestData.Subject = $("#preApproSubject").val();
+                    JsonRequestData.Body = CKEDITOR.instances['editor1'].getData();
+                    JsonRequestData.Guid = $("#guid-email").val();
+                    $.ajax({
+                        url: '@Url.Action("SendMail", "EmailManage", new { area = "QueuedEmail" })',
+                        type: "POST",
+                        dataType: "json",
+                        data: JSON.stringify(JsonRequestData),
+                        async: true,
+                        processData: false,
+                        cache: false,
+                        contentType: 'application/json; charset=utf-8',
+                        success: function (Data) {
+                            //if (Data.isSuccess == false) {
+                            //    alert(Data.errorMessage);
+                            //    return false;
+                            //}
+
+                            if (Data != "1") {
+                                alert("Mail is not sent.");
+                            }
+
+                            var StetpId;
+                            if ('@Model.IsClassic.ToString().ToLower()' == 'true') {
+                                StetpId = $("#DocumentStepId").val();
+                            }
+                            else {
+                                StetpId = $("#popupDocumentStepId").val();
+                            }
+
+                            var jsonData = JSON.stringify({ JobId: $("#BasicDetails_JobID").val(), IsPreAprConn: $("#PreApprovalConnOrStcClicked").val(), StetpId: StetpId, DocumentType: '@FormBot.Helper.SystemEnums.JobDocumentType.Email.GetHashCode()', "Comment": "", "SubjectCode": randomString, Distributor: $("#hdnDistributor").val() });
+                            $.ajax({
+                                url: '@Url.Action("AddUpdateJobEmailConversationForPreAndConn", "JobEmailThread", new { area = "" })',
+                                type: "POST",
+                                dataType: "json",
+                                data: jsonData,
+                                async: true,
+                                processData: false,
+                                cache: false,
+                                contentType: 'application/json; charset=utf-8',
+                                success: function (Data) {
+
+                                    if ('@Model.IsClassic.ToString().ToLower()' == 'true') {
+                                        var documentstepid = $(".DocumentStep.opened").data("documentstepid");
+                                        if ($("#hdnSendOrResendClick").val() == "apply") {
+                                            $("#divApplySection" + documentstepid).append("<a class='sm-btn btn-transparent DocumentStep' data-type='1' data-documentstepid=" + documentstepid + " data-sendResent='resend'>Resend</a>");
+                                            $(".DocumentStep.opened").text("Applied");
+                                            $(".DocumentStep.opened").addClass("collapsed cursorDefault").removeClass("DocumentStep");
+                                        } else {
+                                            $(".DocumentStep.opened").removeClass("opened");
+                                        }
+                                        $(".pnlEmailModule").empty();
+                                    }
+                                    else {
+                                        documentstepid = StetpId;
+                                        ShowHideApplyButton(documentstepid);
+                                        $('#popupboxPreapprovalConnectionApply').modal('toggle');
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            else {
+                $(".alert").hide();
+                $("#errorMsgRegionpopup").removeClass("alert-success");
+                $("#errorMsgRegionpopup").addClass("alert-danger");
+                $("#errorMsgRegionpopup").html(closeButton + 'Please configure your email account');
+                $("#errorMsgRegionpopup").show();
+                return false;
+            }
+
+
+        });
+
+
+        $(".CloseEmailPreApproval").click(function () {
+            $(".pnlEmailModule").empty();
+            $(".DocumentStep").removeClass("opened");
+        });
+
+        $("#btnAddasattachment").click(function () {
+            $("input.selectedDocumentForUpload:checked").each(function () {
+                var path = $(this).attr('path');
+                var docName = $(this).attr('docName');
+                $.ajax({
+                    url: '@Url.Action("UploadPhysicalFileAsAnAttachmentInEmail", "Email", new { area = "Email" })',
+                    type: "POST",
+                    data: JSON.stringify({ file_name: docName, fileFullPath: path }),
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        var result = "<li data-tmpname='" + Data.tmp_name + "' data-filename='" + docName + "'><a href='@(Url.Action("DownloadFileFromTheServer", "Email", new { area = "Email" }))?fileFullPath=" + Data.filenameWithFullPath + "&file_name=" + Data.tmp_name + "'><img alt='' src='@(FormBot.Helper.ProjectConfiguration.ProjectImagePath)Images/attach_document.png' class='mCS_img_loaded'>" + docName + "</a><a class='remove_attach' href='javascript:void(0)' data-tmpname='" + Data.tmp_name + "' data-filename='" + docName + "'></a></li>";
+                        $("#ulAttachForPreAppro").append(result);
+                    }
+                });
+            });
+
+            $("input.selectedDocumentForUpload").prop("checked", false);
+        });
+
+        $("#drpDocument").change(function () {
+            getDocumentListByJobId($(this).val());
+        });
+    });
+
+    function getDocumentListByJobId(stage) {
+        var nmi = $('#hdnNMI').val();
+        var divContent = $('<div>');
+        $('#divDocumentsAttachment').html('');
+
+        $.ajax({
+            url: '@Url.Action("GetDocumentsListByJobId", "Job")' + "?id=" + $("#BasicDetails_JobID").val() + "&distributorID=" + distributorID + "&stage=" + stage + "&jobTypeId=" + $('#BasicDetails_JobType').val(),
+            type: "GET",
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data && data.length > 0) {
+                    $.each(data, function (i, data) {
+                        var div = $('<label >').attr('class', 'checkbox-inline wordwrap');
+                        div.append('<input class="selectedDocumentForUpload" type="checkbox" value="ar_green" name="ar_green" path="' + data.PhysicalPath + '" docName="' + data.Name + '" >' + data.Name + '');
+                        divContent.append(div);
+                    });
+                    $('#divDocumentsAttachment').html(divContent);
+                    $("#btnAddasattachment").show();
+                } else {
+                    $("#btnAddasattachment").hide();
+                }
+            }
+        });
+    }
+
+    function getAllDocumentListByJobId() {
+        var nmi = $('#hdnNMI').val();
+        var divContent = $('<div>');
+        $('#divDocumentsAttachment').html('');
+
+        $.ajax({
+            url: '@Url.Action("GetCheckListDocument", "Job")' + "?jobId=" + JobId,
+            type: "GET",
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data && data.length > 0) {
+
+                    $.each(data, function (i, data) {
+                        var div = $('<label >').attr('class', 'checkbox-inline wordwrap');
+                        div.append('<input class="selectedDocumentForUpload" type="checkbox" value="ar_green" name="ar_green" path="' + data.PhysicalPath + '" docName="' + data.FileName + '" >' + data.FileName + '');
+                        divContent.append(div);
+                    });
+                    $('#divDocumentsAttachment').html(divContent);
+                    $("#btnAddasattachment").show();
+                } else {
+                    $("#btnAddasattachment").hide();
+                }
+            }
+        });
+    }
+
+
+    function SaveDocumentForReference(DocumentType, button) {
+        if ($("#frmAddFolder").valid()) {
+            SaveComment(DocumentType, $("#txtCommentOnReference").val());
+        }
+        return false;
+    }
+
+    function SaveDocumentForAlreadySubmitted(DocumentType, button) {
+        if ($("#frmAddDoc").valid()) {
+            SaveComment(DocumentType, $("#DrpAlreadyApplied").val());
+            //var documentstepid = $(".DocumentStep.opened").data("documentstepid");
+            //if ($("#hdnSendOrResendClick").val() == "apply") {
+            //    $("#divApplySection" + documentstepid).append("<a class='cursorPointer sm-btn btn-transparent DocumentStep' data-type='3' data-documentstepid=" + documentstepid + " data-sendResent='resend'>Resend</a>");
+            //    $(".DocumentStep.opened").text("Applied");
+            //    $(".DocumentStep.opened").addClass("collapsed cursorDefault").removeClass("DocumentStep");
+            //} else {
+            //    $(".DocumentStep.opened").removeClass("opened");
+            //}
+
+            //$("#spanComment" + documentstepid).text(" - " + $("#DrpAlreadyApplied").val());
+            //$("#hdnComment" + documentstepid).val($("#DrpAlreadyApplied").val());
+            //$("#DrpAlreadyApplied").val("");
+            //$(".pnlEmailModule").empty();
+        }
+
+        return false;
+    }
+
+    function SaveComment(DocumentType, Comment) {
+
+        var StetpId;
+        if ('@Model.IsClassic.ToString().ToLower()' == 'true') {
+            StetpId = $("#DocumentStepId").val();
+        }
+        else {
+            StetpId = $("#popupDocumentStepId").val();
+        }
+
+        var jsonData = JSON.stringify({ JobId: $("#BasicDetails_JobID").val(), IsPreAprConn: $("#PreApprovalConnOrStcClicked").val(), StetpId: StetpId, DocumentType: DocumentType, "Comment": Comment, "SubjectCode": "" });
+        $.ajax({
+            url: '@Url.Action("AddUpdateJobEmailConversationForPreAndConn", "JobEmailThread", new { area = "" })',
+            type: "POST",
+            dataType: "json",
+            data: jsonData,
+            //async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+
+                if (DocumentType == 2) {
+                    var documentstepid = '';
+                    if ('@Model.IsClassic.ToString().ToLower()' == 'true') {
+                        var documentstepid = $(".DocumentStep.opened").data("documentstepid");
+                        if ($("#hdnSendOrResendClick").val() == "apply") {
+                            $("#divApplySection" + documentstepid).append("<a class='cursorPointer sm-btn btn-transparent DocumentStep' data-type='2' data-documentstepid=" + documentstepid + " data-sendResent='resend'>Resend</a>");
+                            $(".DocumentStep.opened").text("Applied");
+                            $(".DocumentStep.opened").addClass("collapsed cursorDefault").removeClass("DocumentStep");
+                        } else {
+                            $(".DocumentStep.opened").removeClass("opened");
+                        }
+                        $("#spanComment" + documentstepid).text(" - " + $("#txtCommentOnReference").val());
+                        $("#hdnComment" + documentstepid).val($("#txtCommentOnReference").val());
+                        $("#txtCommentOnReference").val("");
+                        $(".pnlEmailModule").empty();
+                    }
+                    else {
+                        documentstepid = StetpId;
+                        ShowHideApplyButton(documentstepid);
+
+                        $("#spanComment" + documentstepid).text(" - " + $("#txtCommentOnReference").val());
+                        $("#hdnComment" + documentstepid).val($("#txtCommentOnReference").val());
+                        $("#txtCommentOnReference").val("");
+                        $('#popupboxPreapprovalConnectionApply').modal('toggle');
+                    }
+                }
+                else {
+                    if ('@Model.IsClassic.ToString().ToLower()' == 'true') {
+                        var documentstepid = $(".DocumentStep.opened").data("documentstepid");
+                        if ($("#hdnSendOrResendClick").val() == "apply") {
+                            $("#divApplySection" + documentstepid).append("<a class='cursorPointer sm-btn btn-transparent DocumentStep' data-type='3' data-documentstepid=" + documentstepid + " data-sendResent='resend'>Resend</a>");
+                            $(".DocumentStep.opened").text("Applied");
+                            $(".DocumentStep.opened").addClass("collapsed cursorDefault").removeClass("DocumentStep");
+                        } else {
+                            $(".DocumentStep.opened").removeClass("opened");
+                        }
+
+                        $("#spanComment" + documentstepid).text(" - " + $("#DrpAlreadyApplied").val());
+                        $("#hdnComment" + documentstepid).val($("#DrpAlreadyApplied").val());
+                        $("#DrpAlreadyApplied").val("");
+                        $(".pnlEmailModule").empty();
+                    }
+                    else
+                    {
+                        documentstepid = StetpId;
+                        ShowHideApplyButton(documentstepid);
+                        $("#spanComment" + documentstepid).text(" - " + $("#DrpAlreadyApplied").val());
+                        $("#hdnComment" + documentstepid).val($("#DrpAlreadyApplied").val());
+                        $("#DrpAlreadyApplied").val("");
+                        $('#popupboxPreapprovalConnectionApply').modal('toggle');
+                    }
+                }
+            }
+        });
+    }
+
+    function ShowHideApplyButton(documentstepid) {
+        if ($("#PreApprovalConnOrStcClicked").val() == 1) {
+            $("#preapprovalUL").find('li').each(function () {
+                if ($(this).attr('documentstepid') == documentstepid) {
+                    $(this).find('.appliedApprovalButton').show();
+                    $(this).find('.applyApprovalButton').hide();
+                }
+            });
+        }
+        else {
+            $("#connectionUL").find('li').each(function () {
+                if ($(this).attr('documentstepid') == documentstepid) {
+                    $(this).find('.appliedConnectionButton').show();
+                    $(this).find('.applyConnectionButton').hide();
+                }
+            });
+        }
+    }
+</script>

@@ -1,0 +1,3537 @@
+Return-path: <sandip.patel@tatvasoft.com>
+Envelope-to: badal.patel@tatvasoft.com
+Delivery-date: Mon, 20 Jun 2016 09:16:41 +0300
+Received: from [103.204.192.161] (port=60423 helo=PCI125)
+	by mail.tatvasoft.com with esmtpa (Exim 4.87)
+	(envelope-from <sandip.patel@tatvasoft.com>)
+	id 1bEsVc-0007US-DJ; Mon, 20 Jun 2016 09:16:41 +0300
+From: "Sandip Patel" <sandip.patel@tatvasoft.com>
+To: "'Chandler, Philip'" <philip.chandler@mayflowercontrol.com>
+Cc: "'Attri, Vivek'" <Vivek.Attri@Mayflowercontrol.com>,
+	"'Badal Patel'" <badal.patel@tatvasoft.com>
+Subject: Bug 917: i18n - remove hardcoded attribute name from code
+Date: Mon, 20 Jun 2016 11:46:40 +0530
+Message-ID: <000001d1cabb$5096a4c0$f1c3ee40$@tatvasoft.com>
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	boundary="----=_NextPart_000_0001_01D1CAE9.6A5681E0"
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AdHKrntJd86IfXx9RQG41kVD4GYZ1g==
+Content-Language: en-gb
+
+This is a multipart message in MIME format.
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_001_0002_01D1CAE9.6A5681E0"
+
+
+------=_NextPart_001_0002_01D1CAE9.6A5681E0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Hello Phil,
+
+ 
+
+With reference to following work item
+
+Bug 917
+<https://mayflowerdevelopment.visualstudio.com/DefaultCollection/Edison/_wor
+kitems/edit/917?fullScreen=false> : i18n - remove hardcoded attribute name
+from code
+
+ 
+
+We would like to address attributes such a way so it works for any other
+language as well. I read out the approach you suggested in TFS about adding
+additional column Attribute_ID.
+
+ 
+
+As per my knowledge, we use ParamID to address attributes uniquely in Master
+and Sub master services. For example check the usage of ParamIDType.Wattage
+in Master service. This was the existing code developed by Mayflower which I
+would like to bring in your notice. (See enum defined in Master WCF service
+project which is mentioned underneath the table).
+
+ 
+
+I think we can use this ParamID field of ILMAttribute table (instead of
+adding new field) which holds an integer value. However the data we have in
+LIVE systems, does not allow us to set unique constraint on this column. See
+highlighted rows in below table. But I think we can correct the data if
+possible by talking with Sub master expert. Let me know What do you think?
+
+ 
+
+Existing implementation:
+
+1.       In the web application, we referred Attribute description only for
+two attributes "Lamp Wattage" and "Node Type". 
+
+2.  We used UN_Attribute to identify Attribute uniquely. For instance
+AppSettings.MaxNodesSupportedAttributeId.
+
+3.       Also we used ParamID to refer few attributes. For instance
+AppSettings.LampBurnTimeId
+
+ 
+
+I agree, it's not consistent view. We will apply the solution (to be agreed)
+to all those places and before doing that, we'll provide a list of all such
+attributes being used in the application.
+
+ 
+
+
+UN_Attribute
+
+ParamID
+
+Attribute_Description
+
+
+1
+
+1
+
+Data Read Polling Time - mins
+
+
+2
+
+2
+
+Primary Base Station Url
+
+
+27
+
+2
+
+ZigBee Channel Mask
+
+
+48
+
+3
+
+Zigbee Security Link Key
+
+
+3
+
+3
+
+Alternate Base Station Url 1
+
+
+4
+
+4
+
+Alternate Base Station  2
+
+
+5
+
+5
+
+Logging Control
+
+
+6
+
+6
+
+Logging Port Interval - mins
+
+
+49
+
+7
+
+Logging Report Size
+
+
+7
+
+8
+
+Report Non Configured Nodes Interval - mins
+
+
+8
+
+9
+
+NTP Server Address
+
+
+9
+
+11
+
+RTC Synchronisation Interval - mins
+
+
+10
+
+12
+
+GPRS Link Configuration
+
+
+11
+
+13
+
+SMS Authorised Numbers
+
+
+58
+
+16
+
+Total Number of Nodes Supported
+
+
+14
+
+17
+
+Base Station Join Interval - mins
+
+
+26
+
+17
+
+Design Dimming Level  %
+
+
+15
+
+18
+
+Heartbeat Interval
+
+
+16
+
+19
+
+Node Data Reporting Interval - mins
+
+
+30
+
+19
+
+Lamp Wattage
+
+
+18
+
+20
+
+Firmware Update Poll Interval - mins
+
+
+17
+
+21
+
+Node Non Responsive Reporting Interval - mins
+
+
+66
+
+21
+
+Firmware Version
+
+
+19
+
+22
+
+DNS Address
+
+
+20
+
+23
+
+APN Information
+
+
+21
+
+24
+
+APN User Name
+
+
+22
+
+25
+
+APN Password
+
+
+23
+
+26
+
+Session Timeout
+
+
+24
+
+27
+
+Updates Poll Interval - mins
+
+
+25
+
+30
+
+Photo Sensor read Interval - mins
+
+
+50
+
+31
+
+Certificate Index Primary URL
+
+
+51
+
+32
+
+Certificate Index Alternate URL 1
+
+
+33
+
+32
+
+Node Type
+
+
+52
+
+33
+
+Certificate Index Alternate URL 2
+
+
+53
+
+34
+
+Photosensor Window
+
+
+65
+
+34
+
+Debug Attribute
+
+
+54
+
+35
+
+Max Size Limit Report Interval mins
+
+
+55
+
+36
+
+Enable Rejects where Node exists on other Masters
+
+
+56
+
+37
+
+Enable Rejects where Node exists on Master
+
+
+59
+
+38
+
+DALI / NON DALI value
+
+
+68
+
+39
+
+ILN DALI Sequence Reporting Interval -mins
+
+
+67
+
+40
+
+Poll For Manual Command Polling Interval
+
+
+60
+
+42
+
+RTC Time
+
+
+62
+
+48
+
+DALI Ballasts
+
+
+63
+
+49
+
+Power Factor
+
+
+64
+
+50
+
+Radio Power
+
+
+61
+
+64
+
+Lamp Burn Time
+
+
+73
+
+92
+
+Request Latitude
+
+
+74
+
+93
+
+Request Longitude
+
+
+72
+
+99
+
+Default Transport
+
+ 
+
+Param ID used in Master or Sub master service:
+
+File: Edison\Main\Source\Master\SEC.DataContracts\ILMAttribute.cs
+
+public enum ParamIDType
+
+    {
+
+        /// <summary>
+
+        /// All
+
+        /// </summary>
+
+        All = 0,
+
+        /// <summary>
+
+        /// The data read polling time mins
+
+        /// </summary>
+
+        DataReadPollingTimeMins = 1,
+
+        /// <summary>
+
+        /// The primary base station URL
+
+        /// </summary>
+
+        PrimaryBaseStationUrl = 2,
+
+        /// <summary>
+
+        /// The alternate base station url1
+
+        /// </summary>
+
+        AlternateBaseStationUrl1 = 3,
+
+        /// <summary>
+
+        /// The alternate base station2
+
+        /// </summary>
+
+        AlternateBaseStation2 = 4,
+
+        /// <summary>
+
+        /// The logging control
+
+        /// </summary>
+
+        LoggingControl = 5,
+
+        /// <summary>
+
+        /// The logging port interval hours
+
+        /// </summary>
+
+        LoggingPortIntervalHours = 6,
+
+        /// <summary>
+
+        /// The report non configured nodes interval hours
+
+        /// </summary>
+
+        ReportNonConfiguredNodesIntervalHours = 8,
+
+        /// <summary>
+
+        /// The number of NTP server addresses
+
+        /// </summary>
+
+        NumberOfNTPServerAddresses = 9,
+
+        /// <summary>
+
+        /// The RTC synchronisation interval hours
+
+        /// </summary>
+
+        RTCSynchronisationIntervalHours = 11,
+
+        /// <summary>
+
+        /// The GPRS link configuration
+
+        /// </summary>
+
+        GPRSLinkConfiguration = 12,
+
+        /// <summary>
+
+        /// The SMS authorised numbers
+
+        /// </summary>
+
+        SMSAuthorisedNumbers = 13,
+
+        /// <summary>
+
+        /// The configured node size limit
+
+        /// </summary>
+
+        ConfiguredNodeSizeLimit = 15,
+
+        /// <summary>
+
+        /// The total number of nodes supported
+
+        /// </summary>
+
+        TotalNumberOfNodesSupported = 16,
+
+        /// <summary>
+
+        /// The base station join interval mins
+
+        /// </summary>
+
+        BaseStationJoinIntervalMins = 17,
+
+        /// <summary>
+
+        /// The heartbeat interval
+
+        /// </summary>
+
+        HeartbeatInterval = 18,
+
+        /// <summary>
+
+        /// The node data reporting interval hours
+
+        /// </summary>
+
+        NodeDataReportingIntervalHours = 19,
+
+        /// <summary>
+
+        /// The node non responsive reporting interval hours
+
+        /// </summary>
+
+        NodeNonResponsiveReportingIntervalHours = 21,
+
+        /// <summary>
+
+        /// The firmware update poll interval hours
+
+        /// </summary>
+
+        FirmwareUpdatePollIntervalHours = 20,
+
+        /// <summary>
+
+        /// The DNS address
+
+        /// </summary>
+
+        DNSAddress = 22,
+
+        /// <summary>
+
+        /// The APN information
+
+        /// </summary>
+
+        APNInformation = 23,
+
+        /// <summary>
+
+        /// The APN user name
+
+        /// </summary>
+
+        APNUserName = 24,
+
+        /// <summary>
+
+        /// The APN password
+
+        /// </summary>
+
+        APNPassword = 25,
+
+        /// <summary>
+
+        /// The session timeout
+
+        /// </summary>
+
+        SessionTimeout = 26,
+
+        /// <summary>
+
+        /// The updates poll interval hours
+
+        /// </summary>
+
+        UpdatesPollIntervalHours = 27,
+
+        /// <summary>
+
+        /// The photo sensor read interval mins
+
+        /// </summary>
+
+        PhotoSensorReadIntervalMins = 30,
+
+        /// <summary>
+
+        /// The zig bee channel mask
+
+        /// </summary>
+
+        ZigBeeChannelMask = 240,
+
+        /// <summary>
+
+        /// The fail safe mode heartbeats missed
+
+        /// </summary>
+
+        FailSafeModeHeartbeatsMissed = 19,
+
+        /// <summary>
+
+        /// The fresh join
+
+        /// </summary>
+
+        FreshJoin = 21,
+
+        /// <summary>
+
+        /// The EM tolerance percentage
+
+        /// </summary>
+
+        EMTolerancePercentage = 22,
+
+        /// <summary>
+
+        /// The node type
+
+        /// </summary>
+
+        NodeType = 32,
+
+        /// <summary>
+
+        /// The default state on powerup
+
+        /// </summary>
+
+        DefaultStateOnPowerup = 33,
+
+        /// <summary>
+
+        /// The power level settling time after dim mins
+
+        /// </summary>
+
+        PowerLevelSettlingTimeAfterDimMins = 39,
+
+        /// <summary>
+
+        /// The power measurement delay mins
+
+        /// </summary>
+
+        PowerMeasurementDelayMins = 40,
+
+        /// <summary>
+
+        /// The SM communications timeout hours
+
+        /// </summary>
+
+        SMCommunicationsTimeoutHours = 41,
+
+        /// <summary>
+
+        /// The SM ignore time hours
+
+        /// </summary>
+
+        SMIgnoreTimeHours = 42,
+
+        /// <summary>
+
+        /// The zigbee security link key
+
+        /// </summary>
+
+        ZigbeeSecurityLinkKey = 241,
+
+        /// <summary>
+
+        /// The design dimming
+
+        /// </summary>
+
+        DesignDimming = 17,
+
+        /// <summary>
+
+        /// The wattage
+
+        /// </summary>
+
+        Wattage = 19,
+
+        /// <summary>
+
+        /// The Default Transport
+
+        /// </summary>
+
+        DefaultTransport = 99,
+
+    }
+
+ 
+
+Kind Regards
+
+Sandip Patel
+
+Sr. Team Leader 
+
+TatvaSoft CMMI Maturity Level 3
+
+Skype Id:  tatvainfo_117
+
+Website:   <http://www.tatvasoft.com/> http://www.tatvasoft.com
+
+ 
+
+Follow us on: 
+
+ <https://www.linkedin.com/company/tatvasoft>
+<https://www.facebook.com/TatvaSoft>  <https://twitter.com/tatvasoft>
+<https://plus.google.com/+tatvasoft> 
+
+ 
+
+
+------=_NextPart_001_0002_01D1CAE9.6A5681E0
+Content-Type: text/html;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+xmlns:o=3D"urn:schemas-microsoft-com:office:office" =
+xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:x=3D"urn:schemas-microsoft-com:office:excel" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" =
+xmlns=3D"http://www.w3.org/TR/REC-html40"><head><meta =
+http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dus-ascii"><meta name=3DGenerator content=3D"Microsoft Word 15 =
+(filtered medium)"><!--[if !mso]><style>v\:* =
+{behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style><![endif]--><style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:"Microsoft Sans Serif";
+	panose-1:2 11 6 4 2 2 2 2 2 4;}
+@font-face
+	{font-family:Consolas;
+	panose-1:2 11 6 9 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{mso-style-priority:34;
+	margin-top:0cm;
+	margin-right:0cm;
+	margin-bottom:0cm;
+	margin-left:36.0pt;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:72.0pt 72.0pt 72.0pt 72.0pt;}
+div.WordSection1
+	{page:WordSection1;}
+/* List Definitions */
+@list l0
+	{mso-list-id:2142382866;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-68638056 67698703 67698713 67698715 67698703 =
+67698713 67698715 67698703 67698713 67698715;}
+@list l0:level1
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level2
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level3
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l0:level4
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level5
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level6
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+@list l0:level7
+	{mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level8
+	{mso-level-number-format:alpha-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;}
+@list l0:level9
+	{mso-level-number-format:roman-lower;
+	mso-level-tab-stop:none;
+	mso-level-number-position:right;
+	text-indent:-9.0pt;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]--></head><body lang=3DEN-US =
+link=3D"#0563C1" vlink=3D"#954F72"><div class=3DWordSection1><p =
+class=3DMsoNormal>Hello Phil,<o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>With =
+reference to following work item<o:p></o:p></p><p class=3DMsoNormal><a =
+href=3D"https://mayflowerdevelopment.visualstudio.com/DefaultCollection/E=
+dison/_workitems/edit/917?fullScreen=3Dfalse" target=3D"_blank">Bug =
+917</a>: i18n - remove hardcoded attribute name from =
+code<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>We would like to address attributes such a way so it =
+works for any other language as well. I read out the approach you =
+suggested in TFS about adding additional column =
+Attribute_ID.<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>As per my knowledge, we use ParamID to address =
+attributes uniquely in Master and Sub master services. For example check =
+the usage of <span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>ParamIDType</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>.Wattage</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'> </span>in =
+Master service. This was the existing code developed by Mayflower which =
+I would like to bring in your notice. (See enum defined in Master WCF =
+service project which is mentioned underneath the =
+table).<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p =
+class=3DMsoNormal>I think we can use this ParamID field of ILMAttribute =
+table (instead of adding new field) which holds an integer value. =
+However the data we have in LIVE systems, does not allow us to set =
+unique constraint on this column. See highlighted rows in below table. =
+But I think we can correct the data if possible by talking with Sub =
+master expert. Let me know What do you think?<o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal><b>Existing =
+implementation:<o:p></o:p></b></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if =
+!supportLists]><span style=3D'mso-list:Ignore'>1.<span =
+style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><![endif]>In =
+the web application, we referred Attribute description only for two =
+attributes &#8220;Lamp Wattage&#8221; and &#8220;Node Type&#8221;. =
+<o:p></o:p></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if =
+!supportLists]><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'><span =
+style=3D'mso-list:Ignore'>2.<span style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp; </span></span></span><![endif]>We used UN_Attribute to =
+identify Attribute uniquely. For instance <span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>AppSettings</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>.MaxNodesSupportedAttributeId</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black'>.<o:p></o:p></=
+span></p><p class=3DMsoListParagraph =
+style=3D'text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if =
+!supportLists]><span style=3D'mso-list:Ignore'>3.<span =
+style=3D'font:7.0pt "Times New =
+Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span></span><![endif]>Also we used ParamID to refer few attributes. =
+For instance <span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>AppSettings</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>.LampBurnTimeId</span><o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>I agree, =
+it&#8217;s not consistent view. We will apply the solution (to be =
+agreed) to all those places and before doing that, we&#8217;ll provide a =
+list of all such attributes being used in the =
+application.<o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><table class=3DMsoNormalTable =
+border=3D0 cellspacing=3D0 cellpadding=3D0 width=3D787 =
+style=3D'width:590.0pt;margin-left:-.4pt;border-collapse:collapse'><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;background:#D9D9D9;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal><span =
+style=3D'color:black'>UN_Attribute<o:p></o:p></span></p></td><td =
+width=3D101 nowrap valign=3Dbottom style=3D'width:76.0pt;border:solid =
+windowtext 1.0pt;border-left:none;background:#D9D9D9;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>ParamID<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom style=3D'width:446.0pt;border:solid windowtext =
+1.0pt;border-left:none;background:#D9D9D9;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Attribute_Description<o:p></o:p></span></p></td></t=
+r><tr style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>1<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>1<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Data Read Polling Time - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>2<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>2<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Primary Base Station =
+Url<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>27<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>2<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>ZigBee Channel =
+Mask<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>48<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>3<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Zigbee Security Link =
+Key<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>3<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>3<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Alternate Base Station Url =
+1<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>4<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>4<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Alternate Base Station&nbsp; =
+2<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>5<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>5<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Logging Control<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>6<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>6<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Logging Port Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>49<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>7<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Logging Report =
+Size<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>7<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>8<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Report Non Configured Nodes Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>8<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>9<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>NTP Server =
+Address<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>9<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>11<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>RTC Synchronisation Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>10<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>12<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>GPRS Link =
+Configuration<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>11<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>13<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>SMS Authorised =
+Numbers<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>58<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>16<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Total Number of Nodes =
+Supported<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>14<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>17<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Base Station Join Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>26<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>17<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Design Dimming Level&nbsp; =
+%<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>15<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>18<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Heartbeat =
+Interval<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>16<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>19<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Node Data Reporting Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>30<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>19<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Lamp Wattage<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>18<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>20<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Firmware Update Poll Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>17<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>21<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Node Non Responsive Reporting Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>66<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>21<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Firmware Version<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>19<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>22<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>DNS Address<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>20<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>23<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>APN Information<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>21<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>24<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>APN User Name<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>22<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>25<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>APN Password<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>23<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>26<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Session Timeout<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>24<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>27<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Updates Poll Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>25<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>30<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Photo Sensor read Interval - =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>50<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>31<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Certificate Index Primary =
+URL<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>51<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>32<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Certificate Index Alternate URL =
+1<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>33<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>32<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Node Type<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>52<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>33<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Certificate Index Alternate URL =
+2<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>53<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>34<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Photosensor =
+Window<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>65<o:p></o:p></span></p></td><td width=3D101 nowrap =
+valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:red'>34<o:p></o:p></span></p></td><td width=3D595 nowrap =
+valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:red'>Debug Attribute<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>54<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>35<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Max Size Limit Report Interval =
+mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>55<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>36<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Enable Rejects where Node exists on other =
+Masters<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>56<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>37<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Enable Rejects where Node exists on =
+Master<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>59<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>38<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>DALI / NON DALI =
+value<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>68<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>39<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>ILN DALI Sequence Reporting Interval =
+-mins<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>67<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>40<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Poll For Manual Command Polling =
+Interval<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>60<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>42<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>RTC Time<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>62<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>48<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>DALI Ballasts<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>63<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>49<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Power Factor<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>64<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>50<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Radio Power<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>61<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>64<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Lamp Burn Time<o:p></o:p></span></p></td></tr><tr =
+style=3D'height:15.0pt'><td width=3D91 nowrap valign=3Dbottom =
+style=3D'width:68.0pt;border:solid windowtext =
+1.0pt;border-top:none;padding:0cm 5.4pt 0cm 5.4pt;height:15.0pt'><p =
+class=3DMsoNormal align=3Dright style=3D'text-align:right'><span =
+style=3D'color:black'>73<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>92<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Request =
+Latitude<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>74<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>93<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Request =
+Longitude<o:p></o:p></span></p></td></tr><tr style=3D'height:15.0pt'><td =
+width=3D91 nowrap valign=3Dbottom style=3D'width:68.0pt;border:solid =
+windowtext 1.0pt;border-top:none;padding:0cm 5.4pt 0cm =
+5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>72<o:p></o:p></span></p></td><td width=3D101 =
+nowrap valign=3Dbottom =
+style=3D'width:76.0pt;border-top:none;border-left:none;border-bottom:soli=
+d windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm 5.4pt =
+0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal align=3Dright =
+style=3D'text-align:right'><span =
+style=3D'color:black'>99<o:p></o:p></span></p></td><td width=3D595 =
+nowrap valign=3Dbottom =
+style=3D'width:446.0pt;border-top:none;border-left:none;border-bottom:sol=
+id windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0cm =
+5.4pt 0cm 5.4pt;height:15.0pt'><p class=3DMsoNormal><span =
+style=3D'color:black'>Default =
+Transport<o:p></o:p></span></p></td></tr></table><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal><b>Param ID =
+used in Master or Sub master service:<o:p></o:p></b></p><p =
+class=3DMsoNormal>File: =
+Edison\Main\Source\Master\SEC.DataContracts\ILMAttribute.cs<o:p></o:p></p=
+><p class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>public</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:blue;background:white=
+;mso-highlight:white'>enum</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:#2B91AF;background:wh=
+ite;mso-highlight:white'>ParamIDType</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp; {<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> All</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; All =
+=3D 0,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The data read polling time mins</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+DataReadPollingTimeMins =3D 1,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The primary base station URL</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+PrimaryBaseStationUrl =3D 2,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The alternate base station url1</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+AlternateBaseStationUrl1 =3D 3,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The alternate base station2</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+AlternateBaseStation2 =3D 4,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The logging control</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+LoggingControl =3D 5,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The logging port interval hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+LoggingPortIntervalHours =3D 6,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The report non configured nodes interval =
+hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+ReportNonConfiguredNodesIntervalHours =3D 8,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The number of NTP server addresses</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+NumberOfNTPServerAddresses =3D 9,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The RTC synchronisation interval =
+hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+RTCSynchronisationIntervalHours =3D 11,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp; =
+&nbsp;&nbsp;&nbsp;&nbsp;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The GPRS link configuration</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+GPRSLinkConfiguration =3D 12,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The SMS authorised numbers</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+SMSAuthorisedNumbers =3D 13,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The configured node size limit</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+ConfiguredNodeSizeLimit =3D 15,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The total number of nodes supported</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+TotalNumberOfNodesSupported =3D 16,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The base station join interval mins</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+BaseStationJoinIntervalMins =3D 17,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The heartbeat interval</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+HeartbeatInterval =3D 18,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The node data reporting interval =
+hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+NodeDataReportingIntervalHours =3D 19,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The node non responsive reporting interval =
+hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+NodeNonResponsiveReportingIntervalHours =3D 21,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The firmware update poll interval =
+hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+FirmwareUpdatePollIntervalHours =3D 20,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The DNS address</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+DNSAddress =3D 22,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The APN information</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+APNInformation =3D 23,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The APN user name</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+APNUserName =3D 24,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The APN password</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+APNPassword =3D 25,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The session timeout</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+SessionTimeout =3D 26,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The updates poll interval hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+UpdatesPollIntervalHours =3D 27,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The photo sensor read interval mins</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+PhotoSensorReadIntervalMins =3D 30,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The zig bee channel mask</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+ZigBeeChannelMask =3D 240,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The fail safe mode heartbeats missed</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+FailSafeModeHeartbeatsMissed =3D 19,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The fresh join</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+FreshJoin =3D 21,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The EM tolerance percentage</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+EMTolerancePercentage =3D 22,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The node type</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+NodeType =3D 32,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The default state on powerup</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+DefaultStateOnPowerup =3D 33,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The power level settling time after dim =
+mins</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+PowerLevelSettlingTimeAfterDimMins =3D 39,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The power measurement delay mins</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+PowerMeasurementDelayMins =3D 40,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The SM communications timeout hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+SMCommunicationsTimeoutHours =3D 41,<o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The SM ignore time hours</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+SMIgnoreTimeHours =3D 42,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The zigbee security link key</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+ZigbeeSecurityLinkKey =3D 241,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The design dimming</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+DesignDimming =3D 17,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The wattage</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+Wattage =3D 19,<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> The Default Transport</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>///</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:green;background:whit=
+e;mso-highlight:white'> </span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:gray;background:white=
+;mso-highlight:white'>&lt;/summary&gt;</span><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'><o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'text-autospace:none'><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; =
+DefaultTransport =3D 99,<o:p></o:p></span></p><p class=3DMsoNormal><span =
+style=3D'font-size:9.5pt;font-family:Consolas;color:black;background:whit=
+e;mso-highlight:white'>&nbsp;&nbsp;&nbsp; }</span><o:p></o:p></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:black;letter-spacing:.2pt'>Kind =
+Regards<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sandip =
+Patel<o:p></o:p></span></b></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span =
+style=3D'color:#17365D;letter-spacing:.2pt'>Sr. Team Leader</span><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'> <o:p></o:p></span></p><p =
+class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+style=3D'font-size:10.0pt;font-family:"Microsoft Sans =
+Serif","sans-serif";color:#E36C0A'>TatvaSoft</span><span =
+style=3D'font-size:10.0pt;color:#1F497D;letter-spacing:.2pt'> CMMI =
+Maturity Level 3<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Skype =
+Id:</span></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'> =
+<b>&nbsp;</b>tatvainfo_117<o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>Website:</sp=
+an></b><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>&nbsp; =
+</span><span lang=3DEN-IN><a href=3D"http://www.tatvasoft.com/"><span =
+lang=3DEN-US =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'>http://www.t=
+atvasoft.com</span></a></span><span =
+style=3D'font-size:10.0pt;color:#262626;letter-spacing:.2pt'><o:p></o:p><=
+/span></p><p class=3DMsoNormal style=3D'margin-top:1.0pt'><span =
+lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p>&nbsp;</o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>Fo=
+llow us on: <o:p></o:p></span></p><p class=3DMsoNormal =
+style=3D'margin-top:1.0pt'><a =
+href=3D"https://www.linkedin.com/company/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"Picture_x0020_1" =
+src=3D"cid:image001.png@01D1CADC.3CDF2D50" alt=3D"linkedin icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://www.facebook.com/TatvaSoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D39 height=3D36 id=3D"Picture_x0020_2" =
+src=3D"cid:image002.png@01D1CADC.3CDF2D50" alt=3D"facebook icon - =
+clear"></span></a><a href=3D"https://twitter.com/tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D40 height=3D36 id=3D"Picture_x0020_3" =
+src=3D"cid:image003.png@01D1CADC.3CDF2D50" alt=3D"twitter icon - =
+clear"></span></a><span lang=3DEN-IN =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'>&n=
+bsp;</span><a href=3D"https://plus.google.com/+tatvasoft"><span =
+style=3D'color:#262626;letter-spacing:.2pt;text-decoration:none'><img =
+border=3D0 width=3D36 height=3D36 id=3D"Picture_x0020_4" =
+src=3D"cid:image004.png@01D1CADC.3CDF2D50" alt=3D"google+ icon - =
+clear"></span></a><span =
+style=3D'color:#262626;letter-spacing:.2pt;mso-fareast-language:EN-IN'><o=
+:p></o:p></span></p><p =
+class=3DMsoNormal><o:p>&nbsp;</o:p></p></div></body></html>
+------=_NextPart_001_0002_01D1CAE9.6A5681E0--
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0
+Content-Type: image/png;
+	name="image001.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image001.png@01D1CADC.3CDF2D50>
+
+iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAMAAADW3miqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADDUExURWtra3Z2dnFxcWZmZnJycm9vb3d3d3Bw
+cGhoaH5+fnNzc5ycnJ+fn5iYmJOTk56enoWFhZKSko+Pj5WVlbq6ura2tr+/v7i4uKOjo6Ghoa+v
+r7Ozs7Gxsa6urtra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2N3d3cbGxtHR0cfH
+x/Dw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+/v7+3t7fj4+P7+/vn5+ezs7Pb29ubm5v//
+/5JhBesAAAFTSURBVDjLrZRpU4MwEIarq1att4A3RzkrttxHq9L8/18lJCFcwcEZ3w+Q3XkmLJs3
+O0ONNrKiCqKgKvIGdTSrF56vLfUgjFAUBvpS9T0OFEtG0konhhT3odS0su4XUGaZaQeKbAcN5dhR
+C0rtFeJpZacNZDqIL8dkUGyhMVkxhTyJ1PwwO3jvQ5nkEcg3SOIQYDHYyvAJpNH+HAFcDKBEw1Du
+0vjj8nE7rMrNK0iXaRiG4e6zfHyVfdsxSNYrSAloeAxwtQWAp+cTgPn1N8kGSgVJRQ86Baz5HmcL
+qYKEqAfBzcvrWfm6xdlIqCAR9aC78iyKcwDqD5G701sV3JeL1k6DmjC0qCFS0+DvuhD5O9YnPkT6
+xDrOh0jH2dlxIXp2zAVcqHZB7SeemJ8mOXOax1G6Hrkt6/SP927aDZ42C/BUUZup4vKnSnc+5SPz
+6Tf9H/QDPI4PIB7DN/wAAAAASUVORK5CYII=
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0
+Content-Type: image/png;
+	name="image002.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image002.png@01D1CADC.3CDF2D50>
+
+iVBORw0KGgoAAAANSUhEUgAAACcAAAAkCAMAAAA96dOpAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACKUExURWtra2ZmZmhoaGxsbG9vb2dnZ4yMjIOD
+g4WFhY+Pj5ycnLq6ura2tr+/v9ra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2MbG
+xsfHx/Dw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+Xl5enp6e/v7+Tk5OLi4vb29vj4+P//
+/xnm0gMAAAE/SURBVDjLrZRpU4MwEIZB7YEQrnC3hEKDpdb8/79n0bDZEOh0HN9PzPLMZm9LYB39
+IHQ9Nwz8o9Blqc+aRTFtTq1oTw2NQ1Yvcx1JzujHOSHdAsfTrJ891Wcpn3NtXghTRd7qHM9LsaQy
+5xqXIm/l1rLvkh5TzHWZwtIX21acyDrF1QSlsLM1ric1cCxB5RiZ191+OxkSBlyE6vYxchdcx2ji
+hgqZr+jNX1WD5Kj/kPOp5IIGbJ8sGLmiKFRmTSA5cgPbmz0pBtuNSM6F5ogNcAxsrSs5T8UC2OZL
+GT3Tn+PsR8px3oXpD8V3T97IF+JD+S5xkK9WP7peP60fdL0fWn8NTvVXmxeDQ/OC52/O4fnD8zzn
+8Dzj/Zhx+n4IfljZtwP/0/4+fQ+evi8/9ypU96pavVf6/RvW799D/Tf3DUHX0SHdaHbnAAAAAElF
+TkSuQmCC
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0
+Content-Type: image/png;
+	name="image003.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image003.png@01D1CADC.3CDF2D50>
+
+iVBORw0KGgoAAAANSUhEUgAAACgAAAAkCAMAAADM4ogkAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD8UExURXFxcWtra3p6enx8fGZmZmpqam5ubmho
+aHR0dG9vb2lpaXNzc3t7e21tbWxsbGdnZ3d3d3Z2do6Ojo+Pj4WFhY2NjZKSkp6enoSEhIiIiIGB
+gZiYmIKCgpSUlJGRkbq6ura2tr+/v6CgoLW1taKiory8vLKysrOzs7S0tLu7u6mpqdra2svLy8DA
+wMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2N3d3cbGxsTExN7e3sfHx/Dw8Pz8/ODg4Orq6vX1
+9fv7++jo6PPz8/39/evr6/T09PLy8vj4+OPj4/b29vf39+/v7+bm5v7+/vr6+uzs7O7u7vHx8f//
+/2szI4QAAAGHSURBVDjLrZRnc4JAEIbRYDS99wIYNYUi1RIFBCEkhphy//+/RODOO1AcJpP307H7
+zN2yjQIpDXlBZFhGFPhh2gEo4mxaUlu2Rw5wRrbcFi0zB3Q5ZUx4xgrnLgM9VfMzr/ma6i2Ajm6A
+RRm6kwE9vQOWqaN7aVA1wHIZagp0NZAnzSVAk/NzQZ8zMWgpifEFeYM6VTrsekZ0m2JhUEry91p+
+S7jJGj1ThTp6j/IpzcGwl/g/6PX+NDrc0bGqx/3oqxciUObhy1WaPonOpwlIt2MzLyNQsGFoZ5G3
+3GieQ/AzttoCArlJwtmtGk1qA0bMIZCBdZqUUhx9AavLIJBFWblPgw/QzGZvBNNH8u3Nr+yNKEYA
+nrYIsAGyMc7/GnxvY64WQCP+a5THmUbsJeR2npEN5xFVZqaf1i68rzu34cqgWstX13uwePUAz460
+2D1B82a/VDm45UKiz8juKdyPhTu8+MwAb5AzhQPvj3NdfFMU3z3xNhPxNuvlb7P0fgxX7MeV+n/w
+F5blh09uPDHJAAAAAElFTkSuQmCC
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0
+Content-Type: image/png;
+	name="image004.png"
+Content-Transfer-Encoding: base64
+Content-ID: <image004.png@01D1CADC.3CDF2D50>
+
+iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAMAAADW3miqAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEjUExURWpqamZmZmhoaHp6en9/f21tbXh4eGdn
+Z3FxcW9vb3V1dXZ2dm5ubnR0dHd3d3x8fGlpaWtra4mJiZKSkoyMjIeHh5qamoODg5iYmIqKipmZ
+mY2NjZGRkZaWlo+Pj56enpubm7q6ura2tr+/v6CgoLOzs66urry8vKampri4uKOjo6WlpbKysr29
+vaGhoa2traSkpNra2svLy8DAwMHBwcXFxdvb29XV1dPT083NzcnJydbW1tjY2MPDw8LCwtfX18bG
+xsfHx8jIyNnZ2cTExNTU1M7Oztzc3NDQ0PDw8Pz8/ODg4Orq6vX19fv7++jo6PPz8/39/evr6+Li
+4u7u7u/v7+Pj4/Ly8vr6+vb29vT09Ozs7Onp6ebm5v7+/uXl5f///1jAeM0AAAG/SURBVDjLrZRp
+U8IwEIa7RS3eB3ifUA/As9wFVPCGQkvRghe6//9X2JC0pFocnHE/ZJvMk2T37WYF5KyqJFORaCSV
+VKr8MgruV01LZ7L1ho56o57NpLSaD2TIuSa3uZmTje+QmVdb6LWWmjc9kF4o4k8rFnQOMgsl9LNS
+wexD+SL6WzHvQoaKg0w1GFSTnZgfdxcEEAOhJzLZ2yPRyzUKaTnGnI9YaATggs7298mY0yiUZvq0
+xQN7vITRDgc10z3IKrODYlAhbgyuUI/H4wthe0AsWwTKKgxahChxS/Z9z4lEYmTZHhCVLIGSdQat
+wGoPEmkeh73rsJ4kkPzCoGsJzhE7wSPkoReZQBHdEeVmXArFJg7QA+kRAkX70j23j2HSrYNX6qPe
+k4gsIKW9mtOT3Jjsk5SbKYATfheLyc3ubW06lrk9FeGEh2h2jk7vwfUG8XeiZHEQ1clRfAO6LC24
+5yCquPPvBNDo8oXEvRX275wqmIHND+I/tviYnCpg9fQgQFj97D6Etrns3HpyKrN7Njs3H9gp+Vbm
+cDWOZmXAa6mYf3x3w73g4XpBr6uk+l2l7N9VvP3JGtCffrH/g74Amoqoq9ahs3gAAAAASUVORK5C
+YII=
+
+------=_NextPart_000_0001_01D1CAE9.6A5681E0--
+

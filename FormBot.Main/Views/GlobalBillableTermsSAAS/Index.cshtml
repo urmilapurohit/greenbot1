@@ -1,0 +1,205 @@
+﻿@model FormBot.Entity.GlobalBillableTerms
+@using FormBot.Helper;
+
+@{ ViewBag.Title = "Billable Term Settings"; }
+
+<style>
+    #JobHistorySearch {
+        border-radius: 10px;
+        width: 200px;
+        float: right;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="title">
+        <h1>Billable Term Settings</h1>
+        <a id="btnCreateNewBilling" class="btn primary pull-right icon-btn"><span class="sprite-img add_ic"></span>Create New Billing Setting</a>
+    </div>
+</div>
+
+
+<div class="container-fluid">
+    <div class="form-block ddlResellerWholeseller">
+
+        <div id="dvFields">
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Term Name:</label>
+                    <input type="text" id="txtSearchTermName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+
+                <div class="form-group">
+                    <label class="control-label">Billable Code:</label>
+                    <input type="text" id="txtSearchBillableCode" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Term Description:</label>
+                    <input type="text" id="txtSearchTermDescription" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Term Code: </label>
+                    <select id="ddlSearchTermCode" class="form-control">
+                        <option value="0" selected>All</option>
+                        <option value="PerSTC-S">PerSTC-S</option>
+                        <option value="PerJob-S">PerJob-S</option>
+                        <option value="PerUser-S">PerUser-S</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group col-xs-12">
+                <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchBillableTerms();">
+                <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                    <span class="sprite-img reset_ic"></span>
+                    <input type="button" id="btnReset" value="Reset" class="">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid_topbar" style="padding-left: 15px;">
+        <p class="BillableTerm_result" id="numRecords" style="padding-top:0px;"></p>
+    </div>
+    <div id="grid" class="col-md-12">
+        <div class="table-responsive">
+            <table id="datatable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="display:none;"><span>@Html.DisplayName("SAASUserId")</span></th>
+                        <th><span>@Html.DisplayName("Billable Code")</span></th>
+                        <th><span>@Html.DisplayName("Term Name")</span></th>
+                        <th><span>@Html.DisplayName("Term Code")</span></th>
+                        <th><span>@Html.DisplayName("Term Description") </span></th>
+                        <th><span>@Html.DisplayName("Global Price") </span></th>
+                        <th><span>@Html.DisplayName("IsGlobalGst") </span></th>
+                        <th><span>@Html.DisplayName("CreatedBy") </span></th>
+                        <th><span>@Html.DisplayName("CreatedDate") </span></th>
+                        <th class="action">@Html.DisplayName("Action")</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupcreatenewbilling" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:250px">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" id="popupcreatenewbillingclose" class="close" data-dismiss="modal" aria-label="Close">
+                    <img src="~/Images/close-btn.png" alt="" />
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Create New Billing Term</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div class="container-fluid">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-7">
+                                <div class="form-group">
+                                    <input type="hidden" id="hdnglobalpriceId" />
+                                    <input type="hidden" id="hdnoldglobalprice" />
+                                    <input type="hidden" id="hdnbillercode" />
+                                    <label class="control-label">Term Name: </label>
+                                    <input type="text" id="txtTermName" name="txtTermName" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-5">
+                                <label class="control-label">Term Code: </label>
+                                <select id="ddlTermCode" class="form-control">
+                                    <option value="0" selected>Select Term Code</option>
+                                    <option value="PerSTC-S">PerSTC-S</option>
+                                    <option value="PerJob-S">PerJob-S</option>
+                                    <option value="PerUser-S">PerUser-S</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group" id="dvTermDescription">
+                                    <label class="control-label">Term Description :</label>
+                                    <textarea class="form-control" id="txtTermDescription" name="Description" rows="2" cols="20">Add term description.</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group" id="dvGlobalPrice">
+                                    <label class="control-label">Global Price :</label>
+                                    <input type="text" id="txtGlobalPrice" name="txtGlobalPrice" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3">
+                                <div class="form-group">
+                                    <label class="control-label">IsGlobalGST :</label><br>
+                                    <input type="checkbox" name="IsGlobalGST" id="IsGlobalGST">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group defaultFormBot tab_bottomrow">
+                            <div class="btn primary icon-btn" id="btnSaveGlobalPricing">
+                                <span class="sprite-img save_ic"></span>
+                                <input type="button" name="SavePricing" value="Save" class="" id="btnGlobalPricing" tabindex="44" onclick="SaveGlobalPricingTerm()">
+                            </div>
+                            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" tabindex="45" onclick="ClearForm()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-part-modal add-visits" tabindex="-1" id="JobHistory">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg" style="width:75%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Billing Term History</h4>
+                </div>
+                <div class="sub-title" style="margin-bottom:0px!important;border:0px!important">
+                    <div class="row">
+                        <div class="col-md-3" style="float: right !important; margin-top: 6px !important; margin-bottom: -6px; padding-right: 35px;">
+                            <input type="text" id="JobHistorySearch" class="form-control" placeholder="Search">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body" id="JobHistoryOfJob" style="max-height:700px;">
+                </div>
+                <div class="modal-footer" style="border:0px !important">
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        var SaveGlobalBillableTermURL = '@Url.Action("SaveGlobalBillableTermSAAS", "GlobalBillableTermsSAAS")';
+        var urlShowHistory = '@Url.Action("ShowBillingTermHistory", "GlobalBillableTermsSAAS")';
+        var urlGetGlobalPricingList = '@Url.Action("GetGlobalPricingList", "GlobalBillableTermsSAAS")';
+        var urlDeleteBillableTermByID = '@Url.Action("DeleteBillableTermByID", "GlobalBillableTermsSAAS")';
+        var urlRestoreBillableTerm = '@Url.Action("RestoreBillableTerm", "GlobalBillableTermsSAAS")';
+        var Glbl_TermCode = '', Glbl_Price = '', Glbl_Description = '';
+        var ProjectSessionLoggedInUserId = '@ProjectSession.LoggedInUserId';
+        var PageSize = [10, 25, 50,100,200];
+        var DateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    </script>
+    @*<script src="~/Scripts/View/BillableTermSettings.min.js"></script>*@
+    <script src="~/Scripts/View/BillableTermSettings.dev.js"></script>
+}

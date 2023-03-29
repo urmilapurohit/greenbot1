@@ -1,0 +1,1043 @@
+﻿@model FormBot.Entity.Documents.DocumentTemplate
+
+<script src="@Url.Content("~/Scripts/pdf/pdf.js")"></script>
+<script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>
+<script src="~/Scripts/jquery.fileupload.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/set-number.min.js"></script>
+<link href="~/Content/bootstrap-theme.min.css" rel="stylesheet" />
+<script src="~/Scripts/spectrum.js"></script>
+<link href="~/Content/spectrum.css" rel="stylesheet" />
+<form id="form1" runat="server">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div id="section-editor">
+        <div class="caustam-editor">
+            <div class="form-tool-left-ber">
+                <h6 class="left-title">Form Tool</h6>
+                <ol id="selectable">
+                    <li class="input-tool" data-type="t">
+                        <div class="input-box">Text box</div>
+                    </li>
+
+                    <li class="input-tool" data-type="ta">
+                        <div class="textarea-box">Textarea</div>
+                    </li>
+
+                    <li class="input-tool" data-type="sa">
+                        <div class="textarea-box">Signature</div>
+                    </li>
+
+                    <li class="input-tool" data-type="c">
+                        <span class="check-box"></span>Checkebox
+                    </li>
+                    @*<li class="input-tool" data-type="r">
+                            <span class="radio-box"></span>Radio
+                        </li>*@
+                </ol>
+            </div>
+
+            <div class="title">
+                <h1>Editor</h1>
+                <input class="btn primary pull-right dropdown-toggle save_ic" value="Save File" id="btnSaveFile" type="submit">
+            </div>
+            <div class="caustam-editor-con" id="holderParentDiv">
+                <div id="holder">
+                    <div id="the-svg"></div>
+                </div>
+                <div id="draggable" class="tag-controls" style="display:none;">
+                    @*<div id="eleName">Properties</div>*@
+                    <div id="controlProp">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @Html.HiddenFor(m => m.DocumentTemplateId)
+    <div hidden="hidden">
+        @Html.DropDownList("jobFields", Model.JobFields, new { @class = "form-control" })
+    </div>
+</form>
+
+<script>
+    $(document).ready(function(){
+        $('section#content').addClass('editor');
+
+        $(function(){
+            $("#draggable").draggable();
+        });
+    });
+
+    //'use strict';
+    $(function () {
+        $("#loading-image").hide();
+
+        if ('@Model.PDFURL' != '') {
+            init('@Model.PDFURL?h=@DateTime.Now.Ticks');
+        }
+        else {
+            alert('File is not available.');
+        }
+    });
+
+    var pdfItemsStr = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Data))';
+    pdfItemsStr = pdfItemsStr.replace(/\\/g, '/');
+
+    var pdfItems = [];
+    if (pdfItemsStr)
+        pdfItems = JSON.parse(pdfItemsStr);
+
+    var pdfDoc = null,
+        pageNum = 1,
+        pageRendering = false,
+        pageNumPending = null,
+        pageLeftPending = 0,
+        pageTopPending = 0,
+        pdfPageWidth = 0,
+        pdfPageHeight = 0,
+        pdfRotate = 0;
+    offsetX = 0,
+    offsetY = 0;
+    var formFields = {};
+    var div = document.getElementById('holder');
+
+    /**
+   * Asynchronously downloads PDF.
+   */
+    function init(fileName) {
+        $("#loading-image").show();
+        var path = fileName;
+        $.ajaxSetup({ cache: false });
+        PDFJS.workerSrc = '@Url.Content("~/Scripts/pdf/pdf.worker.js")'; //'../Scripts/pdf/pdf.worker.js';
+        PDFJS.getDocument(path).then(function (pdfDoc_) {
+            pdfDoc = pdfDoc_;
+            // document.getElementById('page_count').textContent = pdfDoc.numPages;
+            if (pdfDoc.numPages == 0)
+                $("#loading-image").hide();
+            for (var i = 1; i <= pdfDoc.numPages; i++) {
+                // Initial/first page rendering
+                renderPage(i);
+            }
+            $("#loading-image").hide();
+        });
+    }
+
+    function removeOptions(selectbox) {
+        var i;
+        for (i = selectbox.options.length - 1; i >= 0; i--) {
+            selectbox.remove(i);
+        }
+    }
+
+    var scale = 2;
+    function renderPage(pageNum) {
+        pageRendering = true;
+        // Using promise to fetch the page
+        pdfDoc.getPage(pageNum)
+        .then(function(page) {
+
+            // Get viewport (dimensions)
+            var viewport = page.getViewport(scale);
+
+            // Get div#the-svg
+            var container = document.getElementById('the-svg');
+            // Set dimensions
+            container.style.width = viewport.width + 'px';
+            container.style.height = viewport.height + 'px';
+
+            // SVG rendering by PDF.js
+            var operatorList = page.getOperatorList()
+               .then(function (opList) {
+                   var svgGfx = new PDFJS.SVGGraphics(page.commonObjs, page.objs);
+                   return svgGfx.getSVG(opList, viewport);
+               })
+               .then(function (svg) {
+                   container.appendChild(svg);
+                   offsetY = $(svg).offset().top - $('#the-svg').offset().top;
+                   viewport.offsetY = offsetY;
+                   container.style.height = offsetY + $(svg).height() + 'px';
+                   setupForm(page, viewport, --pageNum);
+                   applyDrop(container);
+               });
+
+            pageNum++;
+            //queueRenderPage(pageNum, 0, 0, true);
+        });
+    }
+
+    function setupForm(content, viewport, pageNum) {
+        content.getAnnotations().then(function (items) {
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var type = 't';
+                switch (item.subtype) {
+                    case 'Widget':
+
+                        if (item.fieldType == 'Btn') {
+                            if (item.fieldFlags & 32768) {
+                                type = 'r';
+                            } else if (item.fieldFlags & 65536) {
+                                type = 'btn';
+                            } else {
+                                type = 'c';
+                            }
+                        }
+
+                        if ((type == 'r' || type == 'c') && item.fullName) {
+                            $.each(item.fullName, function (i) {
+                                if (i == (item.fullName.length - 1) && validation.isGlyphsNumber(this)) {
+                                }
+                            });
+                        }
+                        var value = '';
+                        var fieldName = '';
+                        var maxLength = 50;
+                        var fontSize = '14px';
+                        var fontName = eleType[type].font;
+                        var horiAlign = "Left";
+                        var vertAlign = "Bottom";
+                        var aspectRatio = 0;
+                        var isTextArea = false;
+                        var textColor = "rgb(86, 91, 93)",
+                        isBold = false,
+                        isItalic = false;
+
+                        for (var pdfi = 0; pdfi < pdfItems.length; pdfi++)
+                        {
+                            if(pdfItems[pdfi].FieldName == item.fullName[0])
+                            {
+                                if(type == 'c'){
+                                    var count = 1
+                                    for (var j = 0; j < i; j++) {
+                                        if(items[j].fullName[0] == item.fullName[0])
+                                        {
+                                            count++;
+                                        }
+                                    }
+                                    value = pdfItems[pdfi].AvailableValues[pdfItems[pdfi].AvailableValues.length - count];
+                                }
+                                else {
+                                    value = pdfItems[pdfi].Value
+                                }
+
+                                fieldName = pdfItems[pdfi].FieldName;
+
+                                if(fieldName.indexOf('Pre_') == 0)
+                                    fieldName = fieldName.substr(4);
+                                else if(fieldName.indexOf('Conn_') == 0)
+                                    fieldName = fieldName.substr(5);
+
+                                if((type == 't' || type == 'ta') && pdfItems[pdfi].PdfItemProperties != null)
+                                {
+                                    if(parseInt(pdfItems[pdfi].PdfItemProperties.MaxLength) != 0)
+                                        maxLength = parseInt(pdfItems[pdfi].PdfItemProperties.MaxLength);
+
+                                    if(parseInt(pdfItems[pdfi].PdfItemProperties.FontSize) != 0)
+                                        fontSize = pdfItems[pdfi].PdfItemProperties.FontSize + 'px';
+
+                                    fontName = pdfItems[pdfi].PdfItemProperties.FontName;
+
+                                    if(pdfItems[pdfi].PdfItemProperties.TextColor != null || pdfItems[pdfi].PdfItemProperties.TextColor != '')
+                                        textColor = pdfItems[pdfi].PdfItemProperties.TextColor;
+
+                                    isBold = pdfItems[pdfi].PdfItemProperties.Bold;
+                                    isItalic = pdfItems[pdfi].PdfItemProperties.Italic;
+                                }
+
+                                if(pdfItems[pdfi].ReadOnly)
+                                {
+                                    type = 'sa';
+
+                                    if(pdfItems[pdfi].PdfItemProperties.HoriAlign != null && pdfItems[pdfi].PdfItemProperties.HoriAlign != '')
+                                        horiAlign = pdfItems[pdfi].PdfItemProperties.HoriAlign;
+
+                                    if(pdfItems[pdfi].PdfItemProperties.VertAlign != null && pdfItems[pdfi].PdfItemProperties.VertAlign != '')
+                                        vertAlign = pdfItems[pdfi].PdfItemProperties.VertAlign;
+
+                                    aspectRatio = pdfItems[pdfi].PdfItemProperties.AspectRatio;
+                                }
+
+                                if(pdfItems[pdfi].IsTextArea)
+                                    type = 'ta';
+
+                                break;
+                            }
+                        }
+                        var rect = PDFJS.Util.normalizeRect(
+                            viewport.convertToViewportRectangle(item.rect));
+                        var elementLeft = Math.floor(rect[0]);
+                        var elementTop = Math.floor(rect[1] + viewport.offsetY);
+                        var elementWidth = Math.ceil(rect[2] - rect[0]) + 'px';
+                        var elementHeight = Math.ceil(rect[3] - rect[1]) + 'px';
+
+                        AddInitialControlOnPageLoad(type, value, fieldName, elementLeft, elementTop, elementWidth, elementHeight, maxLength, fontSize, fontName, horiAlign, vertAlign, aspectRatio, pageNum, textColor, isBold, isItalic);
+
+                        break;
+                }
+            }
+        });
+    }
+
+    function BindExportValue(jobFieldVal, value){
+        $.get('@Url.Action("GetExportValueByJobFieldId", "DocumentTemplate")' + '?jobFieldVal=' + jobFieldVal, function (response) {
+            if(response.length > 0){
+                var $ddl = $('#ddlExportValue');
+                $ddl.html('');
+                var data = response;
+                for (var i = 0; i < data.length; i++) {
+                    var exportValue = data[i].ExportValue
+                    if(value == exportValue){
+                        var option = '<option value="' + exportValue + '" selected="selected">' + exportValue + '</option>';
+                        $ddl.append(option);
+                    }
+                    else{
+                        var option = '<option value="' + exportValue + '">' + exportValue + '</option>';
+                        $ddl.append(option);
+                    }
+                }
+                $('#ddlExportValue').closest('.row').show();
+            }
+        });
+    }
+
+    function OnCheckboxChange(obj){
+        var checked = obj.checked;
+        var fieldName = $(obj).attr('fieldname');
+        $(':checkbox[fieldname="' + fieldName + '"]').prop('checked',false);
+        obj.checked = checked;
+    }
+
+    var $ActiveDiv = null;
+    var $CopyDiv = null;
+
+    var ctrlDown = false, ctrlKey = 17, cmdKey = 91, vKey = 86, cKey = 67;
+
+    $("#holder").keydown(function(e) {
+        if (e.keyCode == ctrlKey || e.keyCode == cmdKey) ctrlDown = true;
+
+        if (ctrlDown && e.keyCode == cKey)
+        {
+            $CopyDiv = $ActiveDiv;
+            return false;
+        }
+
+        if(ctrlDown && e.keyCode == vKey && $CopyDiv != null)
+        {
+            var _inputType = $CopyDiv.attr('data-type');
+
+            var $inputControl = null;
+            if(_inputType == 't'){
+                $inputControl = $CopyDiv.find('input[type="text"]').first();
+            }
+            else if (_inputType == 'ta'){
+                $inputControl = $CopyDiv.find('textarea').first();
+            }
+            else if(_inputType == 'c'){
+                $inputControl = $CopyDiv.find('input[type="checkbox"]').first();
+            }
+            else if(_inputType == 'sa'){
+                $inputControl = $CopyDiv.find('input[type="text"]').first();
+            }
+
+
+            var _canvas = $('#the-svg'),
+            _canvasTop = _canvas.offset().top,
+            _canvasLeft = _canvas.offset().left,
+            _inputValue = $inputControl.val(),
+            _fieldName = $inputControl.attr("fieldname"),
+            _elementLeft = $CopyDiv.offset().left - _canvasLeft + 10,
+            _elementTop = $CopyDiv.offset().top - _canvasTop + 10,
+            _elementWidth = $CopyDiv.width() + 2 + 'px',
+            _elementHeight = $CopyDiv.height() + 2 + 'px',
+            _maxLength = $inputControl.prop('maxlength'),
+            _fontSize = $inputControl.closest('.added').css('font-size'),
+            _fontName = $inputControl.closest('.added').css('font-family'),
+            _horiAlign = $inputControl.attr("horialign"),
+            _vertAlign = $inputControl.attr("vertalign"),
+            _aspectRatio = $inputControl.attr("aspectratio"),
+            _pageNum =  $inputControl.attr("pagenumber");
+            _textColor = $inputControl.css("color");
+            _isBold = $inputControl.css('font-weight') == "bold" ? true : false;
+            _isItalic = $inputControl.css('font-style') == "italic" ? true : false;
+
+            AddInitialControlOnPageLoad(_inputType, _inputValue, _fieldName, _elementLeft, _elementTop, _elementWidth, _elementHeight, _maxLength, _fontSize, _fontName, _horiAlign, _vertAlign, _aspectRatio, _pageNum, _textColor, _isBold, _isItalic);
+            ctrlDown = false
+            return false;
+        }
+    }).keyup(function(e) {
+        if (e.keyCode == ctrlKey || e.keyCode == cmdKey) ctrlDown = false;
+    });
+
+    function AddInitialControlOnPageLoad(inputType, inputValue, fieldName, elementLeft, elementTop, elementWidth, elementHeight, maxLength, fontSize, fontName, horiAlign, vertAlign, aspectRatio, pageNum, textColor, isBold, isItalic) {
+        inputValue = inputValue != undefined ? inputValue : '';
+        var type = inputType
+        var $canvas = $('#the-svg');
+        var canvasTop = $canvas.offset().top;
+        var canvasLeft = $canvas.offset().left;
+        elementLeft += canvasLeft;
+        elementTop += canvasTop;
+
+        var fontFamily = fontName != '' ? 'font-family:' + fontName : '';
+        var fontWeight = isBold == true ? 'font-weight: bold;' : '';
+        var fontStyle = isItalic == true ? 'font-style: italic;' : '';
+
+        if (type == "t") {
+            var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + elementWidth + ';height:' + elementHeight + ';position:absolute;background:' + eleType[type].color + ';'+ fontFamily +' ;font-size: '+ fontSize +'"><input class="control" value="'+ (inputValue) +'" type="text" maxlength="'+ maxLength +'"  fieldname="'+ fieldName +'" style="width:100%; height:100%; background:transparent; border:0px; '+ fontWeight + fontStyle +' color:'+ textColor +';"></input></div>');
+        }
+        else if (type == "ta") {
+            var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + elementWidth + ';height:' + elementHeight + ';position:absolute;background:' + eleType[type].color + ';'+ fontFamily +' ;font-size: '+ fontSize +'"><textarea class="control" value="'+ (inputValue) +'" fieldname="'+ fieldName +'" maxlength="'+ maxLength +'" style="width:100%; height:100%; background:transparent; border:0px; '+ fontWeight + fontStyle +' color:'+ textColor +';"></textarea></div>');
+        }
+        else if (type == "r") {
+            var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);width:' + elementWidth + ';height:' + elementHeight + ';position:absolute;"><input id="radbtn" class="control" type="radio" style="width:100%; height:100%; background:transparent"></input></div>');
+        }
+        else if (type == "c") {
+            var checked = inputValue.toLowerCase() == 'yes' ? 'checked=checked' : '';
+            var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);width:' + elementWidth + ';height:' + elementHeight + ';position:absolute;"><input class="control" value="'+ inputValue +'" type="checkbox" ' + checked + '" fieldname="'+ fieldName +'" onchange="OnCheckboxChange(this)" style="width:100%; height:100%; background:transparent"></input></div>');
+        }
+        else if(type == 'sa') {
+            var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + elementWidth + ';height:' + elementHeight + ';position:absolute;background:' + eleType[type].color + ';"><input class="control" fieldname="'+ fieldName +'" type="text" readonly="readonly" horialign="'+ horiAlign +'" vertalign="'+ vertAlign +'" aspectratio="'+ aspectRatio +'" style="width:100%; height:100%; background:transparent; border:0px" ></input></div>');
+        }
+
+        $div.attr('pagenumber', pageNum);
+        debugger;
+
+        $('#holder').append($div);
+
+        if(inputType == 'ta')
+        {
+            $div.find('textarea').val(inputValue);
+        }
+
+        $div.offset({left: elementLeft, top : elementTop});
+
+        $div.click(function () {
+            InputControlClick($(this));
+        });
+
+        $('.added .control').click(function () {
+            $(this).focus();
+        });
+        $div.draggable({ cancel: false, containment : '.ui-droppable' }).resizable({ containment : '.ui-droppable', handles:'nw,ne,sw,se' });
+    }
+
+    function InputControlClick($this){
+        var top = $('#holderParentDiv').offset().top;
+
+        if ($('#holderParentDiv').scrollTop() <= 0)
+        {
+            top = $('#holderParentDiv').offset().top + 30;
+        }
+
+        selectedDiv = $this;
+        $('#controlProp').html('');
+        //$('#eleName').text(eleType[type].ele);
+        $.each(eleType[$this.data('type')].prop, function (i, l) {
+            var obj = eleProp.filter((el) => el.name === l)[0];
+            if (obj) {
+                $('#controlProp').append(obj.html);
+            }
+        });
+        $('#draggable').show();
+        $('#draggable').offset({top : top});
+
+        //<br /><button type="button" id="btnSaveProp" class="btn btn-primary">Save</button>
+        var $btnSave = $('<div class="btn-block job-invoice-btn-block"><input class="btn primary" value="Save" id="btnSaveProp" type="button"></div>');
+        $('#controlProp').append($btnSave);
+
+        if( $this.find('input[type="checkbox"]').length > 0)
+        {
+            BindExportValue($this.find('input[type=checkbox]').attr('fieldname'), $this.find('input[type=checkbox]').val());
+            $('#jobFields').change(function(){
+                BindExportValue($('#jobFields').val(), $this.find('input[type=checkbox]').val());
+            });
+        }
+
+        if($this.find('input[type="text"]').length > 0 ||  $this.find('textarea').length > 0)
+        {
+
+            var textColor = '';
+            if($this.find('input[type="text"]').length > 0)
+                textColor = rgb2hex($this.find('input[type="text"]').css('color'));
+            else
+                textColor = rgb2hex($this.find('textarea').css('color'));
+
+            $("#fullPicker").spectrum({
+                color: textColor,
+                showInput: true,
+                className: "full-spectrum",
+                showInitial: true,
+                showPalette: true,
+                showSelectionPalette: true,
+                maxSelectionSize: 10,
+                preferredFormat: "hex",
+                localStorageKey: "spectrum.demo",
+                move: function (color) {
+
+                },
+                show: function () {
+
+                },
+                beforeShow: function () {
+
+                },
+                hide: function () {
+
+                },
+                change: function() {
+
+                },
+                palette: [
+                    ["rgb(0, 0, 0)", "rgb(67, 67, 67)", "rgb(102, 102, 102)", "rgb(204, 204, 204)", "rgb(217, 217, 217)","rgb(255, 255, 255)"],
+                    ["rgb(152, 0, 0)", "rgb(255, 0, 0)", "rgb(255, 153, 0)", "rgb(255, 255, 0)", "rgb(0, 255, 0)",
+                        "rgb(0, 255, 255)", "rgb(74, 134, 232)", "rgb(0, 0, 255)", "rgb(153, 0, 255)", "rgb(255, 0, 255)"],
+                    ["rgb(230, 184, 175)", "rgb(244, 204, 204)", "rgb(252, 229, 205)", "rgb(255, 242, 204)", "rgb(217, 234, 211)",
+                        "rgb(208, 224, 227)", "rgb(201, 218, 248)", "rgb(207, 226, 243)", "rgb(217, 210, 233)", "rgb(234, 209, 220)",
+                        "rgb(221, 126, 107)", "rgb(234, 153, 153)", "rgb(249, 203, 156)", "rgb(255, 229, 153)", "rgb(182, 215, 168)",
+                        "rgb(162, 196, 201)", "rgb(164, 194, 244)", "rgb(159, 197, 232)", "rgb(180, 167, 214)", "rgb(213, 166, 189)",
+                        "rgb(204, 65, 37)", "rgb(224, 102, 102)", "rgb(246, 178, 107)", "rgb(255, 217, 102)", "rgb(147, 196, 125)",
+                        "rgb(118, 165, 175)", "rgb(109, 158, 235)", "rgb(111, 168, 220)", "rgb(142, 124, 195)", "rgb(194, 123, 160)",
+                        "rgb(166, 28, 0)", "rgb(204, 0, 0)", "rgb(230, 145, 56)", "rgb(241, 194, 50)", "rgb(106, 168, 79)",
+                        "rgb(69, 129, 142)", "rgb(60, 120, 216)", "rgb(61, 133, 198)", "rgb(103, 78, 167)", "rgb(166, 77, 121)",
+                        "rgb(91, 15, 0)", "rgb(102, 0, 0)", "rgb(120, 63, 4)", "rgb(127, 96, 0)", "rgb(39, 78, 19)",
+                        "rgb(12, 52, 61)", "rgb(28, 69, 135)", "rgb(7, 55, 99)", "rgb(32, 18, 77)", "rgb(76, 17, 48)"]
+                ]
+            });
+
+            $("#fullPicker").val(textColor);
+        }
+
+        $btnSave.click(function () {
+            debugger;
+            $this.height($('#eleHeight').val());
+            $this.width($('#eleWidth').val());
+            $this.css({
+                'font-family': $('#eleFontFamily').val(),
+                'font-size': $('#eleFontSize').val() || $this.css('font-size')
+            });
+            if($this.find("input[type=radio]").length>0)
+            {
+                $this.data('group', $('#eleGroupName').val().trim());
+                $this.find('input').attr('name', $('#eleGroupName').val().trim())
+            }
+            else if($this.find('input[type=text]').length>0)
+            {
+                $this.find('input[type=text]').attr('maxlength',$('#eleMaxLength').val());
+                $this.find('input[type=text]').attr('fieldname',$('#jobFields option:selected').val());
+                $this.find('input[type=text]').css("font-weight", $('#eleBold').hasClass('active')? "bold":"normal");
+                $this.find('input[type=text]').css("font-style", $('#eleItalic').hasClass('active')? "italic":"normal");
+                $this.find('input[type=text]').css("text-decoration", $('#eleUnderline').hasClass('active') ? "underline" : "none");
+                $this.find('input[type=text]').css("color", $("#fullPicker").val());
+            }
+            else if($this.find('textarea').length>0)
+            {
+                $this.find('textarea').attr('maxlength',$('#eleMaxLength').val());
+                $this.find('textarea').attr('fieldname',$('#jobFields option:selected').val());
+                $this.find('textarea').css("font-weight", $('#eleBold').hasClass('active')? "bold":"normal");
+                $this.find('textarea').css("font-style", $('#eleItalic').hasClass('active')? "italic":"normal");
+                $this.find('textarea').css("text-decoration", $('#eleUnderline').hasClass('active')? "underline":"none");
+                $this.find('textarea').css("color", $("#fullPicker").val());
+            }
+            else if($this.find('input[type=checkbox]').length>0){
+                $this.find('input[type=checkbox]').attr('fieldname',$('#jobFields option:selected').val());
+                $this.find('input[type=checkbox]').val($('#ddlExportValue option:selected').val());
+            }
+
+            if($this.attr("data-type") == 'sa'){
+                $this.find('input[type=text]').attr('horialign',$('#ddlHoriAlign option:selected').val());
+                $this.find('input[type=text]').attr('vertalign',$('#ddlVertAlign option:selected').val());
+                $this.find('input[type=text]').attr('aspectratio',$('input[type="radio"][name="aspectratio"]:checked').val());
+            }
+        });
+        $('#eleHeight').val($this.height());
+        $('#eleWidth').val($this.width());
+        $('#eleFontSize').val($this.css('font-size'));
+        $('#eleFontFamily').val($this.css('font-family'));
+        $('#eleGroupName').val($this.data('group'));
+        if($this.find('input[type=text]').length>0)
+        {
+            $('#eleMaxLength').val($this.find('input[type=text]').attr('maxlength'));
+            $('#jobFields').val($this.find('input[type=text]').attr('fieldname'));
+            $this.find('input[type=text]').css('font-weight')=="bold"?$('#eleBold').addClass('active'):$('#eleBold').removeClass('active');
+            $this.find('input[type=text]').css('font-style')=="italic"?$('#eleItalic').addClass('active'):$('#eleItalic').removeClass('active');
+            $this.find('input[type=text]').css('text-decoration') == "underline" ? $('#eleUnderline').addClass('active') : $('#eleUnderline').removeClass('active');
+        }
+        else if($this.find('textarea').length>0)
+        {
+            $('#eleMaxLength').val($this.find('textarea').attr('maxlength'));
+            $('#jobFields').val($this.find('textarea').attr('fieldname'));
+            $this.find('textarea').css('font-weight')=="bold"?$('#eleBold').addClass('active'):$('#eleBold').removeClass('active');
+            $this.find('textarea').css('font-style')=="italic"?$('#eleItalic').addClass('active'):$('#eleItalic').removeClass('active');
+            $this.find('textarea').css('text-decoration')=="underline"?$('#eleUnderline').addClass('active'):$('#eleUnderline').removeClass('active');
+        }
+        else if($this.find('input[type=checkbox]').length>0){
+            $('#jobFields').val($this.find('input[type=checkbox]').attr('fieldname'));
+        }
+
+        if($this.attr('data-type') == 'sa') {
+            $('#ddlHoriAlign').val($this.find('input[type=text]').attr('horialign'));
+            $('#ddlVertAlign').val($this.find('input[type=text]').attr('vertalign'));
+            $('input[type="radio"][name="aspectratio"][value="'+$this.find('input[type=text]').attr('aspectratio')+'"]').prop('checked',true)
+        }
+
+        $ActiveDiv = $this;
+    }
+
+    /**
+     * If another page rendering in progress, waits until the rendering is
+     * finised. Otherwise, executes rendering immediately.
+     */
+    function queueRenderPage(num, xOffset, yOffset) {
+        if (pageRendering) {
+            pageNumPending = num;
+            pageLeftPending = xOffset;
+            pageTopPending = yOffset;
+        } else {
+            renderPage(num, xOffset, yOffset, false);
+        }
+    }
+    function getInheritableProperty(annotation, name) {
+        var item = annotation;
+        while (item && !item.has(name)) {
+            item = item.get('Parent');
+        }
+        if (!item)
+            return null;
+        return item.get(name);
+    }
+
+    var validation = {
+        isGlyphsNumber: function (str) {
+            var pattern = /^`+\d+$/;
+            return pattern.test(str);  // returns a boolean
+        }
+    };
+</script>
+
+<script>
+    // Input Control drag-drop
+    $(function () {
+        $("#selectable").selectable();
+    });
+
+    $("#selectable li").draggable({
+        helper: "clone",
+        start: function (event, ui) {
+            $(ui.helper).css('z-index', 9);
+        }
+    });
+
+    var selectedDiv;
+
+    function applyDrop(container) {
+        $(container).droppable({
+            over: function (event, ui) {
+                if (true) {
+                    $(this).addClass("droppable-above").removeClass("droppable-below");
+                }
+                else {
+                    $(this).removeClass("droppable-above").addClass("droppable-below");
+                }
+            },
+            classes: {
+                "ui-droppable-active": "",
+                "ui-droppable-hover": ""
+            },
+            drop: function (event, ui) {
+                var type = $(ui.helper).data('type');
+                if ($(ui.helper).hasClass("added")) {
+                    var left = $(ui.helper).offset().left;
+                    var top = $(ui.helper).offset().top;
+                    var IsHeightGreater = false;
+                    $('#the-svg').find('svg').each(function(index){
+                        if(IsHeightGreater)
+                        {
+                            top =  $(this).offset().top;
+                            $(ui.helper).attr('pagenumber', ++index);
+                            return false;
+                        }
+                        var bottom = $(this).height() + $(this).offset().top;
+                        if(bottom >= top)
+                        {
+                            if(bottom < top + $(ui.helper).height())
+                            {
+                                if(bottom >= top + $(ui.helper).height()/2)
+                                {
+                                    top =  parseInt(bottom - $(ui.helper).height());
+                                    $(ui.helper).attr('pagenumber', ++index);
+                                    return false;
+                                }
+                                else{
+                                    IsHeightGreater = true;
+                                }
+                            }
+                            else{
+                                $(ui.helper).attr('pagenumber', ++index);
+                                return false;
+                            }
+                        }
+                    })
+
+                    $(ui.helper).offset({left: left, top : top});
+                    return;
+                }
+
+                if (type == "t") {
+                    var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + eleType[type].width + ';height:' + eleType[type].height + ';position:absolute;background:' + eleType[type].color + ';font-family:' + eleType[type].font + '"><input class="control" type="text" style="width:100%;height:100%;background:transparent;border:0px" maxlength="50"></input></div>');//onclick="handler(this)"
+                }
+                else if (type == "ta") {
+                    var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + eleType[type].width + ';height:' + eleType[type].height + ';position:absolute;background:' + eleType[type].color + ';font-family:' + eleType[type].font + '"><textarea class="control" style="width:100%;height:100%;background:transparent;border:0px" maxlength="50"></textarea></div>');
+                }
+                else if (type == "r") {
+                    var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);width:' + eleType[type].width + ';height:' + eleType[type].height + ';position:absolute;"><input id="radbtn" class="control" type="radio" style="width:100%;height:100%;background:transparent"></input></div>');
+                }
+                else if (type == "c") {
+                    var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);width:' + eleType[type].width + ';height:' + eleType[type].height + ';position:absolute;"><input class="control" type="checkbox" onchange="OnCheckboxChange(this)" style="width:100%; height:100%; background:transparent"></input></div>');
+                }
+                else if ( type == "sa" ){
+                    var $div = $('<div data-type=' + type + ' class="added" style="border: 1px dotted rgb(0, 0, 0);opacity:0.8;width:' + eleType[type].width + ';height:' + eleType[type].height + ';position:absolute;background:' + eleType[type].color + ';"><input class="control" type="text" readonly="readonly" horialign="Left" vertalign="Bottom" style="width:100%; height:100%; background:transparent; border:0px" ></input></div>');
+                }
+
+                $('#holder').append($div);
+
+                var left = $(ui.helper).offset().left;
+                var top = $(ui.helper).offset().top;
+                var IsHeightGreater = false;
+                $('#the-svg').find('svg').each(function(index){
+                    if(IsHeightGreater)
+                    {
+                        top =  $(this).offset().top;
+                        $div.attr('pagenumber', ++index);
+                        return false;
+                    }
+                    var bottom = $(this).height() + $(this).offset().top;
+                    if(bottom >= top)
+                    {
+                        if(bottom < top + $div.height())
+                        {
+                            if(bottom >= top + $div.height()/2)
+                            {
+                                top =  parseInt(bottom - $div.height());
+                                $div.attr('pagenumber', ++index);
+                                return false;
+                            }
+                            else{
+                                IsHeightGreater = true;
+                            }
+                        }
+                        else{
+                            $div.attr('pagenumber', ++index);
+                            return false;
+                        }
+                    }
+                });
+
+                $div.offset({left: left, top : top});
+
+                $div.click(function () {
+                    InputControlClick($(this));
+                });
+
+                $('.added .control').click(function () {
+                    $(this).focus();
+                });
+                $div.draggable({ cancel: false, containment : '.ui-droppable' }).resizable({ containment : '.ui-droppable', handles:'nw,ne,sw,se' });
+            }
+        });
+    }
+
+    //function inputFocus(ele) {
+    //    $(ele).css({
+    //        'opacity': 1,
+    //        'background-color': 'transparent'
+    //    });
+    //};
+    //function onFocusOut(ele) {
+    //    $(ele).css({
+    //        'opacity': 0.2,
+    //        'background-color': 'rgb(0, 255, 0)'
+    //    });
+    //};
+
+
+    //prop: ['height', 'width', 'maxlength', 'font-size', 'font-family', 'job-field', 'bold', 'italic', 'underline']
+
+    var color = "#EDC201";
+    var eleType = {
+        t: {
+            ele: 'Textbox',
+            height: '30px',
+            width: '200px',
+            color: '#cbf7cb',
+            font: 'Arial',
+            prop: ['height', 'width', 'maxlength', 'font-size', 'font-family', 'job-field', 'colorpicker', 'bold', 'italic']
+        },
+        ta: {
+            ele: 'Textarea',
+            height: '100px',
+            width: '300px',
+            color: '#cbf7cb',
+            font: 'Arial',
+            prop: ['height', 'width', 'maxlength', 'font-size', 'font-family', 'job-field', 'colorpicker', 'bold', 'italic']
+        },
+        c: {
+            ele: 'Checkbox',
+            height: '30px',
+            width: '30px',
+            prop: ['height', 'width', 'job-field', 'export-value']
+        },
+        r: {
+            ele: 'Radio',
+            height: '30px',
+            width: '30px',
+            prop: ['height', 'width', 'group']
+        },
+        sa : {
+            ele: 'Signature',
+            height: '100px',
+            width: '300px',
+            color: '#cbf7cb',
+            prop: ['height', 'width', 'job-field', 'horialign', 'vertalign', 'aspectratio']
+        }
+
+    }
+
+    var jobFields = $('#jobFields')[0].outerHTML.replace(/\n/g, "<br />");
+
+    $('#jobFields').remove()
+
+    var eleProp = [{
+        name: 'height',
+        displayName: 'Height',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Height</label><input type="text" class="form-control" id="eleHeight" /></div></div>'
+    }, {
+        name: 'width',
+        displayName: 'Width',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Width</label><input type="text" class="form-control" id="eleWidth" /></div></div>'
+    }, {
+        name: 'maxlength',
+        displayName: 'Max-length',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Max-length</label><input type="text" class="form-control" id="eleMaxLength" /></div></div>'
+    }, {
+        name: 'font-size',
+        displayName: 'Font Size',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Font Size</label><input type="text" class="form-control" id="eleFontSize" /></div></div>'
+    }, {
+        name: 'font-family',
+        displayName: 'Font Family',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Font Family</label><select class="form-control" id="eleFontFamily"><option>Arial</option><option>Candara</option><option>Courier</option><option>Helvetica</option></select></div></div>'
+    }, {
+        name: 'job-field',
+        displayName: 'Job Field',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Job Field</label>' + jobFields + '</div></div>'
+    }, {
+        name: 'export-value',
+        displayName: 'Export Value',
+        html: '<div class="row" style="display:none"><div class="form-group col-xs-12"><label class="control-label">Export Value</label><select class="form-control" id="ddlExportValue" name="ddlExportValue"></select></div></div>'
+    }, {
+        name: 'group',
+        displayName: 'Group Name',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Group Name</label><input type="text" class="form-control" id="eleGroupName" /></div></div>'
+    }, {
+        name: 'horialign',
+        displayName: 'Horizontal Alignment',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Horizontal Alignment</label><select id="ddlHoriAlign" class="form-control"><option value="Left" selected="selected">Left</option><option value="Center">Center</option><option value="Right">Right</option></select></div></div>'
+
+    }, {
+        name: 'vertalign',
+        displayName: 'Vertical Alignment',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Vertical Alignment</label><select id="ddlVertAlign" class="form-control"><option value="Top">Top</option><option value="Middle">Middle</option><option value="Bottom" selected="selected">Bottom</option></select></div></div>'
+
+    }, {
+        name: 'aspectratio',
+        displayName: 'Aspect Ratio',
+        html: '<div class="form-group col-xs-12 radio"><label><input type="radio" value="0" name="aspectratio" checked="checked" style="transform: scale(1.2);">Aspect Ratio</label><label><input type="radio" value="1" name="aspectratio" style="transform: scale(1.2);">Stretched</label></div>'
+    }, {
+        name:'colorpicker',
+        displayName : 'Color',
+        html: '<div class="row"><div class="form-group col-xs-12"><label class="control-label">Color</label>&nbsp;&nbsp;&nbsp;<input type="text" id="fullPicker" /></div></div>'
+    }, {
+        name: 'bold',
+        displayName: 'Bold',
+        html: '<span class="font-style" id="eleBold" onclick="CheckProperty(this)"><img src="../images/bold.png" alt=""></span>'
+    }, {
+        name: 'italic',
+        displayName: 'Italic',
+        html: '<span class="font-style" id="eleItalic" onclick="CheckProperty(this)"><img src="../images/italic.png" alt=""></span>'
+    }]
+
+    //    name: 'underline',
+    //    displayName: 'Underline',
+    //    html: '<span class="font-style" id="eleUnderline" onclick="CheckProperty(this)"><img src="../images/underlined.png" alt=""></span>'
+    //},
+
+
+    function CheckProperty(e){
+        if($(e).hasClass('active'))
+            $(e).removeClass('active');
+        else
+            $(e).addClass('active');
+    }
+
+    var mousePos = {
+        x: 0,
+        y: 0
+    };
+
+    $("body").mousemove(function (e) {
+        mousePos.x = e.pageX;
+        mousePos.y = e.pageY;
+    });
+
+
+    $('#btnSaveFile').click(function (e) {
+        e.preventDefault();
+        var data = [];
+        $('.added').each(function () {
+            debugger;
+            //var $this = $(this);
+            //var canvasTop = $('#the-svg').offset().top;
+            //var canvasLeft = $('#the-svg').offset().left;
+
+            //var divTop = $this.offset().top;
+            //var divLeft = $this.offset().left;
+
+            //divTop = parseInt((divTop - canvasTop)/scale) + canvasTop;
+            //divLeft = parseInt((divLeft - canvasLeft)/scale) + canvasLeft;
+
+            //canvasTop = canvasTop + $('#holder').find('#the-svg').height()/scale;
+            //divTop = divTop + ($this.height() + 2)/scale;
+
+            //var llx = divLeft - canvasLeft;
+            //var lly = canvasTop - divTop;
+
+            var $this = $(this),
+            pageNumber = parseInt($(this).attr('pagenumber'));
+            var canvastop = $('#the-svg').offset().top;
+            var canvasleft = $('#the-svg').offset().left;
+
+            var divtop = $this.offset().top - ($($('#the-svg').find('svg')[pageNumber -1]).offset().top - canvastop);
+            var divleft = $this.offset().left;
+
+            divtop = parseInt((divtop - canvastop)/scale) + canvastop;
+            divleft = parseInt((divleft - canvasleft)/scale) + canvasleft;
+
+            canvastop = canvastop + $($('#the-svg').find('svg')[pageNumber -1]).height()/scale;
+            divtop = divtop + ($this.height() + 2)/scale;
+
+            var llx = divleft - canvasleft;
+            var lly = canvastop - divtop;
+            var obj = {
+                type: $this.data('type'),
+                'font-size': $this.css('font-size'),
+                llx: llx,
+                lly: lly,        // childOffset.top - $this.height(),
+                urx: llx + ($this.width() + 2)/scale,
+                ury: lly + ($this.height() + 2)/scale,
+                'font-family': $this.css('font-family'),
+                group: $this.data('group'),
+                check: $this.find('input[type=checkbox]').is(":checked"),
+                radio: $this.find("input[type=radio]:checked").val()=="on"?true:false,
+                pagenumber : pageNumber,
+                //underline: $this.find('input[type=text]').length>0? $this.find('input[type=text]').css('text-decoration'):'none',
+                //fontWeighttxt: $this.find('textarea').length>0? $this.find('textarea').css('font-weight'):'normal',
+                //fontStyletxt: $this.find('textarea').length>0? $this.find('textarea').css('font-style'):'normal',
+                //underlinetxt: $this.find('textarea').length>0? $this.find('textarea').css('text-decoration'):'none',
+            }
+            if(obj.type == 't')
+            {
+                obj['fieldname'] = $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('fieldname') : null;
+                obj['value'] = $this.find('input[type=text]').val();
+                obj['vertalign'] =  $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('vertalign') : null;
+                obj['horialign'] =  $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('horialign') : null;
+                obj['aspectratio'] = $('input[type="radio"][name="aspectratio"]:checked').val();
+                obj['maxlength'] = $this.find('input[type=text]').length > 0? $this.find('input[type=text]').attr('maxlength'):null;
+                obj['textcolor'] = $this.find('input[type=text]').length > 0 ? rgb2hex($this.find('input[type=text]').css('color')) : null;
+                obj['fontWeight'] = $this.find('input[type=text]').length>0? $this.find('input[type=text]').css('font-weight'):'normal';
+                obj['fontStyle'] = $this.find('input[type=text]').length>0? $this.find('input[type=text]').css('font-style'):'normal';
+            }
+            else if(obj.type == 'ta'){
+                obj['fieldname'] = $this.find('textarea').length> 0 ? $this.find('textarea').attr('fieldname') : null;
+                obj['value'] = $this.find('textarea').val();
+                obj['maxlength'] = $this.find('textarea').length>0? $this.find('textarea').attr('maxlength'):null;
+                obj['textcolor'] = $this.find('textarea').length > 0 ? rgb2hex($this.find('textarea').css('color')) : null;
+                obj['fontWeight'] = $this.find('textarea').length>0? $this.find('textarea').css('font-weight'):'normal';
+                obj['fontStyle'] = $this.find('textarea').length>0? $this.find('textarea').css('font-style'):'normal';
+            }
+            else if (obj.type == 'c'){
+                obj['fieldname'] = $this.find('input[type=checkbox]').length> 0 ? $this.find('input[type=checkbox]').attr('fieldname') : null;
+                obj['value'] = $this.find('input[type=checkbox]').val();
+            }
+            else if(obj.type == 'sa') {
+                obj['fieldname'] = $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('fieldname') : null;
+                obj['vertalign'] =  $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('vertalign') : null;
+                obj['horialign'] =  $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('horialign') : null;
+                obj['aspectratio'] = $this.find('input[type=text]').length> 0 ? $this.find('input[type=text]').attr('aspectratio') : null;
+            }
+            data.push(obj);
+        });
+        $.ajax({
+            url: '@Url.Action("SaveOpenDocumentTemplate", "DocumentTemplate")?docTemplateId='+ $('#DocumentTemplateId').val(),
+            type: "POST",
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(data),
+            success: function (response) {
+                if (response.status) {
+                    showSuccessMessage("Document Template has been updated successfully.");
+                    setTimeout(function(){ window.open('@Url.Action("JobSetting", "JobSetting")', "_self");}, 300);
+                }
+                else {
+                    showErrorMessage(response.error);
+                }
+            },
+            error: function () {
+                showErrorMessage("Document Template has not been updated.");
+            }
+        });
+    });
+
+    $('#holder').keyup(function (e) {
+        if (e.keyCode == 46) {
+            if (selectedDiv) {
+                selectedDiv.remove();
+            }
+        }
+    });
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegion").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+    }
+
+    var hexDigits = new Array
+        ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f");
+
+    //Function to convert rgb color to hex format
+    function rgb2hex(rgb) {
+        rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+    }
+
+    function hex(x) {
+        return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+    }
+
+
+</script>

@@ -1,0 +1,1295 @@
+﻿@model FormBot.Entity.Job.JobInvoice
+@using FormBot.Helper;
+@{
+    Layout = null;
+    //FormBot.Helper.Helper.Common.WriteErrorLog("Partial view header");
+}
+@Scripts.Render("~/bundles/bootstrap")
+<style>
+    .hide_column {
+        display: none;
+    }
+
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .invoice_delete_ic {
+        background-image: url("/images/ic-trash-wh.png") !important;
+        background-position: 6px 9px;
+        background-repeat: no-repeat;
+        float: right !important;
+        padding: 0 10px 0 28px !important;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }
+
+    #grid .table-responsive td.dt-right {
+        text-align: right;
+    }
+</style>
+
+
+<script>
+    $(function () {
+
+        $("#updateInvoice").click(function () {
+            console.log("save")
+            var invoiceID = '';
+            if ($("#hdnJobInvoiceID"))
+                invoiceID = $("#hdnJobInvoiceID").val();
+            if (invoiceID != 0) {
+                var invoiceStatus = '0';
+                if ($("#drdInvoiceStatus"))
+                    invoiceStatus = $("#drdInvoiceStatus").val();
+
+                var url = '@Url.Action("updateInvoiceNumber", "JobInvoiceDetail")?invoiceID=' + invoiceID +
+                         '&invoiceNumber=' + $("#InvoiceNumber").val() +
+                        '&status=' + invoiceStatus;
+                $.ajax(
+                   {
+                       url: url,
+                       method: 'POST',
+                       cache: false,
+                       success: function (success) {
+                           $(".alert").hide();
+                           $("#successMsgRegion").html("Invoice detail updated successfully.");
+                           $("#successMsgRegion").show();
+                           $("#successMsgRegion").fadeOut(3000);
+                           jobInvoiceDetail.loadData(invoiceID);
+
+                       },
+                       error: function (success) {
+                           $(".alert").hide();
+                           $("#errorMsgRegion").html("Please try again.");
+                           $("#errorMsgRegion").show();
+                           $("#errorMsgRegion").fadeOut(3000);
+                       }
+                   });
+            }
+            else {
+                $(".alert").hide();
+                $("#errorMsgRegion").html("First add invoice component and try again.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(3000);
+            }
+        });
+
+
+    });
+</script>
+<div class="container-fluid">
+    <input type="hidden" id="hasJobID" value="0" />
+    <div class="row">
+        @Html.Hidden("hdnJobInvoiceID", "0")
+        @Html.HiddenFor(m => m.XeroApprovedDate, new { @id = "hdnXeroApprovedDate" })
+        @Html.Hidden("hdnInvoiceToUserType", (string)ViewBag.UserType)
+        <div id="grid">
+            <div class="grid_rightform">
+                <div class="grfp">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="exampleInputName2">Status:</label>
+                            @Html.DropDownListFor(m => m.Status, new List<selectlistitem>
+                                {
+                                new SelectListItem{ Text="Outstanding", Value = "4" },
+                                new SelectListItem{ Text="Partial Payment", Value = "3" },
+                                new SelectListItem{ Text="Paid", Value = "1" },
+                                new SelectListItem{ Text="Canceled", Value = "2" }
+                                }, new { @id = "drdInvoiceStatus", @class = "form-control wth150 mrr10" }
+                                )
+
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail2">Invoice:</label>
+                            @Html.TextBoxFor(m => m.InvoiceNumber, new { @class = "form-control wth150" })
+                        </div>
+                        <div class="form-group">
+                            <input class="btn primary dropdown-toggle save_ic btn_notext" type="button" id="updateInvoice">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="invoice-omponents">
+                <div role="group" class="btn-group">
+
+
+                    <button aria-expanded="false" aria-haspopup="true" data-toggle="dropdown" class="btn primary dropdown-toggle add_ic" type="button">
+                        Add Invoice Components<span class="caret"></span>
+                    </button>
+                    <input class="btn primary dropdown-toggle invoice_delete_ic btn_notext" type="button" id="btnDeleteInvoice" onclick="deleteInvoiceDetial()">
+                    <ul class="dropdown-menu">
+                        @{if (Model != null && Model.XeroApprovedDate == null)
+                        {
+                            <li><a href="#" id="AddTime">Add Time</a></li>
+                            <li><a href="#" id="addEditParts">Add Part</a></li>
+                        }
+                        }
+                        <li><a href="#" id="addPayments">Add Payment</a></li>
+                    </ul>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="exampleInputName2">Invoiced :</label>
+                        <select id="drdInvoiced" class="form-control">
+                            <option value="0">All</option>
+                            <option value="1">Yes</option>
+                            <option value="2">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail2">Show Charge :</label>
+                        <select id="drdInvoiceType" class="form-control">
+                            <option value="0">All</option>
+                            <option value="2">Time</option>
+                            <option value="1">Parts</option>
+                            <option value="3">Payments</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="invoiceDetailListTable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%" style="text-align:center;"><span>@Html.CheckBox("chkall", new { id = "chkAll" }) </span></th>
+                            <th width="10%"><span>@Html.DisplayName("TimeStart") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Type")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Description") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Staff")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Job Visit")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Quantity")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Price/Rate")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Sub Total")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Cost")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Profit")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Margin")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Tax")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Total")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Billable")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Invoiced")</span></th>
+                            <th style="display:none;"><span>@Html.DisplayName("JobInvoiceDetailID")</span></th>
+                            <th style="display:none;"><span>@Html.DisplayName("JobInvoiceType")</span></th>
+                            <th style="display:none;"><span>@Html.DisplayName("Payments")</span></th>
+                            <th style="display:none;"><span>@Html.DisplayName("Remaining")</span></th>
+                            <th style="display:none;"><span>@Html.DisplayName("TaxAmountConsider")</span></th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <td width="60%" colspan="6"></td>
+                            <td colspan="2" style="text-align:right;"> <strong>Summary</strong><em class="i-icon"><img alt="" src="/images/i-icon.png"></em></td>
+                            <td class="dt-right">@ViewBag.SubTotal</td>
+                            <td class="dt-right">@ViewBag.Cost</td>
+                            <td class="dt-right">@ViewBag.Profit</td>
+                            <td class="dt-right">@ViewBag.Margin</td>
+                            <td>&nbsp;</td>
+                            <td align="right">
+                                @{
+                                    if (ViewBag.PDFFound != null)
+                                    {
+                                        var showPdf = "none";
+                                        var filename = @Model.FileName + ".pdf";
+                                        //FormBot.Helper.Helper.Common.WriteErrorLog(System.IO.Path.Combine(ProjectSession.ProofDocumentsURL.Replace("/", "") + "\\JobDocuments" + "\\" + Model.JobId + "\\" + "Invoice\\Report\\" + filename));
+                                        if (System.IO.File.Exists(System.IO.Path.Combine(ProjectSession.ProofDocumentsURL.Replace("/", "") + "\\JobDocuments" + "\\" + Model.JobId + "\\" + "Invoice\\Report\\" + filename)) == true)
+                                            showPdf = "block";
+
+                                        <img src="/images/pdf.png" style="cursor:pointer;display:@showPdf" filename="@filename" title="Download" onclick="DownloadReport(this)" />
+                                    }
+                                }
+                            </td>
+                            <td colspan="2">
+                                <div class="btn-group dropup" role="group">
+                                    <button id="btnInvoiceAction" type="button" class="btn primary dropdown-toggle action-btn"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                        Action<span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+
+                                        <li><a id="generateInvoice">Generate Invoice</a></li>
+                                        <li>
+                                            <a href="javascript:void(0);" onclick="submitInvoiceDetail.submitXeroApprove()">
+                                                Send approved invoice to XERO
+                                            </a>
+                                        </li>
+                                        @{if (Model != null && Model.XeroApprovedDate == null)
+                                        {
+                                            <li>
+                                                <a href="javascript:void(0);" onclick="submitInvoiceDetail.submitXeroDraft()">
+                                                    Send draft invoice to XERO
+                                                </a>
+                                            </li>
+                                        }
+                                        }
+                                        <li><a id="exportCSV">Export .CSV</a></li>
+
+
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+
+                </table>
+                <table id="invoceDetailSummary" style="display:none;">
+                    <tr>
+                        <td width="60%" colspan="6"></td>
+                        <td colspan="2" style="text-align:right;"> <strong>Summary</strong><em class="i-icon"><img alt="" src="/images/i-icon.png"></em></td>
+                        <td class="dt-right">@ViewBag.SubTotal</td>
+                        <td class="dt-right">@ViewBag.Cost</td>
+                        <td class="dt-right">@ViewBag.Profit</td>
+                        <td class="dt-right">@ViewBag.Margin</td>
+                        <td>&nbsp;</td>
+                        <td align="right">
+                            @{
+                                if (ViewBag.PDFFound != null)
+                                {
+                                    var showPdf = "none";
+                                    var filename = @Model.FileName + ".pdf";
+                                    if (System.IO.File.Exists(System.IO.Path.Combine(ProjectSession.ProofDocumentsURL.Replace("/", "") + "\\JobDocuments" + "\\" + Model.JobId + "\\" + "Invoice\\Report\\" + filename)) == true)
+                                        showPdf = "block";
+
+                                    <img src="/images/pdf.png" style="cursor:pointer;display:@showPdf" filename="@filename" title="Download" onclick="DownloadReport(this)" />
+                                }
+                            }
+                        </td>
+                        <td colspan="2">
+                            <div class="btn-group dropup" role="group">
+                                <button id="btnInvoiceAction" type="button" class="btn primary dropdown-toggle action-btn"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    Action<span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right">
+
+                                    <li><a id="generateInvoice">Generate Invoice</a></li>
+                                    <li>
+                                        <a href="javascript:void(0);" onclick="submitInvoiceDetail.submitXeroApprove()">
+                                            Send approved invoice to XERO
+                                        </a>
+                                    </li>
+                                    @{if (Model != null && Model.XeroApprovedDate == null)
+                                    {
+                                        <li>
+                                            <a href="javascript:void(0);" onclick="submitInvoiceDetail.submitXeroDraft()">
+                                                Send draft invoice to XERO
+                                            </a>
+                                        </li>
+                                    }
+                                    }
+                                    <li><a id="exportCSV">Export .CSV</a></li>
+
+
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-sm-6 col-md-4">
+            <div class="form-inline  invoice-to">
+                <div class="form-group">
+                    <label for="exampleInputName2">Invoice to :</label>
+                    @{
+                        if (ViewBag.UserList != null)
+                        {
+                            @Html.DropDownList("drpInvoiceTo", (SelectList)ViewBag.UserList, new { @class = "form-control" })
+                        }
+                    }
+                </div>
+                <div class="form-group">
+                    @{
+                        string invoiceBtnValue = "Send Invoice";
+                        if (Model.Sent == true)
+                        {
+                            invoiceBtnValue = "Resend Invoice";
+                        }
+                    }
+                    <input type="button" class="default resend-invoice resend_ic" onclick="submitInvoiceDetail.sendInvoice()" value="@invoiceBtnValue">
+                </div>
+                <div class="clear"></div>
+                @if (ViewBag.InvoiceToUserDetail != null)
+                {
+                    <p>@ViewBag.InvoiceToUserDetail</p>
+                }
+                @{if (Model != null && Model.InvoiceSentDate != null)
+                {
+                    @Html.Raw("<span class='last-invoice-text'>last invoice sent (" + Model.InvoiceSentDate.Value.ToString(ProjectConfiguration.GetDateFormat.Replace('m', 'M')) + "&nbsp;" + Convert.ToDateTime(Model.InvoiceSentDate).ToString("HH:mm tt") + ")</span>");
+                }
+
+                }
+                @if (ViewBag.InvoiceToUserId != null)
+                {
+                    @Html.Hidden("hdnInvoiceToUserId", (Int32)ViewBag.InvoiceToUserId)
+                }
+                @if (ViewBag.InvoiceToEmailId != null)
+                {
+                    @Html.Hidden("hdnInvoiceToEmailId", (string)ViewBag.InvoiceToEmailId)
+                }
+                @Html.Hidden("hdnFileExist", Model.FileExist)
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-8">
+            <div class="Profitability">
+
+                <table id="invoceDetailSummary2" border="0" collapse="0">
+                    <tbody>
+                        <tr>
+                            <td class="label">Job Profitability</td>
+                            <td><span class="total">Total</span></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Billable</td>
+                            <td>@ViewBag.SubTotal</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Actual Cost</td>
+                            <td>@ViewBag.Cost</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="label">Profit</td>
+                            <td>@ViewBag.Profit / @ViewBag.Margin %</td>
+                        </tr>
+                    </tfoot>
+
+                </table>
+
+                <table id="invoceDetailSummary3" border="0" collapse="0">
+                    <tbody>
+                        <tr>
+                            <td></td>
+                            <td><span class="total">Total</span></td>
+                        </tr>
+                        <tr>
+                            <td class="label">Billable</td>
+                            <td id="">@ViewBag.SubTotal</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Tax</td>
+                            <td id="">@ViewBag.Tax</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Total</td>
+                            <td id="">@ViewBag.SummaryTotal</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td class="label">Payments</td>
+                            <td id="">@ViewBag.Payments</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Remaining</td>
+                            <td id="">@ViewBag.Ramaning</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade add-part-modal" tabindex="-1" role="dialog" id="popupAddTime">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmAddTime"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-part-modal" tabindex="-1" role="dialog" id="popupAddEditPart">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title">Add/Edit Part</h4>
+
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForInvoice" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInvoice" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <div class="form-box">
+                        <div class="row">
+                            <div class="col-lg-6" id="addEditPartContent">
+
+                            </div>
+                            <div class="col-lg-6" id="jobPartListContent">
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn primary save_ic" id="btnJobPartSave" tabindex="13">Save</button>
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal" tabindex="14">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade add-part-modal" tabindex="-1" role="dialog" id="popupAddPayment">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="frmAddPayment"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">View File</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            @*<img src="" id="imgViewImage" class="" style="display:block;margin:0 auto;" />*@
+
+                            <img src="" id="imgViewImage" style="height:500px;" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="dialog-ConnectZero"></div>
+
+@*<div class="modal fade add-part-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="vertical-alignment-helper">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header ">
+                        <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">View File</h4>
+                    </div>
+                    <div class="modal-body fixheight">
+                        <div class="form-border">
+                            <div>
+                                <img src="" id="imgViewImage" class="" style="display:block;margin:0 auto;" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+<script>
+    $("#btnJobPartSave").click(function (e) {
+        e.preventDefault();
+        SaveInvoiceDetail();
+    });
+    $("#btnClosepopupProof").click(function () {
+        $('#popupProof').modal('hide');
+    });
+
+
+    $(function () {
+
+        @*var invoiceID = $("#hdnJobInvoiceID").val();
+
+          var pdfhref = '@Url.Action("CreateReport", "JobInvoiceDetail", new { Filename = "Invoice1", ExportType = "Pdf", jobInvoiceID =2})';
+
+         $("#anchorPdf").attr('href',pdfhref);
+
+
+        var csvhref = '@Url.Action("CreateCSV", "JobInvoiceDetail")?jobInvoiceID=' + invoiceID;
+         $("#anchorCSV").attr('href',csvhref);*@
+
+
+        $("#AddTime").click(function () {
+            loadAddTime('');
+        });
+
+        $("#addEditParts").click(function () {
+
+            var jobId = $("#BasicDetails_JobID").val();
+
+            GetJobInvoiceDetailById(0, jobId);
+        });
+    });
+
+    function loadAddTime(jobInvoiceDetailID) {
+        var jobId = $("#hasJobID").val();
+        $.ajax({
+            url: '@Url.Action("GetJobTimeById", "JobInvoiceDetail")?jobId=' + jobId + '&jobInvoiceDetailID=' + jobInvoiceDetailID,
+            dataType: 'html',
+            method: "get",
+            success: function (data) {
+                $("#frmAddTime").html(data);
+
+                @*var fileName = $("#FileName").val();
+                    var jobInvoiceDetailId = $("#JobInvoiceDetailID").val();
+                    var jobId = $("#BasicDetails_JobID").val();
+
+                    if (fileName != null && fileName != undefined && fileName != "") {
+                        var fullFileName = jobInvoiceDetailId + "_" + fileName;
+                        var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                        var imagePath = proofDocumentURL + "JobDocuments" + "/" + jobId + "/" + "Invoice";
+                        var SRC = imagePath + "/" + fullFileName;
+                        $('#imgSign').attr('src', SRC);
+                        $('#imgSign').attr('class', fullFileName);
+                        $('#imgSign').attr('folderName', jobId);
+
+                        var result = "<tr class='success' data-tmpname='" + fullFileName + "' data-filename='" + fullFileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage('" + this + "');' >&times;</a></td></tr>";
+                        $("#tblSelectedFile1").append(result);
+                    }*@
+            }
+        });
+
+        if ($("#InvoiceNumber")) {
+            $("#InvoiceNumber").val();
+        }
+        else
+            $("#InvoiceNumber").val("123");
+
+        $("#popupAddTime").modal();
+    }
+
+    //Payment click
+
+    $("#addPayments").click(function () {
+        var JobInvoiceDetailId = "";
+        PaymentPopup(JobInvoiceDetailId);
+    });
+
+    function PaymentPopup(JobInvoiceDetailId) {
+        var InvoiceNumber;
+        var jobId = $("#BasicDetails_JobID").val();
+        var jobInvoiceId = $("#hdnJobInvoiceID").val();
+        $("#JobInvoiceID").val(jobInvoiceId);
+        if ($("#InvoiceNumber")) {
+            $("#InvoiceNumber").val();
+            InvoiceNumber = $("#InvoiceNumber").val();
+        }
+        else
+            InvoiceNumber = $("#InvoiceNumber").val("123");
+
+        $.ajax({
+            url: '@Url.Action("GetJobPaymentById", "JobInvoiceDetail")?jobInvoiceId=' + jobInvoiceId + '&jobId=' + jobId + '&InvoiceNumber=' + InvoiceNumber + '&JobInvoiceDetailId=' + JobInvoiceDetailId,
+            dataType: 'html',
+            method: "get",
+            success: function (data) {
+                $("#frmAddPayment").html(data);
+            }
+        });
+
+
+        $("#popupAddPayment").modal();
+        setTimeout(function () {
+            $('#PaymentType').focus();
+        }, 1000);
+    }
+
+    function GetJobInvoiceDetailById(jobInvoiceDetailID, jobId) {
+
+        $.ajax({
+            url: '@Url.Action("GetJobPartsById", "JobInvoiceDetail")?jobInvoiceDetailID=' + jobInvoiceDetailID + '&jobId=' + jobId,
+            dataType: 'html',
+            method: "get",
+            success: function (data) {
+                $("#addEditPartContent").html(data);
+
+
+
+                @*if ($("#DateAdded").val() != '' && $("#DateAdded").val() != null && $("#DateAdded").val() != undefined)
+                    {
+                        var dateAdded = moment($("#DateAdded").val()).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+                        $("#DateAdded").val(dateAdded);
+
+                    }*@
+
+                @*var fileName = $("#FileName").val();
+                        var jobInvoiceDetailId = $("#JobInvoiceDetailID").val();
+                        var jobId = $("#JobId").val();
+
+                        if (fileName != null && fileName != undefined && fileName != "") {
+                            var fullFileName = jobInvoiceDetailId + "_" + fileName;
+                            var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+                            var imagePath = proofDocumentURL + "JobDocuments" + "/" + jobId + "/" + "Invoice";
+                            var SRC = imagePath + "/" + fullFileName;
+                            $('#imgSign').attr('src', SRC);
+                            $('#imgSign').attr('class', fullFileName);
+                            $('#imgSign').attr('folderName', jobId);
+
+                            var result = "<tr class='success' data-tmpname='" + fullFileName + "' data-filename='" + fullFileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage();' >&times;</a></td></tr>";
+                            $("#tblSelectedFile2").append(result);
+                        }*@
+
+                var jobInvoiceId = $("#hdnJobInvoiceID").val();
+                $("#JobInvoiceID").val(jobInvoiceId);
+
+                //TODO
+
+                if ($("#InvoiceNumber")) {
+                    $("#InvoiceNumber").val();
+                }
+                else
+                    $("#InvoiceNumber").val("123");
+
+                $("#JobId").val(jobId);
+            }
+        });
+
+        $.ajax({
+            url: '@Url.Action("GetJobPartsPartialView", "JobInvoiceDetail")?isAllParts=true',
+            dataType: 'html',
+            method: "get",
+            success: function (data) {
+
+                $("#jobPartListContent").html(data);
+
+                //var table = $('#datatable').dataTable();
+
+                $('.datatableParts tbody').on('click', 'tr', function (e) {
+
+                    var jobPartId = $(e.currentTarget).find('td').find('a').attr('jobPartId');
+
+                    $.ajax({
+                        url: '@Url.Action("GetJobPartsByIdOnClick", "JobInvoiceDetail")?jobPartId=' + jobPartId,
+                        dataType: 'html',
+                        method: "get",
+                        success: function (data) {
+
+                            if (data) {
+                                var jobPartsData = JSON.parse(data);
+
+                                //$.each(jobPartsData, function (index, ele) {
+                                $("#Description").val(jobPartsData[0].Description);
+                                $("#ItemCode").val(jobPartsData[0].ItemCode);
+                                $("#Sale").val(jobPartsData[0].Sale);
+                                $("#Purchase").val(jobPartsData[0].Purchase);
+                                $("#Margin").val(jobPartsData[0].Margin);
+                                $("#JobPartID").val(jobPartsData[0].JobPartID);
+
+                                CalculateMargin();
+                                //});
+                            }
+                        }
+                    });
+
+                });
+
+                $("#popupAddEditPart").modal();
+                setTimeout(function () {
+                    $('#IsBillable').focus();
+                }, 1000);
+            }
+        });
+
+    }
+
+</script>
+
+<script>
+    var submitInvoiceDetail = submitInvoiceDetail || [];
+
+    submitInvoiceDetail = (function () {
+        var pub = {};
+
+        pub.submitToXero = function (invoiceStatus) {
+            var invoiceID = '', invoiceNumber = '', jobID = '', contactName = '', invoicePaidStatus = '';
+            var IsValidate = true;
+            if ($("#hdnJobInvoiceID"))
+                invoiceID = $("#hdnJobInvoiceID").val();
+
+            if ($("#InvoiceNumber"))
+                invoiceNumber = $("#InvoiceNumber").val();
+
+            if ($("#hasJobID"))
+                jobID = $("#hasJobID").val();
+
+            if ($("#drpInvoiceTo"))
+                contactName = $("#drpInvoiceTo").text();
+
+            if ($("#drdInvoiceStatus"))
+                invoicePaidStatus = $("#drdInvoiceStatus").val();
+
+            if (IsValidate && (invoiceID == undefined || invoiceID == '')) {
+                IsValidate = false;
+                $(".alert").hide();
+                $("#errorMsgRegion").html("Invoice ID is not found.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(5000);
+            }
+
+            if (IsValidate && (invoiceNumber == undefined || invoiceNumber == '')) {
+                IsValidate = false;
+                $(".alert").hide();
+                $("#errorMsgRegion").html("Invoice number is not found.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(5000);
+            }
+
+            if (IsValidate && (jobID == undefined || jobID == '')) {
+                IsValidate = false;
+                $(".alert").hide();
+                $("#errorMsgRegion").html("Job ID is not found.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(5000);
+            }
+
+            if (IsValidate && (contactName == undefined || contactName == '')) {
+                IsValidate = false;
+                $(".alert").hide();
+                $("#errorMsgRegion").html("Contact is not found.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(5000);
+            }
+
+            if (IsValidate && (invoicePaidStatus == undefined || invoicePaidStatus == '')) {
+                IsValidate = false;
+                $(".alert").hide();
+                $("#errorMsgRegion").html("Invoice status is not found.");
+                $("#errorMsgRegion").show();
+                $("#errorMsgRegion").fadeOut(5000);
+            }
+
+            {
+
+                if (IsValidate) {
+                    var url = '@Url.Action("submitToZero", "JobInvoiceDetail")?invoiceID=' + invoiceID +
+                        '&invoiceNumber=' + invoiceNumber + '&invoiceStatus=' + invoiceStatus
+                    + '&jobID=' + jobID + '&contactName=' + contactName + '&invoicePaidStatus=' + invoicePaidStatus;
+                    $.ajax(
+                       {
+                           url: url,
+                           method: 'POST',
+                           cache: false,
+                           success: function (result) {
+
+                               console.log("success == " + result.status);
+                               if (result.status == false) {
+                                   if (result.error == 'Specified method is not supported.') {
+
+                                       window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                                   }
+                                   else {
+                                       $(".alert").hide();
+                                       $("#errorMsgRegion").html(result.error);
+                                       $("#errorMsgRegion").show();
+                                       $("#errorMsgRegion").fadeOut(5000);
+                                   }
+                               }
+                               else {
+                                   $(".alert").hide();
+                                   if (invoiceStatus == 1) {
+                                       $("#successMsgRegion").html("Drafted invoice successfully in XERO.");
+                                   }
+                                   else {
+                                       $("#successMsgRegion").html("Approved invoice successfully in XERO.");
+                                       //jobInvoiceDetail.loadData(invoiceID);
+                                   }
+                                   $("#successMsgRegion").show();
+                                   $("#successMsgRegion").fadeOut(3000);
+                                   if ($('#invoiceDetailListTable')) {
+                                       var table = $('#invoiceDetailListTable').DataTable();
+                                       table.destroy();
+                                   }
+                                   jobInvoiceDetail.loadData(invoiceID)
+                               }
+                           },
+                           error: function (result) {
+
+                               console.log("error == " + result.error);
+
+                           }
+                       });
+                }
+
+            }
+
+        }
+        function documentReady() {
+            $('#drdInvoiced').on('change', function () {
+                if ($("#hdnJobInvoiceID")) {
+                    if ($('#invoiceDetailListTable')) {
+                        var table = $('#invoiceDetailListTable').DataTable();
+                        table.destroy();
+                    }
+                    jobInvoiceDetail.loadInvoiceDetailGrid($("#hdnJobInvoiceID").val())
+                }
+            });
+            $('#drdInvoiceType').on('change', function () {
+                if ($("#hdnJobInvoiceID")) {
+                    if ($('#invoiceDetailListTable')) {
+                        var table = $('#invoiceDetailListTable').DataTable();
+                        table.destroy();
+                    }
+                    jobInvoiceDetail.loadInvoiceDetailGrid($("#hdnJobInvoiceID").val())
+                }
+            });
+
+            //$('#drdInvoiceTo').on('change', function () {
+
+            //});
+
+        }
+
+        function sendInvoice() {
+            if ($("#hdnJobInvoiceID")) {
+                var invoiceID = $("#hdnJobInvoiceID").val();
+                if (invoiceID != 0) {
+                    var id = $("#drpInvoiceTo").val();
+                    if (id != undefined && id != '') {
+
+                        var sendMail = true;
+                        var jobID = '', queryString = '', emailId = '', invoiceSendUserID = '', fileExit = '';
+                        fileExit = $("#hdnFileExist").val();
+                        console.log("hdnFileExist == " + fileExit);
+                        if (fileExit == 0) {
+                            if (confirm("Are you sure?")) {
+                                sendMail = true;
+                            }
+                            else {
+                                sendMail = false;
+                            }
+                        }
+
+                        jobID = $("#hasJobID").val();
+
+                        if ($("#hdnInvoiceToUserType").val() == '2' && (jobID == undefined || jobID == '')) {
+                            sendMail = false;
+                        }
+                        else {
+                            queryString = queryString + "&jobID=" + jobID;
+                        }
+
+
+                        if ($("#hdnInvoiceToEmailId")) {
+                            emailId = $("#hdnInvoiceToEmailId").val();
+                            queryString = queryString + "&emailId=" + emailId;
+                        }
+                        if ($("#hdnInvoiceToUserId")) {
+                            invoiceSendUserID = $("#hdnInvoiceToUserId").val();
+                            queryString = queryString + "&invoiceSendUserID=" + invoiceSendUserID;
+                        }
+                        console.log("sendMail 2 == " + sendMail);
+                        if (sendMail == true) {
+                            var url = '@Url.Action("SendInvoice", "JobInvoiceDetail")?id=' + id
+                                + '&invoiceId=' + $("#hdnJobInvoiceID").val()
+                                + '&userType=' + $("#hdnInvoiceToUserType").val() + queryString;
+
+                            $.ajax(
+                               {
+                                   url: url,
+                                   method: 'POST',
+                                   cache: false,
+                                   success: function (success) {
+                                       $(".alert").hide();
+                                       $("#successMsgRegion").html("Invoice send successfully.");
+                                       $("#successMsgRegion").show();
+                                       $("#successMsgRegion").fadeOut(3000);
+                                   },
+                                   error: function (success) {
+
+                                   }
+                               });
+                        }
+                    }
+                }
+                else {
+                    $(".alert").hide();
+                    $("#errorMsgRegion").html("First add invoice component and try again.");
+                    $("#errorMsgRegion").show();
+                    $("#errorMsgRegion").fadeOut(3000);
+                }
+            }
+        }
+
+        pub.openPopup = function (id, type) {
+
+
+        }
+
+        return {
+            submitXeroDraft: function () { pub.submitToXero('1') },
+            submitXeroApprove: function () { pub.submitToXero('2') },
+            documentReady: documentReady,
+            sendInvoice: sendInvoice,
+            openPopup: function (id, type) { pub.openPopup(id, type) },
+        };
+
+    })();
+    submitInvoiceDetail.documentReady();
+
+    @*function deleteInvoiceDetial()
+                        {
+                            var url = '@Url.Action("DeleteJobInvoiceDetail", "JobInvoiceDetail")?invoiceDetailID=123';
+
+                            $.ajax(
+                               {
+                                   url: url,
+                                   method: 'POST',
+                                   cache: false,
+                                   success: function (success) {
+
+                                   },
+                                   error: function (success) {
+
+                                   }
+                               });
+                        }*@
+
+    function deleteInvoiceDetial() {
+        var selectedRows = '';
+        $('#invoiceDetailListTable tbody input[type="checkbox"]').each(function () {
+            if ($(this).prop('checked') == true) {
+                selectedRows = selectedRows + $(this).attr('id').substring(4) + ",";
+            }
+        })
+
+        if (selectedRows != null && selectedRows.length > 0) {
+            var result = confirm("Are you sure you want to delete selected invoice item(s) ?");
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("DeleteJobInvoiceDetail", "JobInvoiceDetail")?ids=' + selectedRows,
+                    type: "POST",
+                    async: false,
+                    contentType: "application/text; charset=utf-8",
+                    success: function (data) {
+                        if (data.success) {
+                            $(".alert").hide();
+                            $("#errorMsgRegion").html(closeButton + "invoice item(s) deleted successfully.");
+                            $("#errorMsgRegion").show();
+                            $("#errorMsgRegion").fadeOut(3000);
+                            $("#invoiceDetailListTable").dataTable().fnDraw();
+                        }
+                    },
+                });
+            }
+        }
+        else {
+            alert('Please select any component for delete.');
+        }
+    }
+
+    function submitXeroDraft(invoiceStatus) {
+        var invoiceID = '', invoiceNumber = '', jobID = '', contactName = '', invoicePaidStatus = '';
+
+        if ($("#hdnJobInvoiceID"))
+            invoiceID = $("#hdnJobInvoiceID").val();
+
+        if ($("#InvoiceNumber"))
+            invoiceNumber = $("#InvoiceNumber").val();
+
+        if ($("#hasJobID"))
+            jobID = $("#hasJobID").val();
+
+        if ($("#drpInvoiceTo"))
+            contactName = $("#drpInvoiceTo").text();
+
+        if ($("#drdInvoiceStatus"))
+            invoicePaidStatus = $("#drdInvoiceStatus").val();
+
+
+        if (invoiceID != '' && invoiceNumber != '' && invoiceStatus != '') {
+
+            var url = '@Url.Action("submitToZero", "JobInvoiceDetail")?invoiceID=' + invoiceID +
+                '&invoiceNumber=' + invoiceNumber + '&invoiceStatus=' + invoiceStatus
+                + '&jobID=' + jobID + '&contactName=' + contactName + '&invoicePaidStatus=' + invoicePaidStatus;
+            $.ajax(
+               {
+                   url: url,
+                   method: 'POST',
+                   cache: false,
+                   success: function (success) {
+
+                   },
+                   error: function (success) {
+
+                   }
+               });
+
+        }
+    }
+
+    function FileUpload(objFileUpload, Guid, objTableFileControl, fullFileName) {
+        'use strict';
+
+        var jobId = $("#BasicDetails_JobID").val();
+        var url = '@Url.Action("UploadInvoice", "Job")';
+        $("#loading-image").show();
+        $("#loading-image").hide();
+
+        objFileUpload.fileupload({
+
+            url: url,
+            dataType: 'json',
+            done: function (e, data) {
+                var UploadFailedFiles = [];
+                UploadFailedFiles.length = 0;
+
+                for (var i = 0; i < data.result.length; i++) {
+                    if (data.result[i].Status == true) {
+
+                        var guid = Guid;
+
+                        var OldInvoiceFile = fullFileName;
+                        var Sign = document.getElementsByName("Signature")
+                        if (Sign.length > 0) {
+                            var signName = Sign[0].defaultValue;
+
+                            if (signName != null && signName != "") {
+                                DeleteFileFromFolderAndInvoice(signName, jobId, OldInvoiceFile);
+                            }
+
+                        }
+
+                        $("[name='Signature']").each(function () {
+                            $(this).remove();
+                        });
+
+
+
+                        data.result[i].FileName.substr(0, data.result[i].FileName.indexOf('_')); // "72"
+                        data.result[i].FileName.substr(data.result[i].FileName.indexOf('_') + 1); // "tocirah sneab"
+
+                        var originalFileName = data.result[i].FileName.substr(data.result[i].FileName.indexOf('_') + 1);
+
+                        $('<input type="hidden">').attr({
+                            name: 'Signature',
+                            value: data.result[i].FileName,
+                            id: data.result[i].FileName,
+                        }).appendTo('form');
+
+                        var result = "<tr class='success' data-tmpname='" + data.result[i].FileName + "' data-filename='" + data.result[i].FileName + "'><td>" + originalFileName + "</td><td><img src='@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png' id='signDelete' title='Delete'  style='cursor: pointer' oldFileName='" + fullFileName + "'  filename='" + data.result[i].FileName + "' onclick='deleteInvoiceImage(this);'></td></tr>"; objTableFileControl.append(result);
+
+                        objTableFileControl.html(result);
+
+                    }
+                    else {
+                        UploadFailedFiles.push(data.result[i].FileName);
+                    }
+                }
+                if (UploadFailedFiles.length > 0) {
+                    $(".alert").hide();
+                    $("#successMsgRegionPopUp").hide();
+                    message = "File has not been uploaded."
+                    showErrorMessage(message);
+                }
+                else {
+                    $(".alert").hide();
+                }
+            },
+            progressall: function (e, data) {
+
+            },
+
+            singleFileUploads: false,
+            send: function (e, data) {
+
+                var documentType = data.files[0].type.split("/");
+                var mimeType = documentType[0];
+                if (data.files.length > 1) {
+                    for (var i = 0; i < data.files.length; i++) {
+                        if (data.files[i].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                            $(".alert").hide();
+                            $("#successMsgRegionPopUp").hide();
+
+                            message = data.files[i].name + " Maximum file size limit exceeded. Please upload a file smaller  than" + " " + maxsize + "MB";
+                            showErrorMessage(message);
+
+                            return false;
+                        }
+                    }
+                }
+                else {
+                    if (data.files[0].size > parseInt('@FormBot.Helper.ProjectSession.MaxImageSize')) {
+                        $(".alert").hide();
+                        $("#successMsgRegionInvoice").hide();
+
+                        message = "Maximum  file size limit exceeded.Please upload a  file smaller than" + " " + maxsize + "MB";
+                        showErrorMessage(message);
+                        return false;
+                    }
+                }
+
+                $(".alert").hide();
+                $("#errorMsgRegion").html("");
+                $("#errorMsgRegion").hide();
+
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: Guid,
+                    id: Guid,
+                }).appendTo('form');
+                return true;
+
+            },
+            formData: { guid: Guid, jobId: jobId }
+        });
+    }
+    function DeleteFileFromFolderAndInvoice(fileNames, guid, OldInvoiceFile) {
+        $.ajax(
+            {
+                url: '@Url.Action("DeleteFileFromInvoiceFolder", "Job")',
+                data: { fileName: fileNames, FolderName: guid, OldInvoiceFile: OldInvoiceFile },
+                contentType: 'application/json',
+                method: 'get',
+                success: function (data) {
+
+                },
+            });
+    }
+    function deleteInvoiceImage(obj) {
+        var fileName = $(obj).attr('filename');
+        var FolderName = $("#JobId").val();
+        var OldFileName = $(obj).attr('oldFileName');
+        //if (confirm('Are you sure you want to delete this file ?')) {
+        $.ajax(
+                {
+                    url: '@Url.Action("DeleteFileFromInvoiceFolder", "JobInvoiceDetail")',
+                    data: { fileName: fileName, FolderName: FolderName, OldInvoiceFile: OldFileName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        $("#tblSelectedFile1").html("");
+                        $("#tblSelectedFile2").html("");
+                        $("#tblSelectedFile3").html("");
+                        $("[name='Signature']").each(function () {
+                            $(this).remove();
+                        });
+                        return false;
+                    }
+                });
+        //}
+        //else
+        //    return;
+    }
+
+    function OnlyDecimalAllow(obj, event) {
+        var $this = obj;
+        if ((event.which != 46 || $this.val().indexOf('.') != -1) &&
+           ((event.which < 48 || event.which > 57) &&
+           (event.which != 0 && event.which != 8))) {
+            event.preventDefault();
+        }
+
+        var text = obj.val();
+        if ((event.which == 46) && (text.indexOf('.') == -1)) {
+            setTimeout(function () {
+                if ($this.val().substring($this.val().indexOf('.')).length > 3) {
+                    $this.val($this.val().substring(0, $this.val().indexOf('.') + 3));
+                }
+            }, 1);
+        }
+
+        if ((text.indexOf('.') != -1) &&
+            (text.substring(text.indexOf('.')).length > 2) &&
+            (event.which != 0 && event.which != 8) &&
+        (obj[0].selectionStart >= text.length - 2)) {
+            event.preventDefault();
+        }
+    }
+
+    //Proof of Open upload
+    function OpenDocument(obj) {
+        var JobId = $("#JobId").val();
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var fileName = $(obj).attr('filename');
+        var imagePath = UploadedDocumentPath + "/" + "JobDocuments" + "/" + JobId + "/" + "Invoice" + "/" + fileName;
+
+        $('#imgViewImage').attr("src", imagePath);
+        $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+    }
+
+    //Proof of Download Document
+    function DownloadDocument(obj) {
+
+        var JobId = $("#JobId").val();
+        var fileName = $(obj).attr('filename');
+        window.location.href = '@Url.Action("ViewDownloadInvoiceFile", "JobInvoiceDetail")?FileName=' + fileName + '&JobID=' + JobId;
+    }
+
+    function DownloadReport(obj) {
+        var JobId = $("#hasJobID").val();
+        var fileName = $(obj).attr('filename');
+        if (JobId != undefined)
+            window.location.href = '@Url.Action("ViewDownloadInvoiceReportFile", "JobInvoiceDetail")?FileName=' + fileName + '&JobID=' + JobId;
+        @*var ajaxUrl = '@Url.Action("ViewDownloadInvoiceReportFile", "JobInvoiceDetail")?FileName=' + fileName + '&JobID=' + JobId;
+                        $.ajax(
+                              {
+                                  url: ajaxUrl,
+                                  contentType: 'application/json',
+                                  method: 'get',
+                                  success: function (data) {
+                                      if (data == false) {
+                                          $(".alert").hide();
+                                          $("#errorMsgRegion").html("File not found.");
+                                          $("#errorMsgRegion").show();
+                                          $("#errorMsgRegion").fadeOut(3000);
+                                      }
+                                      else {
+                                          window.location = data;
+                                      }
+                                  }
+                              });*@
+    }
+
+    //$('.modal').on("hidden.bs.modal", function(e) {
+    //    if ($('.modal:visible').length) {
+    //        $('.modal-backdrop').first().css('z-index', parseInt($('.modal:visible').last().css('z-index')) - 10);
+    //        $('body').addClass('modal-open');
+    //    }
+    //}).on("show.bs.modal", function (e) {
+    //    if ($('.modal:visible').length) {
+    //        $('.modal-backdrop.in').first().css('z-index', parseInt($('.modal:visible').last().css('z-index')) + 10);
+    //        this.style.setProperty('z-index', $('.modal-backdrop.in').first().css('z-index') + 10, 'important');
+    //    }
+    //});
+
+    $('.modal').on('hidden.bs.modal', function (e) {
+        if ($('.modal').hasClass('in')) {
+            $('body').addClass('modal-open');
+        }
+    });
+
+</script>

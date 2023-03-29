@@ -1,0 +1,105 @@
+﻿@model FormBot.Entity.CreateVEEC
+@using FormBot.Helper;
+
+
+<div class="clearfix">
+    <div class="sub-title row">
+        <h4 class="calc-subheading col-sm-8" style="line-height:34px;">BASELINE EQUIPMENT</h4>
+        <div class="col-sm-4">
+            <button type="button" class="btn icon-btn pull-right" id="btnAddBaseLine" onclick="addBaslineUpgrade(1);">
+                <span class="sprite-img add_ic" style="background-position: -53px -150px;"></span>Add baseline Equipment
+            </button>
+        </div>
+    </div>
+    <div id="divBaselineGridView">
+        <div class="panel-group" role="tablist" aria-multiselectable="true" id="BaselineEquipmentDetail">
+            
+
+            @if (Model.lstBaselineEquipment != null && Model.lstBaselineEquipment.Count > 0)
+            {
+                foreach (var lstBaseline in @Model.lstBaselineEquipment)
+                {
+                    TempData["BaselineUpgrade"] = 1;
+                @Html.Partial("~/Views/VEEC/_BaselineUpgradeGridView.cshtml", lstBaseline)
+
+                    }
+                }
+        </div>
+    </div>
+</div>
+<div class="clearfix">
+
+    <div class="sub-title row">
+
+        <h4 class="calc-subheading  col-sm-8" style="line-height:34px;">UPGRADE EQUIPMENT</h4>
+        <div class="alert alert-success alert-dismissible" role="alert" id="errormessageforselectareaupgrade" style="display: none"></div>
+        @*<div class="col-sm-2 text-left">
+                <h5 class="calc-subheading">AREA NAME:</h5>
+            </div>
+            <div class="col-sm-2 areaDropdown">
+                @Html.DropDownListFor(m => m.VEECArea.Name, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "AreaSelectIdUpgrade", @class = "form-control" })
+            </div>*@
+        <div class="col-sm-4">
+            <button type="button" class="btn icon-btn pull-right" id="btnAddUpgradeLine" onclick="addBaslineUpgrade(2);">
+                <span class="sprite-img add_ic" style="background-position: -53px -150px;"></span>Add upgrade Equipment
+            </button>
+        </div>
+
+    </div>
+    <div id="divUpgradeGridView">
+        <div class="panel-group" role="tablist" aria-multiselectable="true" id="UpgradelineEquipmentDetail">
+            @if (Model.lstUpgradeEquipment != null && Model.lstUpgradeEquipment.Count > 0)
+            {
+                foreach (var lstUpgradeline in @Model.lstUpgradeEquipment)
+                {
+                    TempData["BaselineUpgrade"] = 2;
+                    @Html.Partial("~/Views/VEEC/_BaselineUpgradeGridView.cshtml", lstUpgradeline)
+                }
+            }
+        </div>
+        </div>
+</div>
+
+<script>
+    function addBaslineUpgrade(baselineUpgrade) {
+        $('#popupAddBaseLine').modal({ backdrop: 'static', keyboard: false });
+        clearBaselineValues();
+        if (baselineUpgrade == 1) {
+            $('#popupAddBaseLine').find('.modal-header > h4').text("Baseline Equipment").end().modal('show');
+            $('#baselineupgrade').val('Baseline');
+            $("#baselineupgrade").attr("disabled", "disbled");
+        } else {
+            $('#popupAddBaseLine').find('.modal-header > h4').text("Upgrade Equipment").end().modal('show');
+            $('#baselineupgrade').val('Upgrade');
+            $("#baselineupgrade").attr("disabled", "disbled");
+        }
+        EquipmentValidations(baselineUpgrade);
+        var id = $('#AreaSelectIdUpgrade').val();
+        $('#veecareaidforselectedarea').val(id);
+    }
+    var urlReloadBaselineEquipment = '@Url.Action("ReloadBaselineUpgradeEquipment", "VEEC")',
+        urlDeleteBaselineUpgradeEquipment = '@Url.Action("DeleteBaselineUpgradeEquipment","VEEC")',
+        urlAddArea = '@Url.Action("AddEditArea","VEEC")?areaname=',
+        urlEditArea = '@Url.Action("AddEditArea","VEEC")?areaname=',
+        urlRearrangeCalcZone = '@Url.Action("RearrangeCalcZone", "VEEC")?VEECId=',
+        urlAddBaselineEquipment = '@Url.Action("AddBaselineequipment","VEEC")?VEECId=',
+
+
+    urlGetAreaNameRecords = '@Url.Action("GetAreaNameRecords","VEEC")',
+    urlDeleteVEECAreaName = '@Url.Action("DeleteVEECareaName","VEEC")',
+    urlGetAreaNameList = '@Url.Action("GetAreaNameList","VEEC")?VEECId=',
+    urlGetSpacetype = '@Url.Action("GetSpacetype","VEEC")',
+    urlGetBCAClassification = '@Url.Action("GetBCAClassification", "VEEC")',
+    urlGetLampBallastCombination = '@Url.Action("GetLampBallastCombination","VEEC")',
+    urlGetLampCategory = '@Url.Action("GetLampCategory","VEEC")',
+    urlGetBaselineAssetLifetimeReference = '@Url.Action("GetBaselineAssetLifetimeReference", "VEEC")';
+    urlGetUpgradeAssetLifetimeReference = '@Url.Action("GetUpgradeAssetLifetimeReference", "VEEC")',
+    urlGetProductBrand = '@Url.Action("GetProductBrand", "VEEC")',
+    urlGetProductModel = '@Url.Action("GetProductModel", "VEEC")',
+    urlGetVRUProductBrand = '@Url.Action("GetVRUProductBrand", "VEEC")',
+    urlGetVRUProductModel = '@Url.Action("GetVRUProductModel", "VEEC")',
+    urlGetTypeOfFirstController = '@Url.Action("GetTypeOfFirstController", "VEEC")',
+    urlGetSecondControllerType = '@Url.Action("GetSecondControllerType", "VEEC")';
+
+</script>
+

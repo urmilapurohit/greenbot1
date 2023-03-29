@@ -1,0 +1,98 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+@using FormBot.Helper;
+@{
+    int currentJobStatus = 0;
+    if (Model.stcBasicDetails != null)
+    {
+        currentJobStatus = Model.stcBasicDetails.STCStatusId;
+    }
+}
+@{
+    bool isPnlInvoiceform = false;
+    bool isElecBillform = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.PnlInvoiceform.GetHashCode()) { isPnlInvoiceform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.ElecBillform.GetHashCode()) { isElecBillform = true; }
+        });
+    }
+}
+<div class="row">
+    @if (ProjectSession.UserTypeId != 8 || isPnlInvoiceform)
+    {
+        <div class="col-md-6" id="divDocumentsPnlInvoice" style="display:none">
+            <div class="job-com-box coc-form-box" style="min-height:auto;">
+                <div class="title">
+                    <i class="sprite-img form-icon"></i>PANEL INVOICE
+                    <div class="center-btn-group" id="pnlInvoiceDocbtns">
+                        <input id="uploadPnlInvoiceBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt,.heic" multiple type="file" class="upload fileUpload" style="display:none;" />
+                        <input class="btn border-btn pull-right" value="Upload" id="btnUploadPnlInvoiceDocument" type="button" style="margin-top:-5%">
+                    </div>
+                </div>
+
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionPnlInvoice" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionPnlInvoice" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div id="loader-Ajax-docpanelinvoice" class="lds-ellipsis">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+                <div class="table-responsive">
+                    <div style="height:auto;max-height:124px;">
+                        <table class="table table-hover">
+                            <tbody id="tbodyPnlInvoice"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="center-box noDocumentPnlInvoice" style="display:none">
+                    <p>There is no Panel Invoice form available, Create one now?</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (ProjectSession.UserTypeId != 8 || isElecBillform)
+    {
+        <div class="col-md-6" id="divDocumentsElecBill" style="display:none">
+            <div class="job-com-box coc-form-box" style="min-height:auto;">
+                <div class="title">
+                    <i class="sprite-img form-icon"></i>ELECTRICITY BILL
+                    <div class="center-btn-group" id="elecBillDocBtns">
+                        <input id="uploadElecBillBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt,.heic" multiple type="file" class="upload fileUpload" style="display:none;" />
+                        @*<input class="btn border-btn fileUpload1" value="Upload" id="uploadElecBillBtnDocument" type="file" style="display:none">*@
+                        <input class="btn border-btn pull-right" value="Upload" id="btnUploadElecBillDocument" type="button" style="margin-top:-5%">
+                    </div>
+                </div>
+
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionElecBill" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionElecBill" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div id="loader-Ajax-docelectricity" class="lds-ellipsis">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+                <div class="table-responsive">
+                    <div style="height:auto;max-height:124px;">
+                        <table class="table table-hover">
+                            <tbody id="tbodyElecBill"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="center-box noDocumentElecBill" style="display:none">
+                    <p>There is no Electricity Bill form available, Create one now?</p>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+

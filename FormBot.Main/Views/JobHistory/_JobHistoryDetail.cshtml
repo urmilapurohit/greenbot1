@@ -1,0 +1,185 @@
+﻿@model List<FormBot.Entity.Job.JobHistory>
+
+    <div class="message-box">
+        <div class="col-sm-12">
+            <div class="filter-menu">
+                <span class="filter-label">Filter :</span>
+                <ul class="create-job-menu clearfix" id="historyCategories">
+                    <li class="active" id="0"><a href="javascript:void(0);" title="All">All</a></li>
+                    <li id="1"><a href="javascript:void(0);" title="General" id="">General</a></li>
+                    <li id="2"><a href="javascript:void(0);" title="Interaction">Interaction</a></li>
+                    <li id="3"><a href="javascript:void(0);" title="Statuses">Statuses</a></li>
+                    <li id="4"><a href="javascript:void(0);" title="Notifications">Notifications</a></li>
+                    <li id="5"><a href="javascript:void(0);" title="Invoicing">Invoicing</a></li>
+                    <li id="6"><a href="javascript:void(0);" title="Documents">Documents</a></li>
+                    <li id="7"><a href="javascript:void(0);" title="Scheduling">Scheduling</a></li>
+                    <li id="8"><a href="javascript:void(0);" title="Signature">Signature</a></li>
+                </ul>
+            </div>
+
+            <div class="filter-menu">
+                <span class="filter-label">Date :</span>
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-2">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input type="text" placeholder="From" id="from" class="form-control date-pick" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-2 nopad">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <input type="text" placeholder="To" id="to" class="form-control date-pick" readonly="readonly">
+                                <span class="input-group-addon sprite-img date-picker"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3">
+                        <div class="form-group">
+                            <select class="form-control" id="HistoryOrder">
+                                <option value="DESC">Arrange By: Recent</option>
+                                <option value="ASC">Arrange By: Older</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <input type="button" value="Search" id="searchJobHistory" class="primary search_ic">
+                            <input type="button" value="Reset" id="resetHistory" class="default ic_reset">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div id="historyList">
+            @Html.Partial("~/Views/JobHistory/_HistoryList.cshtml", Model)
+        </div>
+    </div>
+
+    <style>
+        /*.IconsEditDelete {
+            display: none !important;
+        }*/
+        .blue-title {
+            color: #1b94da;
+        }
+        .currentPage {
+            background-color: #50b3d3 !important;
+            color: white !important;
+        }
+        .pagination-div {
+            display : flex;
+            justify-content:center;
+            align-items : center;
+        }
+    </style>
+
+<script>
+    $(document).ready(function () {
+        $('#from').datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#to").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#from").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                var toDate = new Date(ConvertDateToTick($("#to").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                if (fromDate > toDate) {
+                    $("#to").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#from").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+            tDate = moment(tickStartDate).format("MM-DD-YYYY");
+            if ($('#to').data('datepicker')) {
+                $('#to').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#to").datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        });
+        SearchHistory();
+    });
+
+    $("ul#historyCategories").on("click", "li", function () {
+        $('ul#historyCategories').each(function () {
+            $(this).find('li').each(function () {
+                $(this).removeClass("active");
+            });
+        });
+
+        $(this).addClass("active");
+        SearchHistory();
+    });
+
+    $("#searchJobHistory").on("click", function () {
+        SearchHistory();
+    });
+
+    $("#resetHistory").on("click", function () {
+        $('ul#historyCategories').each(function () {
+            $(this).find('li').each(function () {
+                $(this).removeClass("active");
+            });
+        });
+        $('ul#historyCategories > #0').addClass("active");
+        $("#from").val("");
+        $("#to").val("");
+        var d = new Date();
+        d.setDate(d.getDate() - 365);
+        $('#to').data('datepicker').setStartDate(d);
+        SearchHistory();
+    });
+    function SearchHistory(pageIndex =1,pagCount=0) {
+        
+        var categoryID = $('#historyCategories > .active').attr('id');
+        categoryID = categoryID != null ? categoryID : 0;
+
+        var jobId = $("#BasicDetails_JobID").val();
+        var fromDate = $("#from").val();
+        if (fromDate != "") {
+            fromDate = ConvertDateToTick(fromDate, '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+            fromDate = moment(fromDate).format("YYYY-MM-DD");
+        }
+
+        var toDate = $("#to").val();
+        if (toDate != "") {
+            toDate = ConvertDateToTick(toDate, '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+            toDate = moment(toDate).format("YYYY-MM-DD");
+        }
+        var order = $('#HistoryOrder').val();
+        var getUrl = '@Url.Action("ShowFilteredHistory", "Job")';
+        $("#loading-image").show();
+        setTimeout(function () {
+            $.ajax({
+                url: getUrl,
+                type: "GET",
+                data: { "jobId": jobId, "categoryID": categoryID, "order": order, "fromDate": fromDate, "toDate": toDate, "pageIndex" : pageIndex },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    debugger;
+                    $("#historyList").html($.parseHTML(Data));
+                    $('#divCustom').mCustomScrollbar();
+                }
+            });
+            $("#loading-image").hide();
+        }, 10);
+        
+        
+    
+    }
+    function DownloadHistoryDocument(e) {
+        debugger;
+        var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+        var FolderName = $(e).attr("data-folder");
+        var FileName = $(e).attr("data-name");
+        window.location.href = BaseURL + 'ViewDownloadFileForStc/Job?FileName=' + FileName + '&FolderName=' + FolderName;
+    }
+</script>

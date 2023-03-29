@@ -1,0 +1,666 @@
+﻿@using FormBot.Entity
+@using FormBot.Entity.Job
+@using FormBot.Helper
+@{
+    ////Todo
+    bool isAdd = false;
+    bool isDelete = false;
+    bool isAssignSSC = false, isAssignSCO = false, isNotesView = false, isHistoryView = false, isMessageView = false, isScheduleView = false;
+    bool isJobInvoiceView = false, isJobEmailView = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSSC.GetHashCode()) { isAssignSSC = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSCO.GetHashCode()) { isAssignSCO = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteAdd.GetHashCode()) { isAdd = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteDelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobNoteView.GetHashCode()) { isNotesView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobHistoryView.GetHashCode()) { isHistoryView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobMessageView.GetHashCode()) { isMessageView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView.GetHashCode()) { isScheduleView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobInvoiceView.GetHashCode()) { isJobInvoiceView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEmailView.GetHashCode()) { isJobEmailView = true; }
+        });
+    }
+
+    bool isSendMessage = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobMessageSend.GetHashCode()) { isSendMessage = true; }
+        });
+    }
+
+    STCBasicDetails sTCBasicDetails = new STCBasicDetails();
+    if (ViewBag.STCBasicDetails != null)
+    {
+        sTCBasicDetails = (STCBasicDetails)ViewBag.STCBasicDetails;
+    }
+}
+
+<style>
+    .dataTables_empty {
+        text-align: center !important;
+    }
+
+    .ui-autocomplete {
+        z-index: 99999999999999 !important;
+    }
+
+    .notes {
+        padding-top: 8px;
+        padding-left: 5px;
+    }
+
+    .notesTR {
+        border: none;
+        padding: 10px 20px;
+        height: 34px;
+        background-color: #f8f8f8;
+    }
+
+    .createdTR {
+        border-bottom: 1px solid #c8c8c8;
+        padding: 0px 20px;
+        height: 34px;
+        background-color: #f8f8f8;
+    }
+
+    .createdBy {
+        border: none;
+        padding-left: 5px;
+        padding-top: 5px;
+    }
+
+    .tblCase {
+        width: 100%;
+        background: #fff;
+        margin: 0px;
+        overflow-y: auto;
+    }
+
+    .createdDate {
+        border: none;
+        padding-top: 5px;
+    }
+
+    .dvIndividual {
+        border-bottom-width: 0px;
+        height: 350px;
+        border-color: #c8c8c8;
+        border: none;
+    }
+</style>
+<link href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" />
+
+<div class="container-fluid create-job message-page">
+    <div class="title title2">
+        @if (ProjectSession.UserTypeId == 1)
+        {
+            <h1 id="jobTitle" style="width:245px;">   @*width : 260px;*@
+                <span style="border: none;font-size: 25px;padding-bottom: 10px;">
+                    Job Details
+                    <span style="display:unset;">(@Model.BasicDetails.JobID)</span>
+                </span>
+            </h1>
+        }
+        else
+        {
+            <h1 id="jobTitle" style="width:140px;">
+                Job Details
+            </h1>
+        }
+        @if (Model.Header != null)
+        {
+            <div class="sub1" id="jobTitle1">
+                <span title="@Model.Header">@Model.Header</span>
+            </div>
+        }
+
+        <div class="t-btn" style="width:80px;"><a class="back-btn pull-right" id="btnJobPrint" title="Print job"><img alt=" " style="cursor:pointer" src='@Url.Content("~/images/print-b.png")'></a></div>
+        <div class="t-btn" style="width:80px;"><a class="back-btn pull-right" id="btnBack" title="Back" href="javascript:void(0);"><img alt="" src='@Url.Content("~/images/back-icon.png")'>Back</a></div>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <input type="hidden" id="hasJobID" value="0" />
+    <input type="hidden" id="STCStatusId" value="@ViewBag.STCStatusId" />
+
+    <ul class="create-job-menu">
+        <li class="active" id="ActiveJob"><a href="javascript:void(0)" title="Job Details" style="text-decoration:none;">Job Details</a></li>
+
+        <li id="aInvoice">
+            @if (isJobInvoiceView)
+            {
+                <a href="javascript:void(0);" title="Invoice" style="text-decoration:none;">Invoice</a>
+            }
+        </li>
+
+        <li id="aNotes">
+            @if (isNotesView)
+            {
+                <a href="javascript:void(0);" title="Notes" style="text-decoration:none;">Notes</a>
+            }
+        </li>
+        <li id="aHistory">
+            @if (isHistoryView)
+            {
+                <a href="javascript:void(0);" title="History" style="text-decoration:none;">History</a>
+            }
+        </li>
+        <li id="aMessage">
+            @if (isMessageView)
+            {
+                <a href="javascript:void(0);" title="Message" style="text-decoration:none;">Message</a>
+            }
+        </li>
+        <li id="aEmail">
+            @if (isJobEmailView)
+            {
+                <a href="javascript:void(0);" title="Email" style="text-decoration:none;">Email</a>
+            }
+        </li>
+
+        @*<li><a href="javascript:void(0);" title="Add Parts" style="text-decoration:none;" id="addEditParts">Add Parts</a></li>*@
+
+        <li class="assign">
+            <div class="row">
+                @if (isAssignSSC && ProjectSession.IsSSCReseller.ToString().ToLower() == "true")
+                {
+                    if (Model.BasicDetails.JobType == 1 && Model.JobID > 0)
+                    {
+                        <div class="assign-job" id="jobSSCID">
+                            <label class="control-label" id="SolarSubLabel">Assign to SSC:</label>
+                            @Html.DropDownList("SSCID", new List<SelectListItem>(), new { id = "SSCID", @class = "form-control" })
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="assign-job" id="jobSSCID" style="display:none;">
+                            <label class="control-label" id="SolarSubLabel">Assign to SSC:</label>
+                            @Html.DropDownList("SSCID", new List<SelectListItem>(), new { id = "SSCID", @class = "form-control" })
+                        </div>
+                    }
+                }
+                @if (isAssignSCO)
+                {
+                    <div class="assign-job">
+                        <label class="control-label" id="SolarConnectionLabel">Assign to SCO:</label>
+                        @Html.DropDownList("ScoID", new List<SelectListItem>(), new { id = "ScoID", @class = "form-control" })
+                    </div>
+                }
+            </div>
+        </li>
+    </ul>
+
+    <div class="row">
+        <div id="createJobView">
+            <div class="col-md-3 create-job-left-bar">
+
+                @Html.Partial("_CreateJob")
+
+
+            </div>
+            @*<div id="createDocuments">*@
+            <div class="col-md-9 create-job-right-bar">
+                <div class="row">
+                    <div class="col-sm-4 text-center">
+                        <div class="apply-box">
+                            <h3 class="title green-bg">
+                                Preapproval : <strong>
+                                    <span id="spanPreapprovalStatus">
+                                        @if (ViewBag.PreApprovalStatus != null)
+                                        {
+                                            <text>@ViewBag.PreApprovalStatus</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Not Yet Applied</text>
+                                        }
+                                    </span>
+                                </strong>
+                            </h3>
+                            <p id="preApprovalComment">
+                                @if (ViewBag.PreApprovalComment != null)
+                                {
+                                    <text>@ViewBag.PreApprovalComment</text>
+                                }
+                                else
+                                {
+                                    <text>Not Yet Applied</text>
+                                }
+                            </p>
+                            <input type="button" class="btn border-btn" value="Apply Now" id="btnApplyPreapproval" onclick="LoadPreApprovalOrConnection('@FormBot.Helper.SystemEnums.JobStage.PreApprovals.GetHashCode().ToString()')">
+                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <div class="apply-box">
+                            <h3 class="title blue-bg">
+                                Connection Paper Work : <strong>
+                                    <span id="spanConnectionStatus">
+                                        @if (ViewBag.ConnectionStatus != null)
+                                        {
+                                            <text>@ViewBag.ConnectionStatus</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Incomplete</text>
+                                        }-
+                                    </span>
+                                </strong>
+                            </h3>
+                            <p id="connectionComment">
+                                @if (ViewBag.ConnectionComment != null)
+                                {
+                                    <text>@ViewBag.ConnectionComment</text>
+                                }
+                                else
+                                {
+                                    <text>Incomplete</text>
+                                }
+                            </p>
+                            <input type="button" class="btn border-btn" value="Apply Now" id="btnApplyConnectionPaper" onclick="LoadPreApprovalOrConnection('@FormBot.Helper.SystemEnums.JobStage.Connections.GetHashCode().ToString()')">
+                        </div>
+                    </div>
+                    <div class="col-sm-4 text-center">
+                        <div class="apply-box">
+                            <h3 class="title pink-bg">
+                                STC Submission : <strong>
+                                    <span id="spanSTCStatus">
+                                        @if (ViewBag.STCStatusName != null)
+                                        {
+                                            <text>@ViewBag.STCStatusName</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Not Yet Submitted</text>
+                                        }
+                                    </span>
+                                </strong>
+                            </h3>
+                            <p id="STCDescription">
+                                @if (ViewBag.STCDescription != null)
+                                {
+                                    <text>@Html.Raw(ViewBag.STCDescription)</text>
+                                }
+                                else
+                                {
+                                    <text>
+                                        "You will need to ensure that you have these documents to trade:
+                                        (If Job is PVD:)
+                                        - CES/COC Form
+                                        - STC assignment Form
+                                        - Photos of Serial Number"
+                                    </text>
+                                }
+                            </p>
+                            @if (ProjectSession.UserTypeId == 7 || ProjectSession.UserTypeId == 9)
+                            {
+                                <input id="btnApplySTCSubmission" type="button" class="btn border-btn" value="Apply Now" onclick="checkBusinessRules(0,true)" disabled="disabled">
+                            }
+                            else
+                            {
+                                <input id="btnApplySTCSubmission" type="button" class="btn border-btn" value="Apply Now" onclick="checkBusinessRules(0,true)">
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div id="dvDocuments">
+                    @Html.Partial("_Documents")
+                </div>
+
+                @if (Model.JobID > 0)
+                {
+                    @*@Html.Action("_JobPhoto", "Job")*@
+                    @Html.Partial("_JobPhoto")
+                }
+                else
+                {
+                    <div class="documents-block">
+                        <h4 class="hed">Photos</h4>
+                        <div class="documents-inner-block">
+                            <div class="installation-title">
+                                <h5>Installation <span>(0)</span></h5>
+                                @*<div class="upload-link">
+                                        <a href="javascript:void(0)" style="text-decoration:none;" title="Upload Photos">Upload Photos |</a>
+                                        <a href="javascript:void(0)" style="text-decoration:none;" title="Delete Selected">Delete Selected</a>
+                                    </div>*@
+                            </div>
+                            <ul class="installation-list"></ul>
+
+                        </div>
+                        <div class="documents-inner-block">
+                            <div class="installation-title">
+                                <h5>Serial Number <span>(0)</span></h5>
+                                @*<div class="upload-link">
+                                        <a href="javascript:void(0)" style="text-decoration:none;" title="Upload Photos">Upload Photos |</a>
+                                        <a href="javascript:void(0)" style="text-decoration:none;" title="Delete Selected">Delete Selected</a>
+                                    </div>*@
+                            </div>
+                            <ul class="installation-list"></ul>
+
+                        </div>
+                    </div>
+                }
+                <div>
+                    @if (isScheduleView)
+                    {
+                        <div id="divSchedulingEdit">
+                            @*<div id="loading-image2" class="loadingOverlayWhite loading-imageWhite" style="position: relative; height: 440px; "><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>*@
+                        </div>
+                    }
+                </div>
+                @*<button id="btnStcCompliance" onclick="StcCompliance()">STC Compliance</button>*@
+
+                @*@Html.Partial("_jobScheduling", new ViewDataDictionary { { "id", "1234" } });*@
+                @*<div>
+                        <ul class="media-list scheduling-list">
+                            <li class="media">
+                                <div class="media-left">
+                                    <div class="date-box">
+                                        <div class="month">FEB</div>
+                                        <div class="date">22</div>
+                                        <div class="year">2016</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="media-body">
+                                <div class="edit-box">
+                                    <a class="edit" href="javascript:void(0)" title="edit"></a>
+                                    <a class="delete" href="javascript:void(0)" title="delete"></a>
+                                </div>
+                                <p><a class="volkan" href="javascript:void(0)" title="Volkan Erbroy">Volkan Erbroy</a><span class="fix-up">Fix Up</span> <span class="time">14:00 PM</span> </p>
+                                <p class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's Lorem.</p>
+                            </div>
+                        </li>
+                        <li class="media">
+                            <div class="media-left">
+                                <div class="date-box">
+                                    <div class="month">FEB</div>
+                                    <div class="date">22</div>
+                                    <div class="year">2016</div>
+                                </div>
+                            </div>
+                            <div class="media-body">
+                                <div class="edit-box">
+                                    <a class="edit" href="javascript:void(0)" title="edit"></a>
+                                    <a class="delete" href="javascript:void(0)" title="delete"></a>
+                                </div>
+                                <p><a class="volkan" href="javascript:void(0)" title="Volkan Erbroy">Volkan Erbroy</a><span class="fix-up">Fix Up</span> <span class="time">14:00 PM</span> </p>
+                                <p class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's Lorem.</p>
+                            </div>
+                        </li>
+                        <li class="media">
+                            <div class="media-left">
+                                <div class="date-box">
+                                    <div class="month">FEB</div>
+                                    <div class="date">22</div>
+                                    <div class="year">2016</div>
+                                </div>
+                            </div>
+                            <div class="media-body">
+                                <div class="edit-box">
+                                    <a class="edit" href="javascript:void(0)" title="edit"></a>
+                                    <a class="delete" href="javascript:void(0)" title="delete"></a>
+                                </div>
+                                <p><a class="volkan" href="javascript:void(0)" title="Volkan Erbroy">Volkan Erbroy</a><span class="fix-up">Fix Up</span> <span class="time">14:00 PM</span> </p>
+                                <p class="text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's Lorem.</p>
+                            </div>
+                        </li>
+                    </ul>
+
+
+
+                    </div>*@
+
+            </div>
+        </div>
+
+
+        <div id="createJobNotes" style="display:none;margin-top:25px;">
+            @*@Html.Partial("JobNotes",new FormBot.Entity.JobNotes())*@
+        </div>
+        <div id="createJobMessage" style="display: none;">
+            @*if (ViewBag.lstEmailThread != null)
+                {
+                    Html.Partial("~/Views/JobEmailThread/Messages.cshtml", (IEnumerable<FormBot.Entity.Email.EmailThread>)ViewBag.lstEmailThread)
+                }*@
+        </div>
+        <div id="invoice" style="display: none; margin-top: 25px;">
+
+        </div>
+        <div id="invoiceDetail" style="display: none; margin-top: 25px;">
+            <link href="~/Content/InvoiceDetail.css" rel="stylesheet" />
+
+            <div id="invoiceDetailList" style="display: block;">
+
+            </div>
+
+        </div>
+        <div id="history" style="display:none;">
+            @*@Html.Partial("~/Views/JobHistory/_JobHistoryDetail.cshtml")*@
+        </div>
+        <div id="EmailConversation" style="display: none;">
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade newemail-modal" id="emailboxThread" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close newEmailCloseThread" type="button" title="Close">
+                    <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                </button>
+                <div class="email-hed"> <a href="javascript:void(0)" class="admin-id"> <img alt="" src="@Url.Content("~/images/admin-id-icon.png")" class="mail-icon"><span id="emailBoxEmailId">Admin@tatvasoft.com</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <!--<li class="active"><a href="#" title="Back to List" data-dismiss="modal" aria-label="Close"> <img class="icon" src="images/back-list.png" alt="Back to List">Back to List</a></li>-->
+                    <li class="active" id="SendMail"><a href="javascript:void(0)" title="Send"> <img class="icon" src="@Url.Content("~/images/send-icon.png")" alt="Send">Send</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <!-- menu End -->
+                <div class="mail-box-input">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label required">Send To</label>
+                            <div class="col-sm-4">
+                                @if (ViewBag.JobWiseUsers != null)
+                                {
+                                    @Html.DropDownList("JobWiseUsers", (IEnumerable<SelectListItem>)ViewBag.JobWiseUsers, "Select", new { @class = "form-control" })
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group" id="FormGroupToMail" style="display:none">
+                            <label class="col-sm-1 control-label">To</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="ToMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Subject</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="SubjectMail" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Body</label>
+                            <div class="col-sm-11">
+                                <div id="editor">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Selected Files :</label>
+                            <div class="col-sm-11">
+                                <table class="table table-bordered" id="tblSelectedFile">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Attach File :</label>
+                            <div class="col-sm-11">
+                                <table class="uf">
+                                    <tr>
+                                        <td width="70">
+                                            <input id="uploadFile" placeholder="Choose File" class="form-control" disabled="disabled" style="display:none" />
+                                            <div class="fileUpload primary" style="margin:0px;">
+                                                <span>Upload</span>
+                                                <input type="file" class="upload" id="uploadFileFromSendNewMessage" title="Upload" />&nbsp;
+                                                <a href="javascript:void();" id="uplDoc">Upload Documents</a>
+                                            </div>
+                                        </td>
+                                        <td style="vertical-align:top;"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Job Document Files :</label>
+                            <div class="col-sm-11">
+                                <div class="table-responsive" id="div_EmailDoc">
+                                    @*<table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th class="checkbox-col"><input type="checkbox" value="" name=""></th>
+                                                    <th>Document Name</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (Model.lstEmailDocuments != null && Model.lstEmailDocuments.Count > 0)
+                                                {
+                                                    foreach (var item in Model.lstEmailDocuments)
+                                                    {
+                                                        <tr>
+                                                            <td class="checkbox-col"><input type="checkbox" value="" name="" class="clsEmailDoc" data-path="@item.strDocumentPath"></td>
+                                                            <td>@item.DocumentPath</td>
+                                                        </tr>
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>*@
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+@*Stc-Compliane Popup*@
+<div class="modal fade stc-status newemail-modal in" id="popupStcCompliance" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="modalContentStcCompliance">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade preapprovals newemail-modal" id="preapprovalsAndConnectionmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" id="preapprovalsAndConnectionContent">
+        </div>
+    </div>
+</div>
+
+@Html.Hidden("PreApprovalConnOrStcClicked")
+<!-- mobal======================== -->
+
+<div class="modal fade stc-status newemail-modal" id="StcModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="@Url.Content("~/Images/close-btn.png")"></button>
+                @*<div class="title">
+                        <h1>
+                            STC Submission @if (Model != null && Model.Header != null && Model.Header != "")
+                            {<span>@Model.Header</span>}
+                        </h1>
+                    </div>*@
+                <!-- Modal Header End-->
+                @*<div class="modal-body" id="STcBasicDetails">
+
+                    </div>*@
+                <div id="STcBasicDetails">
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>
+
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+    @*@Scripts.Render("~/Scripts/FormBot.js")
+    <script src="~/Scripts/jquery.fileupload.js"></script>*@
+}
+
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+<script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+<script type="text/javascript">
+    var isSendMessage = '@isSendMessage.ToString().ToLower()',
+
+         urlSaveJobNotes = '@Url.Action("SaveJobNotes", "Job")',
+         urlJobList = '@Url.Action("JobList", "Job")',
+         isDelete = '@isDelete.ToString().ToLower()',
+         urlDeleteJobNotes = '@Url.Action("DeleteJobNotes", "Job")',
+         urlUpload = '@Url.Action("Upload", "Job")',
+         urlJobSchedulingDetail = '@Url.Action("JobSchedulingDetail","JobScheduling")',
+        ModelId  = '@Model.Id',
+         Electricians_Signature = '@Model.JobElectricians.Signature',
+         Model_Guid = '@Model.Guid',
+         urlLogin = '@Url.Action("Login","Acount")',
+         UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+         MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize',
+         Model_Header = '@Model.Header',
+         urlGetJobInvoice = '@Url.Action("GetJobInvoice", "Job")',
+         isNotesView = '@isNotesView',
+         urlGetJobNotes = '@Url.Action("GetJobNotes", "Job")?jobID=',
+         BasicDetails_Title = '@Model.BasicDetails.Title',
+         isHistoryView = '@isHistoryView',
+         urlShowHistory = '@Url.Action("ShowHistory", "Job")?jobID=',
+         IsUserEmailAccountConfigured = '@ProjectSession.IsUserEmailAccountConfigured',
+         isMessageView = '@isMessageView',
+         urlLoadMessageTab = '@Url.Action("LoadMessageTab", "JobEmailThread")?jobId=',
+         urlGetMessageForJobEmailConversationForPreAndConn = '@Url.Action("GetMessageForJobEmailConversationForPreAndConn", "Job")?jobID=',
+         urlGetJobInvoiceDetail = '@Url.Action("GetJobInvoiceDetail", "JobInvoiceDetail")',
+
+         urlGetInvoiceDetailListing = '@Url.Action("GetInvoiceDetailListing", "JobInvoiceDetail")',
+         urlCreateReport = '@Url.Action("CreateReport", "JobInvoiceDetail")?Filename=Formbot_Invoice&ExportType=Pdf&jobInvoiceID=',
+         urlCreateCSV = '@Url.Action("CreateCSV", "JobInvoiceDetail")?jobInvoiceID=',
+         urlDeleteInvoice = '@Url.Action("DeleteInvoice", "Job")',
+         urlViewDownloadInvoiceReportFile = '@Url.Action("ViewDownloadInvoiceReportFile", "JobInvoiceDetail")?FileName=',
+         LoggedInUserId = '@ProjectSession.LoggedInUserId',
+         GetPageSize = @ProjectConfiguration.GetPageSize,
+         urlGetInvoiceList = '@Url.Action("GetInvoiceList", "Job")?JobID=',
+         urlApplyForPreApprovalAndConnection = '@Url.Action("ApplyForPreApprovalAndConnection", "JobEmailThread", new { area = "" })',
+         Model_JobId = @Model.JobID,
+         Model_Signature = '@Model.Signature',
+         QueryId = '@QueryString.QueryStringEncode("id=" + Convert.ToString(Model.JobID))',
+         urlPrint = '@Url.Action("Print", "Job")?id=',
+         urlIndex = "@Url.Action("Index", "Job", new {@id = "" })",
+         url_STCJobPopup = '@Url.Action("_STCJobPopup", "Job", new { area = "" })',
+         BasicDetails_IsWholeSaler = '@Model.BasicDetails.IsWholeSaler';
+</script>
+<script src="~/Scripts/View/Job/_CreateJob.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+@*<script src="~/Scripts/View/Job/Create.min.js?v=@ProjectConfiguration.ScriptVersion"></script>*@

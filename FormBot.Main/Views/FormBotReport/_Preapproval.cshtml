@@ -1,0 +1,190 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="PreBit" value="10" id="PreBit" />
+<input type="hidden" name="minSCA" value="0" id="minSCA" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstPreapprovalStatus, new MultiSelectList(Model.LstPreapprovalStatus, "Value", "Text"), new { id = "LstPreapproval", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.LstPreapprovalStatusAssigned, new MultiSelectList(Model.LstPreapprovalStatusAssigned, "Value", "Text"), new { id = "LstPreapprovalAssigned", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnPreapprovalStatusAssigned, new { id = "hdnPreapproval" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnPreSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnClearPreApproval" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SCA", function () {
+        if (parseInt($('#PreBit').val()) == 0) {
+            $('#LstPreapproval option:selected').each(function () {
+                $(this).remove().appendTo("#LstPreapprovalAssigned");
+            });
+            $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstPreapproval option:selected').length + $('#LstPreapprovalAssigned option').length) <= parseInt($('#PreBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstPreapprovalAssigned option').length < parseInt($('#PreBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstPreapproval option:selected').each(function () {
+                        $(this).remove().appendTo("#LstPreapprovalAssigned");
+                    });
+                    $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+                }
+                if (($('#LstPreapprovalAssigned option').length == parseInt($('#PreBit').val()))) {
+                    $('#btnLtoR_SCA').css('opacity', '0.5');
+                    $('#btnLtoR_SCA').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SCA').css('opacity', '1');
+                    $('#btnLtoR_SCA').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_SCA", function () {
+        $('#LstPreapprovalAssigned option:selected').each(function () {
+            $(this).remove().appendTo("#LstPreapproval");
+        });
+        var max = $('#PreBit').val();
+        if (max > 0) {
+            $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+        } else {
+            $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+        }
+        if (($('#LstPreapprovalAssigned option').length < parseInt($('#PreBit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+    });
+
+    //$(document).on("click", "#closePreapproval", function () {
+    //    $('#popupPreapproval').modal('hide');
+    //    $('#cntPreapprovals').html($('#LstPreapprovalAssigned option').length);
+    //});
+
+    $(document).on("click", "#btnPreSave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstPreapprovalAssigned option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minsca').val() > 0) {
+            document.getelementbyid('btnjobstatusbarreport').style.pointerevents = 'auto';
+            $('#btnjobstatusbarreport').css('opacity', '1');
+            $("#errormsgregion").hide();
+        }
+        //if ($('#minSCA').val() > 0 && $('#LstPreapprovalAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+        //    //$("#errorMsgRegion").removeClass("alert-success");
+        //    //$("#errorMsgRegion").addClass("alert-danger");
+        //    //$("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+        //    //$("#errorMsgRegion").show();
+        //}
+        if (($('#LstPreapprovalAssigned option').length <= parseInt($('#PreBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() == 1 && $('#LstPreapprovalAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnPreapproval").val(strAssignedAttendeeList);
+        $('#cntPreapprovals').html($('#LstPreapprovalAssigned option').length);
+        $('#popupPreapproval').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearPreApproval", function () {
+        $('#LstPreapprovalAssigned option').each(function () {
+            $(this).remove().appendTo("#LstPreapproval");
+        });
+        var max = $('#PreBit').val();
+        if (max > 0) {
+            $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+        } else {
+            $('#AvailablePreapprovals').html($('#LstPreapprovalAssigned option').length);
+        }
+        if (($('#LstPreapprovalAssigned option').length < parseInt($('#PreBit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+        $("#hdnPreapproval").val('');
+    });
+
+    $(document).on("click", "#closePreapproval", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstPreapprovalAssigned option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minSCA').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() > 0 && $('#LstPreapprovalAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+        //    //$("#errorMsgRegion").removeClass("alert-success");
+        //    //$("#errorMsgRegion").addClass("alert-danger");
+        //    //$("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+        //    //$("#errorMsgRegion").show();
+        //}
+        if (($('#LstPreapprovalAssigned option').length <= parseInt($('#PreBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        //if ($('#minSCA').val() == 1 && $('#LstPreapprovalAssigned option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnPreapproval").val(strAssignedAttendeeList);
+        $('#cntPreapprovals').html($('#LstPreapprovalAssigned option').length);
+        $('#popupPreapproval').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

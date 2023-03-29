@@ -1,0 +1,52 @@
+﻿
+
+@model FormBot.Entity.SPV.SpvLog
+
+@{
+    /**/
+
+    var SerialNumber = @Model.lstSpvlog.Select(x=>x.SerialNumber).ToList();
+    //var RecSearchFailedBatchId = @Model.lstSPVHistorySearchFailedBatchId.Select(a => a.JobID).Distinct().ToList();
+}
+
+<style>
+    .spv-failure-reason.checklist-block ul.checklist {margin:0px; max-height:400px;overflow:scroll;}
+    .spv-failure-reason.checklist-block ul.checklist li h5 {color:#2a2f33;}
+    .spv-failure-reason.checklist-block ul.checklist li h5 b {
+        color: #1b954c;
+        font-size:13px;
+        float:right;
+}
+</style>
+
+@if (Model.lstSpvlog.Count() > 0)
+{
+
+    <div class="panel-group" id="accordionExample" role="tablist" aria-multiselectable="true">
+
+
+
+        <div class="spv-failure-reason checklist-block">
+            <ul class="checklist">
+        @for (var i = 0; i < SerialNumber.Count; i++)
+        {
+                <li>
+                    <h5>@Html.Raw(Model.lstSpvlog[i].SerialNumber) <b>@Model.lstSpvlog[i].RequestTime</b></h5>
+                    <p>@Html.Raw(Model.lstSpvlog[i].ResponseMessage).</p>
+                    
+                </li>
+        }
+            </ul>
+        </div>
+
+    </div>
+    <label class="no-record-found" style="display:none;"> No records found </label>
+}
+else
+{
+    <label class="no-record-found"> No records found </label>
+}
+
+
+
+

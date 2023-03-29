@@ -1,0 +1,89 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+@using FormBot.Helper;
+@{
+    int settlementTerm = 0;
+    int statusId = 0;
+    if (Model.stcBasicDetails != null)
+    {
+        if (Model.stcBasicDetails.STCSettlementTerm != null && Model.stcBasicDetails.STCSettlementTerm > 0)
+        {
+            settlementTerm = Model.stcBasicDetails.STCSettlementTerm.Value;
+        }
+
+        statusId = Model.stcBasicDetails.STCStatusId;
+    }
+}
+
+<div class="job-com-box">
+    <div class="row">
+        <div id="loader-Ajax-stcjob" class="lds-ellipsis" style="display:none;">
+            <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="col-lg-4">
+            <div class="sub-title STC-sub-title bor-none">
+                <h4 style="display:inline;">STC Status:</h4>
+                <span class="applied-select color-text" id="spanSTCStatus" style="color: @ViewBag.ColorCode">
+                </span>
+            </div>
+            <p id="lblDescription" style="word-break: break-all;"></p>
+            <div id="checkListItemForTrade">
+                @Html.Partial("_CheckListItemForTrade", Model)
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+
+            @Html.Partial("_PricingSettlementTerm", Model.pricingManager)
+
+            @if (Model.stcBasicDetails.STCStatusId != 10 && Model.stcBasicDetails.STCStatusId != 12)
+            {
+                <div class="total-amonut" id="totalSTCAmount">
+                    <p class="traded-as color-text"><strong>Traded as </strong><span id="stcValueForJob"></span> - $<span id="pricingTerm"></span></p>
+                    <p class="total-amt color-text" id="calculatedSTCParent"><strong>Total Amount : </strong>$<span id="spancalculatedSTC">@Model.stcBasicDetails.TotalAmount</span></p>
+                    <p class="date" id="lblLastUpdatedDate"></p>
+                </div>
+            }
+
+            <div id="tradeButton">
+                <div class="text-center clearfix term">
+                    @if (Model.pricingManager.IsSAASUser)
+                    {
+                        <input id="btnApplyTradeStc" type="button" value="TRADE STCs SAAS" class="primary trade-btn center-box" onclick="ApplyTradeSAAS();">
+                    }
+                    else
+                    {
+                        <input id="btnApplyTradeStc" type="button" value="TRADE STCs" class="primary trade-btn center-box" onclick="ApplyTradeForStc();">
+                    }
+                </div>
+                <br />
+                <div class="text-center term">By trading on the Greenbot Portal, you agree to the following</div><br />
+                <div class="text-center term">
+                    <a href="https://greenbot.com.au/index.php/terms-and-conditions" target="_blank">Terms and Conditions</a> @*<span>I AGREE </span><input type="checkbox" id="chkAgree" />*@
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    var pricingManager_STCAmount = '@Model.pricingManager.STCAmount';
+    var stc_STCPrice = '@Model.stcBasicDetails.STCPrice';
+    var stc_Status = '@Model.stcBasicDetails.Status';
+    var stc_STCStatusId = '@Model.stcBasicDetails.STCStatusId';
+
+    $(document).ready(function () {
+        STCJobNewScreenOnLoad();
+        if ($("#JobSystemDetails_SystemSize").val() > 60) {            
+            if ((($("#tbodyPnlInvoice").children().length == 0) || ($("#tbodyElecBill").children().length == 0)) && (ProjectSession_UserTypeId != 1)) {
+                $('#btnApplyTradeStc').hide();
+            }
+            else {
+                $('#btnApplyTradeStc').show();
+            }
+        }
+        else {
+            $('#btnApplyTradeStc').show();
+        }
+    });
+</script>

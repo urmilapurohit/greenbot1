@@ -1,0 +1,640 @@
+﻿@model FormBot.Entity.JobList
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Index";
+    var jsUserColumnList = ViewBag.JSUserColumnList;
+    ViewBag.IsKendo = true;
+}
+@{
+    bool isAdd = false, isEdit = false, isDelete = false, isAllScaJobView = false;
+    bool isShowOnlyAssignJobsSCO = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.SCOViewAssignJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.SCOViewAssignJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.ShowOnlyAssignJobsSCO.GetHashCode()) { isShowOnlyAssignJobsSCO = true; }
+        });
+    }
+    ////Todo
+    bool isAssignSSC = false, isAssignSCO = false;
+    bool isIndexWS_SCASettlementTermView = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSSC.GetHashCode()) { isAssignSSC = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAdd.GetHashCode()) { isAdd = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEdit.GetHashCode()) { isEdit = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSCO.GetHashCode()) { isAssignSCO = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.WholesalerSCASettlementTermView.GetHashCode()) { isIndexWS_SCASettlementTermView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+}
+
+
+<input id="IsWholeSaler" type="hidden" name="IsWholeSaler">
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <h1>Solar Jobs</h1>
+
+        @*<a href="#" id="aSwitch" title="Switch between Dynamic Search Job Index and Static Search Job Index" class="icon-btn pull-right" style="margin: 0 0 0 15px;"><img src='@Url.Content("~/images/comparer-icon.png")' alt="Switch between Dynamic Search Job Index and Static Search Job Index"></a>*@@*<a href="#" id="aSwitch" title="Switch between Dynamic Search Job Index and Static Search Job Index" class="icon-btn pull-right" style="margin: 0 0 0 15px;"><img src='@Url.Content("~/images/comparer-icon.png")' alt="Switch between Dynamic Search Job Index and Static Search Job Index"></a>*@
+        @if (isAdd)
+        {
+            if (Model.UserTypeID == 8)
+            {
+                if (!ProjectSession.IsSubContractor)
+                {
+                    <a href="#" class="primary pull-right ic_plus createJobFromSolarJobScreen">Create New Job</a>
+                }
+            }
+            else
+            {
+                <a href="#" class="primary pull-right ic_plus createJobFromSolarJobScreen">Create New Job</a>
+            }
+        }
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    @*@if (Model.UserTypeID != 7 || Model.UserTypeID != 9 || Model.UserTypeID != 10)
+        {
+            <div class="stages">
+                <span class="stage_title">Show Stage:</span>
+                <ul>
+                    <li id="jobstage_0" style="cursor:pointer; background-color: #686868;" onclick="SetStageId('0');">Show All<strong>(@Model.lstJobStages.Sum(t => t.jobCount))</strong></li>
+                    @foreach (var stage in Model.lstJobStages)
+                    {
+                        <li id="jobstage_@stage.JobStageId" style="cursor:pointer; background-color: #bdbdbd;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<strong>(@stage.jobCount)</strong></li>
+                    }
+                </ul>
+            </div>
+        }*@
+    <form class="form-block" style="margin-top:10px;" id="job-search-form">
+        <div class="row" style="padding-left:15px;padding-right:15px;">
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+            {
+                <div class="col-sm-6 col-md-6 col-lg-4">
+                    <div class="form-group">
+                        <label class="control-label">Reseller:</label>
+                        @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                    </div>
+                </div>
+            }
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5 || Model.UserTypeID == 6)
+            {
+                <div class="col-sm-6 col-md-6 col-lg-4">
+                    <div class="form-group">
+                        <label class="control-label">Solar Company:</label>
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+                </div>
+            }
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+            {
+                <div class="col-sm-6 col-md-6 col-lg-4">
+                    <div class="checkbox mag-top"><label><input type="checkbox" name="IsActive" id="chkIsArchive" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()"><span></span>Show Deleted Jobs</label></div>
+                </div>
+            }
+        </div>
+        <div class="row" style="padding-left:15px;padding-right:15px;">
+            <div class="col-sm-12 col-md-12 col-lg-4">
+                <div class="form-group">
+                    <label class="control-label">Search for:</label>
+                    <input type="text" id="txtSearchfor" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+
+            @if (ProjectSession.UserTypeId != 7 && ProjectSession.UserTypeId != 9)
+            {
+                <div class="col-sm-12 col-md-12 col-lg-4">
+                    <div class="form-group">
+                        <label class="control-label">Create Date Year:</label>
+                        <select id="ddlYear" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                            @{
+                                string allYear = string.Empty;
+                                for (int i = DateTime.Now.Year; i >= ProjectConfiguration.ArchiveMinYear; i--)
+                                {
+                                    if (string.IsNullOrEmpty(allYear))
+                                    {
+                                        allYear = i.ToString();
+                                    }
+                                    else
+                                    {
+                                        allYear += string.Format(",{0}", i);
+                                    }
+                                }
+
+                                for (int i = DateTime.Now.Year; i >= ProjectConfiguration.ArchiveMinYear; i--)
+                                {
+                                    if (i == DateTime.Now.Year)
+                                    {
+                                        string iyear = i + "," + (i - 1);
+                                        i--;
+                                        <option value="@iyear">@iyear</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@i">@i</option>
+                                    }
+
+                                    if (Model.UserTypeID == 1)
+                                    {
+                                        if (i == ProjectConfiguration.ArchiveMinYear)
+                                        {
+                                            <option value="@allYear">All</option>
+                                        }
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <input type="hidden" value="2022" id="ddlYear" />
+            }
+
+            @*<div class="col-sm-6 col-md-6 col-lg-4">
+            <div class="row">
+                <div class="form-group col-sm-6 col-md-6 col-lg-6">
+                    <label class="control-label">Job Created Date:</label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDate" readonly="readonly" placeholder="From" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <a href="#" id="clearJobCreatedDate" title="Clear Job Created Date" class="icon-btn pull-right">Clear</a>
+                    <div class="input-group">
+                        <input type="text" id="txtToDate" readonly="readonly" placeholder="To" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-6 col-lg-4">
+            <div class="row">
+                <div class="form-group col-sm-6 col-md-6 col-lg-6">
+                    <label class="control-label">Installation Date:</label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDate2" readonly="readonly" placeholder="From" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <a href="#" id="clearJobInstallationDate" title="Clear Job Installation Date" class="icon-btn pull-right">Clear</a>
+                    <div class="input-group">
+                        <input type="text" id="txtToDate2" readonly="readonly" placeholder="To" class="form-control" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+        </div>
+        <div class="form-group col-xs-12">
+            <p class="searchlink" id="searchlink" style="width:100px;"><a id="searchBasicAdvance" href="javascript:void(0);">Advance Search</a></p>
+            <div class="checkboxgroup" style="display:none; margin-top:0px;">
+                <div class="row">
+                    @foreach (var obj in Model.lstAdvanceSearchCategory)
+                    {
+                        @*<li id="Filter_@stage.JobStageId" style="cursor:pointer; background-color: #bdbdbd;" onclick="SetStageId('@stage.JobStageId');">@stage.StageName<strong>(@stage.jobCount)</strong></li>*@
+                        @*<label class="control-label" id="Filter_@obj.SearchCategoryId">@String.Join(",", @obj.lstAdvanceSearchSubCategory.Select(p => p.DisplayName).ToArray())</label>*@
+
+                        <div class="col-sm-6 col-md-4 col-lg-6">
+                            <div class="form-group">
+                                <label class="control-label">@obj.SearchCategoryName Filters:</label>
+                                <label class="control-label" id="Filter_@obj.SearchCategoryId" style="color:#2994cc;">@obj.AllFilters</label>
+                                <label class="control-label" id="hdnFilter_@obj.SearchCategoryId" data-columnname="@obj.hdnColName" style="display:none">@obj.hdnAllFilters</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchJobs();">
+            <div class="btn default icon-btn" onclick="ResetSearchFilters(true);">
+                <span class=" sprite-img reset_ic">
+                </span>
+                <input type="button" id="btnReset" value="Clear" class="">
+            </div>
+            <input type="button" id="btnChangeSearchFilter" value="Change Filter" class="btn filter-ic" data-target="#Advancefilter" data-toggle="modal">
+        </div>
+    </form>
+    @if (Model.UserTypeID == 8)
+    {
+        if (!ProjectSession.IsSubContractor)
+        {
+            <div class="grid_topbar">
+                <p class="job_result" id="numRecords"></p>
+                <div class="take_action">
+                    @if (isDelete)
+                    {
+                        <text>
+                            @*<a href="#" class="delete_selected" data-toggle="tooltip" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" data-placement="top" title="Delete Selected" onclick="DeleteSelectedJobs();"></a>*@
+                            <input type="button" id="btnDeleteJobs" class="primary delete_ic" value="Delete Job(s)" onclick="DeleteSelectedJobs();" data-toggle="tooltip" data-placement="top" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" />
+                        </text>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="grid_topbar">
+            <p class="job_result" id="numRecords"></p>
+        </div>
+        <div class="grid_topbar mag-top-20">
+            <div class="row">
+                <div class="col-xs-8">
+                    <div class="form-group col-xs-6" style="padding-left:0;">
+                        @*@Html.DropDownListFor(model => model.JobStageID, new List<SelectListItem>
+                            (), new { id = "JobStageID", @class = "form-control" })*@
+                        @Html.DropDownList("JobStage", null, "Select", new { id = "JobStageID", @class = "form-control" })
+                    </div>
+                    <a href="javascript:void(0);" onclick="BulkChangeJobStage();" style="margin-right:0; margin-right:30px;" class="primary payment-status--h-ic" title="Bulk Change Job Stage">Bulk Change Job Stage</a>
+                </div>
+                <div class="col-xs-4 text-right">
+                    <div class="take_action">
+                        @if (isDelete)
+                        {
+                            <text>
+                                @*<a href="#" class="delete_selected" data-toggle="tooltip" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" data-placement="top" title="Delete Selected" onclick="DeleteSelectedJobs();">Divya</a>*@
+                                <input type="button" id="btnDeleteJobs" class="primary delete_ic" value="Delete Job(s)" onclick="DeleteSelectedJobs();" data-toggle="tooltip" data-placement="top" onmouseout="HideToolTip();" onmouseover="ShowToolTip(this.id);" />
+                            </text>
+                        }
+                        @if (isAssignSCO && Model.UserTypeID != 6)
+                        {
+                            <text>
+                                <input type="button" id="btnBulkAssign" class="primary assign_ic" value="Assign SCO" onclick="AssignSCO();" />
+                            </text>
+                        }
+                        @if (Model.UserTypeID == 1)
+                        {
+                            <text>
+                                <input style="display:none" type="button" id="btnOpenDeletedJobs" class="primary delete_ic" value="Open Deleted Jobs" onclick="OpenDeletedJobs();" />
+                            </text>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive kendo-grid">
+                @*<table id="datatable" class="table table-hover filter-table" style="width: 100%;">
+
+                                        <thead>
+                                            <tr id="trHeadersDynamic">
+
+                                                <th style="width: 2% !important; background-image: none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                                                @foreach (var col in (ViewBag.JSUserColumnList as List<FormBot.Entity.Job.UserWiseColumns>
+                    ))
+                                                {
+                                                    <th style="width:@col.Width%" data-columnid="@col.ColumnID" data-order="@col.OrderNumber"><span>@Html.DisplayName(col.DisplayName)</span></th>
+                                                }
+                                                <th style="width: 2%;" class="action">@Html.DisplayName("Action")</th>
+                                            </tr>
+                                        </thead>
+                                    </table>*@
+                @*<table id="datatable" class="table table-hover filter-table" style="width: 100%;">
+                        <thead>
+                            <tr id="trHeadersDynamic">
+                                <th><input type="checkbox" id="chkAll" name="select_all"></th>
+                                @foreach (var col in (ViewBag.JSUserColumnList as List<FormBot.Entity.Job.UserWiseColumns>))
+                                {
+                                    <th  data-field="@col.Name" data-columnid="@col.ColumnID" data-order="@col.OrderNumber"><span>@Html.DisplayName(col.DisplayName)</span></th>
+                                }
+                                <th class="action">@Html.DisplayName("Action")</th>
+                            </tr>
+                        </thead>
+                    </table>*@
+                <div id="datatable"></div>
+            </div>
+        </div>
+    </div>
+    <div class="totalrow">
+        @if (Model.UserTypeID == 4 || Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+        {
+            <p style="display:none;">Total STC Selected for Trade:&nbsp;&nbsp;<b><span id="btotalTradedSTC">0</span></b></p><a href="javascript:void(0);" class="primary trade_ic" onclick="LoadStc()" style="display:none;">Trade STCs</a>
+
+        }
+        @*<text>
+                <input type="button" id="btnLock" class="primary assign_ic pull-left" value="Lock" onclick="UnlockChanges()" />
+            </text>*@
+        <text>
+            <text>
+                <div class="btn primary icon-btn pull-left" id="btnExportExcel">
+                    <span class="exporth_ic"></span>
+                    <input type="button" class="" value="Export Excel" />
+                </div>
+            </text>
+        </text>
+        @*<text>
+                <div class="btn primary icon-btn pull-left" id="btnSaveChanges">
+                    <span class="sprite-img save_ic"></span>
+                    <input type="button" class="" value="Save Changes" />
+                </div>
+            </text>*@
+        <text>
+            <input type="button" id="btnEditColumns" class="primary assign_ic pull-left" value="Edit Columns" onclick="EditColumns('@SystemEnums.MenuId.JobView.GetHashCode()');" />
+        </text>
+    </div>
+</div>
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog  modal-lg" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnAssignSSCClose">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Assign Job to SSC</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @Html.HiddenFor(m => m.SSCJobID)
+                    <div id="divAssignJobSSC">
+                    </div>
+                    @*@Html.Action("_AssignJobSSC", "AssignJobToSCO")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="SCOpopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin:50px;">
+            <div class="modal-header ">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btnAssignSCOClose">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Assign Job to SCO</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border" id="divAssignSco">
+                    @*@Html.Action("AssignSCO", "AssignJobToSCO")*@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.Partial("_DynamicColumnModel")
+<div class="modal fade filter-mobal" id="Advancefilter" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="~/images/close-btn.png"></button>
+                <h1 class="title">Filter</h1>
+            </div>
+            <!-- Modal Header End-->
+            <div class="modal-body" id="ChangeAdvanceSearchFiltersView">
+                <!-- Current Status-->
+                @foreach (var obj in Model.lstAdvanceSearchCategory)
+                {
+                    <div class="filters-block" id="popup_@obj.SearchCategoryId" data-columnname="@obj.hdnColName">
+                        <h5 class="filters-title">
+                            @obj.SearchCategoryName Filters
+                            @*<label style="float: right;"><input type="checkbox" class="visit-list-check" id="Sel_@obj.SearchCategoryId" onclick="SelectAdvanceSearchCategory(@obj.SearchCategoryId)">Select All</label>
+                                <label style="float: right;"><input type="checkbox" class="visit-list-check" id="DeSel_@obj.SearchCategoryId" onclick="DeSelectAdvanceSearchCategory(@obj.SearchCategoryId)">DeSelect All</label>*@
+                            <a href="#" style="margin-right:10px;" id="DeSel_@obj.SearchCategoryId" title="DeSelect All" class="icon-btn pull-right" onclick="DeSelectAdvanceSearchCategory(@obj.SearchCategoryId)">DeSelect All</a>
+                            <a href="#" style="margin-right:10px;" id="Sel_@obj.SearchCategoryId" title="Select All" class="icon-btn pull-right" onclick="SelectAdvanceSearchCategory(@obj.SearchCategoryId)">Select All</a>
+                        </h5>
+                        <ul class="filters-option">
+                            @if (obj.SearchCategoryId == 1 || obj.SearchCategoryId == 2)
+                            {
+                                foreach (var objSub in obj.lstAdvanceSearchSubCategory)
+                                {
+                                    if (objSub.Name.ToLower() == "jobdescription" || objSub.Name.ToLower() == "staffname" || objSub.Name.ToLower() == "installerfullname" || objSub.Name.ToLower() == "designerfullname" || objSub.Name.ToLower() == "electricianfullname")
+                                    {
+                                        <li class="checkbox"><label><input type="checkbox" id="popup_@objSub.Name" value="@objSub.DisplayName"><span></span>@objSub.DisplayName</label></li>
+                                    }
+                                    else
+                                    {
+                                        <li class="checkbox"><label><input type="checkbox" id="popup_@objSub.Name" value="@objSub.DisplayName" checked="checked"><span></span>@objSub.DisplayName</label></li>
+                                    }
+                                }
+                            }
+                            else if (obj.SearchCategoryId == 9 || obj.SearchCategoryId == 11)
+                            {
+                                foreach (var arrSub in obj.hdnAllFilters.Split(','))
+                                {
+                                    <li class="checkbox"><label><input type="checkbox" id="popup_@obj.SearchCategoryName@arrSub" value="@arrSub" checked="checked"><span></span>@arrSub</label></li>
+                                }
+                            }
+                            else
+                            {
+                                foreach (var arrSub in obj.hdnAllFilters.Split(','))
+                                {
+                                    <li class="checkbox"><label><input type="checkbox" id="popup_@arrSub" value="@arrSub" checked="checked"><span></span>@arrSub</label></li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                @*<label style="float: left;"><input type="checkbox" class="visit-list-check" id="Sel_All" onclick="SelectAllAdvanceSearchCategory()">Select All</label>
+                    <label style="float: left;"><input type="checkbox" class="visit-list-check" id="DeSel_All" onclick="DeSelectAllAdvanceSearchCategory()">DeSelect All</label>*@
+                <a href="#" style="margin-left:20px;text-transform:uppercase;font-size:14px;font-weight: bold;" id="Sel_All" title="Select All" class="pull-left" onclick="SelectAllAdvanceSearchCategory()">Select All</a>
+                <a href="#" style="margin-left:15px;text-transform:uppercase;font-size:14px;font-weight: bold;" id="DeSel_All" title="DeSelect All" class="pull-left" onclick="DeSelectAllAdvanceSearchCategory()">DeSelect All</a>
+                <input type="button" value="OK" class="btn primary save_ic" onclick="SaveFilter();">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+    #grid .table-responsive td:first-child {
+        white-space: nowrap;
+        width: 45px;
+    }
+
+    /*#grid .table-responsive th {
+        border-right: 1px solid;
+        }*/
+
+    /*#grid .table-responsive th {
+        border-right: 5px double #e4e4e4;
+        border-bottom: 4px solid #e4e4e4;
+    }*/
+
+    #grid .table-responsive th:last-child {
+        border-right: 0px;
+    }
+
+    #grid .table-responsive td {
+        border-right: 1px solid #e4e4e4;
+    }
+
+        #grid .table-responsive td:last-child {
+            border-right: 0px;
+        }
+
+    tfoot {
+        display: table-header-group;
+    }
+
+    .download_ic {
+        background-image: url(../Images/ic-download.png);
+        background-position: 6px 9px;
+        background-repeat: no-repeat;
+        padding: 0 10px 0 28px !important;
+    }
+</style>
+@Styles.Render("~/JobIndexBootstrapCSS")
+@Scripts.Render("~/bundles/JobIndex")
+@section scripts{
+    @*
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"></script>*@
+    <script>
+        var chkCount=0;
+        var selectedRows = [];
+        var SelectedStageId = 0;
+        var solarCompanyList = [];
+        //var Ntraded = 2;
+        var toggleId;
+        var GridConfig = JSON.parse('@Html.Raw(Json.Encode(((List<FormBot.Entity.KendoGrid.UserWiseGridConfiguration>)ProjectSession.UserWiseGridConfiguration).Where(m=>m.ViewPageId == SystemEnums.ViewPageId.JobView.GetHashCode())))')
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var JobStage = '@TempData["JobStage"]';
+        var JobStageList = @Html.Raw(Json.Encode(ViewData["JobStage"]));
+        var PropertyType = @Html.Raw(Json.Encode(ViewData["PropertyType"]));
+        var UserWiseColumnsData = @Html.Raw(Json.Encode(ViewData["JSUserColumnList"]));
+        var UserTypeID = '@Model.UserTypeID';
+        var scaId = '@Model.UserTypeID' == 4 || '@Model.UserTypeID' == 6 || '@Model.UserTypeID' == 8 ? '@Model.SolarCompanyId' : 0;
+        var urlGetSSCUser = '@Url.Action("GetSSCUser", "AssignJobToSCO")';
+        var urlGetReseller = '@Url.Action("GetReseller", "Reseller")';
+        var ResellerId = @ProjectSession.ResellerId;
+        var urlGetAssignedSolarCompanyToRAM = '@Url.Action("GetAssignedSolarCompanyToRAM","RAMSolarCompany")';
+        var urlGetRequestedSolarCompanyToSSC = '@Url.Action("GetRequestedSolarCompanyToSSC","SolarCompany")';
+        var NotYetInvoicedDashboardStatus = '@TempData["NotYetInvoicedDashboardStatus"]';
+        var PageSize = @ProjectConfiguration.GetPageSize;
+        var urlIndex = '@Url.Action("Index", "Job", new { id = "" })?id=';
+        var isAssignSSC = '@isAssignSSC.ToString().ToLower()';
+        var IsSSCReseller = '@ProjectSession.IsSSCReseller.ToString().ToLower()';
+        var urlGetJobList = '@Url.Action("GetJobList", "Job")';
+        var urlGetJobListUserWiseColumns = '@Url.Action("GetJobListUserWiseColumns", "Job")';
+        var urlGetJobListUserWiseColumns1 = '@Url.Action("GetJobListUserWiseColumnsKendo", "Job")';
+        var urlLogout = '@Url.Action("Logout", "Account")';
+        var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+        var urlGetJobStageCount =  '@Url.Action("GetJobStageCount", "Job")';
+        var urlDeleteSelectedJobs = '@Url.Action("DeleteSelectedJobs", "Job")';
+        var urlGetDataForTradeJob = '@Url.Action("GetDataForTradeJob", "Job")';
+        var urlOpenDeletedJobs = '@Url.Action("OpenDeletedJobs", "Job")';
+        var urlGetSSCUserByJbID = '@Url.Action("GetSSCUserByJbID", "AssignJobToSCO")';
+        var urlGetSSCID = '@Url.Action("GetSSCID", "AssignJobToSCO")';
+        var urlSaveJobToSSC = '@Url.Action("SaveJobToSSC", "AssignJobToSCO")';
+        var urlRemoveSSCRequest = '@Url.Action("RemoveSSCRequest", "AssignJobToSCO")';
+        var urlBindJobSTCPriceView = '@Url.Action("BindJobSTCPriceView", "Job", new { area = "" })';
+        var urlAcceptRejectJobToSSC = '@Url.Action("AcceptRejectJobToSSC", "Job")';
+        var urlCancelRemovalRequest = '@Url.Action("CancelRemovalRequest", "JOb")';
+        var urlBulkChangeJobStage = '@Url.Action("BulkChangeJobStage", "Job")';
+        var urlGetJobStages = '@Url.Action("GetJobStages", "Job")';
+        var IsSubContractor = '@ProjectSession.IsSubContractor.ToString().ToLower()';
+        var listColumns = '@ViewBag.ListColumnName';
+        var listColumnsWidth = '@ViewBag.ListColumnWidth';
+        var urlEditColumnsForJobIndex = '@Url.Action("EditColumnsForJobIndex", "Job")';
+        var urlAddColumns = '@Url.Action("AddColumns", "Job")';
+        var urlResetDefaultColumns= '@Url.Action("ResetDefaultColumns", "Job")';
+        var urlGetUserWiseColumnsDetail= '@Url.Action("GetUserWiseColumnsDetail", "Job")';
+        var colPriority = @Html.Raw(Json.Encode(ViewData["colPriority"]));
+        var colJobType = @Html.Raw(Json.Encode(ViewData["colJobType"]));
+        var colTradeStatus = @Html.Raw(Json.Encode(ViewData["colTradeStatus"]));
+        var urlAssignSCO = '@Url.Action("AssignSCO", "AssignJobToSCO")';
+        var urlAssignSSC = '@Url.Action("_AssignJobSSC", "AssignJobToSCO")';
+        var urlCheckIsWholeSaler_ByResellerId = '@Url.Action("CheckIsWholeSaler_ByResellerId", "SolarCompany")?id=';
+        var isDynamicJobIndex = true;
+        var urlGetStaffNameValueForFilter = '@Url.Action("GetStaffNameValueForFilter", "Job")';
+        var urlGetSolarCompanyForFilter = '@Url.Action("GetSolarCompanyForFilter", "SolarCompany")'
+        var DefaultPageSize = '@ViewBag.PageSize';
+        var urlExportDatattableExcel = '@Url.Action("ExportDatattableExcel","Job")'
+        var JobView = '@SystemEnums.MenuId.JobView.GetHashCode()';
+        var STCSubmissionView = '@SystemEnums.MenuId.STCSubmissionView.GetHashCode()';
+        var STCInvoiceView = '@SystemEnums.MenuId.STCInvoiceView.GetHashCode()'
+        var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+        var isShowOnlyAssignJobsSCO = '@isShowOnlyAssignJobsSCO.ToString().ToLower()';
+        var ViewPageId = '@SystemEnums.ViewPageId.JobView.GetHashCode()';
+        var isKendoView = true;
+        var isDefaultGrid = false;
+        @if(ViewBag.Archive != null & ViewBag.Archive == true)
+        {
+            <text>var isArchiveScreen = true;</text>
+        }
+        //$(document).ajaxSend(function (evt, request, settings) {
+        //    if (settings.url.toLowerCase().indexOf("/job/getjoblistuserwisecolumnskendo") > -1) {
+        //        var httpRequest = new XMLHttpRequest();
+        //        httpRequest.open('POST', "https://login.greenbot.com.au/Job/ManageJobRequestLogs", true);
+        //        httpRequest.setRequestHeader("Content-Security-Policy", "upgrade-insecure-requests");
+        //        httpRequest.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        //        httpRequest.send(JSON.stringify({ data: settings.data }));
+        //    }
+        //});
+
+    </script>
+    @*<script src="~/Scripts/View/Job/JobIndex.min.js?v=@ProjectConfiguration.ScriptVersion"></script>*@
+    <script src="~/Scripts/View/Job/JobIndex.min.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    <script src="~/Scripts/View/Job/CommonJobIndex.js?v=@ProjectConfiguration.ScriptVersion"></script>
+}
+<div class="modal fade stc-status newemail-modal" id="StcModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabe5">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close" type="button"> <img alt="" src="~/images/close-btn.png"></button>
+                <div class="title">
+                    <h1>STC Status</h1>
+                </div>
+                <!-- Modal Header End-->
+                <div class="modal-body">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTCStatus" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div id="SettleMentBlock">
+                    </div>
+                    <!-- Current Status End-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .ui-state-focus {
+        width: 100%;
+    }
+
+    .column-2-popup {
+        left: 0px !important;
+    }
+
+    #datatable thead th {
+        cursor: pointer;
+    }
+
+    #btnChangeSearchFilter {
+        margin-bottom: 3px;
+    }
+
+    #grid .table-responsive th:first-child {
+        padding-left: 9px !important;
+    }
+
+    #errorMsgRegionSTCStatus .close {
+        margin-top: 0px !important;
+    }
+</style>

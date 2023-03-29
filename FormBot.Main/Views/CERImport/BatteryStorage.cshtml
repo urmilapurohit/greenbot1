@@ -1,0 +1,303 @@
+﻿@model FormBot.Entity.BatteryStorage
+@using FormBot.Helper;
+
+@*@Html.AntiForgeryToken()*@
+@Html.ValidationSummary(true)
+
+<div class="container-fluid">
+    <h1 class="title">Battery Storage</h1>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-success" id="successMessage" style="display:none;">
+                File has been imported successfully.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="failureMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="noRecordMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("PhotovoltaicModules", "CERImport", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-block", @style = "margin-bottom:8px;" }))
+    {
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Manufacturer:</label>
+                @Html.TextBoxFor(model => model.Manufacturer, new { @class = "form-control", @maxlength = "200" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Model Number:</label>
+                @Html.TextBoxFor(model => model.ModelNumber, new { @class = "form-control", @maxlength = "200" })
+            </div>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSendRequest" value="Search" class="primary search_ic">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="grid_topbar">
+                <p class="job_result" id="numRecords"></p>
+            </div>
+        </div>
+        <div class="col-lg-9 text-right">
+            <div class="control-label ver-text" id="headerTitle" style="vertical-align:top; padding-top:10px;">
+                @ViewBag.Version
+            </div>
+            <div class="fileUpload botpad primary upload_ic" style="display: inline-block; vertical-align: middle;">
+                <span>Upload</span>
+                <input type="file" id="fileUpload" class="upload" value="Upload" />
+            </div>
+            <div class="botpad btn primary icon-btn" style="display:inline-block; vertical-align:middle;">
+                <span class="sprite-img download_ic"></span>
+                <input type="button" id="btnDownload" value="Download" class="fileUpload">
+            </div>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%"><span>@Html.DisplayName("BatteryStorageId") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Manufacturer")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Model Number")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Equipment Category")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Compliance Pathway")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Brand Name")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Series")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("RatedApparentACPowerkVA")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("NominalBatteryCapacitykWh")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("DepthOfDischarge")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("UsableCapacitykWh")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("MinOperatingTemp")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("MaxOperatingTemp")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("OutdoorUsage")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("CECApprovalDate")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("CECExpiryDate")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+<style>
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+        width: inherit;
+        height: inherit;
+        /* To center horizontally */
+        margin: 0 auto;
+    }
+</style>
+@Styles.Render("~/datatableCSS")
+<link href="~/Content/style.css" rel="stylesheet" />
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+
+    <script>
+        var obj;
+        $(document).ready(function () {
+
+            if (@ProjectSession.UserTypeId==3) {
+                $('.fco').hide();
+            }
+
+            var result = '';
+            var result = '@ViewBag.Result';
+            if (result == 'failure'){
+                $("#noRecordMessage").show();
+                setTimeout(function () {
+                    $('.alert').fadeOut(4000);
+                }, 4000);
+            }
+
+            $("#fileUpload").change(function () {
+                $("#successMessage").hide();
+                $("#failureMessage").hide();
+
+                var fileUpload = $("#fileUpload").get(0);
+                var files = fileUpload.files;
+                var test = '';
+                //if (files[0].name.split('.').pop().toLowerCase() == 'pdf')
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    // Create FormData object
+                    var fileData = new FormData();
+
+                    // Looping over all files and add it to FormData object
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("UploadBatteryStorage", "CERImport")',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if (result[0] == "success") {
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                        },
+                    });
+                }
+                else {
+                    //$("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#failureMessage").html('Please upload file with ".pdf" extension only.').show();
+                    $("#successMessage").hide();                   
+                }
+                this.value = null;
+            });
+
+            $('#btnDownload').click(function(e){
+                window.location.href = '@Url.Action("DownloadBatteryStorageFile", "CERImport")';
+            });
+
+            $('#btnSendRequest').click(function (e) {
+                $("#datatable").dataTable().fnDraw();
+            });
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'BatteryStorageId', "visible": false },
+                        { 'data': 'Manufacturer'},
+                        { 'data': 'ModelNumber' },
+                    { 'data': 'EquipmentCategory' },
+                    { 'data': 'CompliancePathway' },
+                    { 'data': 'BrandName' },
+                    { 'data': 'Series' },
+                    { 'data': 'RatedApparentACPowerkVA' },
+                    { 'data': 'NominalBatteryCapacitykWh' },
+                    { 'data': 'DepthOfDischarge' },
+                    { 'data': 'UsableCapacitykWh' },
+                    { 'data': 'MinOperatingTemp' },
+                    { 'data': 'MaxOperatingTemp' },
+                    { 'data': 'OutdoorUsage' },
+                    {
+                        'data': 'CECApprovalDate',
+                        "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                    },
+                    {
+                        'data': 'CECExpiryDate',
+                        "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                    }
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetBatteryStorageList", "CERImport")',
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Battery Storage(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Battery Storage(s) found';
+                    }
+
+                    $('[data-toggle="tooltip"]').tooltip();
+                    //------------------------------------------------------------------------------------------------------------------------------
+                },
+                "fnServerParams": function (aoData) {
+
+                    aoData.push({ "name": "manufacturer", "value": $("#Manufacturer").val() });
+                    aoData.push({ "name": "modelNumber", "value": $("#ModelNumber").val() });
+                }
+            });
+
+            $("#Manufacturer").focus();
+        });
+
+        function ResetSearchFilters() {
+            $("#Manufacturer").val('');
+            $("#ModelNumber").val('');
+            $("#Manufacturer").focus();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+    </script>
+}

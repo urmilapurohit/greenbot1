@@ -1,0 +1,525 @@
+﻿@model FormBot.Entity.VEEC.CreateVEECPopup
+@using FormBot.Helper
+@Scripts.Render("~/bundles/jqueryval")
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+@*@Scripts.Render("~/bundles/jqueryval")
+<script src="~/Scripts/jquery.fileupload.js"></script>
+<script src="~/Scripts/FormBot.js"></script>*@
+
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+<script src="~/Scripts/ddaccordion.js"></script>
+
+
+
+<style type="text/css">
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 50%;
+    }
+
+    .vertical-align-center-serial {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 40%;
+    }
+
+    /*.modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }*/
+
+    .ui-autocomplete {
+        z-index: 10000 !important;
+    }
+</style>
+
+<div class="modal-header">
+    <button type="button" class="close" aria-label="Close" id="btnClosepopupboxCreateVEECPopup">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title" id="myModalLabel">Create VEEC</h4>
+</div>
+
+<div class="modal-body">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForCreateVEECPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" aria-label="Close">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+    </div>
+
+    <div class="form-box">
+        <div class="row">
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label required" id="popupboxCreateVEECPopup_lblResellerID">Reseller:</label>
+                        @Html.DropDownListFor(model => model.createVEEC.VEECDetail.ResellerId, new List<SelectListItem>(), new {  @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.ResellerId)
+                        @*@Html.Partial("_GetResellerAndSolarcompany", null, new ViewDataDictionary
+                        {
+                            {"IsReseller" , "true" },
+                            {"IsSolarCompany" , "false"},
+                            {"ResellerId" , "ResellerId"},
+                            {"ResellerCustomClass" , ""},
+                            {"ResellerControlName" , "VEECDetail.ResellerId"},
+                            {"ResellerIsVelidate" , "true"},
+                            {"ResellerVelidationMessage" , "The ResellerId field is required."},
+                            {"SolarCompanyId" , "SolarCompanyId"},
+                            {"SolarCompanyCustomClass" , ""},
+                            {"SolarCompanyControlName" , "VEECDetail.SolarCompanyId"},
+                            {"SolarCompanyIsVelidate" , "false"},
+                            {"SolarCompanyVelidationMessage" , "The SolarCompanyId field is required."},
+                            {"SolarCompanyIdHiddenField" , ""}
+                        })*@
+                    </div>
+                </div>
+            }
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5)
+            {
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label required" id="popupboxCreateVEECPopup_lblSolarCompanyId">SolarCompany:</label>
+                        @Html.DropDownListFor(model => model.createVEEC.VEECDetail.SolarCompanyId, new List<SelectListItem>(), new {  @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.SolarCompanyId)
+                        @*@Html.Partial("_GetResellerAndSolarcompany", null, new ViewDataDictionary
+                        {
+                            {"IsReseller" , "false" },
+                            {"IsSolarCompany" , "true"},
+                            {"ResellerId" , "ResellerId"},
+                            {"ResellerCustomClass" , ""},
+                            {"ResellerControlName" , "VEECDetail.ResellerId"},
+                            {"ResellerIsVelidate" , "false"},
+                            {"ResellerVelidationMessage" , "The ResellerId field is required."},
+                            {"SolarCompanyId" , "SolarCompanyId"},
+                            {"SolarCompanyCustomClass" , ""},
+                            {"SolarCompanyControlName" , "VEECDetail.SolarCompanyId"},
+                            {"SolarCompanyIsVelidate" , "true"},
+                            {"SolarCompanyVelidationMessage" , "The SolarCompanyId field is required."},
+                            {"SolarCompanyIdHiddenField" , ""}
+                        })*@
+                    </div>
+                </div>
+            }
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("VEEC Details:")
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.ScheduleActivityType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.createVEEC.VEECDetail.ScheduleActivityType, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.ScheduleActivityType)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.RefNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECDetail.RefNumber, new { @class = "form-control", @maxlength = "255", @tabindex = 2 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.RefNumber)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.Title, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECDetail.Title, new { @class = "form-control", @maxlength = "255", @tabindex = 3 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.Title)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            @*<div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.ScheduledActivityPremises, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.createVEEC.VEECDetail.ScheduledActivityPremises, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 4 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.ScheduledActivityPremises)
+                </div>
+            </div>*@
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.CommencementDate, new { @class = "control-label required" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.createVEEC.VEECDetail.CommencementDate, new { @class = "form-control date-pick", @readonly = "true", @tabindex = 6 })
+                        @*<span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>*@
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.CommencementDate)
+                </div>
+            </div>
+
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.ActivityDate, new { @class = "control-label required" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.createVEEC.VEECDetail.ActivityDate, new { @class = "form-control date-pick", @readonly = "true", @tabindex = 7 })
+                        @*<span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>*@
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.ActivityDate)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECDetail.Description, new { @class = "control-label required" })
+                    @Html.TextAreaFor(m => m.createVEEC.VEECDetail.Description, new { @class = "form-control", @maxlength = "4000", @tabindex = 5 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECDetail.Description)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Owner Details:")
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.OwnerType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.createVEEC.VEECOwnerDetail.OwnerType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Individual", Value = "Individual" }, new SelectListItem() { Text = "Government body", Value = "Government body" }, new SelectListItem() { Text = "Corporate body", Value = "Corporate body" }, new SelectListItem() { Text = "Trustee", Value = "Trustee" } }, new { @class = "form-control", @tabindex = 8 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.OwnerType)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.CompanyName, new { @class = "control-label", @id = "createVEEC_VEECOwnerCompanyName" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 9, @autofocus = "autofocus" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.CompanyName, "", new { id = "createVEEC_VEECOwnerCompanyNameValidate" })
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.FirstName, new { @class = "control-label required", @id = "createVEEC_VEECOwnerFirstName" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 10 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.FirstName, "", new { id = "createVEEC_VEECOwnerFirstNameValidate" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.LastName, new { @class = "control-label required", @id = "createVEEC_VEECOwnerLastName" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 11 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.LastName, "", new { id = "createVEEC_VEECOwnerLastNameValidate" })
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.Email, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 12 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.Email)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.Phone, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 13, onkeypress = "return isValidPhone(event,this);" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.Phone)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.Mobile, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 14, onkeypress = "return isValidPhone(event,this);" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.Mobile)
+                </div>
+            </div>
+        </div>
+        @*<div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label required">Postal Address Type :</label>
+                    @Html.DropDownListFor(m => m.createVEEC.VEECOwnerDetail.IsPostalAddress, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1", Selected = true }, new SelectListItem() { Text = "P.O.Box", Value = "2" } }, new { @class = "form-control OwnerAddress", @tabindex = 15 })
+                </div>
+            </div>
+            <div class="col-sm-4 PDAOwner" style="display:none">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.PostalAddressID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.createVEEC.VEECOwnerDetail.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 16, @key = "UnitType" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.PostalAddressID)
+                </div>
+            </div>
+            <div class="col-sm-4 PDAOwner" style="display:none">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.PostalDeliveryNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 17 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.PostalDeliveryNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAOwner">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.UnitTypeID, new { @class = "control-label", @id = "createVEEC_VEECOwnerDetail_lblVEECOwnerUnitTypeID" })
+                    @Html.DropDownListFor(model => model.createVEEC.VEECOwnerDetail.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 18 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.UnitTypeID)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAOwner">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.UnitNumber, new { @class = "control-label", @id = "createVEEC_VEECOwnerDetail_lblVEECOwnerUnitNumber" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.UnitNumber)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 DPAOwner">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.StreetNumber, new { @class = "control-label required", @id = "createVEEC_VEECOwnerDetail_lblVEECOwnerStreetNumber" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 20 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.StreetNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAOwner">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.StreetName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 21 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.StreetName)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAOwner">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.StreetTypeID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.createVEEC.VEECOwnerDetail.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 22 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.StreetTypeID)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.Town, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 23 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.Town)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.State, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @tabindex = 24 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.State)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECOwnerDetail.PostCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECOwnerDetail.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 25 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECOwnerDetail.PostCode)
+                </div>
+            </div>
+        </div>*@
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Installation Address:")
+                </div>
+            </div>
+            @*<div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Same as Owner Address:</label>
+                    @Html.CheckBoxFor(m => m.createVEEC.VEECInstallationDetail.IsSameAsOwnerAddress, new { @tabindex = 26 })
+                </div>
+            </div>*@
+            @*<div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label">Same as Owner Address:</label>
+                        @Html.CheckBoxFor(m => m.createVEEC.VEECInstallationDetail.IsSameAsOwnerAddress, new { @tabindex = 226 })
+                    </div>
+                </div>*@
+        </div>
+        <div class="row">
+            <div class="col-sm-4 veecInstallation" style="display:none;">
+                <div class="form-group">
+                    <label class="control-label required">Postal Address Type :</label>
+                    @Html.DropDownListFor(m => m.createVEEC.VEECInstallationDetail.IsPostalAddress, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1", Selected = true } }, new { @class = "form-control OwnerAddress", @tabindex = 15 })
+                </div>
+            </div>
+            <div class="col-sm-4 veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.LevelType, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.createVEEC.VEECInstallationDetail.LevelType , new { @class = "form-control", @tabindex = 16 })
+                </div>
+            </div>
+            <div class="col-sm-4 veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.LevelNumber, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.LevelNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 17 })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 DPAInstallation veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.UnitTypeID, new { @class = "control-label" })
+                    @Html.DropDownListFor(model => model.createVEEC.VEECInstallationDetail.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 18 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.UnitTypeID)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAInstallation veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.UnitNumber, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 19 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.UnitNumber)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 DPAInstallation veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.StreetNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 20 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.StreetNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAInstallation veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.StreetName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 21 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.StreetName)
+                </div>
+            </div>
+            <div class="col-sm-4 DPAInstallation veecInstallation">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.StreetTypeID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.createVEEC.VEECInstallationDetail.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 22 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.StreetTypeID)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group veecInstallation">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.Town, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 23 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.Town)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group veecInstallation">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.State, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @tabindex = 24 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.State)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group veecInstallation">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.PostCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 25 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.PostCode)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.IndustryBusinessType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.createVEEC.VEECInstallationDetail.IndustryBusinessType, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.IndustryBusinessType)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.NumberOfLevels, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.NumberOfLevels, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.NumberOfLevels)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.FloorSpace, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.FloorSpace, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.FloorSpace)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.createVEEC.VEECInstallationDetail.FloorSpaceUpgradedArea, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.createVEEC.VEECInstallationDetail.FloorSpaceUpgradedArea, new { @class = "form-control", @tabindex = 3, @onkeypress = "return isDecimal(event,10,3,this);" })
+                    @Html.ValidationMessageFor(m => m.createVEEC.VEECInstallationDetail.FloorSpaceUpgradedArea)
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn primary icon-btn" id="saveCreateVEECPopup" tabindex="239" onclick="return validateFormVEEC();"><span class="sprite-img save_ic"></span> Save</button>
+    <button type="button" class="btn default cancel_ic" id="cancelCreateVEECPopup" onclick="PopupToggle('popupboxCreateVEECPopup');">Cancel</button>
+</div>
+
+<script type="text/javascript">
+    var GetDateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+     actionProcessRequest = '@Url.Action("ProcessRequest","User")',
+
+       urlCreateVEEC = '@Url.Action("Create", "VEEC")',
+     urlGetUnitType = '@Url.Action("GetUnitType", "UnitType")',
+     urlGetStreetType = '@Url.Action("GetStreetType", "StreetType")',
+     urlGetPostalAddress = '@Url.Action("GetPostalAddress", "User")',
+     urlLogout = '@Url.Action("Logout", "Account")',
+     VEECMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)'+'&callback=mapsCallback';
+</script>
+<script type="text/javascript">
+    if(@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3){
+        FillDropDown('createVEEC_VEECDetail_ResellerId', '@Url.Action("GetReseller", "Reseller")', 0, true, null);
+        FillDropDown('createVEEC_VEECDetail_SolarCompanyId', '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")?id=' + $('#createVEEC_VEECDetail_ResellerId').val(), 0, true, null);
+    }
+    $("#createVEEC_VEECDetail_ResellerId").change(function () {
+
+        FillDropDown('createVEEC_VEECDetail_SolarCompanyId', '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")?id=' + $('#createVEEC_VEECDetail_ResellerId').val(), 0, true, null);
+    })
+    $('.date-pick, .date-pick1, .date-pick').datepicker({
+        format: GetDateFormat,
+        autoclose: true
+    }).on('changeDate', function () {
+        $(this).datepicker('hide');
+    });
+
+    $("#btnClosepopupboxCreateVEECPopup").click(function () {
+        $('#popupboxCreateVEECPopup').modal('toggle');
+        $('body').css('overflow', 'auto');
+        //$('#createVEECPopup').empty();
+    });
+
+
+    function isValidPhone(event, obj) {
+        if (!event.ctrlKey) {
+            if (event.which == 43 && $("#" + obj.id).val().length < 2) {
+                if ($("#" + obj.id).val().indexOf('+') == -1) {
+                    return true;
+                }
+            }
+            if (event.which > 31 && (event.which < 48 || event.which > 57)) {
+                return false;
+            }
+            return true;
+        }
+        return true;
+    }
+</script>
+
+<script src="~/Scripts/View/VEEC/CreateVEEC.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+
+
+

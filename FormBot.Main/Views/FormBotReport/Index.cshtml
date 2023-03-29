@@ -1,0 +1,261 @@
+﻿@model FormBot.Entity.FormBotReport
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <form id="FormBotReportDetails" method="post">
+        <div class="title">
+            <h1>GreenBot Reports</h1>
+        </div>
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="find_job_leftpanel">
+            <a href="#" class="jtoggle"></a>
+            <div class="frmblock rep-block">
+                <div class="form-group">
+                    @Html.DropDownListFor(m => m.ReportID, new SelectList(Model.lstReport, "ReportID", "ReportName"), new { @class = "form-control" })
+                </div>
+                <div id="loadContent">
+
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="job_calendar" id="divGrid" style="display:none;">
+        <div class="chartbox" id="chartbox" style="display:none;">
+            <div id="chart" style="height:400px;width:100%;"></div>
+        </div>
+
+        <div class="grid">
+            <div class="table-responsive">
+                <div id="displayTable">
+
+                </div>
+            </div>
+        </div>
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 7)
+        {
+            <div class="grid" style="margin-top:25px;">
+                <div class="table-responsive">
+                    <div id="displayTable1">
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@*<script src="~/Scripts/jquery-1.11.0.min.js"></script>
+    <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+@*<script src="~/Scripts/jquery.fileupload.js"></script>
+@Scripts.Render("~/Scripts/FormBot.js")
+@Scripts.Render("~/bundles/bootstrap")*@
+@*<script src="~/Scripts/general.js"></script>*@
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+@*@Scripts.Render("~/datatableJs")*@
+@Scripts.Render("~/Report_ExportJS")
+
+<style>
+    /*.find_job_leftpanel {
+        width: 345px !important;
+    }
+
+    .job_calendar {
+        margin-left: 380px !important;
+    }*/
+</style>
+
+@*<script src="~/Scripts/ReportJS/dataTables.buttons.min.js"></script>
+    <script src="~/Scripts/ReportJS/buttons.flash.min.js"></script>
+    <script src="~/Scripts/ReportJS/buttons.html5.min.js"></script>
+    <script src="~/Scripts/ReportJS/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.flash.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>*@
+
+@section scripts
+{
+    <script type="text/javascript">
+        var chartdiv;
+        $(document).ready(function () {
+
+            $(".jtoggle").click(function (e) {
+                e.preventDefault();
+                $(".find_job_leftpanel").toggleClass("active");
+                $(".jtoggle").toggleClass("active");
+                $(".job_calendar").toggleClass("push");
+                chartdiv.resize();
+            });
+
+            var userTypeID = '@FormBot.Helper.ProjectSession.UserTypeId';
+
+            if (userTypeID == 1) {
+                var url = '@Url.Action("_SystemUserReports", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_SystemUserReports');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 2) {
+                var url = '@Url.Action("_SystemUserReports", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_SystemUserReports');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 3) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 4) {
+                var url = '@Url.Action("_JobStatusBarTotalReports", "FormBotReport")';
+                //$("#loadContent").load("/FormBotReport/_JobStatusBarTotalReports");
+                $("#loadContent").load(url);
+            }
+            else if (userTypeID == 5) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 6) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 7) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+            }
+            else if (userTypeID == 8) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+            }
+            else if (userTypeID == 9) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+            }
+            @*else if (userTypeID == 10) {
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                $('#loadContent').load(url);
+            }*@
+        });
+
+        $("#ReportID").change(function () {
+
+            $("#divGrid").hide();
+            var table = $('#datatable').DataTable();
+            table.destroy();
+            if ($('#ReportID').val() == "1") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_JobStatusBarTotalReports", "FormBotReport")';
+                //$('#loadContent').load('/FormBotReport/_JobStatusBarTotalReports');
+                $('#loadContent').load(url);
+            } else if ($('#ReportID').val() == "2") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_JobStatusDetailReports", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_JobStatusDetailReports');
+            } else if ($('#ReportID').val() == "3") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_TotalJobsReports", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_TotalJobsReports');
+            } else if ($('#ReportID').val() == "4") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_JobStagesReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_JobStagesReport');
+            }
+            else if ($('#ReportID').val() == "5") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_SystemUserReports", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_SystemUserReports');
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+                $('#btnJobStatusBarReport').css('opacity', '1');
+            }
+            else if ($('#ReportID').val() == "6") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_AllocationReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_AllocationReport');
+                document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                $('#btnJobStatusBarReport').css('opacity', '0.5');
+            }
+            else if ($('#ReportID').val() == "7") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_ActiveUserReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_ActiveUserReport');
+            }
+            else if ($('#ReportID').val() == "8") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_InvoiceView", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_InvoiceView');
+            }
+            else if ($('#ReportID').val() == "9") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_SEUserLevelReports", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_SEUserLevelReports');
+            }
+            else if ($('#ReportID').val() == "10") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_SSCSEJobsDetailReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_SSCSEJobsDetailReport');
+            }
+            else if ($('#ReportID').val() == "11") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_SoldByWhoReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_SoldByWhoReport');
+            }
+            else if ($('#ReportID').val() == "13") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_RECFailureReasonsReports", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_RECFailureReasonsReports');
+            }
+
+            else if ($('#ReportID').val() == "12") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_STCGeneralReport", "FormBotReport")';
+                $('#loadContent').load(url);
+                //$('#loadContent').load('/FormBotReport/_STCGeneralReport');
+            }
+
+            else if ($('#ReportID').val() == "14") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_STCGeneralReportForRAM", "FormBotReport")';
+                $('#loadContent').load(url);
+            }
+           else if ($('#ReportID').val() == "15") {
+                $('#loadContent').show();
+                var url = '@Url.Action("_NonTradeJobs", "FormBotReport")';
+                $('#loadContent').load(url);
+            }
+
+            else {
+                $('#loadContent').hide();
+            }
+        });
+
+    </script>
+}

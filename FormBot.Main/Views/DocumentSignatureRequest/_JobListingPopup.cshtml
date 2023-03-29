@@ -1,0 +1,341 @@
+﻿@model FormBot.Main.Models.JobDocumentSignatureModels
+@using FormBot.Helper;
+<style>
+    .ui-autocomplete {
+        z-index: 99999 !important;
+    }
+</style>
+<div class="modal fade popupShowJobForGroup" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" id="popupShowJobForGroup">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Add jobs in group</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <form id="AddJobInGroup">
+                        <div class="row">
+                            <div class="col-sm-6 col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="control-label">Reseller:</label>
+                                    <select id="ResellerId" class="form-control"></select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-4">
+                                <div class="form-group solar-compnay-name">
+                                    <label class="control-label">Solar Company:</label>
+                                    <input type="hidden" id="hdnbulkuploaddocumentrequestSolarcompanyId" />
+                                    <input type="text" id="searchbulkuploaddocumentrequestSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="control-label">Reference Number:</label>
+                                    <input type="text" id="txtReferenceNumber" name="searchReferenceNumber" class="form-control" maxlength="50" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-4">
+                                <div class="form-group">
+                                    <label class="control-label">Job Id:</label>
+                                    <input type="text" id="txtJobId" name="searchJobId" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-4">
+                                <div class="form-group hidden">
+                                    <label class="control-label">Job Type:</label>
+                                    <select id="JobTypeSelect" class="form-control">
+                                        <option value="0" selected>Select Job Type</option>
+                                        <option value="1">PVD</option>
+                                        <option value="2">SWH</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">PVDSWH Code:</label>
+                                    <input type="text" id="PVDSWHCode" name="PVDSWHCode" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-12">
+                                <input type="button" id="btnSearchJobListForAddGroup" value="Search" class="primary search_ic" onclick="SearchJobListForAddGroup();">
+                                <div class="default btn icon-btn" onclick="ResetSearchJobListForAddGroup();">
+                                    <span class="sprite-img reset_ic"></span>
+                                    <input type="button" id="btnResetSearchJobListForForAddGroup" value="Reset" class="">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="formGroupName">
+                        <button type="button" class="primary pull-right btn icon-btn marg-b-8" id="add-selected-jobs">
+                            <span class="sprite-img add_ic"></span>
+                            Add Selected Jobs
+                        </button>
+                    </div>
+                   
+                    <div class="formAddJobToGroup">
+                        <div id="grid" class="JobListingForAddGroup">
+                            <div class="table-responsive">
+                                <table id="datatableJobListForAddGroup" class="table table-hover datatableJobListForAddGroup">
+                                    <thead>
+                                        <tr>
+                                            <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                                            <th><span>@Html.DisplayName("Job Id")</span></th>
+                                            <th><span>@Html.DisplayName("PVDSWH Code")</span></th>
+                                            <th><span>@Html.DisplayName("Ref Number")</span></th>
+                                            <th><span>@Html.DisplayName("Company Name")</span></th>
+                                            <th><span>@Html.DisplayName("Client Name")</span></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var urlGetStateList = '@Url.Action("GetStateList", "Job")';
+    var urlGetDocumentsByStateId = '@Url.Action("GetDocumentTemplateByStateId", "DocumentSignatureRequest")';
+    var urlGetGroupNameList = '@Url.Action("Binddropdown_GetBulkUploadDocumentGroupNameList", "DocumentSignatureRequest")';
+    var urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+    var urlGetEmailTemplateList = '@Url.Action("GetEmailTemplateList", "DocumentSignatureRequest")'
+    $(document).ready(function () {
+        $('#datatableJobListForAddGroup').DataTable({
+            iDisplayLength: 10,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+            deferLoading: 0,
+            columns: [
+                {
+                    'data': null,
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        return '<input type="checkbox" data-pvdswhcode="' + full.PVDSWHCode + '" class="chkRow" id=' + full.JobId + '  >';
+                    }
+                },
+                {
+                    'data': 'JobId',
+                    "orderable": true,
+                    "render": function (data, type, full, meta) {
+                        return '<span id="jobId">' + full.JobId + '</span>';
+                    }
+                }
+                ,
+                {
+                    'data': 'PVDSWHCode',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) {
+                        return '<span id="PVDSWHCode">' + full.PVDSWHCode + '</span>';
+                    }
+                }
+                
+                , {
+                    'data': 'JobRefNumber',
+                    "orderable": true,
+                    "render": function (data, type, full, meta) { return full.JobRefNumber; }
+                },
+                {
+                    'data': 'CompanyName',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) { return full.CompanyName; }
+                },
+                {
+                    'data': 'ClientName',
+                    "orderable": false,
+                    "render": function (data, type, full, meta) { return full.ClientName; }
+                }
+            ],
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                //document.getElementById("numRecords").innerHTML = '<b>' + json.iTotalDisplayRecords + '</b>  of  <b>' + json.iTotalRecords + '</b>  Document Group are found';
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+                
+            },
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetBulkJobListForAddToGroup", "DocumentSignatureRequest")',
+            "fnDrawCallback": function () {
+                $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+                if ($(".paging").find("span").length > 1) {
+                    $("#datatable_length").show();
+                } else if ($(".datatableGroupNameList").find("tr").length > 11) { $("#datatable_length").show(); } else { $("#datatable_length").hide(); }
+                var table1 = $('#datatableGroupNameList').DataTable();
+                var info = table1.page.info();
+                $('[data-toggle="tooltip"]').tooltip();
+                $("#datatableJobListForAddGroup .chkRow").change(function () {
+                    AllCheckboxIsCheckedOrNotForAddJobPopup();
+                });
+            },
+            "fnServerParams": function (aoData) {
+                aoData.push({ "name": "referenceNumber", "value": $("#txtReferenceNumber").val() });
+                aoData.push({ "name": "solarCompanyId", "value": ($("#searchbulkuploaddocumentrequestSolarCompany").val() == '' ? '' : $("#hdnbulkuploaddocumentrequestSolarcompanyId").val()) });
+                aoData.push({ "name": "resellerId", "value": $("#ResellerId").val() });
+                aoData.push({ "name": "jobId", "value": $("#txtJobId").val() });
+                aoData.push({ "name": "jobType", "value": $("#JobTypeSelect").val() });
+                aoData.push({ "name": "PVDSWHCode", "value": $("#PVDSWHCode").val() });
+            }
+        });
+        $.ajax({
+            type: 'get',
+            url: '@Url.Action("GetReseller", "Reseller")',
+            dataType: 'json',
+            data: '',
+            async: false,
+            success: function (reseller) {
+                $.each(reseller, function (i, res) {
+                    $("#ResellerId").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                });
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Resellers.' + ex);
+            }
+        });
+        $('#popupShowJobForGroup').on('show.bs.modal', function () {
+            BindSolarCompany($("#ResellerId").val());
+            solarCopanyAutoComplete();
+        })
+        $("#add-selected-jobs").click(function () {
+            if ($("#datatableJobListForAddGroup").find('.chkRow:checked').length == 0) {
+                alert("please select atleast one job")
+                return;
+            }
+            var data = {};
+            var lstjobId = [];
+            $("#datatableJobListForAddGroup").find('.chkRow:checked').each(function () {
+                var obj = {};
+                obj.JobId = $(this).attr('id');
+                obj.PVDSWHCode = $(this).attr('data-pvdswhcode');
+                lstjobId.push(obj);
+            })
+            data.bulkUploadDocumentGroupId = @Model.GroupId;
+            data.lstDocumentWiseSignatureDetail = lstjobId;
+            $.ajax({
+                url: '@Url.Action("AddJobToGroup", "DocumentSignatureRequest")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'POST',
+                data: JSON.stringify({ sendEmailRequest: data }),
+                success: function (response) {
+                    if (response.status) {
+                        showSuccessMessageForDocumentSignatureRequest("Job has been added successfully.");
+                        $("#chkAll").prop('checked', false);
+                        $("#datatableJobListForAddGroup").find('li').find('[type="checkbox"]:checked').prop("checked", false);
+                    }
+                    else {
+                        if (response.error.toLowerCase() == 'sessiontimeout')
+                            window.location.href = '@Url.Action("Logout", "Account")';
+                        else
+                            showErrorMessageForDocumentSignatureRequest(response.error);
+                    }
+                    PopupToggle('popupShowJobForGroup');
+                },
+                error: function () {
+                    showErrorMessageForDocumentSignatureRequest("Job has not been added.");
+                    PopupToggle('popupShowJobForGroup');
+                }
+            });
+        });
+        $("#chkAll").click(function () {
+            $('#datatableJobListForAddGroup .chkRow').not(this).prop('checked', this.checked);
+        });
+    });
+    $("#ResellerId").change(function () {
+        BindSolarCompany($("#ResellerId").val());
+        solarCopanyAutoComplete();
+    });
+    function solarCopanyAutoComplete() {
+        $('#searchbulkuploaddocumentrequestSolarCompany').autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var data = [];
+                $.each(solarCompanyList, function (key, value) {
+
+                    if (value.text.toLowerCase().indexOf($("#searchbulkuploaddocumentrequestSolarCompany").val().toLowerCase()) > -1) {
+                        data.push({ Title: value.text, id: value.value });
+                    }
+                });
+                response($.map(data, function (item) {
+                    return { label: item.Title, value: item.Title, id: item.id };
+                }))
+            },
+            select: function (event, ui) {
+                $("#hdnbulkuploaddocumentrequestSolarcompanyId").val(ui.item.id); // save selected id to hidden input
+                IsServerCallForSearch = true;
+            }
+        }).on('focus', function () { $(this).keydown(); });
+        $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+            var re = new RegExp($.trim(this.term.toLowerCase()));
+            var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                "</span>");
+            return $("<li style='font-size:14px;'></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + t + "</a>")
+                .appendTo(ul);
+        };
+    }
+    function BindSolarCompany(resellerID) {
+        $("#searchbulkuploaddocumentrequestSolarCompany").val("");
+        var IsCompanyExist = false;
+        $.ajax({
+            type: 'POST',
+            url: urlGetSolarCompanyByResellerId,
+            dataType: 'json',
+            async: false,
+            data: { id: resellerID, isAll: true },
+            success: function (solarcompany) {
+                solarCompanyList = [];
+                $.each(solarcompany, function (i, company) {
+                    solarCompanyList.push({ value: company.Value, text: company.Text });
+                });
+                $.each(solarCompanyList, function (key, value) {
+
+                    if (value.value == localStorage.getItem('JobList_SolarCompanyId')) {
+
+                        $("#searchbulkuploaddocumentrequestSolarCompany").val(value.text);
+                        $('#hdnbulkuploaddocumentrequestSolarcompanyId').val(localStorage.getItem('JobList_SolarCompanyId'));
+                    }
+                });
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Solar Companies.' + ex);
+            }
+        });
+        return false;
+    }
+    function SearchJobListForAddGroup() {
+        $("#datatableJobListForAddGroup").dataTable().fnDraw();
+    }
+    function ResetSearchJobListForAddGroup() {
+        $("#txtReferenceNumber").val('');
+        $("#PVDSWHCode").val('');
+        $("#txtJobId").val('');
+        $("#JobTypeSelect").val(0);
+        $("#searchbulkuploaddocumentrequestSolarCompany").val('');
+        $(" #datatableJobListForAddGroup #chkAll").prop('checked', false);
+        $(".datatableJobListForAddGroup").dataTable().fnDraw();
+    }
+    function AllCheckboxIsCheckedOrNotForAddJobPopup() {
+        if ($("#datatableJobListForAddGroup .chkRow:checkbox:checked").length == $("#datatableJobListForAddGroup .chkRow").length) {
+            $("#datatableJobListForAddGroup #chkAll").prop('checked', true);
+        }
+        else {
+            $(" #datatableJobListForAddGroup #chkAll").prop('checked', false);
+        }
+    }
+    $('#popupShowJobForGroup').on('hidden.bs.modal', function () {
+        ResetSearchJobListForAddGroup();
+        $("#datatableSendEmailJobList").dataTable().fnDraw();
+        $("#chkAll-addedJob").prop('checked', false);
+    })
+</script>

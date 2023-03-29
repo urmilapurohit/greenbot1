@@ -1,0 +1,187 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="JobStagesBit" value="10" id="JobStagesBit" />
+<input type="hidden" name="minJobStages" value="1" id="minJobStages" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstJobStages, new MultiSelectList(Model.LstJobStages, "Value", "Text"), new { id = "LstJobStages", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_JobStages" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_JobStages" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.JobStagesAssignedUser, new MultiSelectList(Model.LstJobStagesAssignedUser, "Value", "Text"), new { id = "LstJobStagesAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnJobStagesAssignedUser, new { id = "hdnJobStages" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnJobStagesSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnJobStagesClear" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_JobStages", function () {
+
+        if (parseInt($('#JobStagesBit').val()) == 0) {
+            $('#LstJobStages option:selected').each(function () {
+                $(this).remove().appendTo("#LstJobStagesAssignedUser");
+            });
+            $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length);
+        }
+        else {
+            var JobStages = (($('#LstJobStages option:selected').length + $('#LstJobStagesAssignedUser option').length) <= parseInt($('#JobStagesBit').val()));
+            if (JobStages) {
+                var LstJobStages = $('#LstJobStagesAssignedUser option').length < parseInt($('#JobStagesBit').val());
+                if (LstJobStages) {
+                    $('#LstJobStages option:selected').each(function () {
+                        $(this).remove().appendTo("#LstJobStagesAssignedUser");
+                    });
+                    var max = $('#JobStagesBit').val();
+                    $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstJobStagesAssignedUser option').length == parseInt($('#JobStagesBit').val()))) {
+                    $('#btnLtoR_JobStages').css('opacity', '0.5');
+                    $('#btnLtoR_JobStages').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_JobStages').css('opacity', '1');
+                    $('#btnLtoR_JobStages').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_JobStages", function () {
+        $('#LstJobStagesAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstJobStages");
+        });
+        var max = $('#JobStagesBit').val();
+        if (max > 0) {
+            $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length + '/' + max);
+        } else {
+            $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstJobStagesAssignedUser option').length < parseInt($('#JobStagesBit').val()))) {
+                $('#btnLtoR_JobStages').css('opacity', '1');
+                $('#btnLtoR_JobStages').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_JobStages').css('opacity', '0.5');
+                $('#btnLtoR_JobStages').css('cursor', 'auto');
+            }
+        }
+    });
+
+    //$(document).on("click", "#closeJobStages", function () {
+    //    $('#popupJobStages').modal('hide');
+    //    $('#cntJobStages').html($('#LstJobStagesAssignedUser option').length);
+    //});
+
+    $(document).on("click", "#btnJobStagesSave", function () {
+
+        var strAssignedAttendeeList = [];
+        $('#LstJobStagesAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        //if ($('#minJobStages').val() > 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minJobStages').val() > 0 && $('#LstJobStagesAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        //if (($('#LstJobStagesAssignedUser option').length <= parseInt($('#JobStagesBit').val()))) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minJobStages').val() == 1 && $('#LstJobStagesAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnJobStages").val(strAssignedAttendeeList);
+        $('#cntJobStages').html($('#LstJobStagesAssignedUser option').length);
+        $('#popupJobStages').modal('hide');
+    });
+
+    $(document).on("click", "#btnJobStagesClear", function () {
+        $('#LstJobStagesAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstJobStages");
+        });
+        var max = $('#JobStagesBit').val();
+        if (max > 0) {
+            $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length + '/' + max);
+        } else {
+            $('#JobStagesAvil').html($('#LstJobStagesAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstJobStagesAssignedUser option').length < parseInt($('#JobStagesBit').val()))) {
+                $('#btnLtoR_JobStages').css('opacity', '1');
+                $('#btnLtoR_JobStages').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_JobStages').css('opacity', '0.5');
+                $('#btnLtoR_JobStages').css('cursor', 'auto');
+            }
+        }
+        $("#hdnJobStages").val('');
+    });
+
+    $(document).on("click", "#closeJobStages", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstJobStagesAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        //if ($('#minJobStages').val() > 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minJobStages').val() > 0 && $('#LstJobStagesAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        //if (($('#LstJobStagesAssignedUser option').length <= parseInt($('#JobStagesBit').val()))) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+        //    $('#btnJobStatusBarReport').css('opacity', '1');
+        //    $("#errorMsgRegion").hide();
+        //}
+        //if ($('#minJobStages').val() == 1 && $('#LstJobStagesAssignedUser option').length == 0) {
+        //    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        //    $('#btnJobStatusBarReport').css('opacity', '0.5');
+        //}
+        $("#hdnJobStages").val(strAssignedAttendeeList);
+        $('#cntJobStages').html($('#LstJobStagesAssignedUser option').length);
+        $('#popupJobStages').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

@@ -1,0 +1,171 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+<script src="~/Scripts/Calendar/moment.min.js"></script>
+@{
+    Layout = null;
+}
+
+@{
+    bool isAddEditJobScheduling = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }        
+        });
+    }
+}
+<div id="divVisitGridView">
+    @Html.Partial("~/Views/JobScheduling/_VisitGridView.cshtml", Model)
+
+</div>
+<div class="modal fade add-visits" tabindex="-1" id="notification" style="z-index:10000 !important">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form id="jv">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Notification</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <h5 class="notification">Already assign maximum job to this same electrician.Are you sure you want to continue?</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesNotification" isAutoScheduleVisit="false">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noNotification">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="popUpJobDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form id="jobScheduling">
+                    @Html.HiddenFor(m => m.JobSchedulingID)
+                    @Html.HiddenFor(m => m.Status)
+                    @Html.Partial("~/views/JobScheduling/_SchedulePopup.cshtml", Model)
+                </form>
+                @if (Model.IsCheckListView)
+                {
+                    <div id="checkListTemplateForm" style="padding:15px"></div>
+                }
+                <div class="modal-footer">
+                    @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+                Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                    {
+                        if (isAddEditJobScheduling)
+                        {
+                            <button type="button" class="btn primary icon-btn" id="saveJobSchedule"><span class="sprite-img save_ic"></span>Save</button>
+                        }
+
+                    }
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade view-signature" id="popupboxViewSignature" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxViewSignature"></button>
+                    <h4 class="modal-title" id="myModalLabel">View Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOwnerSignature">Owner Signature:</label>
+                            <div class="signechar-box"><img id="imgOwnerSignature" width="50px" height="50px" /></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewInstallerSignature">Installer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgInstallerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewDesignerSignature">Designer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgDesignerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewElectricianSignature">Electrician Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgElectricianSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOtherSignature">Other Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgOtherSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxPopulateSignature" tabindex="-1" role="dialog">
+    <div>
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxPopulateSignature"></button>
+                    <h4 class="modal-title" id="myModalLabel">Populate Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <input class="checkbox" type="hidden" id="hdnJobSchedulingId" />
+                    <ul class="populate-signature" id="jobDocumentPopulate"></ul>
+                </div>
+                <div class="modal-footer" style="border-top:0px !important;">
+                    <button type="button" class="btn primary save_ic" onclick="SaveSignatureToDocument()">Save</button>
+                    <button type="button" class="btn default cancel_ic" onclick="ClearSignatureToDocument()">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.Partial("~/views/JobScheduling/_CommonCheckListForVisit.cshtml", Model)
+@Html.Partial("~/Views/CheckListItem/_CommonCheckListMethod.cshtml")
+
+@*@Scripts.Render("~/bundles/jqueryval")*@
+
+<script type="text/javascript">
+    var isCheckListView = '@Model.IsCheckListView.ToString().ToLower()';
+    var urlReloadSectionOnVisitSave = '@Url.Action("ReloadSectionOnVisitSave", "Job")';
+    var visitJobId = '@Model.VisitJobId';
+    var sessionIsUserEmailAccountConfigured = '@ProjectSession.IsUserEmailAccountConfigured';
+    var sessionMakeVisitAsDefaultSubmission = '@Url.Action("MakeVisitAsDefaultSubmission", "JobScheduling")';
+    var changeVisitStatus = '@Url.Action("ChangeVisitStatus", "JobScheduling")';
+    var urlLogout = '@Url.Action("Logout", "Account")';
+    var urlGetCheckListDocument = '@Url.Action("GetCheckListDocument", "Job")';
+    var urlRequestJobData = '@Url.Action("RequestJobData", "Job")';
+    var urlSaveSignatureToDocument = '@Url.Action("SaveSignatureToDocument", "Job")';
+    var urlViewVisitSignature = '@Url.Action("ViewVisitSignature", "Job")';
+    var sessionUploadedDocPath = '@ProjectSession.UploadedDocumentPath';
+    var urlGenerateRandomNumber = '@Url.Action("GenerateRandomNumber", "JobScheduling")';
+    var modelDefaultTemplateId = '@Model.DefaultTemplateId';
+</script>

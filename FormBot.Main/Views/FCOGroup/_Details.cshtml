@@ -1,0 +1,66 @@
+﻿@model FormBot.Entity.FCOGroup
+@using FormBot.Entity;
+@{
+    IEnumerable<FCOGroup> users = new List<FCOGroup>();
+}
+<style>
+    .defaultFormBot {
+        margin-top: 30px;
+        padding-top: 8px;
+    }
+</style>
+<div class="row">
+    <div class="col-sm-12 ">
+        <div class="title">
+            <h1>FCO User Group</h1>
+            <a href="@Url.Action("Index", "FCOGroup")" title="Back" class="back-btn pull-right" style="text-decoration:none;"><img src="~/Images/back-icon.png" alt="" />Back</a>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            @Html.LabelFor(m => m.GroupName, new { @class = "control-label required" })
+            @Html.TextBoxFor(m => m.GroupName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.GroupName)
+        </div>
+    </div>
+</div>
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">All FCO Users:</label>
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.lstUser, new MultiSelectList(Model.lstUser, "Value", "Text"), new { id = "lstAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 3 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            @*style="padding-left: 40px; padding-right: 20px; padding-top: 10px;"*@
+            <a id="btnLtoR" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="4" />
+            </a>
+            <a id="btnRtoL" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="5" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <label class="col-md-7 col-sm-7 control-label " for="md" style="padding-top: 8px; margin-left:-13px;">Assigned FCO Users:</label>
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.AssignedUser, new MultiSelectList(Model.lstAssignedUser, "Value", "Text"), new { id = "lstAssignedAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 6 })
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <div class="btn primary icon-btn ">
+        <span class="sprite-img save_ic"></span>
+        <input type="submit" name="Submit" value="Save" autofocus class="" id="btnSubmit" tabindex="25">
+    </div>
+    <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" tabindex="26">
+</div>

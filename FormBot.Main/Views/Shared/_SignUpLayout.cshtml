@@ -1,0 +1,140 @@
+﻿@using FormBot.Main
+@using FormBot.Helper
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>GreenBot</title>
+    <link rel="shortcut icon" href="~/Images/favicon.ico" />
+
+    @Styles.Render("~/Content/css")
+    @Styles.Render("~/datatableCSS")
+
+    @Scripts.Render("~/bundles/CommonJS")
+
+    @*@Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")*@
+    @*<script src="~/Scripts/Calendar/moment.min.js"></script>*@
+    @*@Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/datatableJs")*@
+    <link href="~/Content/timeout-dialog.css" rel="stylesheet" />
+    <script src="~/Scripts/timeout-dialog.js"></script> 
+
+    <style type="text/css">
+        .hd-top .logo {
+            max-width: 200px;
+            height: 60px;
+            overflow: hidden;
+        }
+
+            .hd-top .logo img {
+                max-width: 100%;
+                margin-top: 5px;
+                /*height: 60px;*/
+            }
+    </style>
+
+</head>
+<body id="@FormBot.Helper.ProjectSession.Theme">
+    <!-- wrapper start -->
+    <div id="wrapper">
+        <header id="header">
+            <!-- header start -->
+            <div class="hd-top">
+                <div class="container-fluid">
+                    <div class="logo col-sm-6">
+                        <a href="#" title="Formbot">
+                            <img src="~/Images/logo.png" alt="Formbot" id="imgLogo" />
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @*<nav id="navigation">
+                    <a class="menu-toggle" href="#">
+                        <i class="menu-icon">
+                            <span class="line1"></span>
+                            <span class="line2"></span>
+                            <span class="line3"></span>
+                        </i>
+                    </a>
+                </nav>*@
+            <!-- header End -->
+        </header>
+        <!-- End Header -->
+        <!-- Start Content -->
+        <section id="content">
+            <div id="loading-image" class="loadingOverlay" style="display: none;margin-left:-15px;"><img src="@Url.Content("~/images/loader.gif")" alt="loading..." align="middle"></div>
+            @RenderBody()
+        </section>
+        <!-- wrapper end -->
+
+
+    </div>
+    <footer id="footer">
+        <div class="content-wrapper">
+            <p class="copyright">Copyright &copy; 2019 Emerging Energy</p>
+        </div>
+    </footer>
+    <!-- End Content -->
+    @RenderSection("scripts", required: false)
+    <script type="text/javascript">
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize';
+        var ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath';
+        $(document).ready(function () {
+
+            //setTimeout(function () {
+            //    $('.alert').fadeOut(4000);
+            //}, 4000);
+
+            $("body").find("form").submit(function (e) {
+                if (typeof (validateExtraFields) == "function") {
+                    if (validateExtraFields() == false) {
+                        return false;
+                    }
+                }
+
+                //if ($(this).valid()) {
+                //    e.stopPropagation();
+                //}
+            });
+
+            if ('@ProjectSession.Logo' != null && '@ProjectSession.Theme' != null && '@ProjectSession.Logo' != '' && '@ProjectSession.Theme' != '') {
+                if ('@ProjectSession.Logo' == 'Images/logo.png') {
+                    $('#imgLogo').attr('src', ('@ProjectSession.SiteUrlBase' + '@ProjectSession.Logo'));
+                }
+                else {
+                    $('body').attr('id', '@ProjectSession.Theme');
+                    var proofDocumentURL = UploadedDocumentPath;
+                    var logo = '@ProjectSession.Logo';
+                    var SRC = proofDocumentURL + 'UserDocuments' + '/' + logo;
+                    $('#imgLogo').attr('src', SRC);
+                    $('.hd-top .logo img').css('height', '60px');
+                    $('.hd-top .logo img').css('margin-top', '0px');
+                }
+                $('body').attr('id', '@ProjectSession.Theme');
+            }
+
+            $(document).ajaxStart(function () {
+                $("#loading-image").show();
+            });
+
+            $(document).ajaxComplete(function () {
+                $("#loading-image").hide();
+            });
+            $(document).attr('title', 'GreenBot - ' + $('h1:first').text());
+            window.history.forward();
+        });
+
+        $('#btnSubmit').click(function () {
+            //setTimeout(function () {
+            //    $('.alert').fadeOut(4000);
+            //}, 4000);
+        });
+
+        function noBack() { window.history.forward(); }
+    </script>
+</body>
+</html>

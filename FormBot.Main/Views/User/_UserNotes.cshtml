@@ -1,0 +1,211 @@
+﻿@model FormBot.Entity.User
+<style>
+    .Notestype {
+        border: 0px;
+        outline: 0px;
+        background: none;
+        color: blue;
+    }
+
+    #cke_8 {
+        margin-left: 200px !important;
+    }
+
+    #cke_17,#cke_18 {
+        display:none;
+    }
+
+    .important-note {
+        visibility: hidden;
+        font-size: 30px;
+        cursor: pointer;
+    }
+
+        .important-note:before {
+            content: "\2606";
+            position: absolute;
+            visibility: visible;
+        }
+
+        .important-note:checked:before {
+            content: "\2605";
+            position: absolute;
+        }
+
+    input#IsImportantNote {
+        line-height: inherit;
+    }
+</style>
+<div class="row">
+    <div class="UserNotes col-sm-6">
+        @*<div class="title" style="">
+            <h3>Notes </h3>
+        </div>*@
+        @using (Html.BeginForm("SaveUserNotetoXML", "User", FormMethod.Post, new { id = "UserDetails", enctype = "multipart/form-data" }))
+        {
+            <input type="hidden" id="hiddenUserNoteID" name="hiddenUserNoteID" />
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionUserNotes" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionUserNotes" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group" id="notesText">
+                        @*@Html.TextAreaFor(m => m.Note, new { @class = "form-control noreadonly", @autofocus = true, id = "Note" })*@
+                        @Html.TextAreaFor(m => m.Note, new { @class = "ckeditor", @id = "contentusernoteeditor" })
+
+                    </div>
+                </div>
+            </div>
+            <div class="row divSaveCancelNote" >
+
+                <div class="form-group col-md-6">
+                    <div class="btn primary icon-btn">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="button" name="Submit" value="Save Note" autofocus="" class="btnSubmit" id="btnSaveUserNote">
+                    </div>
+
+                    <input type="button" value="Cancel" id="btnCancelUserNotes" class="default cancel_ic">
+                </div>
+                <div class="col-md-6">
+                    <div class="notestypeandimportant" style="float:right; margin-right:10px;">
+                        @Html.DropDownListFor(m => m.NotesType, ViewBag.NotesType as SelectList, new { @class = "Notestype" })
+                        | @*<input class="important-note" type="checkbox" title="Star Note" id="IsImportantNote" style="margin-top:0px !important">*@
+                        @Html.CheckBoxFor(m => m.IsImportantNote, new { @class = "important-note", @id = "IsImportantNote", @style = "margin-top:0px !important" })
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script>
+    var UserIDforckeditor = @Model.UserId;
+    var jobid = 0;
+    var jobID = 0;
+</script>
+<script src="~/Scripts/ckeditor/ckeditor_4.16.2_custom6/ckeditor/ckeditor.js"></script>
+<script>
+    debugger;
+      
+    $(document).ready(function () {
+        debugger;
+            CKEDITOR.instances.contentusernoteeditor.on("focus", function () {
+                $("#cke_1_bottom").css("display", "block");
+                $(".divSaveCancelNote").css("display", "block");
+                $("#cke_1_contents").css("cssText", "height: 120px !important;");
+            });
+        CKEDITOR.instances.contentusernoteeditor.on("blur", function () {
+            var text = CKEDITOR.instances.contentusernoteeditor.getData();
+            if (text == "") {
+                $("#cke_1_bottom").css("display", "none");
+                $(".divSaveCancelNote").css("display", "none");
+                $("#cke_1_contents").css("cssText", "height: 60px !important;");
+            }
+              
+            });
+       
+        //$(".UserNotes").focusin(function () {
+        //    $("#cke_1_bottom").css("display", "block");
+        //    $(".divSaveCancelNote").css("display", "block");
+        //    $("#cke_1_contents").css("cssText", "height: 120px !important;");
+        //})
+        //$(".UserNotes").focusout(function () {
+        //    $("#cke_1_bottom").css("display", "none");
+        //    $(".divSaveCancelNote").css("display", "none");
+        //    $("#cke_1_contents").css("cssText", "height: 70px !important;");
+        //})
+       
+       
+
+        @*CKEDITOR.instances.contentusernoteeditor.on("instanceReady", function (event) {
+            if (@Model.UserId == 0) {
+            debugger;
+            $('#cke_19').css("display", "none");
+        }
+        });*@
+        
+
+        $("#btnSaveUserNote").click(function () {
+        @*var UserIDforckeditor = @Model.UserId;*@
+       
+        debugger;
+        var urlSaveNote = '@Url.Action("SaveUserNotetoXML", "User")';
+        var userid = '@Model.UserId';
+        var note = CKEDITOR.instances.contentusernoteeditor.getData();
+
+        if (note == "") {
+            showErrorMessageUserNotes("Please add some detail in notes section for save note.");
+        }
+        else {
+        var Notestype = $("#NotesType").val();
+        var NoteID = $("#hiddenUserNoteID").val();
+        var UserTypeID = '@Model.UserTypeID';
+        var isimportantnote = document.getElementById("IsImportantNote").checked;
+        $.ajax({
+            type: 'GET',
+            url: urlSaveNote,
+            dataType: 'json',
+            async: false,
+            data: { UserID: userid, Notes: note, NotesType: Notestype, UserTypeID: UserTypeID, IsImportant: isimportantnote, NoteID: NoteID },
+            success: function (data) {
+                debugger;
+                if (data.status) {
+                    showSuccessMessageUserNotes(data.message);
+                    CKEDITOR.instances.contentusernoteeditor.setData('');
+                    searchuserhistory();
+                    $('#hiddenUserNoteID').val("");
+                    $("#NotesType").prop("disabled", false);
+                    $("#IsImportantNote").prop('checked', false);
+                    NotesTypeFilter();
+                }
+                else {
+                    showErrorMessageUserNotes(data.message);
+                    $('#hiddenUserNoteID').val("");
+                }
+
+            },
+            error: function (ex) {
+                debugger;
+                showErrorMessageUserNotes("Failed to save User Note")
+            }
+        });
+        }
+       
+        });
+
+        $("#btnCancelUserNotes").click(function () {
+            CKEDITOR.instances.contentusernoteeditor.setData('');
+            $('#hiddenUserNoteID').val("");
+            $("#NotesType").prop("disabled", false);
+            $("#IsImportantNote").prop('checked', false);
+            NotesTypeFilter();
+        });
+
+        //CKEDITOR.instances.contentusernoteeditor.on("focus", function () {
+        //    $("#cke_1_bottom").css("display", "block");
+            
+        //});
+        //CKEDITOR.instances.contentusernoteeditor.on("blur", function () {
+           
+        //    $("#cke_1_bottom").css("display", "none");
+        //});
+    })
+    
+    
+    function showSuccessMessageUserNotes(message) {
+        $("#errorMsgRegionUserNotes").hide();
+        $("#successMsgRegionUserNotes").html(closeButton + message);
+        $("#successMsgRegionUserNotes").show();
+    }
+    function showErrorMessageUserNotes(message) {
+        $("#successMsgRegionUserNotes").hide();
+        $("#errorMsgRegionUserNotes").html(closeButton + message);
+        $("#errorMsgRegionUserNotes").show();
+    }
+
+</script>

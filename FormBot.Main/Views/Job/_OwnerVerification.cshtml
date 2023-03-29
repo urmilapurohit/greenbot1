@@ -1,0 +1,102 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = "~/Views/Shared/_SignUpLayout.cshtml";
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+@using (Html.BeginForm("_OwnerVerification", "Job", FormMethod.Post, new { id = "CreateJob", enctype = "multipart/form-data" }))
+{
+    @Html.HiddenFor(m => m.BasicDetails.JobID)
+    @Html.HiddenFor(m => m.JobOwnerDetails.FirstName)
+    <div class="container-fluid">
+        <div class="title">
+            <div class="row">
+                <h1>Home Owner verification</h1>
+                </div>
+            </div>
+                <div class="container-fluid faq-block fix-width" style="max-width: 600px !important">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobOwnerDetails.LastName, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 1 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.LastName, "", new { id = "OwnerLastNameValidate" })
+                    </div>
+
+                    <div class="form-group">
+                        @*@Html.LabelFor(m => m.JobOwnerDetails.PostCode, new { @class = "control-label required" })*@
+                        <label class="control-label required">Owner Post code</label>
+                        @Html.TextBoxFor(m => m.JobOwnerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 2 })
+                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostCode)
+                    </div>
+
+
+
+                    <div class="form-group">
+                        <input type="button" value="verify" class="login-btn primary" tabindex="3" id="btnVerify">
+                    </div>
+
+                </div>
+    </div>
+}
+
+@section Scripts
+    {
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+       var themeId = '@(ViewData.ContainsKey("theme") ? ViewData["theme"] : "green")';
+            $('body').attr('id', themeId);
+
+
+    });
+
+    $("#btnVerify").click(function () {
+        var OwnerlastName = escape($("#JobOwnerDetails_LastName").val());
+        var OwnerPostcode = $("#JobOwnerDetails_PostCode").val();
+        var JobId = $("#BasicDetails_JobID").val();
+        var id = $("#JobOwnerDetails_FirstName").val();
+
+        if ($("#CreateJob").valid() && JobId > 0) {
+            $.ajax(
+                      {
+                           url: '@Url.Action("_OwnerVerification", "Job")?OwnerlastName=' + OwnerlastName + '&Jobid=' + JobId + '&OwnerPostcode=' + OwnerPostcode,
+                          contentType: 'application/json',
+                          method: 'post',
+                          success: function (data) {
+                              if (data == true) {
+                                  @*window.location.href = '@Url.Action("_OwnerSignature", "Job")?Id=' + id + '&Type=@Model.Type';*@
+                                  window.location.href = '@Url.Action("_OwnerSignature", "Job")?Id=' + id + '&Type=@Model.Type'+ '&SMSOrMail=@Model.SMSOrMail' ;
+                                  @*'@Url.Action("_OwnerSignature", "Job")'+ "?id=@Model.BasicDetails.Id";*@
+
+                              }
+                              else {
+
+                                  $("#errorMsgRegion").html(closeButton + "Please verify inserted home owner details.");
+                                  $("#errorMsgRegion").show();
+                                  $('html').animate({ scrollTop: 0 }, 'slow');//IE, FF
+                                  $('body').animate({ scrollTop: 0 }, 'slow');
+
+                              }
+                          },
+
+                      });
+
+
+        }
+
+
+    });
+
+</script>
+}

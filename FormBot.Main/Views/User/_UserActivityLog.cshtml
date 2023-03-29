@@ -1,0 +1,206 @@
+﻿<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+@*<link href="~/Content/kendo/styles/kendo.custom.css" rel="stylesheet" />*@
+<link href="~/Content/KendoGrid.css" rel="stylesheet" />
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+@{
+    var enumData = from FormBot.Helper.SystemEnums.ActivityLogType e in Enum.GetValues(typeof(FormBot.Helper.SystemEnums.ActivityLogType))
+                   select new
+                   {
+                       ID = (int)e,
+                       Name = FormBot.Helper.SystemEnums.GetDescription(e)
+                   };
+    var list = new SelectList(enumData, "ID", "Name");
+}
+<style>
+    .user-activity-log-block .control-label {
+        display: block;
+    }
+    .user-activity-log-block .form-box {
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+</style>
+<div class="form-box user-activity-log-block">
+    <div class="row">
+        <div class="col-sm-4 col-md-2">
+            <div class="form-group">
+                <label class="control-label">Activity Log Type:</label>
+                <select id="activity-log-type" class="form-control"></select>
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <div class="form-group">
+                <label class="control-label">Start Date:</label>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="startDate" placeholder="From" readonly="readonly">
+                            <span class="input-group-addon sprite-img date-picker"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4 col-md-2">
+            <div class="form-group">
+                <label class="control-label">End Date:</label>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="endDate" placeholder="To" readonly="readonly">
+                            <span class="input-group-addon sprite-img date-picker"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <div class="form-group">
+                <input type="button" id="btnSearchUserActivityLog" value="Search" class="primary search_ic" onclick="SearchUserActivityLog();">
+                <div class="default btn icon-btn" id="btnReset" onclick="ResetUserActivityLog();">
+                    <span class="sprite-img reset_ic"></span>
+                    <input type="button" value="Reset" class="">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="toggle-table-row kendo-grid">
+    <div id="activity-log-datatable">
+    </div>
+</div>
+<script>
+    var data = JSON.parse('@Html.Raw(Json.Encode(list))');
+    var startDate = "";
+    var endDate = "";
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = dateFormatMoment;
+    $(document).ready(function () {
+        $("#activity-log-type").html("");
+        $("#activity-log-type").append("<option value='0'>Select Activity Type ...</option>")
+        $.each(data, function (k, data) {
+            $("#activity-log-type").append("<option value='" + data.Value + "'>"+data.Text+"</option>")
+        })
+        $('#startDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#endDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#startDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#endDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#endDate").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#startDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#endDate').data('datepicker')) {
+                $('#endDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#endDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#endDate').change(function () {
+            var fromDate = new Date(ConvertDateToTick($("#endDate").val(), dateFormat));
+            var toDate = new Date(ConvertDateToTick($("#endDate").val(), dateFormat));
+        });
+        $("#activity-log-datatable").kendoGrid({
+            columns: [
+                {
+                    field: "ActivityTypeName",
+                    title: "Activity Type",
+                    width: 240
+                },
+                {
+                    field: "LogMessage",
+                    title: "Log Message"
+                },
+                {
+                    field: "UserFullName",
+                    title: "User Name"
+                },
+                {
+                    field: "strCreatedDate",
+                    title: "Created Date",
+                    width: 150
+                },
+                {
+                    field: "IpAddress",
+                    title: "IP Address",
+                    width: 150
+                }
+            ],
+            dataSource: {
+                type: "json",
+                transport: {
+                    read: {
+                        url: '@Url.Action("GetActivityLog","User")',
+                        data: {},
+                        contentType: 'application/json',
+                        dataType: 'json',
+                        type: 'POST'
+                    },
+                    parameterMap: function (options) {
+                        options.UserId = USERID;
+                        options.ActivityTypeId = $("#activity-log-type").val();
+                        options.StartDate = GetDates($("#startDate").val());
+                        options.EndDate = GetDates($("#endDate").val());
+                        return JSON.stringify(options);
+                    }
+                },
+                schema: {
+                    data: "data", // records are returned in the "data" field of the response
+                    total: "total"
+                },
+                pageSize: 10,
+                serverPaging: true,
+                serverSorting: true,
+                serverFiltering: false,
+                requestStart: function (e) {
+                    setTimeout(function (e) {
+                        $(".k-loading-image").hide();
+                    })
+                },
+                requestEnd: function (e) {
+                },
+            },
+            groupable: false,
+            sortable: true,
+            pageable: {
+                buttonCount: 5,
+                pageSizes: [10, 25, 50, 100, 200]
+            },
+            resizable: true,
+            scrollable: true,
+            reorderable: true,
+            dataBound: function (e) {
+            }
+        });
+
+    })
+
+    function SearchUserActivityLog() {
+        $('#activity-log-datatable').data('kendoGrid').dataSource.read();
+    }
+
+    function ResetUserActivityLog() {
+        $("#activity-log-type").val(0);
+        $("#startDate").val('');
+        $("#endDate").val('');
+        $('#activity-log-datatable').data('kendoGrid').dataSource.read();
+    }
+    function GetDates(date) {
+        if (date != '') {
+            var tickStartDate = ConvertDateToTick(date, dateFormat);
+            return moment(tickStartDate).format("YYYY-MM-DD");
+        }
+        else {
+            return '';
+        }
+    }
+
+    </script>

@@ -1,0 +1,423 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "SSC";
+}
+
+@{
+    ////Todo
+    bool isSendRequest = false, isView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.SolarSubContractorSendRequest.GetHashCode()) { isSendRequest = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SolarSubContractorView.GetHashCode()) { isView = true; }
+        });
+    }
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div><div class="container-fluid">
+    <div class="title">
+        <h1>Solar Sub-Contractors Details</h1>
+        @if (isSendRequest && ProjectSession.IsSSCReseller.ToString().ToLower() == "true")
+        {
+            <text>
+                <input type="button" id="btnSendRequest" value="Send Request" class="primary pull-right sendRequest_ic" style="" onclick="SendRequestSSC();">
+            </text>
+        }
+    </div>
+
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <form class="form-block" style="margin-top:10px;">
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Name:</label>
+                <input type="text" id="txtName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Email:</label>
+                <input type="text" id="txtEmail" class="form-control" maxlength="256" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Company Name:</label>
+                <input type="text" id="txtCompanyName" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Company ABN:</label>
+                <input type="text" id="txtCompanyABN" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Status:</label>
+                @Html.DropDownList("SscStatus", null, "Select", new { id = "SscStatusId", @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchUsers();">
+            <div class="btn default icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset">
+            </div>
+        </div>
+    </form>
+
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="3%" style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                            <th><span>@Html.DisplayName("Name")</span></th>
+                            <th><span>@Html.DisplayName("Email ") </span></th>
+                            <th><span>@Html.DisplayName("Company Name")</span></th>
+                            <th><span>@Html.DisplayName("Company ABN")</span></th>
+                            <th><span>@Html.DisplayName("Status ")</span></th>
+                            @*<th class="action">@Html.DisplayName("Action")</th>*@
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="popupboxSSC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" id="btnClosepopupboxSSC">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Send Request To Solar-Sub Contractor</h4>
+                </div>
+                @Html.HiddenFor(m => m.UserTypeID)
+                <div id="msgSection">
+                    @Html.RenderMessages()
+                </div>
+                <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.CompanyABN, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.CompanyABN, new { @class = "form-control", @maxlength = 50, @id = "CompanyABN", @autofocus = "autofocus", @tabindex = 1 })
+                                        @Html.ValidationMessageFor(m => m.CompanyABN)
+                                    </div>
+                                </div>
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label class="control-label">Company/Business Name:</label>
+                                        <input type="text" class="form-control" id="txtCompanyNamebyABN" readonly="readonly" tabindex="2" />
+                                        @*@Html.TextBoxFor(m => m.CompanyName, new { @class = "form-control", @maxlength = 50, @id = "txtCompanyName", @readonly = "readonly" })*@
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab_bottomrow">
+                                <input type="submit" name="Submit" value="Save" autofocus class="primary save_ic" id="btnSendRequestSave" tabindex="3">
+                                <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" tabindex="4">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/bootstrap-datepicker.js"></script>
+    @Scripts.Render("~/datatableJs")
+    @Scripts.Render("~/bundles/jqueryval")
+    @*<script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        @Scripts.Render("~/bundles/bootstrap")
+        @Scripts.Render("~/datatableJs")*@
+    <script type="text/javascript">
+        var BaseURL= '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+        $(document).ready(function () {
+            var chkCount=0;
+            SetParamsFromLocalStorage();
+            $("#txtName").focus();
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'Id',
+                            "orderable": false,
+                            "render": function (data, type, full, meta) {
+                                if($('#chkAll').prop('checked')==true){
+                                    return '<input type="checkbox" id="chk_'+full.Id+'" checked>';
+                                }
+                                else{
+                                    return '<input type="checkbox" id="chk_'+full.Id+'">';
+                                }
+                            }
+                        },
+                        { 'data': 'Name' },
+                        { 'data': 'Email' },
+                        { 'data': 'CompanyName' },
+                        { 'data': 'CompanyABN' },
+                        { 'data': 'Status',
+                            "render": function (data, type, full, meta) {
+                                if(full.Status==1){
+                                    return '<p>Request Send</p>'
+                                }
+                                else if(full.Status==2){
+                                    return '<p>Request Accepted</p>'
+                                }
+                                else if(full.Status==3){
+                                    return '<p>Request Rejected</p>'
+                                }
+                                else{
+                                    return '';
+                                }
+                            },
+                        },
+                        @*{'data': 'Id',
+                            "render": function (data, type, full, meta) {
+                                var viewButton='';
+                                if('@isView.ToString().ToLower()'=="true"){
+                                    imgview = 'background:url(../Images/view-icon.png) no-repeat center; text-decoration:none;';
+                                    var viewHref = ("@Url.Action("ViewDetail", "User")" + "/" + full.Id);
+                                    viewButton = '<a href="' + viewHref + '" class="action view" style="' + imgview + '" title="View">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                }
+
+                                returnHTML =viewButton;
+                                return returnHTML;
+                            },
+                            "orderable": false
+                        },*@
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function( settings, json ) {
+                    $('.grid-bottom span:first').attr('id','spanMain');
+                    $("#spanMain span").html("");
+                },
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetRequestedSSCforSCA", "User")',
+
+                "fnDrawCallback": function () {
+                    if($('#chkAll').prop('checked')==true){
+                        chkCount=$('#datatable >tbody >tr').length;
+                    }
+                    else{
+                        chkCount=0;
+                    }
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length >= 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Solar Sub Contractor(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Solar Sub Contractor(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                },
+
+                "fnServerParams": function (aoData) {  //These are the extra parameters from our custom filters
+                    aoData.push({ "name": "name", "value": $("#txtName").val() });
+                    aoData.push({ "name": "email", "value": $("#txtEmail").val() });
+                    aoData.push({ "name": "companyname", "value": $("#txtCompanyName").val() });
+                    aoData.push({ "name": "companyabn", "value": $("#txtCompanyABN").val() });
+                    aoData.push({ "name": "sscstatus", "value": localStorage.getItem('SSC_SscStatusId') });
+                }
+            });
+
+            var table = $('#datatable').DataTable();
+
+            $('#chkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                chkCount = this.checked ? $('#datatable >tbody >tr').length : 0;
+            });
+
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (this.checked) {
+                    chkCount++;
+                    if (chkCount == $('#datatable >tbody >tr').length) {
+                        $('#chkAll').prop('checked', this.checked)
+                    }
+                }
+                else {
+                    chkCount--;
+                    $('#chkAll').prop('checked', this.checked)
+                }
+            });
+
+
+        });
+
+        function ResetSearchFilters() {
+            localStorage.setItem('SSC_Name','');
+            localStorage.setItem('SSC_Email','');
+            localStorage.setItem('SSC_CompanyName','');
+            localStorage.setItem('SSC_CompanyABN','');
+            localStorage.setItem('SSC_SscStatusId',0);
+            document.getElementById("SscStatusId").selectedIndex = 0;
+
+            SetParamsFromLocalStorage();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function SearchUsers(){
+            localStorage.setItem('SSC_Name',$("#txtName").val());
+            localStorage.setItem('SSC_Email',$("#txtEmail").val());
+            localStorage.setItem('SSC_CompanyName',$("#txtCompanyName").val());
+            localStorage.setItem('SSC_CompanyABN',$("#txtCompanyABN").val());
+            localStorage.setItem('SSC_SscStatusId',document.getElementById("SscStatusId").value);
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function SendRequestSSC(){
+            $('#popupboxSSC').modal({ backdrop: 'static', keyboard: false });
+            setTimeout(function(){
+                $('.form-box').find('input:first').focus();
+            },1000);
+        }
+        $("#btnClosePopUpBox").click(function () {
+            $('#popupbox').modal('toggle');
+        });
+
+        $("#btnClosepopupboxSSC").click(function () {
+            $('#popupboxSSC').modal('hide');
+        });
+
+        $("#btnCancel").click(function () {
+            $('#popupboxSSC').modal('hide');
+        });
+
+        $("#CompanyABN").change(function () {
+            var companyABN = $('#CompanyABN').val();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetComapnyNameByABN", "User")',
+                data: { companyABN: companyABN },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+                    if (data != "") {
+                        $('#txtCompanyNamebyABN').val(data);
+                    }
+                    else {
+                        $(".alert").hide();
+                        $("#popuperrorMsgRegion").html(closeButton + "Solar sub contractor with given company ABN number doesn't exist.");
+                        $("#popuperrorMsgRegion").show();
+
+                    }
+                }
+            });
+        });
+
+        $('#btnSendRequestSave').click(function () {
+            var CompanyABN = $("#CompanyABN").val();
+            $.ajax({
+                url: '@Url.Action("SendRequestForSolarSubContractor", "User")',
+                type: "GET",
+                data: {CompanyABN: CompanyABN },
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data == true) {
+                        var strEmailConfigureMsg='';
+                        //Email configuration not required
+                        if('@ProjectSession.IsUserEmailAccountConfigured'=='False'){
+                            strEmailConfigureMsg='(Can not send mail to Solar Sub Contractor because email account is not configured)';
+                        }
+                        $('#popupboxSSC').modal('hide');
+                        $(".alert").hide();
+                        $("#errorMsgRegion").removeClass("alert-danger");
+                        $("#errorMsgRegion").addClass("alert-success");
+                        $("#errorMsgRegion").html(closeButton + "Job assigned to SSC successfully. "+strEmailConfigureMsg);
+                        $("#errorMsgRegion").show();
+                        $('#CompanyABN').val("");
+                        $('#txtCompanyNamebyABN').val("");
+
+                        window.setTimeout(function () { location.reload() }, 3000)
+                    }
+                    else if(data = "Exist")
+                    {
+                        $(".alert").hide();
+                        $("#popuperrorMsgRegion").html(closeButton + "Solar sub contractor with given request already exist.");
+                        $("#popuperrorMsgRegion").show();
+
+                    }
+                    else
+                    {
+                        $(".alert").hide();
+                        $("#popuperrorMsgRegion").html(closeButton + "Solar sub contractor with given company ABN number doesn't exist.");
+                        $("#popuperrorMsgRegion").show();
+
+                    }
+                },
+            });
+        });
+
+        function SetParamsFromLocalStorage(){
+            $("#txtName").val(localStorage.getItem('SSC_Name'));
+            $("#txtEmail").val(localStorage.getItem('SSC_Email'));
+            $("#txtCompanyName").val(localStorage.getItem('SSC_CompanyName'));
+            $("#txtCompanyABN").val(localStorage.getItem('SSC_CompanyABN'));
+            $("#txtElectricalContractorsLicenseNumber").val(localStorage.getItem('SE_ElectricalContractorsLicenseNumber'));
+            if(localStorage.getItem('SSC_SscStatusId')=="0"){
+                document.getElementById("SscStatusId").selectedIndex = 0;
+            }
+            else{
+                document.getElementById("SscStatusId").value = localStorage.getItem('SSC_SscStatusId');
+            }
+        }
+    </script>
+}
+<style type="text/css">
+    .sendRequest_ic {
+        background-image: url(../images/send-request-wh.png) !important;
+        background-repeat: no-repeat;
+        background-position: 6px 9px;
+        padding: 0px 10px 0px 28px !important;
+    }
+</style>

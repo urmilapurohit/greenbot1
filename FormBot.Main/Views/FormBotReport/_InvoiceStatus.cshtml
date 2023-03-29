@@ -1,0 +1,185 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="StatusBit" value="4" id="StatusBit" />
+<input type="hidden" name="minStatus" value="1" id="minStatus" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstStatus, new MultiSelectList(Model.LstStatusUsers, "Value", "Text"), new { id = "LstStatus", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_Status" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_Status" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.FormBotStatusAssignedUser, new MultiSelectList(Model.LstStatusAssignedUser, "Value", "Text"), new { id = "LstStatusAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnFormBotStatusAssignedUser, new { id = "hdnStatus" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnInvoiceSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnClearInvoice" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_Status", function () {
+        if (parseInt($('#StatusBit').val()) == 0) {
+            $('#LstStatus option:selected').each(function () {
+                $(this).remove().appendTo("#LstStatusAssignedUser");
+            });
+            $('#AvailableStatus').html($('#LstStatusAssignedUser option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstStatus option:selected').length + $('#LstStatusAssignedUser option').length) <= parseInt($('#StatusBit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstStatusAssignedUser option').length < parseInt($('#StatusBit').val());
+                if (LstSCA_Acc) {
+                    $('#LstStatus option:selected').each(function () {
+                        $(this).remove().appendTo("#LstStatusAssignedUser");
+                    });
+                    var max = $('#StatusBit').val();
+                    $('#AvailableStatus').html($('#LstStatusAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstStatusAssignedUser option').length == parseInt($('#StatusBit').val()))) {
+                    $('#btnLtoR_Status').css('opacity', '0.5');
+                    $('#btnLtoR_Status').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_Status').css('opacity', '1');
+                    $('#btnLtoR_Status').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    $(document).on("click", "#btnRtoL_Status", function () {
+        $('#LstStatusAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstStatus");
+        });
+        var max = $('#StatusBit').val();
+        if (max > 0) {
+            $('#AvailableStatus').html($('#LstStatusAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableStatus').html($('#LstStatusAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstStatusAssignedUser option').length < parseInt($('#StatusBit').val()))) {
+                $('#btnLtoR_Status').css('opacity', '1');
+                $('#btnLtoR_Status').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_Status').css('opacity', '0.5');
+                $('#btnLtoR_Status').css('cursor', 'auto');
+            }
+        }
+    });
+
+    //$(document).on("click", "#closeStatus", function () {
+    //    $('#popupStatus').modal('hide');
+    //    $('#cntStatus').html($('#LstStatusAssignedUser option').length);
+    //});
+
+    $(document).on("click", "#btnInvoiceSave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstStatusAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minStatus').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minStatus').val() > 0 && $('#LstStatusAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        if (($('#LstStatusAssignedUser option').length <= parseInt($('#StatusBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minStatus').val() == 1 && $('#LstStatusAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnStatus").val(strAssignedAttendeeList);
+        $('#cntStatus').html($('#LstStatusAssignedUser option').length);
+        $('#popupStatus').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearInvoice", function () {
+        $('#LstStatusAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstStatus");
+        });
+        var max = $('#StatusBit').val();
+        if (max > 0) {
+            $('#AvailableStatus').html($('#LstStatusAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableStatus').html($('#LstStatusAssignedUser option').length);
+        }
+        if (max > 0) {
+            if (($('#LstStatusAssignedUser option').length < parseInt($('#StatusBit').val()))) {
+                $('#btnLtoR_Status').css('opacity', '1');
+                $('#btnLtoR_Status').css('cursor', 'poiter');
+            }
+            else {
+                $('#btnLtoR_Status').css('opacity', '0.5');
+                $('#btnLtoR_Status').css('cursor', 'auto');
+            }
+        }
+        $("#hdnStatus").val('');
+    });
+
+    $(document).on("click", "#closeStatus", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstStatusAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minStatus').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minStatus').val() > 0 && $('#LstStatusAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        if (($('#LstStatusAssignedUser option').length <= parseInt($('#StatusBit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minStatus').val() == 1 && $('#LstStatusAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnStatus").val(strAssignedAttendeeList);
+        $('#cntStatus').html($('#LstStatusAssignedUser option').length);
+        $('#popupStatus').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

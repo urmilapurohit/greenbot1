@@ -1,0 +1,70 @@
+﻿
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Change Reseller";
+}
+
+<form>
+    <div class="form-group row">
+        <label for="staticEmail" class="col-sm-2 col-form-label">Solar Company</label>
+        <div class="col-sm-10">
+            <select class="form-control" id="ddlCompanyList"></select>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="inputPassword" class="col-sm-2 col-form-label">Reseller</label>
+        <div class="col-sm-10">
+            <select class="form-control" id="ddlReseller"></select>
+        </div>
+    </div>
+    <div class="form-group row">
+        <button id="btnChange" class="btn btn-primary">Change</button>
+    </div>
+</form>
+
+@section scripts{
+    <script src="~/Scripts/jquery-ui-1.0.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+
+    @Scripts.Render("~/datatableJs")
+    @Scripts.Render("~/bundles/jqueryval")
+ 
+
+
+    <script type="text/javascript">
+
+        $.ajax(
+         {
+             url: '@Url.Action("GetCompanyList", "Settings")',
+             dataType: 'json',
+             contentType: 'application/json; charset=utf-8',
+             type: 'get',
+             //async: false,
+             success: function (response) {
+                 if (response && response.status == false) {
+                     if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception') {
+                         window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                     }
+                     else if (response.error.toLowerCase() == 'sessiontimeout')
+                         window.location.href = '@Url.Action("Logout", "Account")';
+                     else if (response.error)
+                         showErrorMessage(response.error);
+                     else
+                         showErrorMessage("Account has not been synced.");
+                 }
+                 else {
+                     window.location.href = '@Url.Action("Settings", "Settings")';
+                     //window.location.reload();
+                     //showSuccessMessage("Account has been sync successfully.");
+                 }
+             },
+             error: function (response) {
+                 showErrorMessage("Account has not been synced.");
+             }
+         });
+
+  
+
+    </script>
+}

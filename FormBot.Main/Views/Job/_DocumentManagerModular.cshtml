@@ -1,0 +1,480 @@
+﻿@model Tuple<FormBot.Entity.CreateJob, FormBot.Entity.Job.CaptureUserSign>
+@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+@{
+    bool isJobDocumentManagerUpload = false;
+    bool isJobDocumentManagerDelete = false;
+    bool isJobDocumentManagerGenerate = false;
+    bool isJobDocumentManagerView = false;
+    bool isJobDocumentManagerSave = false;
+    bool isJobDocumentManagerSignatureMail = true;
+    bool isSaveDocAfterTradeJob = false;
+    var serializer = new JavaScriptSerializer();
+    var documentsJson = serializer.Serialize(Model.Item1.DocumentJson);
+    var temp = serializer.Deserialize<JsonResult>(documentsJson);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+        });
+    }
+    if (ProjectSession.UserTypeId != 1 && ProjectSession.UserTypeId != 3 && Model.Item1.STCDetailsModel.stcBasicDetails.STCStatusId != 10 && Model.Item1.STCDetailsModel.stcBasicDetails.STCStatusId != 12 && Model.Item1.STCDetailsModel.stcBasicDetails.STCStatusId != 14 && Model.Item1.STCDetailsModel.stcBasicDetails.STCStatusId != 17)
+    {
+        isJobDocumentManagerDelete = false;
+        isJobDocumentManagerGenerate = false;
+    }
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+                if (d.MenuId == (int)SystemEnums.MenuId.SaveDocAfterTrade.GetHashCode()) { isSaveDocAfterTradeJob = true; }
+
+            });
+        }
+    }
+}
+
+@Html.AntiForgeryToken()
+@Html.ValidationSummary(true)
+<style>
+    .document-signature-send-request {
+        width: 27px !important;
+        height: 25px !important;
+        /*background-position: -235px -193px;*/
+        background-position: -188px -38px;
+    }
+
+    .document-status-green {
+        background-position: -172px -275px;
+    }
+
+    .document-status-orange {
+        background-position: -134px -275px;
+    }
+
+    .orange-border {
+        border-left: 3px solid #e49b16;
+    }
+
+    .green-border {
+        border-left: 3px solid #49cc00;
+    }
+
+    .red-border {
+        border-left: 3px solid #ff0000;
+    }
+</style>
+<script>
+    var urlGetEmailTemplateList = '@Url.Action("GetEmailTemplateList", "DocumentSignatureRequest")';
+</script>
+
+<div id="DocViewerOuterPopup">
+    @Html.Partial("_DocumentViewerOuterPopup")
+</div>
+<!-- Modal -->
+<div id="document-histroy-popup" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#document-histroy-popup').modal('hide');">&times;</button>
+                <h4 class="modal-title">Document History</h4>
+            </div>
+            <div class="modal-body">
+                <div class="documents-history">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade popupSignature" tabindex="-1" id="popupSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content signatureDocument">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Draw Signature</h4>
+                </div>
+                <div class="modal-body" style="overflow:auto !important">
+                    <form id="signatureSend">
+                        <div class="form-group">
+                            <label class="radio-inline"><input type="radio" value="D" name="signType" checked> Draw </label>
+                            <label class="radio-inline"><input type="radio" value="M" name="signType"> Mobile/Email </label>
+                        </div>
+                        <div class="form-box">
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSendSms" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSendSms" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Item2.Firstname, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Item2.Firstname, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsFirstname" })
+                                @Html.ValidationMessageFor(m => m.Item2.Firstname)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Item2.Lastname, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Item2.Lastname, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsLastname" })
+                                @Html.ValidationMessageFor(m => m.Item2.Lastname)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Item2.mobileNumber, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Item2.mobileNumber, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsMobileNo" })
+                                @Html.ValidationMessageFor(m => m.Item2.mobileNumber)
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Item2.Email, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.Item2.Email, new { @class = "form-control", @tabindex = 206, @id = "SendSignSmsEmail" })
+                                @Html.ValidationMessageFor(m => m.Item2.Email)
+                            </div>
+                        </div>
+                    </form>
+                    <div id="jSignature" style="opacity: 0.8; border: 1px dotted rgb(0, 0, 0) !important;" onchange="jobSignChange()"></div>
+                    </br>
+                    <div id="captureSignDetail">
+                        <label>Sign Capture By : </label></br>
+                        <label>Name : <span id="signCaptureName"></span></label></br>
+                        <label>Mobile Number : <span id="signCaptureMobile"></span></label></br>
+                        <label>Email : <span id="signCaptureEmail"></span></label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input type="button" value="Save" class="primary" id="btnSaveSign">
+                    <div class="btn-group" role="group" id="btnSendSignatureUrl">
+                        <a href="javascript:void(0);" style="margin-right:0; margin-top:10px;margin-right:10px;color:#383838 !important;" class="btn default dropdown-toggle pull-right export-ic" title="Send Signature Url" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Send<span class="caret" style="margin-left: 10px;"></span></a>
+                        <ul class="dropdown-menu" id="SaveJob" style="min-width:96%;text-align:center;">
+                            <li><a href="javascript:void(0)" onclick="SendUserSignatureUrl(0);">Mobile</a></li>
+                            <li><a href="javascript:void(0)" onclick="SendUserSignatureUrl(1);">Email</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="popupViewer" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title" id="myModalLabel">Document Image</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img id="imgDocImage" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="viewDoc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body">
+                <embed id="embDoc" width="500" height="375" type='application/pdf' src="http://localhost:56199/JobDocuments/2393/CES/test.pdf" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="mdlDocs" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">CREATE A DOCUMENT</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-inline">
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="control-label" style="margin-top:8px; float:left;">Select Category</label>
+                        <div class="col-md-6">
+                            <select id="ddlCat" class="form-control"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                        <ul class="list-group checked-list-box" id="tbodyItems" style="margin-bottom:0px;"></ul>
+                    </div>
+                </div>
+
+                <div class="form-inline">
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="control-label" style="margin-top:8px; float:left;">Populate Documents with Job Data?</label>
+                        <div class="col-md-3">
+                            <select id="ddlFillData" class="form-control">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <button type="button" id="btnAddDoc" class="btn primary ic_plus dropdown-toggle">Add Document</button>
+                    <button type="button" class="btn default icon-btn" id="btnClear"> <span class="sprite-img reset_ic"></span> Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="popupDocumentCreateConfirm" tabindex="-1" role="dialog" aria-labelledby="lblDocumentCreateConfirm">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnPopupDocumentCreateConfirm"></button>
+                    <h4 class="modal-title" id="lblDocumentCreateConfirm">Document Template</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-7 col-md-7 col-lg-7">
+                        <div class="form-group">
+                            <label class="control-label">Choose the document template you would like to create :</label>
+                            <select class="form-control" id="docTemplateId" name="docTemplateId">
+                                <option value="1">New Document Template</option>
+                                <option value="2">Existing</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary icon-btn" id="nextDocumentTemplate"><span class="sprite-img save_ic"></span>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="DocumentTemplate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="btndocumentTampleClose"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">USE EXISTING DOCUMENT</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                        <ul class="list-group checked-list-box" id="tbodyDocItemsForJob" style="margin-bottom:0px;"></ul>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <button type="button" class="btn default icon-btn" id="btnClearExistingDoc"><span class="sprite-img reset_ic"></span>Clear</button>
+                    <button type="button" id="btnAddExistingDoc" class="btn primary icon-btn dropdown-toggle"><span class="sprite-img add_ic"></span>Add Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="CrateSTCDocument" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create STC Document</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                        <ul class="list-group checked-list-box" id="tbodySTCItems" style="margin-bottom:0px;"></ul>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <button type="button" class="btn default icon-btn" id="btnClearSTCExistingDoc"><span class="sprite-img reset_ic"></span>Clear</button>
+                    <button type="button" id="btnAddSTCExistingDoc" class="btn primary icon-btn dropdown-toggle"><span class="sprite-img add_ic"></span>Add Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="SendMailDocumentSignatureRequest">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg vertical-align-center" style="width:90% !important;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" onclick="ToggleModelPopup('SendMailDocumentSignatureRequest');$('#DocumentLoadWithControls').html('');">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Send Mail Document Signature Request</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="">
+                                <div id="JobDocumentPreview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade popupSendEmailForBulkSignature" tabindex="-1" role="dialog" id="popupSendEmailForBulkSignature">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Choose email template for send signature</h4>
+                </div>
+                <div class="modal-body create-job">
+                    <form id="addGroupNameForm">
+                        <div class="alert alert-danger alert-dismissible" role="alert" id="errorSendEmailForBulkSignature" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="form-box">
+                            <div class="form-inline">
+                                <div class="form-group" style="margin-bottom:15px;">
+                                    <label class="control-label" style="margin-top:8px; float:left;">Select Email template</label>
+                                    <div class="col-md-6">
+                                        <select id="lstEmailTemplate" class="form-control"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Index","EmailTemplate")" id="createNewEmailTemplate">Create new template</a>
+                        </div>
+                        <div class="modal-footer" style="border-top:0px !important;">
+                            <a href="#" id="sendEmail" class="primary mail_ic" title="Send Email" onclick="sendEmailForSignatureRequest()">Send</a>
+                            <button type="button" class="btn default cancel_ic" onclick="FillDropDown('lstEmailTemplate', urlGetEmailTemplateList, null, true, null);" id="refreshEmailtemplate">Refresh</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="downloadSpvXml" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Greenbot Terms and Conditions:</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        The Provider agrees to:
+                        <p>a. ensure that with each Signed Data Package issued to the User by the Installer App, the Installer App also:</p>
+                        <p>i. issues a Written Statement to the User;</p>
+                        <p>ii. makes available to the User, subject to the terms of this Deed, a corresponding Customer Record;</p>
+                        <br />
+                        <p>b. ensure that the Written Statement issued to the User by the Installer App confirms that:</p>
+                        <p>i. the relevant Verification Service has verified that the Solar Panel Serial Numbers provided in the Data Package correspond to models on the Approved Modules List based on information stored in the Verification Service Provider’s Database;</p>
+                        <p>ii. the issuance of a Signed Data Package to a User by the Installer App does not give the User or Registered Person a right to obtain STCs or to have an application to register STCs processed outside of the CER’s usual processing times;</p>
+                        <p>iii. a Solar Panel corresponding to a Solar Panel Serial Number verified by the relevant Verification Service through use of the Installer App has not been specifically approved, authorised, tested, inspected or checked in any way, including without limitation in relation to safety or quality, other than having its Solar Panel Serial Number checked against the Database maintained by the relevant Verification Service Provider;</p>
+                        <p><input type="checkbox" id="chkGbSpvTerms" onclick="ShowHideDownloadBtn(this)" /> I acknowledge and accept the statements above</p>
+                    </div>
+                </div>
+                <div class="clearfix">
+                    <div class="botpad btn default icon-btn btnDownloadXml" style="display:inline-block; vertical-align:middle;">
+                        <span class="sprite-img download_ic"></span>
+                        <input type="button" id="btnDownloadXml" value="Download" class="fileUpload">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/';
+    var JobId = '@Model.Item1.JobID';
+    var eJobId = '@Model.Item1.Id';
+    var urlDocumentCES = BaseURL + 'UploadDocumentCES/Job';
+    var urlDocumentSTC = BaseURL + 'UploadDocument/Job';
+    var allowdViewTypes = ['pdf', 'jpg', 'png', 'jpeg','heic'];
+    var imageTypes = ['jpg', 'jpeg', 'png', 'gif','heic'];
+    var USERID = '@ProjectSession.LoggedInUserId';
+    var USERType = '@ProjectSession.UserTypeId';
+    var typeOfFile = "Other";
+    var SelectedUsersForSendMailRequestForDocumentSignature = [];
+    var DistributorId = '@Model.Item1.JobInstallationDetails.DistributorID' ? '@Model.Item1.JobInstallationDetails.DistributorID' : 0;
+    var JobDocumentName = "";
+    var urlGetDocumentsListAll = '@Url.Action("GetDocumentsListAll", "Job")',
+        urlGenerateDocument = '@Url.Action("GenerateDocument", "Job")',
+        url_Viewer = '@Url.Action("_Viewer","Job")',
+        url_OnPageViewer = '@Url.Action("_OnPageViewer", "Job")',
+        urlDownloadSTCDocument = '@Url.Action("DownloadSTCDocument", "Job")',
+        urlCheckBusinessRules = '@Url.Action("CheckBusinessRules", "Job")',
+        urlDeleteDocument = '@Url.Action("DeleteDocument", "Job")',
+        ProjectSession_MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize',
+        urlGetDocumentsByStateId = '@Url.Action("GetDocumentsByStateId", "Job")',
+        urlAddOtherDocuments = '@Url.Action("AddOtherDocuments", "Job")',
+        UploadedDocumentPath = '@ProjectSession.UploadedDocumentPath',
+        urlDownloadJobDocuments = '@Url.Action("DownloadJobDocuments", "Job")',
+        urlCheckJobDocuments = '@Url.Action("CheckJobDocumentsFile", "Job")',
+        urlDeleteDocumentNew = '@Url.Action("DeleteDocumentNew", "Job")',
+        urlDownloadAllDocumentsNew = '@Url.Action("DownloadAllDocumentsNew", "Job")',
+        urlisExistsDownloadAllDocumentsNew='@Url.Action("isExistDownloadAllDocumentsNew", "Job")',
+        url_DocViewer = '@Url.Action("_DocViewer","Job")',
+        urlGetAllDocumentTemplate = '@Url.Action("GetAllDocumentTemplate", "DocumentTemplate")',
+        urlGetStateList = '@Url.Action("GetStateList", "Job")',
+        urlUploadSTCDocument = '@Url.Action("UploadSTCDocument", "Job")',
+        urlUploadCESPdf = '@Url.Action("UploadALLCESPdf", "Job")',
+        urlDocumentPreview = "@Url.Action("JobWiseDocumentSignatureRequest", "DocumentSignatureRequest")";
+    var urlGetFullJobPack = '@Url.Action("GenerateFullJobPack", "Job")';
+    var urlSendEmailForSignatureRequest = '@Url.Action("SendEmailForSignatureRequest", "DocumentSignatureRequest")';
+    var urlDocViewerOuterPopup = "@Url.Action("DocViewerOuterPopup","Job")";
+    var isJobDocumentManagerSave = '@isJobDocumentManagerSave';
+    var isJobDocumentManagerSignatureMail = '@isJobDocumentManagerSignatureMail';
+    var isJobDocumentManagerGenerate = '@isJobDocumentManagerGenerate';
+    var isJobDocumentManagerView = '@isJobDocumentManagerView';
+    var isJobDocumentManagerDelete = '@isJobDocumentManagerDelete';
+    var documentsJson = '@temp.Data';
+    var isSaveDocAfterTradeJob = '@isSaveDocAfterTradeJob';
+    var urlDownloadGPSLogs = '@Url.Action("DownloadGPSLogFiles","Job")';
+
+</script>
+@*<script src="~/Scripts/View/Job/_DocumentManager.min.js"></script>*@

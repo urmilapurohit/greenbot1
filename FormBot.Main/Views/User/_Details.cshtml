@@ -1,0 +1,2514 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Entity;
+@using FormBot.Helper;
+@using FormBot.Helper.Helper;
+@{
+    IEnumerable<User> users = new List<User>();
+    ViewBag.Company = new SelectList(users, string.Empty, string.Empty);
+    ViewBag.WholesalerCompany = new SelectList(users, string.Empty, string.Empty);
+
+    List<RECAccount> lstRECAccounts = new List<RECAccount>();
+}
+
+@{
+    bool isEdit = false;
+    bool isSCAComplianceCheck = false, isSEComplianceCheck = false;
+    string fullURL = FormBot.Helper.ProjectConfiguration.ProjectImagePath + "UserDocuments/" + Model.Logo;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.UserEdit.GetHashCode()) { isEdit = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SCAComplianceChek.GetHashCode()) { isSCAComplianceCheck = true; }
+        });
+    }
+}
+
+<style type="text/css">
+    .disabled {
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    .default {
+        line-height: normal !important;
+    }
+
+
+    .k-grid-norecords-template {
+        background-color: none;
+        border: none;
+    }
+
+    /*Start : Spin Icon add and rotate*/
+    .refresh-icon .fa-spin {
+        -webkit-animation: fa-spin 2s infinite linear;
+        animation: fa-spin 2s infinite linear;
+    }
+
+    .control-label-text {
+        color: #494949;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 16px;
+        margin-bottom: 10px;
+        padding-right: 0 !important;
+        font-weight: 400;
+        border: none !important;
+    }
+
+    @@-webkit-keyframes fa-spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+
+        100% {
+            -webkit-transform: rotate(359deg);
+            transform: rotate(359deg)
+        }
+    }
+
+    @@keyframes fa-spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+
+        100% {
+            -webkit-transform: rotate(359deg);
+            transform: rotate(359deg)
+        }
+    }
+    /*End : Spin Icon add and rotate*/
+    .UpdateContactlog {
+        padding: 10px;
+        margin: 10px;
+        font-size: 15px;
+        background-color: white;
+    }
+</style>
+<div id="horizontalTab">
+    <ul class="resp-tabs-list">
+        <li id="t1">Personal Details</li>
+        <li id="t2" class="RA SCA SSC SE SC" @if (Common.IsExistsInArray(new int[] { 1, 3, 5, 8 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>Address Details</li>
+        <li id="t3" class="RA SCA SSC SE SC" @if (Common.IsExistsInArray(new int[] { 1, 3, 5, 8 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>Account Details</li>
+        <li id="t4" style="display:none;">Email Configuration</li>
+        @if (ProjectSession.UserTypeId == 2)
+        {
+            <li id="t5" style="display:none;">Rec Email Configuration</li>
+        }
+        @if (Model.UserTypeID == 4 || Model.UserTypeID == 6 || Model.UserTypeID == 8)
+        {
+            <li id="t6">Installer & Designer</li>
+        }
+        <li id="t7" class="RA">Wholesaler Invoice Details</li>
+        <li id="t10" class="RA">SAAS Invoice Details</li>
+        @if (ProjectSession.UserTypeId == 1)
+        {
+            <li id="t8">Activity Logs</li>
+        }
+        @if ((Model.UserTypeID == 7 || Model.UserTypeID == 9))
+        {
+            <li id="t9">Connected Devices</li>
+        }
+        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+        {
+            <li id="t10">Notes & History</li>
+        }
+    </ul>
+    <div class="resp-tabs-container">
+        @Html.HiddenFor(m => m.AccreditedInstallerId)
+        <div class="tab1">
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    @{bool result = true;
+                        if (Model.UserId > 0)
+                        {
+                            if (Model.UserTypeID != 7)
+                            {
+                                result = false;
+                            }
+                        }
+                    }
+                    @if (result)
+                    {
+                        @*<div class="col-sm-3">*@
+                        <div class="col-sm-3 drpjobtype">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousIsPVDUser)
+                                @Html.HiddenFor(m => m.PreviousIsSWHUser)
+                                @Html.Label("User Work Type", new { @class = "control-label required" })
+                                <div class="checkbox-box" style="color:#494949;">
+                                    <label>
+                                        @Html.CheckBox("IsPVDUser", Model.IsPVDUser.HasValue ? Model.IsPVDUser : false) PVD Job
+                                    </label>
+                                    <label>
+                                        @Html.CheckBox("IsSWHUser", Model.IsSWHUser.HasValue ? Model.IsSWHUser : false) SWH Job
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-3 SE">
+                            <div class="form-group">
+                                <div class="option-box">
+                                    <label class="control-label">Allow any solar company to auto-approve and send you jobs.</label>
+                                    @Html.HiddenFor(m => m.PreviousIsAutoRequest)
+                                    @Html.HiddenFor(m => m.IsAutoRequest)
+                                    <div class="onoffswitch" style="top: 30px;left: 0;right: auto;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="AutoRequestSwitch" checked>
+                                        <label class="onoffswitch-label" for="AutoRequestSwitch">
+                                            <span class="onoffswitch-inner"></span>
+                                            <span class="onoffswitch-switch"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @*</div>*@
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousFirstName)
+                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                            @Html.ValidationMessageFor(m => m.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousLastName)
+                            @Html.LabelFor(m => m.LastName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                            @Html.ValidationMessageFor(m => m.LastName)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousEmail)
+                            @Html.LabelFor(m => m.Email, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 3 })
+                            @Html.ValidationMessageFor(m => m.Email)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousPhone)
+                            @Html.LabelFor(m => m.Phone, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", @maxlength = 20, @tabindex = 4, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.Phone)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousMobile)
+                            @Html.LabelFor(m => m.Mobile, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.Mobile, new { @class = "form-control", @maxlength = 20, @tabindex = 5, onkeypress = "return isNumber(event);" })
+                        </div>
+                    </div>
+
+                    @*@if (((Model.UserId > 0 || Model.UserId == 0) && (Model.UserTypeID != 4 || Model.UserTypeID != 7)))
+                        {*@
+                    @if (ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "profile" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "myprofile" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "edit" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "create" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "view" || ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower() == "viewdetail")
+                    {
+                        <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC viewDetail SCAShowUsername">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousUserName)
+                                @Html.LabelFor(m => m.UserName, new { @class = "control-label required", @id = "lblUserName" })
+                                @Html.TextBoxFor(m => m.UserName, new { @class = "form-control", @maxlength = 256, @tabindex = 6, @id = "UserName", @onblur = "checkExist(this,'user name')" })
+                                @Html.ValidationMessageFor(m => m.UserName)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 FSA RA FCO SCA RAM SCO SE SSC SC ViewPassword viewDetail SCAShowUsername">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousPassword)
+                                @Html.LabelFor(m => m.Password, new { @class = "control-label required", @id = "lblPassword" })
+                                @Html.PasswordFor(m => m.Password, new { id = "Password", @class = "form-control", @maxlength = 50, @tabindex = 7 })
+                                @Html.ValidationMessageFor(m => m.Password)
+                            </div>
+                        </div>
+
+                        <div class="col-sm-3 defaultFormBot ViewPassword chkActive viewDetail">
+                            <div class="form-group">
+                                <span class="control-label">Is Active</span>
+                                <div class="checkbox-box">
+                                    @Html.HiddenFor(m => m.PreviousIsActive)
+                                    @Html.CheckBoxFor(m => m.IsActive, new { @tabindex = 8 })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="defaultFormBot ViewPassword chkActive viewDetail">
+                            <div class="clearfix visible-lg-block"></div>
+                        </div>
+
+                    }
+
+                    <div class="col-sm-3 RAM RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousClientCodePrefix)
+                            @Html.LabelFor(m => m.ClientCodePrefix, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.ClientCodePrefix, new { @class = "form-control", @tabindex = 8, @maxlength = 6 })
+                            @Html.ValidationMessageFor(m => m.ClientCodePrefix)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RAcode" style="display:none">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousGB_RACode)
+                            @Html.LabelFor(m => m.GB_RACode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.GB_RACode, new { @class = "form-control", @tabindex = 8, @readonly = "readonly" })
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCAcode" style="display:none">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousGB_SCACode)
+                            @Html.LabelFor(m => m.GB_SCACode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.GB_SCACode, new { @class = "form-control", @tabindex = 8, @readonly = "readonly" })
+                        </div>
+                    </div>
+                    @*<div class="col-sm-3 SE">
+                            <div class="form-group">
+                                <div class="option-box">
+                                    <label class="control-label">Turn off auto-request</label>
+                                    @Html.HiddenFor(m => m.IsAutoRequest)
+                                    <div class="onoffswitch" style="top: 30px;left: 0;right: auto;">
+                                        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="AutoRequestSwitch" checked>
+                                        <label class="onoffswitch-label" for="AutoRequestSwitch">
+                                            <span class="onoffswitch-inner"></span>
+                                            <span class="onoffswitch-switch"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>*@
+                    @*<div class="col-sm-3 RA" style="display:none">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.UsageType, new { @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.UsageType, new SelectList(ViewBag.UsageType, "Value", "Key"), new { @class = "form-control", id = "UsageType", @tabindex = 21 })
+                                @Html.DropDownListFor(m => m.UsageType, ViewBag.UsageType as SelectList, new { @class = "form-control", id = "UsageType", @tabindex = 21 })
+                                @Html.ValidationMessageFor(m => m.UsageType)
+                            </div>
+                        </div>*@
+
+                    <div class="col-sm-3 RA" id="dvIsWholeSaler" style="display:none">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.IsWholeSaler, new { @class = "control-label" })
+                            @Html.CheckBoxFor(m => m.IsWholeSaler, new { @class = "form-control", id = "IsWholeSaler", @tabindex = 22 })
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA" style="display:none">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.IsSAASUser, new { @class = "control-label" })
+                            @Html.CheckBoxFor(m => m.IsSAASUser, new { @class = "form-control", id = "IsSAASUser", @tabindex = 23 })
+                        </div>
+                    </div>
+                    @*}*@
+                </div>
+                <div class="row">
+                    <div class="col-sm-3 ThemeProfileRA" style="display:none">
+                        <div class="form-group">
+                            <label class="control-label">Theme:</label>
+                            <div class="theme-colors">
+                                <button id="green" onclick="changeTheme('green','1')" class="btn green btn-circle active" type="button" tabindex="9">&nbsp;</button>
+                                <button id="blue" onclick="changeTheme('blue','2')" class="btn blue btn-circle" type="button" tabindex="10">&nbsp;</button>
+                                <button id="pink" onclick="changeTheme('pink','3')" class="btn pink btn-circle" type="button" tabindex="11">&nbsp;</button>
+                                <button id="skyblue" onclick="changeTheme('skyblue','4')" class="btn skyblue btn-circle" type="button" tabindex="12">&nbsp;</button>
+                                <button id="yellow" onclick="changeTheme('yellow','5')" class="btn yellow btn-circle" type="button" tabindex="13">&nbsp;</button>
+                                <button id="black" onclick="changeTheme('black','6')" class="btn black btn-circle" type="button" tabindex="14">&nbsp;</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 ThemeProfileRA" style="display:none">
+                        <div class="form-group">
+                            <div>
+                                @Html.LabelFor(m => m.Logo, new { @class = "control-label" })
+                            </div>
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic">
+                                            <span>Upload</span>
+                                            <input id="uploadBtnLogo" type="file" class="upload fileUpload" tabindex="15" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="bxcont" style="margin-top:7px;">
+                                            <a id="imgViewLogo" href="javascript:void(0)" style="display:none;text-decoration:none;" tabindex="16">&nbsp; &nbsp; View Image</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        @if (Model.UserTypeID == 4)
+                        {
+                            <label class="control-label" style="background-color:white;">Allow SPV</label>
+                            <div class="onoffswitch" style="top:5%;right:5%;">
+                                @Html.HiddenFor(m => m.PreviousSCisAllowedSPV)
+                                <input type="checkbox" name="SCisAllowedSPVSwitch" class="onoffswitch-checkbox switch" id="onOffSwitchSPV" ison="0">
+                                <label class="onoffswitch-label" for="onOffSwitchSPV">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        }
+                        @*@if (Model.UserTypeID == 2 && ProjectSession.UserTypeId == 1)
+                        {
+                            @Html.HiddenFor(m => m.PreviousIsAllowedMasking)
+                            <label class="control-label" style="background-color:white;">Allow SPV Retailer details unmasking</label>
+                            <div class="onoffswitch" style="top:5%;right:5%;">
+                                <input type="checkbox" name="isAllowedMasking" class="onoffswitch-checkbox switch" id="onOffSwitchMasking" ison="0">
+                                <label class="onoffswitch-label" for="onOffSwitchMasking">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        }*@
+                    </div>
+                    <div class="col-md-3">
+                    </div>
+                    <div class="col-md-3">
+                    </div>
+                </div>
+                <div class="tab_bottomrow">
+                    <div class="btnCheckInXero">
+                        <input id="checkInXero" type="button" class="primary search_ic" multiple tabindex="51" title="Check In Xero" value="Check In Xero" style="float:left" />
+                    </div>
+                    @if (Model.UserTypeID == 4)
+                    {
+                        <div class="btnLogsForUpdateContactInxero">
+                            <input id="btnLogsForUpdateContactInxero" type="button" class="primary search_ic" multiple tabindex="51" title="Logs For UpdateContactInxero" value="Logs For UpdateContactInxero" style="float:left" onclick="UpdateContactInXeroLog();" />
+                        </div>
+                    }
+                    <div class="RA SCA SSC SE SC" @if (Common.IsExistsInArray(new int[] { 1, 3, 5, 8 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t2').click() : false;">Next</a>
+                    </div>
+
+                    <div class="SCProfile SCNext" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t3').click() : false;">Next</a>
+                    </div>
+
+                    <div class="Profile" style="display:none;">
+
+                        <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t4').click() : false;">Next</a>
+                    </div>
+
+                    <div class="PersonlDetailsNext" @if (Common.IsExistsInArray(new int[] { 1 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t10').click() : false;">Next</a>
+                    </div>
+
+                    <div class="PersonlDetailsNextForInstallerAndDesigner" @if (Common.IsExistsInArray(new int[] { 8 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <a href="javascript:void(0)" class="next_btn" tabindex="17" onclick="return validateForm() ? $('#t6').click() : false;">Next</a>
+                    </div>
+
+
+                    <div class="FSA FCO RAM SCO" @if (Common.IsExistsInArray(new int[] { 2, 4, 6, 7, 8, 9, 10 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+
+                        @if (Model.UserId > 0)
+                        {
+                            if (isEdit)
+                            {
+                                <div class="btn primary icon-btn ParentBtnOfPersonalDetail">
+                                    <span class="sprite-img save_ic"></span>
+                                    <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="18" onclick="return getDropDownValue() ? SaveUser() : false;">
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="btn primary icon-btn ParentBtnOfPersonalDetail">
+                                <span class="sprite-img save_ic"></span>
+                                <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="18" onclick="return getDropDownValue() ? SaveUser() : false;">
+                            </div>
+                        }
+                        <input type="button" value="Cancel" id="btnCancel" class="btn default cancel_ic ParentBtnOfPersonalDetail" tabindex="19">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab2" style='display:none;'>
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousCompanyABN)
+                            @Html.LabelFor(m => m.CompanyABN, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 20, @id = "CompanyABN", @onblur = "checkExist(this,'company ABN')" })
+                            @Html.ValidationMessageFor(m => m.CompanyABN)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group refresh-icon">
+                            @Html.HiddenFor(m => m.PreviousCompanyName)
+                            @Html.LabelFor(m => m.CompanyName, new { @class = "control-label required" })
+                            <a href="#" id="CompanyNameRefresh" style="font-size:14px;color: #1d9f4e;">
+                                @*<i class="fa fa-refresh" style="font-size:24px;color: #1d9f4e;"></i>*@
+                                <i class="glyphicon glyphicon-refresh"></i>
+                            </a>
+
+                            @Html.DropDownListFor(m => m.CompanyName, new SelectList((ViewBag.Company) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", id = "CompanyName", @tabindex = 21 })
+                            @Html.ValidationMessageFor(m => m.CompanyName)
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FromDate, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.strFromDate, new { @class = "form-control", @maxlength = 50, @tabindex = 22, id = "fromDate", @readonly = "readonly" })
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.ToDate, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.strToDate, new { @class = "form-control", @maxlength = 50, @tabindex = 23, id = "toDate", @readonly = "readonly" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousCompanyWebsite)
+                            @Html.LabelFor(m => m.CompanyWebsite, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CompanyWebsite, new { @class = "form-control", @maxlength = 50, @tabindex = 24 })
+                            @Html.ValidationMessageFor(m => m.CompanyWebsite)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA" @if (Common.IsExistsInArray(new int[] { 1, 3, 4, 5, 6, 7, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousLoginCompanyName)
+                            @Html.LabelFor(m => m.LoginCompanyName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.LoginCompanyName, new { @class = "form-control", @maxlength = 50, @tabindex = 25, @id = "LoginCompanyName", @onblur = "checkExist(this,'login company name')" })
+                            @Html.ValidationMessageFor(m => m.LoginCompanyName)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousAddressID)
+                            <label class="control-label required">Postal Address Type :</label>
+                            @Html.DropDownListFor(m => m.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", id = "AddressID", @tabindex = 26 })
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 SCA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.GSTText, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.GSTText, new { @class = "form-control", @readonly = "readonly" })
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.EntityName, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.EntityName, new { @class = "form-control", @maxlength = 200, @tabindex = 22, @readonly = "readonly" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row DPA">
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousUnitTypeID)
+                            @Html.LabelFor(m => m.UnitTypeID, new { @class = "control-label", @id = "lblUnitTypeID" })
+                            @Html.DropDownListFor(model => model.UnitTypeID, new List<SelectListItem>(), new { id = "UnitTypeId", @class = "form-control", @tabindex = 27 })
+                            @Html.ValidationMessageFor(m => m.UnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousUnitNumber)
+                            @Html.LabelFor(m => m.UnitNumber, new { @class = "control-label", @id = "lblUnitNumber" })
+                            @Html.TextBoxFor(m => m.UnitNumber, new { id = "UnitNumber", @class = "form-control", @maxlength = 20, @tabindex = 28 })
+                            @Html.ValidationMessageFor(m => m.UnitNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousStreetNumber)
+                            @Html.LabelFor(m => m.StreetNumber, new { @class = "control-label required", @id = "lblStreetNumber" })
+                            @Html.TextBoxFor(m => m.StreetNumber, new { id = "StreetNumber", @class = "form-control", @maxlength = 20, @tabindex = 29 })
+                            @Html.ValidationMessageFor(m => m.StreetNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousStreetName)
+                            @Html.LabelFor(m => m.StreetName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.StreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 30 })
+                            @Html.ValidationMessageFor(m => m.StreetName)
+                        </div>
+                    </div>
+                </div>
+                <div class="row PDA">
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousPostalAddressID)
+                            @Html.LabelFor(m => m.PostalAddressID, new { @class = "control-label required" })
+                            @Html.DropDownListFor(model => model.PostalAddressID, new List<SelectListItem>(), new { id = "PostalAddressID", @class = "form-control hdnPostalAddressID", @tabindex = 31 })
+                            @Html.ValidationMessageFor(m => m.PostalAddressID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousPostalDeliveryNumber)
+                            @Html.LabelFor(m => m.PostalDeliveryNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostalDeliveryNumber, new { id = "PostalDeliveryNumber", @class = "form-control", @maxlength = 50, @tabindex = 32 })
+                            @Html.ValidationMessageFor(m => m.PostalDeliveryNumber)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="DPA">
+                        <div class="col-sm-3 RA SCA SE SSC SC POID">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousStreetTypeID)
+                                @Html.LabelFor(m => m.StreetTypeID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(model => model.StreetTypeID, new List<SelectListItem>(), new { id = "StreetTypeId", @class = "form-control", @tabindex = 33 })
+                                @Html.ValidationMessageFor(m => m.StreetTypeID)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousTown)
+                            @Html.LabelFor(m => m.Town, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 34, id = "txtTown" })
+                            @Html.ValidationMessageFor(m => m.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousState)
+                            @Html.LabelFor(m => m.State, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.State, new { @class = "form-control", @maxlength = 20, @tabindex = 35, id = "txtState", @readonly = "readonly" })
+                            @Html.ValidationMessageFor(m => m.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousPostCode)
+                            @Html.LabelFor(m => m.PostCode, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 36, id = "txtPostCode" })
+                            @Html.ValidationMessageFor(m => m.PostCode)
+                        </div>
+                    </div>
+                </div>
+                <div class="tab_bottomrow">
+                    <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                    <a href="javascript:void(0)" tabindex="38" id="NextTab1" class="next_btn" onclick="return validateForm() ? $('#t3').click() : false;">Next</a>
+                </div>
+            </div>
+        </div>
+        <div class="tab3" style='display:none;'>
+            <!--Tab3 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-3 RA SCA SCO SE SSC SC OnlySE hideSESWH">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousBSB)
+                            @Html.LabelFor(m => m.BSB, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.BSB, new { @class = "form-control", @maxlength = 20, @tabindex = 39, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.BSB)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SCO SE SSC SC OnlySE hideSESWH">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousAccountNumber)
+                            @Html.LabelFor(m => m.AccountNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.AccountNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 40, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.AccountNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SCO SE SSC SC OnlySE hideSESWH">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousAccountName)
+                            @Html.LabelFor(m => m.AccountName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.AccountName, new { @class = "form-control", @tabindex = 41 })
+                            @Html.ValidationMessageFor(m => m.AccountName)
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3 SCA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousRAMId)
+                            @Html.LabelFor(m => m.RAMId, new { @class = "control-label" })
+                            @Html.HiddenFor(m => m.RAMId)
+                            <input type="hidden" id="hdnRAMID" />
+                            <input type="text" id="searchRAM" name="searchRAM" class="form-control" maxlength="50" tabindex="42" />
+                        </div>
+                    </div>
+                    <div class="SCA clearfix visible-lg-block"></div>
+                    <div class="col-sm-3 SCA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousClientNumber)
+                            @Html.LabelFor(m => m.ClientNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.ClientNumber, new { @class = "form-control", @tabindex = 43, @readonly = "readonly" })
+                            <input type="hidden" id="hdnResellerClientNumber" />
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousUniqueCompanyNumber)
+                            @Html.LabelFor(m => m.UniqueCompanyNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.UniqueCompanyNumber, new { @class = "form-control", @tabindex = 43, @readonly = "readonly" })
+                        </div>
+                    </div>
+
+                    @*<div class="col-sm-3 RA">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.ClientCodePrefix, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.ClientCodePrefix, new { @class = "form-control", @tabindex = 44, @maxlength = 6 })
+                            </div>
+                        </div>*@
+                    @*<div class="col-sm-3 SCA chkisSTC" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 5, 6, 7, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text>            }>
+                            <div class="form-group">
+                                <span class="control-label"> I am a solar installer and want to trade STCs:</span>
+                                <div class="checkbox-box">
+                                    @Html.CheckBoxFor(m => m.IsSTC, new { @tabindex = 42, id = "chkSCA" })
+                                </div>
+                            </div>
+                        </div>*@
+                </div>
+                <div class="row chkSCASignUp" id="cecDoc">
+                    @*@if (Common.IsExistsInArray(new int[] { 1, 2, 3, 5, 9, 8 }, Model.UserTypeID)){ <text> style='display:none;' </text>         }*@
+                    <div class="col-sm-3 SCA SE SSC hideForSWH CECAccreditationNumber" style="display: block;">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousCECAccreditationNumber)
+                            @Html.LabelFor(m => m.CECAccreditationNumber, new { @class = "control-label", @id = "lblCECAccreditationNumber" })
+                            @Html.TextBoxFor(m => m.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 43, @id = "CECAccreditationNumber", @onblur = "checkExist(this,'cec accreditation number')" })
+                            @Html.ValidationMessageFor(m => m.CECAccreditationNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA SE SSC hideForSWH ElectricalContractorsLicenseNumber">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousElectricalContractorsLicenseNumber)
+                            @Html.LabelFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "control-label", @id = "lblElectricalContractorsLicenseNumber" })
+                            @Html.TextBoxFor(m => m.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 44 })
+                            @Html.ValidationMessageFor(m => m.ElectricalContractorsLicenseNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SCA SE SSC hideForSWH CECDesignerNumber">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousCECDesignerNumber)
+                            @Html.LabelFor(m => m.CECDesignerNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.CECDesignerNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 45 })
+                            @Html.ValidationMessageFor(m => m.CECDesignerNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 SE SCA hideForSWH" @if (Common.IsExistsInArray(new int[] { 1, 2, 3, 5, 6, 8, 9 }, Model.UserTypeID)) { <text> style='display:none;' </text> }>
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousSEDesigner)
+                            <label class="control-label required">SE Role:</label>
+                            <div class="checkbox-box" style="color:#494949;">
+                                @Html.RadioButton("SEDesigner", "2", true, new { @id = "SEDesign", @tabindex = 46 }) Design
+                                @Html.RadioButton("SEDesigner", "1", false, new { @id = "SEInstall", @tabindex = 47 }) Install
+                                @Html.RadioButton("SEDesigner", "3", false, new { @id = "SEDesignInstall", @tabindex = 48 }) Design & Install
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="col-sm-3 SWH">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.SWHLicenseNumber, new { @class = "control-label", @id = "lblSWHLicenseNumber" })
+                                @Html.TextBoxFor(m => m.SWHLicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 36 })
+                                @Html.ValidationMessageFor(m => m.SWHLicenseNumber)
+                            </div>
+                        </div>*@
+                </div>
+                <div class="row" id="RecUsernamePwd" style="display:none;">
+                    @Html.HiddenFor(model => model.RecCompUserName)
+                    @Html.HiddenFor(model => model.RECName)
+                    @Html.HiddenFor(model => model.RECCompName)
+                    @Html.HiddenFor(model => model.RecSuperAdminUserName)
+                    @Html.HiddenFor(model => model.SuperAdminRECName)
+                    @Html.HiddenFor(model => model.SuperAdminRECCompName)
+                    <div class="title" style="margin-top: 20px;background: #f2f2f2;padding: 10px;">
+                        <h3>REC Registry Login Details:</h3>
+                    </div>
+                    @if (ProjectSession.UserTypeId == 1 && Model.UserTypeID == 2)
+                    {
+                        <div class="row marg-b-8 RECSuperAdmin">
+                            <div class="col-md-3">
+                                @Html.LabelFor(m => m.UseCredentialFrom, new { @class = "control-label " })
+                            </div>
+                            <div class="col-md-9 AdminResellerswitch" style="position:relative!important">
+                                <input type="checkbox" name="onoffswitchCheckAllPoints" class="AdminResellerswitch-checkbox switch" value="@Model.UseCredentialFrom" checked="@Model.UseCredentialFrom" id="adminResellerSwitch" ison="1" onchange="CheckChange();">
+                                <label class="AdminResellerswitch-label" for="adminResellerSwitch">
+                                    <span class="AdminResellerswitch-inner"></span>
+                                    <span class="AdminResellerswitch-switch"></span>
+                                </label>
+                                @Html.CheckBoxFor(m => m.UseCredentialFrom, new { @class = "form-control hidden" })
+                            </div>
+                        </div>
+                    }
+                    <div class="col-md-6">
+                        <div class="row form-block">
+                            <div class="row center-box title">
+                                Reseller Login Details
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="control-label">CER Login Id:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    @Html.TextBoxFor(m => m.CERLoginId, new { @class = "form-control", @maxlength = 100, @tabindex = 46, id = "CERLoginId" })
+                                    @Html.HiddenFor(m => m.hdnCERLoginId, new { @class = "form-control", @maxlength = 100, @tabindex = 46, id = "hdnCERLoginId" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-4">
+                                    <label class="control-label">CER Password:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    @Html.PasswordFor(m => m.CERPassword, new { @Value = Model.CERPassword, @class = "form-control", @maxlength = 30, @tabindex = 47, id = "RecPassword" })
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:0px;">
+                                <div class="col-md-4">
+                                    <label class="control-label">Reseller Name:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    <label id="ResellerNamelbl" class="control-label">@Model.CompanyName</label>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:0px;">
+                                <div class="col-md-4">
+                                    <label class="control-label">REC UserName:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    <label id="RecCompUserNamelbl" class="control-label">@Model.RecCompUserName</label>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:0px;">
+                                <div class="col-md-4">
+                                    <label class="control-label">REC Name:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    <label id="RECNamelbl" class="control-label">@Model.RECName</label>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:0px;">
+                                <div class="col-md-4">
+                                    <label class="control-label">REC Company Name:</label>
+                                </div>
+                                <div class="col-md-8 marg-b-8">
+                                    <label id="RECCompNamelbl" class="control-label">@Model.RECCompName</label>
+                                </div>
+                            </div>
+                            <div class="row center-box marg-b-8">
+                                <button class="btn primary icon-btn" tabindex="48" type="button" onclick="return GetRECAccounts('Reseller');">
+                                    Get Account Details
+                                    <span class="sprite-img rec-registry-h-ic"></span>
+                                </button>
+                                <input class="default cancel_ic" tabindex="48" type="button" onclick="return ClearData('Reseller');" value="Clear" />
+                            </div>
+                        </div>
+                    </div>
+                    @if (ProjectSession.UserTypeId == 1 && Model.UserTypeID == 2)
+                    {
+                        <div class="col-md-6 RECSuperAdmin">
+                            <div class="row form-block">
+
+                                <div class="row center-box title">
+                                    Super Admin Login Details
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <label class="control-label">CER Login Id:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        @Html.TextBoxFor(m => m.SuperAdminCERLoginId, new { @class = "form-control", @maxlength = 100, @tabindex = 49, id = "CERSuperAdminLoginId" })
+                                        @Html.HiddenFor(m => m.hdnSuperAdminCERLoginId, new { @class = "form-control", @maxlength = 100, @tabindex = 49, id = "hdnCERSuperAdminLoginId" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-4">
+                                        <label class="control-label">CER Password:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        @Html.PasswordFor(m => m.SuperAdminCERPassword, new { @Value = Model.SuperAdminCERPassword, @class = "form-control", @maxlength = 30, @tabindex = 47, id = "RecSuperAdminPassword" })
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-left:0px;">
+                                    <div class="col-md-4">
+                                        <label class="control-label">Reseller Name:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        <label id="SAResellerNamelbl" class="control-label">@Model.CompanyName</label>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-left:0px;">
+                                    <div class="col-md-4">
+                                        <label class="control-label">REC UserName:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        <label id="RecSuperAdminUserNamelbl" class="control-label">@Model.RecSuperAdminUserName</label>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-left: 0px;">
+                                    <div class="col-md-4">
+                                        <label class="control-label">REC Name:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        <label id="SuperAdminRECNamelbl" class="control-label">@Model.SuperAdminRECName</label>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-left: 0px;">
+                                    <div class="col-md-4">
+                                        <label class="control-label">REC Company Name:</label>
+                                    </div>
+                                    <div class="col-md-8 marg-b-8">
+                                        <label id="SuperAdminRECCompNamelbl" class="control-label">@Model.SuperAdminRECCompName</label>
+                                    </div>
+                                </div>
+                                <div class="row center-box marg-b-8">
+                                    <button class="btn primary icon-btn" type="button" onclick="return GetRECAccounts('Admin');">
+                                        Get Account Details
+                                        <span class="sprite-img rec-registry-h-ic"></span>
+                                    </button>
+                                    <input class="default cancel_ic" tabindex="48" type="button" onclick="return ClearData('Admin');" value="Clear" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="row uploadSCA">
+                    <div class="title" style="margin-top: 20px;background: #f2f2f2;padding: 10px;">
+                        <h3>Compliance Identification Checks:</h3>
+                    </div>
+                    @if (Model.UserTypeID != 7 && Model.UserTypeID != 9)
+                    {
+                        <div class="col-md-2 SCA SSC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Directors drivers license:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblDirectorsDriversLicense',1);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblDirectorsDriversLicense">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 1)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Preview" onclick="OpenDocument(this)" proofDocumentType="1"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Download" onclick="DownloadDocument(this)" proofDocumentType="1"></td>
+                                                                        }
+                                                                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                        {
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-3 SCA SSC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label" style="margin-right:15px;">Accreditation Documentations:</label>
+                                <label class="control-label">(CEC,electricial,contractor license)</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblAccreditationDocumentations',2)" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblAccreditationDocumentations">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 2)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" userDocumentId="@Document.UserDocumentID" onclick="OpenDocument(this)" proofDocumentType="2"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" userDocumentId="@Document.UserDocumentID" onclick="DownloadDocument(this)" proofDocumentType="2"></td>
+                                                                        }
+                                                                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                        {
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-3 SCA SSC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Proof of business address:</label>
+                                <label class="control-label">(Utility bill or bank statement with address detail visible)</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblProofOfBusinessAddress',3);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblProofOfBusinessAddress">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 3)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" userDocumentId="@Document.UserDocumentID" onclick="OpenDocument(this)" proofDocumentType="3"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" userDocumentId="@Document.UserDocumentID" onclick="DownloadDocument(this)" proofDocumentType="3"></td>
+                                                                        }
+                                                                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                        {
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-2 SCA SSC ViewPassword hideForSWH">
+                            <div class="form-group">
+                                <label class="control-label">Public liability insurance:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" onclick="proofUpload('tblPublicLiabilityInsurance',4);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblPublicLiabilityInsurance">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 4)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" userDocumentId="@Document.UserDocumentID" onclick="OpenDocument(this)" proofDocumentType="4"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" userDocumentId="@Document.UserDocumentID" onclick="DownloadDocument(this)" proofDocumentType="4"></td>
+                                                                        }
+                                                                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                        {
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-2 SCA SSC ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    @Html.HiddenFor(m => m.PreviousSignature)
+                                    @Html.LabelFor(m => m.Signature, new { @class = "control-label" })
+                                </div>
+                                <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                <input id="uploadBtnSignature" type="file" class="upload fileUpload" tabindex="49" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgSignature" href="javascript:void(0)" style="display:none;text-decoration:none;" tabindex="50">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-sm-3 SC SE ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    @Html.HiddenFor(m => m.PreviousSignature)
+                                    @Html.LabelFor(m => m.Signature, new { @class = "control-label" })
+                                </div>
+                                @*<div class="fileUpload primary col-sm-2" style="margin:0;">
+                                    </div>*@
+                                <table class="uf" style="margin-left:-10px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                @*<input id="fileToUploadSignature" tabindex="34" type="file" class="upload" name="file" data-input="true" onchange="ShowPreview(this, 'imgSign', 'fileToUploadSignature')" />*@
+                                                <input id="uploadBtnSignatureSE" type="file" class="upload fileUpload" tabindex="41" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgSignature" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 SC SE ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    <label class="control-label chkSCASignUp" id="lblUpload">
+                                        Proof of Identity (Please upload drivers license, CEC license and electrical license photos):
+                                    </label>
+                                    <label class="control-label chkSWHSignUp" id="lblUpload">
+                                        Proof of Identity (Please upload drivers license and plumbers license):
+                                    </label>
+                                </div>
+                                <table class="uf" style="margin-left:-10px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                <input id="uploadBtn1" type="file" class="upload fileUpload" multiple tabindex="42" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont col-sm-9" id="divDocuments">
+                                                <table id="tblDocuments1" class="table table-striped">
+                                                    <tbody id="tblDocuments">
+                                                        @if (Model.UserId != 0)
+                                                        {
+                                                            if (Model.lstUserDocument != null)
+                                                            {
+                                                                foreach (var Document in Model.lstUserDocument)
+                                                                {
+                                                                    if (Document.DocumentType != 5)
+                                                                    {
+                                                                        <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                            <td class="tdCount col-sm-2">@Document.index</td>
+                                                                            <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                            @if (Document.MimeType == "image")
+                                                                            {
+                                                                                <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Preview" onclick="OpenDocument(this)"></td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                            }
+                                                                            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                            {
+                                                                                <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath')"></td>
+                                                                            }
+
+                                                                        </tr>
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="row uploadSCA">
+                    @if (Model.UserTypeID == 7 || Model.UserTypeID == 9)
+                    {
+
+                        <div class="col-sm-3 SC SE ViewPassword">
+                            <div class="form-group">
+                                <div>
+                                    @Html.HiddenFor(m => m.PreviousSESelfie)
+                                    @Html.LabelFor(m => m.SESelfie, new { @class = "control-label" })
+                                </div>
+                                <table class="uf" style="margin-left:-10px;margin-top:10px;">
+                                    <tr>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary upload_ic">
+                                                <span>Upload</span>
+                                                <input id="uploadBtnSelfie" type="file" class="upload fileUpload" tabindex="41" />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="bxcont" style="margin-top:7px;">
+                                                <a id="imgSelfie" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 SC SE ViewPassword">
+                            <div class="form-group">
+                                <label class="control-label">Installers drivers license:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:10px;">
+                                <tr>
+                                    <td width="150" style="vertical-align:top;">
+                                        <div class="col-md-12" style="padding-left:0px !important">
+                                            <div class="fileUpload primary upload_ic col-md-6" style="width: 145px;">
+                                                <span>Upload Front</span>
+                                                <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="51" onclick="proofUploadInstaller('Front');" />
+                                            </div>
+
+                                            <div class="fileUpload primary upload_ic col-md-6" style="width: 145px;">
+                                                <span>Upload Back</span>
+                                                <input type="file" class="btnUploadProofDocs upload fileUpload" multiple tabindex="52" onclick="proofUploadInstaller('Back');" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-9" id="divDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblInstallerDriversLicense">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.lstUserDocument != null)
+                                                        {
+                                                            foreach (var Document in @Model.lstUserDocument)
+                                                            {
+                                                                if (@Document.DocumentType == 5)
+                                                                {
+                                                                    <tr style='margin-top:30px' id=@Document.UserDocumentID>
+                                                                        <td class="tdCount col-sm-2">@Document.index</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocumentPath</td>
+                                                                        <td class="col-sm-6" style="color:#494949">@Document.DocLocStr</td>
+                                                                        @if (Document.MimeType == "image")
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Preview" onclick="OpenDocument(this)" proofDocumentType="5"></td>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id=@Document.DocumentPath class="@Document.DocumentPath" userDocumentId="@Document.UserDocumentID" title="Download" onclick="DownloadDocument(this)" proofDocumentType="5"></td>
+                                                                        }
+                                                                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                        {
+                                                                            <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(@Document.UserDocumentID,@Model.UserId, '@Document.DocumentPath','@Document.DocumentType')"></td>
+                                                                        }
+                                                                    </tr>
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                    }
+                </div>
+                <div class="tab_bottomrow">
+                    @*<div class="btnCheckInXero" >
+                            <input id="checkInXero" type="button" class="primary search_ic" multiple tabindex="51" title="Check In Xero" value="Check In Xero" style="float:left" />
+                        </div>*@
+                    <div class="ProfileSCO" style="display:none;">
+
+                        @if (Model.UserTypeID == 7 && (TempData["Flag"] != null && TempData["Flag"].ToString().ToLower() == "docupload"))
+                        {
+                            <div class="btn primary icon-btn ViewPassword ViewBtn">
+                                <span class="sprite-img save_ic"></span>
+                                <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="54" onclick="return getDropDownValue() ? SaveUser() : false;">
+                            </div>
+                            <input type="button" value="Cancel" id="btnCancel" class="default ViewPassword cancel_ic ViewBtn WS" tabindex="55" onclick="DeleteDocumentFolderOnCancel()">
+                        }
+                        else
+                        {
+                            <a href="javascript:void(0)" tabindex="52" class="prev_btn default RA viewPre SCOProfile SCOPro1" onclick="return validateForm() ? $('#t2').click() : false;">Previous</a>
+                            <a href="javascript:void(0)" tabindex="52" class="prev_btn default SCO SCOPro" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                            <a href="javascript:void(0)" class="next_btn ProfileRA" tabindex="53" onclick="return validateForm() ? $('#t4').click() : false;">Next</a>
+                            <a href="javascript:void(0)" class="next_btn NextBtnToInstallerTabFromAccountTab" tabindex="53" onclick="return validateForm() ? $('#t6').click() : false;">Next</a>
+                            if (Model.UserTypeID == 4 && (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5))
+                            {
+                                <a href="javascript:void(0)" class="next_btn default RA viewPre SCOProfile SCOPro1" tabindex="53" onclick="return validateForm() ? $('#t6').click() : false;">Next</a>
+                            }
+                            <a href="javascript:void(0)" class="next_btn default RA tab7Next WS" tabindex="53" onclick="return validateForm() ? $('#t7').click() : false;">Next</a>
+                            <a href="javascript:void(0)" class="next_btn default RA tab10Next WS" tabindex="53" onclick="return validateForm() ? $('#t10').click() : false;">Next</a>
+                            if (Model.UserId > 0)
+                            {
+                                <div class="btn primary icon-btn ViewPassword ViewBtn SignUp ParentBtnOfAccountDetail" style="display:none;">
+                                    <span class="sprite-img save_ic"></span>
+                                    <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="54" onclick="return getDropDownValue() ? SaveUser() : false;">
+                                </div>
+
+                                if (isEdit)
+                                {
+                                    <div class="btn primary icon-btn ViewPassword ViewBtn tab7btn tab10btn ParentBtnOfAccountDetail">
+                                        <span class="sprite-img save_ic"></span>
+                                        <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="54" onclick="return getDropDownValue() ? SaveUser() : false;">
+                                    </div>
+
+                                }
+                            }
+                            else
+                            {
+                                <div class="btn primary icon-btn ViewPassword ViewBtn tab7btn tab10btn ParentBtnOfAccountDetail">
+                                    <span class="sprite-img save_ic"></span>
+                                    <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit ParentBtnOfAccountDetail" tabindex="54" onclick="return getDropDownValue() ? SaveUser() : false;">
+                                </div>
+
+                            }
+                            @*<input type="button" value="Cancel" id="btnCancelLast" class="default ViewPassword cancel_ic ViewBtn tab7btn SCA SSC SE SWH SCO" tabindex="55" onclick="DeleteDocumentFolderOnCancel()">*@
+                            <input type="button" value="Cancel" id="btnCancelLast" class="default ViewPassword cancel_ic ViewBtn tab7btn WS ParentBtnOfAccountDetail" tabindex="55" onclick="DeleteDocumentFolderOnCancel()">
+                        }
+                    </div>
+                </div>
+                @*<div class="form-group defaultFormBot">
+                        <input type="submit" name="Submit" value="Save" autofocus class="primary" id="btnSubmit" tabindex="25">
+                        <input type="button" value="Cancel" class="default" tabindex="26">
+                    </div>*@
+            </div>
+        </div>
+        <div class="tab4" style="display:none;">
+            <div class="row">
+                <div class="col-sm-offset-9 alignright">
+                    <div class="form-group">
+                        <a title="Help" class="helpic" style="padding-right:19px;padding-left:23px;text-decoration:none" href="javascript:void(0);" id="imgViewConfigre">Help</a>
+                    </div>
+                </div>
+            </div>
+            @Html.Partial("~/Areas/Email/Views/Email/_EmailSetting.cshtml", Model.EmailSignup)
+            <div class="tab_bottomrow">
+                <a href="javascript:void(0)" tabindex="56" class="prev_btn default RA  SC SCAPrev" onclick="return validateForm() ? $('#t3').click() : false;">Previous</a>
+                <a href="javascript:void(0)" tabindex="56" class="prev_btn default SCO FSA FCO RAM" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                @if (ProjectSession.UserTypeId != 2 && Model.UserTypeID != 4 && Model.UserTypeID != 6)
+                {
+                    <div class="btn primary icon-btn ViewPassword ViewBtn">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="57" onclick="return getDropDownValue();">
+                    </div>
+                }
+                else if (ProjectSession.UserTypeId == 2)
+                {
+                    <a href="javascript:void(0)" class="next_btn ProfileRA" tabindex="53" onclick="return validateForm() ? $('#t5').click() : false;">Next</a>
+                }
+                else if (Model.UserTypeID == 4 || Model.UserTypeID == 6)
+                {
+                    <a href="javascript:void(0)" class="next_btn ProfileRA" tabindex="53" onclick="return validateForm() ? $('#t6').click() : false;">Next</a>
+                }
+            </div>
+        </div>
+        @*//Rec email changes*@
+        @if (ProjectSession.UserTypeId == 2)
+        {
+            <div class="tab5" style="display:none;">
+                <div class="row">
+                    <div class="col-sm-offset-9 alignright">
+                        <div class="form-group">
+                            <a title="Help" class="helpic" style="padding-right:19px;padding-left:23px;text-decoration:none" href="javascript:void(0);" id="imgViewConfigre">Help</a>
+                        </div>
+                    </div>
+                </div>
+                @Html.Partial("~/Areas/Email/Views/Email/_RecEmailSetting.cshtml", Model.RecEmailSignup)
+                <div class="tab_bottomrow">
+                    <a href="javascript:void(0)" tabindex="57" class="prev_btn default RA  SC SCAPrev" onclick="return validateForm() ? $('#t4').click() : false;">Previous</a>
+                    <a href="javascript:void(0)" tabindex="57" class="prev_btn default SCO FSA FCO RAM" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                    <a href="javascript:void(0)" tabindex="57" class="next_btn default RA SC SCAPrev tab7Next" onclick="return validateForm() ? $('#t7').click() : false;">Next</a>
+                    <div class="btn primary icon-btn ViewPassword ViewBtn tab7btn" style="display:none;">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="57" onclick="return getDropDownValue();">
+                    </div>
+                </div>
+            </div>
+        }
+        @*@if (ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 6 || ProjectSession.UserTypeId == 1)*@
+        @if (Model.UserTypeID == 4 || Model.UserTypeID == 6 || Model.UserTypeID == 8)
+        {
+            <div class="tab6" style="display:none;">
+                <div class="installerDesignerDiv">
+                    @*@Html.HiddenFor(m => m.solarElectricianView.IsSendRequest)*@
+                    @Html.HiddenFor(m => m.installerDesignerView.InstallerDesignerId)
+                    <div class="form-box">
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="control-label required">User Type:</label>
+                                    <div class="checkbox-box" style="color:#494949;">
+                                        @Html.RadioButton("InstallerUserType", "0", true, new { @id = "InstallerUserTypePVD" }) PVD Installer/Designer
+                                        @Html.RadioButton("InstallerUserType", "1", false, new { @id = "InstallerUserTypeSWH" }) SWH Installer
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            <div class="col-sm-3 showPVD">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.CECAccreditationNumber, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.CECAccreditationNumber, new { @class = "form-control", @maxlength = 20, @onblur = "checkExistInstallerDesigner(this,'InstallerDesigner AccreditationNumber')", @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.CECAccreditationNumber)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.FirstName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.FirstName, new { @class = "form-control", @readonly = "readonly", @maxlength = 50, @autofocus = "autofocus", @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.FirstName)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.LastName, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.LastName, new { @class = "form-control", @readonly = "readonly", @maxlength = 50, @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.LastName)
+                                </div>
+                            </div>
+                            @*<div class="col-sm-3 showSWH">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.installerDesignerView.Email, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.installerDesignerView.Email, new { @class = "form-control", @maxlength = 50, @idClass = "installerDesignerRequired" })
+                                        @Html.ValidationMessageFor(m => m.Email, "Email is required")
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-3 showPVD">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.installerDesignerView.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.installerDesignerView.Email, new { @class = "form-control", @maxlength = 50, @idClass = "installerDesignerNotRequired" })
+                                    </div>
+                                </div>*@
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.Email, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.Email, new { @class = "form-control", @maxlength = 50 })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.Email, "Email is required.")
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.Phone, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.Phone, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.Phone)
+                                </div>
+                            </div>
+                            @*<div class="clearfix visible-lg-block"></div>*@
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.Mobile, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.Mobile, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+                            <div class="col-sm-3 showPVD">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.ElectricalContractorsLicenseNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.ElectricalContractorsLicenseNumber, new { @class = "form-control", @maxlength = 20, @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+
+                            <div class="col-sm-3 showPVD">
+                                <div class="form-group">
+                                    <label class="control-label required">SE Role:</label>
+                                    <div class="checkbox-box" style="color:#494949;">
+                                        @Html.RadioButton("SEDesignRoleId", "2", true, new { @id = "SEDesignRoleId2", @tabindex = 18 }) Design
+                                        @Html.RadioButton("SEDesignRoleId", "1", false, new { @id = "SEDesignRoleId1", @tabindex = 19 }) Install
+                                        @Html.RadioButton("SEDesignRoleId", "3", false, new { @id = "SEDesignRoleId3", @tabindex = 20 }) Design & Install
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3 showSWH">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.SWHLicenseNumber, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.SWHLicenseNumber, new { @class = "form-control", @maxlength = 20, @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.SWHLicenseNumber)
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label class="control-label">Postal Address Type :</label>
+                                    @Html.DropDownListFor(m => m.installerDesignerView.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+                            <div class="col-sm-3 PDAInstallerDesigner" style="display:none">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.PostalAddressID, new { @class = "control-label" })
+                                    @Html.DropDownListFor(model => model.installerDesignerView.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+                            <div class="col-sm-3 PDAInstallerDesigner" style="display:none">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.PostalDeliveryNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @idClass = "installerDesignerNotRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.PostalDeliveryNumber)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 DPAInstallerDesigner">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.UnitTypeID, new { @class = "control-label" })
+                                    @Html.DropDownListFor(model => model.installerDesignerView.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+                            <div class="col-sm-3 DPAInstallerDesigner">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.UnitNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.UnitNumber, new { @class = "form-control", @maxlength = 10, @idClass = "installerDesignerNotRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.UnitNumber)
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            <div class="col-sm-3 DPAInstallerDesigner">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.StreetNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.StreetNumber, new { @class = "form-control", @maxlength = 15, @idClass = "installerDesignerNotRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.StreetNumber)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 DPAInstallerDesigner">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.StreetName, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.StreetName, new { @class = "form-control", @maxlength = 45, @idClass = "installerDesignerNotRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.StreetName)
+                                </div>
+                            </div>
+                            <div class="col-sm-3 DPAInstallerDesigner">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.StreetTypeID, new { @class = "control-label" })
+                                    @Html.DropDownListFor(model => model.installerDesignerView.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @idClass = "installerDesignerNotRequired" })
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.Town, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.Town, new { @class = "form-control", @maxlength = 80, @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.Town)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.State, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.State, new { @class = "form-control", @maxlength = 3, @readonly = "readonly", @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.State)
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.PostCode, new { @class = "control-label required" })
+                                    @Html.TextBoxFor(m => m.installerDesignerView.PostCode, new { @class = "form-control", @maxlength = 8, @idClass = "installerDesignerRequired" })
+                                    @Html.ValidationMessageFor(m => m.installerDesignerView.PostCode)
+                                </div>
+                            </div>
+                            <div class="clearfix visible-lg-block"></div>
+                            @*<div class="col-sm-3">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.installerDesignerView.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.installerDesignerView.Email, new { @class = "form-control", @maxlength = 20, @tabindex = 15 })
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.installerDesignerView.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.installerDesignerView.Email, new { @class = "form-control", @maxlength = 20, @tabindex = 15 })
+                                    </div>
+                                </div>*@
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.installerDesignerView.SESignature, new { @class = "control-label" })
+                                    <table class="uf" style="margin-left:-10px;">
+                                        <tr>
+                                            <td width="70" style="vertical-align:top;">
+                                                <div class="fileUpload primary upload_ic">
+                                                    <span>Upload</span>
+                                                    <input id="uploadBtnSignatureInstallDesign" type="file" class="upload fileUpload" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="bxcont" style="margin-top:7px;">
+                                                    <a id="imgSignatureInstallDesign" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            @*<div class="clearfix visible-lg-block"></div>*@
+
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <button type="button" name="addInstallerDesigner" class="btn primary icon-btn showPVD" id="addInstallerDesigner"><span class="sprite-img save_ic"></span> Add Installer/Designer</button>
+                                    <button type="button" name="addSWHInstaller" class="btn primary icon-btn showSWH" id="addSWHInstaller"><span class="sprite-img save_ic"></span>Add SWH Installer</button>
+                                    <div class="default btn icon-btn" id="btnResetInstallerDesigner" onclick="ResetInstallerDesigner();">
+                                        <span class="sprite-img reset_ic"></span>
+                                        <input type="button" value="Reset" class="">
+                                    </div>
+                                    <div class="default btn icon-btn" style="display:none" id="btnCancelInstallerDesigner">
+                                        <span class="sprite-img reset_ic"></span>
+                                        <input type="button" value="Cancel" class="" onclick="CancelInstallerDesigner();">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="title" style="margin-top:30px;">Search Installer/Designer</h3>
+                <div id="instDesignerAddedByProfile">
+
+                </div>
+                <div class="tab_bottomrow">
+                    @if (Model.UserTypeID == 4 && (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5))
+                    {
+                        <a href="javascript:void(0)" tabindex="54" class="prev_btn default SCA SSC FSA" onclick="return validateForm() ? $('#t3').click() : false;">Previous</a>
+                        <a href="javascript:void(0)" tabindex="54" class="next_btn default BtnFromInstallerTabToSaasTab" onclick="return validateForm() ? $('#t10').click() : false;">Next</a>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" tabindex="54" class="prev_btn default SCA SSC FSA" onclick="return validateForm() ? $('#t4').click() : false;">Previous</a>
+                        <a href="javascript:void(0)" tabindex="54" class="next_btn default BtnFromInstallerTabToSaasTab" onclick="return validateForm() ? $('#t10').click() : false;">Next</a>
+                    }
+                    <div class="btn primary icon-btn ViewPassword ViewBtn">
+                        <span class="sprite-img save_ic"></span>
+                        <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="54" onclick="return getDropDownValue();">
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="tab7" style='display:none;'>
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerFirstName)
+                            @Html.LabelFor(m => m.WholesalerFirstName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerFirstName, new { @class = "form-control", @maxlength = 100 })
+                            @Html.ValidationMessageFor(m => m.WholesalerFirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerLastName)
+                            @Html.LabelFor(m => m.WholesalerLastName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerLastName, new { @class = "form-control", @maxlength = 100 })
+                            @Html.ValidationMessageFor(m => m.WholesalerLastName)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerEmail)
+                            @Html.LabelFor(m => m.WholesalerEmail, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerEmail, new { @class = "form-control", @maxlength = 256 })
+                            @Html.ValidationMessageFor(m => m.WholesalerEmail)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerPhone)
+                            @Html.LabelFor(m => m.WholesalerPhone, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerPhone, new { @class = "form-control", @maxlength = 20, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.WholesalerPhone)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerMobile)
+                            @Html.LabelFor(m => m.WholesalerMobile, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerMobile, new { @class = "form-control", @maxlength = 20, onkeypress = "return isNumber(event);" })
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerCompanyABN)
+                            @Html.LabelFor(m => m.WholesalerCompanyABN, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerCompanyABN, new { @class = "form-control", @maxlength = 50, @onblur = "checkExist(this,'company ABN')" })
+                            @Html.ValidationMessageFor(m => m.WholesalerCompanyABN)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerCompanyname)
+                            @Html.LabelFor(m => m.WholesalerCompanyName, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.WholesalerCompanyName, new SelectList((ViewBag.WholesalerCompany) as SelectList, "Value", "Text"), "Select", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.WholesalerCompanyName)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerIsPostalAddress)
+                            @Html.LabelFor(m => m.WholesalerIsPostalAddress, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.WholesalerIsPostalAddress, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.WholesalerIsPostalAddress)
+                        </div>
+                    </div>
+                </div>
+                <div class="row DPAWholesaler">
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerUnitTypeID)
+                            @Html.LabelFor(m => m.WholesalerUnitTypeID, new { @class = "control-label", @id = "lblWholesalerUnitTypeID" })
+                            @Html.DropDownListFor(m => m.WholesalerUnitTypeID, new List<SelectListItem>(), new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.WholesalerUnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerUnitNumber)
+                            @Html.LabelFor(m => m.WholesalerUnitNumber, new { @class = "control-label", @id = "lblWholesalerUnitNumber" })
+                            @Html.TextBoxFor(m => m.WholesalerUnitNumber, new { @class = "form-control", @maxlength = 20 })
+                            @Html.ValidationMessageFor(m => m.WholesalerUnitNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerStreetNumber)
+                            @Html.LabelFor(m => m.WholesalerStreetNumber, new { @class = "control-label required", @id = "lblWholesalerStreetNumber" })
+                            @Html.TextBoxFor(m => m.WholesalerStreetNumber, new { @class = "form-control", @maxlength = 20 })
+                            @Html.ValidationMessageFor(m => m.WholesalerStreetNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerStreetName)
+                            @Html.LabelFor(m => m.WholesalerStreetName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerStreetName, new { @class = "form-control", @maxlength = 20 })
+                            @Html.ValidationMessageFor(m => m.WholesalerStreetName)
+                        </div>
+                    </div>
+                </div>
+                <div class="row PDAWholesaler" style="display:none">
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerPostalAddressID)
+                            @Html.LabelFor(m => m.WholesalerPostalAddressID, new { @class = "control-label required" })
+                            @Html.DropDownListFor(m => m.WholesalerPostalAddressID, new List<SelectListItem>(), new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.WholesalerPostalAddressID)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC POID">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerPostalDeliveryNumber)
+                            @Html.LabelFor(m => m.WholesalerPostalDeliveryNumber, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerPostalDeliveryNumber, new { @class = "form-control", @maxlength = 50 })
+                            @Html.ValidationMessageFor(m => m.WholesalerPostalDeliveryNumber)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="DPAWholesaler">
+                        <div class="col-sm-3 RA SCA SE SSC SC POID">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.PreviousWholesalerStreetTypeID)
+                                @Html.LabelFor(m => m.WholesalerStreetTypeID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.WholesalerStreetTypeID, new List<SelectListItem>(), new { @class = "form-control" })
+                                @Html.ValidationMessageFor(m => m.WholesalerStreetTypeID)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerTown)
+                            @Html.LabelFor(m => m.WholesalerTown, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerTown, new { @class = "form-control", @maxlength = 50 })
+                            @Html.ValidationMessageFor(m => m.WholesalerTown)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerState)
+                            @Html.LabelFor(m => m.WholesalerState, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerState, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                            @Html.ValidationMessageFor(m => m.WholesalerState)
+                        </div>
+                    </div>
+                    <div class="col-sm-3 RA SCA SE SSC SC">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerPostCode)
+                            @Html.LabelFor(m => m.WholesalerPostCode, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.WholesalerPostCode, new { @class = "form-control", @maxlength = 20 })
+                            @Html.ValidationMessageFor(m => m.WholesalerPostCode)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerBSB)
+                            @Html.LabelFor(m => m.WholesalerBSB, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerBSB, new { @class = "form-control", @maxlength = 20, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.WholesalerBSB)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerAccountNumber)
+                            @Html.LabelFor(m => m.WholesalerAccountNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerAccountNumber, new { @class = "form-control", @maxlength = 20, onkeypress = "return isNumber(event);" })
+                            @Html.ValidationMessageFor(m => m.WholesalerAccountNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousWholesalerAccountName)
+                            @Html.LabelFor(m => m.WholesalerAccountName, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.WholesalerAccountName, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.WholesalerAccountName)
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.PreviousUniqueWholesalerNumber)
+                            @Html.LabelFor(m => m.UniqueWholesalerNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.UniqueWholesalerNumber, new { @class = "form-control", @readonly = "readonly" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab_bottomrow">
+                    <div class="RA">
+                        @if (ProjectSession.UserTypeId == 2)
+                        {
+                            <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t5').click() : false;">Previous</a>
+                        }
+                        else
+                        {
+                            <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t3').click() : false;">Previous</a>
+                        }
+                        <a href="javascript:void(0)" id="tab10NextFromWholesaler" class="next_btn default RA WS" tabindex="53" onclick="return validateForm() ? $('#t10').click() : false;" style="display: inline-block;">Next</a>
+                        <div class="btn primary icon-btn" id="wholeSalerTabSavebtn">
+                            <span class="sprite-img save_ic"></span>
+                            <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="18" onclick="return getDropDownValue() ? SaveUser() : false;">
+                        </div>
+                        <input type="button" value="Cancel" id="btnCancelTab7" class="default ViewPassword cancel_ic ViewBtn" tabindex="19" onclick="DeleteDocumentFolderOnCancel()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab10" style='display:none;'>
+            <!--Tab1 start here-->
+            <div class="form-box">
+                <div class="row">
+                    <div class="col-sm-6 col-md-3 RA">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Invoicer, new { @class = "control-label" })
+                            @*@Html.DropDownListFor(m => m.Invoicer, new List<SelectListItem>(), "Select", new { @class = "form-control valid" })*@
+                            @*@Html.DropDownListFor(m => m.Invoicer, ViewBag.Invoicer as SelectList, new { @class = "form-control valid" })*@
+                            @Html.DropDownListFor(m => m.Invoicer, new List<SelectListItem>(), new { @class = "form-control valid", id = "Invoicer" })
+                        </div>
+                    </div>
+
+                    <div class="col-sm-3 RA">
+                        <div class="form-group">
+                            @Html.HiddenFor(m => m.AccountCode, new { id = "hdnAccountCode" })
+                            @Html.LabelFor(m => m.AccountCode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.AccountCode, new { @class = "form-control", @maxlength = 100, @readonly = "readonly", id = "AccountCode" })
+                        </div>
+                    </div>
+                    @*<div class="col-sm-6 col-md-3 RA">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerFirstName, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.InvoicerFirstName, new { @class = "form-control", @maxlength = 100, @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3 RA">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerLastName, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.InvoicerLastName, new { @class = "form-control", @maxlength = 256, @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3 RA">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerPhone, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.InvoicerPhone, new { @class = "form-control", @maxlength = 20, @readonly = "readonly", onkeypress = "return isNumber(event);" })
+                            </div>
+                        </div>*@
+                </div>
+                @*<div class="row">
+                        <div class="col-sm-3 RA SAAS">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.UniqueCompanyNumber, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.UniqueCompanyNumber, new { @class = "form-control", @tabindex = 43, @readonly = "readonly", id = "UniqueCompanyNumberSAAS" })
+                            </div>
+                        </div>
+
+                        <div class="col-sm-3 RA SAAS">
+                            <div class="form-group">
+                                @Html.HiddenFor(m => m.AccountCode, new { id = "hdnAccountCode" })
+                                @Html.LabelFor(m => m.AccountCode, new { @class = "control-label" })
+                                @Html.DropDownListFor(m => m.AccountCode, new List<SelectListItem>(), new { @class = "form-control", @readonly = "readonly", id = "AccountCode" })
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-3 RA">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerAddressID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.InvoicerAddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerAddressID)
+                            </div>
+                        </div>
+                    </div>*@
+                @*<div class="row DPAInvoicer">
+                        <div class="col-sm-6 col-md-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerUnitTypeID, new { @class = "control-label", @id = "lblWholesalerUnitTypeID" })
+                                @Html.DropDownListFor(m => m.InvoicerUnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerUnitTypeID)
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerUnitNumber, new { @class = "control-label", @id = "lblWholesalerUnitNumber" })
+                                @Html.TextBoxFor(m => m.InvoicerUnitNumber, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerUnitNumber)
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerStreetNumber, new { @class = "control-label required", @id = "lblWholesalerStreetNumber" })
+                                @Html.TextBoxFor(m => m.InvoicerStreetNumber, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerStreetNumber)
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerStreetName, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.InvoicerStreetName, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerStreetName)
+                            </div>
+                        </div>
+                    </div>*@
+                @*<div class="row PDAInvoicer" style="display:none">
+                        <div class="col-sm-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerPostalAddressID, new { @class = "control-label required" })
+                                @Html.DropDownListFor(m => m.InvoicerPostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerPostalAddressID)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerPostalDeliveryNumber, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.InvoicerPostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerPostalDeliveryNumber)
+                            </div>
+                        </div>
+                    </div>*@
+                @*<div class="row">
+                        <div class="DPAInvoicer">
+                            <div class="col-sm-3 RA">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.InvoicerStreetTypeID, new { @class = "control-label required" })
+                                    @Html.DropDownListFor(m => m.InvoicerStreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @readonly = "readonly" })
+                                    @Html.ValidationMessageFor(m => m.InvoicerStreetTypeID)
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerTown, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.InvoicerTown, new { @class = "form-control", @maxlength = 50, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerTown)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerState, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.InvoicerState, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerState)
+                            </div>
+                        </div>
+                        <div class="col-sm-3 RA ">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.InvoicerPostCode, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.InvoicerPostCode, new { @class = "form-control", @maxlength = 20, @readonly = "readonly" })
+                                @Html.ValidationMessageFor(m => m.InvoicerPostCode)
+                            </div>
+                        </div>
+                    </div>*@
+                @*<div class="row">
+                        <div class="col-sm-9 col-md-9 RA">
+                            <div class="form-group">
+                                <label class="control-label">Contract:</label>
+                            </div>
+                            <table class="uf" style="margin-left:-10px;margin-top:40px;">
+                                <tr>
+                                    <td width="70" style="vertical-align:top;">
+                                        <div class="fileUpload primary upload_ic" style="width: 86px;">
+                                            <span>Upload</span>
+                                            <input type="file" class="btnUploadProofDocs upload fileUpload" tabindex="51" accept=".pdf,.doc,.docx" onclick="proofUpload('tblContractPath',6);" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="bxcont col-sm-3 col-md-3" id="divContractDocuments">
+                                            <table id="tblDocuments1" class="table table-striped">
+                                                <tbody id="tblContractPath">
+                                                    @if (Model.UserId != 0)
+                                                    {
+                                                        if (Model.ContractPath != null && Model.ContractPath != "")
+                                                        {
+                                                            <tr style='margin-top:30px' id="0">
+                                                                <td class="col-sm-6" style="color:#494949">@Model.ContractPath</td>
+                                                                <td class="col-sm-2" style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.UserId" class="@Model.ContractPath" title="Download" onclick="DownloadDocument(this)"></td>
+                                                                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                                                                {
+                                                                    <td style="color:blue"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteFileFromDatabase(0,@Model.UserId, '@Model.ContractPath',6)"></td>
+                                                                }
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>*@
+                <div class="tab_bottomrow">
+                    <div class="RA">
+                        @if (ProjectSession.UserTypeId == 2)
+                        {
+                            <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t5').click() : false;">Previous</a>
+                        }
+                        @*else if (ProjectSession.UserTypeId == 1)
+                            {
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                            }*@
+                        else
+                        {
+                            if (Model.UserTypeID == 2)
+                            {
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" id="prevBtnFromSAASTabToAccountDetailTab" onclick="return validateForm() ? $('#t3').click() : false;">Previous</a>
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" id="prevBtnFromSAASTabToWholeSalerTab" onclick="return validateForm() ? $('#t7').click() : false;">Previous</a>
+                            }
+                            else if (Model.UserTypeID == 9)
+                            {
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t3').click() : false;">Previous</a>
+                            }
+                            else if (Model.UserTypeID == 6)
+                            {
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t6').click() : false;">Previous</a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" tabindex="37" class="prev_btn" onclick="return validateForm() ? $('#t1').click() : false;">Previous</a>
+                            }
+                        }
+                        <div class="btn primary icon-btn">
+                            <span class="sprite-img save_ic"></span>
+                            <input type="submit" name="Submit" value="Save" autofocus class="btnSubmit" tabindex="18" onclick="return getDropDownValue() ? SaveUser() : false;">
+                        </div>
+                        <input type="button" value="Cancel" id="btnCancelTab10" class="default ViewPassword cancel_ic ViewBtn" tabindex="19" onclick="DeleteDocumentFolderOnCancel()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (ProjectSession.UserTypeId == 1)
+        {
+            <div class="tab8" style='display:none;'>
+
+                @Html.Partial("_UserActivityLog")
+            </div>
+        }
+
+        @if ((Model.UserTypeID == 7 || Model.UserTypeID == 9))
+        {
+            <div class="tab9" style="display:none;">
+                <!-- Grid start -->
+                <div class="toggle-table-row table-responsive kendo-grid">
+                    <div id="datatableUserDevice">
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="tab10" style="display:none;" id="tabHistory">
+            @if (Model.UserTypeID == 4 || Model.UserTypeID == 7)
+            {
+                @Html.Partial("_UserNotes", Model)
+            }
+            @Html.Partial("_UserHistory", Model)
+        </div>
+
+
+
+    </div>
+    <div class="row">
+        @if (Model.AccreditedInstallerId > 0)
+        {
+            @Html.Partial("_ComplianceStatus", Model)
+        }
+    </div>
+
+
+
+</div>
+@********Pop up view*********@
+<div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBox">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div id="signMyProfile" style="height:480px;">
+                            <img src="@Model.Signature" id="imgSign" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+
+                    <div id="signMyProfile">
+                        <img src="@Model.Signature" id="imgSign" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteImage('imgSign');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxSE" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBoxSE">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.Signature" id="imgSignSE" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteImage('imgSignSE');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxInsallerDesigner" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBoxInsallerDesigner">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.installerDesignerView.SESignature" id="imgSignInstallDesign" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteImage('imgSignInstallDesign');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header ">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Proof of Document</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @{
+                        var args = new Dictionary<string, string>();
+                        if (Model.FileCount != null)
+                        {
+                            args["FileCount"] = Model.FileCount.ToString();
+                            args["DivId"] = "MainDiv";
+                        }
+                    }
+                    @if (Model.FileCount != null)
+                    {
+                        @Html.Partial("~/Views/Shared/_DocumentSlider.cshtml", args)
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxlogo" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupboxlogo">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Logo</h4>
+            </div>
+            <div class="modal-body fixheight">
+                <div class="form-border">
+                    <div>
+                        @*<img src="@Model.Logo" id="imgLG" class="" style="display:block;width:250px;height:300px;margin:auto;" />*@
+                        <img src=@fullURL id="imgLG" class="" style="display:block;margin:auto;" />
+                    </div>
+                </div>
+                <div class="modal-footer"><p class="remove_ic" onclick="deleteLogoImage('imgLG');"><img src="~/images/delete-icon.png" id="signDelete">Remove</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxSelfie" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBoxSelfie">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Selfie</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.SESelfie" id="imgSelfieImage" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteSelfieImage('imgSelfie', @Model.UserId);"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-part-modal" id="popupboxContact" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" id="LoadContactDetail">
+
+            @*<div class="modal-footer">
+                    <button type="button" class="btn primary save_ic">Update in Greenbot</button>
+                </div>*@
+        </div>
+    </div>
+</div>
+
+<div id="myModal1" class="modal fade" role="dialog" style="font-family:Arial;color:#333;">
+    <div class="modal-dialog  modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content MyProfileConfigure">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnCloseConfigure">&times;</button>
+                <h4 class="modal-title">Help</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <dl>
+                            <dt>Step-1 How to Configure Gmail</dt>
+                            <dd>1. Sign in to Gmail.</dd>
+                            <dd>2. Click the gear in the top right.</dd>
+                            <dd>3. Select Settings.</dd>
+                            <dd>4. Click Forwarding and POP/IMAP.</dd>
+                            <dd>5. Select enable POP for mail that arrives from now on.</dd>
+                            <dd>6. Click Save Changes.</dd>
+                            <dd>7.Open this url and "https://www.google.com/settings/security/lesssecureapps" and Click on Turn On.</dd>
+                            <dd>8. Formbot Email Settings Enter Your Email and Password.</dd>
+                            <dd>9. Select Type POP3.</dd>
+                            <dd>10. Incoming Mail : <mark>"pop.gmail.com"</mark> and Port : <mark>"995"</mark>.</dd>
+                            <dd>11. Outgoing Mail : <mark>"pop.gmail.com"</mark> and Port : <mark>"587"</mark>.</dd>
+                            <dd>12. Click Save.</dd>
+                            <br />
+                            <dt>Step-2 How to Configure Yahoo</dt>
+                            <dd>1. Sign in to Yahoo.</dd>
+                            <dd>2. Click the gear in the top right.</dd>
+                            <dd>3. Select Settings.</dd>
+                            <dd>4. Click Accounts and select your Email address.</dd>
+                            <dd>5. Find Access your Yahoo Mail elsewhere select the Pop.</dd>
+                            <dd>6. Click Save.</dd>
+                            <dd>7. Click the gear in the top right again and Click on Account Info.</dd>
+                            <dd>8. Click Account Security and "Allow apps that use less secure sign-in" click on enable.</dd>
+                            <dd>9. Formbot Email Settings Enter Your Email and Password.</dd>
+                            <dd>10. Select Type POP3.</dd>
+                            <dd>11. Incoming Mail : <mark>"plus.pop.mail.yahoo.com"</mark> and Port : <mark>"995"</mark>.</dd>
+                            <dd>12. Outgoing Mail : <mark>"smtp.mail.yahoo.com"</mark> and Port : <mark>"465"</mark>.</dd>
+                            <dd>13. Click Save.</dd>
+                            <br />
+                            <dt>Step-3 Confugure your company account</dt>
+                            <dd>1. Formbot Email Settings Enter Your Email and Password.</dd>
+                            <dd>2. Select Type POP3.</dd>
+                            <dd>3. Incoming Mail : <mark>"mail.yourcompany.com"</mark> and Port : <mark>"110"</mark>.</dd>
+                            <dd>4. Outgoing Mail : <mark>"mail.yourcompany.com"</mark> and Port : <mark>"25"</mark>.</dd>
+                            <dd>5. Click Save.</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupUpdateContactXeroLog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="width:120%">
+            <div class="modal-header">
+                <button type="button" class="close sprite-img" aria-label="Close" data-dismiss="modal"></button>
+                <h4 class="modal-title" id="myModalLabel">Update Contact Xero Log</h4>
+            </div>
+            <div class="modal-body" style="height:700px;overflow:scroll !important;">
+                <div id="listOfLog">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-part-modal" id="popupboxREC" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" id="LoadRECAccounts">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnCloseRecAcc">&times;</button>
+                <h4 class="modal-title">Select Account</h4>
+            </div>
+            <div id="gridJobs" class="box-border batchDetails">
+                <!-- Grid start -->
+                <div class="form-inline" style="display:none">
+                    <div class="form-group">
+                        <label class="control-label">Search Company:    </label>
+                        <input type="text" id="txtSearch" class="form-control w-220" />
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="datatable_FailedJobs" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th width="10%" style="background-image:none !important;"></th>
+                                <th width="10%"><span>@Html.DisplayName("REC User Name")</span></th>
+                                <th width="20%"><span>@Html.DisplayName("Company Name")</span></th>
+                                @*<th width="0%"><span>@Html.DisplayName("Name") </span></th>*@
+                            </tr>
+                        </thead>
+                        <tbody id="recAcc"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    if ("@ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower()" == "profile" || "@ViewContext.Controller.ValueProvider.GetValue("action").RawValue.ToString().ToLower()" == "myprofile") {
+        debugger;
+        $("#IsPVDUser").attr('readonly', 'readonly');
+        $("#IsSWHUser").attr('readonly', 'readonly');
+        $("#tabHistory").css('display', 'none');
+        $("#t10").css('display', 'none');
+    }
+</script>
+
+<script type="text/javascript">
+
+    var logoWidthSignInstallDesign = 0, logoHeightSignInstallDesign = 0, logoWidthLGInstallDesign = 0, logoHeightLGInstallDesign = 0, SRCSignInstallDesign, SRCLGInstallDesign;
+    var SendBy = 1;
+    var solarCompanyList = [];
+    var SendBy1 = 1;
+    var RAMList = [];
+    var dropDownData = [];
+    var userTypeId = '@Model.UserTypeID';
+    var DocCount = -1;
+    var urlDeviceLogout = '@Url.Action("DeviceLogout","User")';
+    var urlGetUserDeviceKendo = '@Url.Action("GetUserDeviceKendo", "User")';
+    var rowNumber = 0;
+    var sessionUserTypeId = '@ProjectSession.UserTypeId';
+    var sessionLoggedInUserId = '@ProjectSession.LoggedInUserId';
+    var sessionSolarCompanyId = '@ProjectSession.SolarCompanyId';
+    var SCisAllowedSPV = '@Model.SCisAllowedSPV';
+    var modelRAMId = '@Model.RAMId';
+    var modelResellerId = '@Model.ResellerID';
+    var modelUserId = '@Model.UserId';
+    var modelUserTypeID = '@Model.UserTypeID';
+    var modelSolarCompanyId = '@Model.SolarCompanyId';
+    var modelWholeSaler = '@Model.IsWholeSaler';
+    var modelGB_RACode = '@Model.GB_RACode';
+    var getUnitTypeURL = '@Url.Action("GetUnitType", "UnitType")';
+    var getStreetTypeURL = '@Url.Action("GetStreetType", "StreetType")';
+    var getPostalAddressURL = '@Url.Action("GetPostalAddress", "User")';
+    var installerDesignerUnitTypeId = '@Model.installerDesignerView.UnitTypeID';
+    var installerDesignerStreetTypeId = '@Model.installerDesignerView.StreetTypeID';
+    var installerDesignerPostalAddressID = '@Model.installerDesignerView.PostalAddressID';
+    var installerDesignerSESignature = '@Model.installerDesignerView.SESignature';
+    var WholesalerUnitTypeID = '@Model.WholesalerUnitTypeID';
+    var WholesalerStreetTypeID = '@Model.WholesalerStreetTypeID';
+    var WholesalerPostalAddressID = '@Model.WholesalerPostalAddressID';
+    var InvoicerUnitTypeID = '@Model.InvoicerUnitTypeID';
+    var InvoicerStreetTypeID = '@Model.InvoicerStreetTypeID';
+    var InvoicerPostalAddressID = '@Model.InvoicerPostalAddressID';
+    var modelIsAllowedMasking = '@Model.isAllowedMasking';
+    var getRECAccountsURL = '@Url.Action("GetRECAccounts", "Reseller")';
+    var getRECNameURL = '@Url.Action("GetRECName", "Reseller")';
+    var proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var processRequestURL = '@Url.Action("ProcessRequest","User")';
+    var installerDesignerAddURL = '@Url.Action("AddInstallerDesigner", "User")';
+    var checkInXeroURL = '@Url.Action("CheckInXero", "User")';
+    var xeroConnectURL = '@Url.Action("Connect", "XeroConnect")';
+    var logoutURL = '@Url.Action("Logout", "Account")';
+    var xeroContactURL = '@Url.Action("_XeroContact", "User")';
+    var GetRAMByResellerURL = '@Url.Action("GetRAMByReseller", "RAMSolarCompany")';
+    var CheckClientCodePrefixURL = '@Url.Action("CheckClientCodePrefix", "User")';
+    var GetClientNumberOnRAMChangeURL = '@Url.Action("GetClientNumberOnRAMChange", "Account")';
+    var getGetCompanyABNURL = '@Url.Action("GetCompanyABN", "User")';
+    var getInstallerDesignerAddedByProfileURL = '@Url.Action("InstallerDesigner", "User")';
+    var getUserTypeURL = '@Url.Action("GetUserType", "UserType")';
+    var getRoleURL = '@Url.Action("GetRole", "Role", new { id=Model.UserTypeID})';
+    var unitTypeID = '@Model.UnitTypeID';
+    var streetTypeId = '@Model.StreetTypeID';
+    var postalAddressID = '@Model.PostalAddressID';
+    var modelRoleId = '@Model.RoleID';
+    var modelStatus = '@Model.Status';
+    var chkSTC = @Model.chkSTC;
+    var strFromDate = '@Model.strFromDate';
+    var strToDate = '@Model.strToDate';
+    var activeTab = 't1';
+    var chkUserName = true;
+    var chkCompanyABN = true;
+    var chkCECAccreditationNumber = true;
+    var chkLoginCompanyName = true;
+    var BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'User/';
+    var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+    var maxsize = Math.round(documentSizeLimit);
+    var logoSizeLimit = '@FormBot.Helper.ProjectSession.MaxLogoSize' / 1024000;
+    var maxLogoSize = Math.round(logoSizeLimit);
+    var oldFileName = '@Model.Signature';
+    var oldFileNameSelfie ='@Model.SESelfie';
+    var SEDesigner = @Model.SEDesigner;
+    var companyABN = '@Model.CompanyABN';
+    var companyName = '@Model.CompanyName';
+    var addressId = @Model.AddressID;
+    var customCompanyName = "@Model.CustomCompanyName";
+    var userGuid = "@Model.Guid";
+    var projectURL = BaseURL;
+    var getLogsForUpdateContactURL = '@Url.Action("GetLogsForUpdateContact", "User")';
+    var UserIDforckeditor = @Model.UserId;
+    var jobid = 0;
+    var getEntityNameURL = '@Url.Action("GetEntityName", "User")';
+    var urlgetSAASdetails = '@Url.Action("GetSAASUserDetail","User")';
+    var urlgetAccountCodes = '@Url.Action("GetAccountCodesFromXero", "User")';
+    var AccountCode = '@Model.AccountCode';
+    var isExecuted = false;
+    var modelInvoicer = '@Model.Invoicer';
+</script>
+@Scripts.Render("~/bundles/UserDetail")
+@*@Styles.Render("~/bundles/kendoCSS")*@
+@*<script src="~/Scripts/User/UserDetail.dev.js"></script>*@
+<script src="~/Scripts/User/UserDetail.min.js"></script>

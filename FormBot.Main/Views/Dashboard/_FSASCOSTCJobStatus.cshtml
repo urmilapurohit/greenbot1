@@ -1,0 +1,90 @@
+﻿@model List<FormBot.Entity.Dashboard.DashboardSTCJobStaus>
+@using FormBot.Helper;
+
+<style>
+    .submission-filters {
+        padding-left: 0px !important;
+        padding-top: 10px;
+        /*border-top: 0px !important;*/
+        margin-top: 5px;
+    }
+
+    .fsa-job-status.submission-filters {
+        border-bottom: 1px solid #e3e3e3;
+        padding-bottom: 10px;
+    }
+
+        .fsa-job-status.submission-filters:last-child {
+            border-bottom: none;
+            padding-bottom: 5px;
+        }
+
+        .fsa-job-status.submission-filters .stage_title {
+            width: 180px !important;
+            text-align: left;
+            margin-top: 5px;
+        }
+
+        .fsa-job-status.submission-filters .filters-row {
+            padding-left: 180px;
+        }
+</style>
+
+
+<div class="status-block">
+    @if (Model.Count > 0)
+    {
+        foreach (var item in Model)
+        {
+            int searchId = 0;
+            <div class="submission-filters fsa-job-status fdb-labelspace">
+                @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                {
+                    searchId = item.ResellerId;
+                    <span class="stage_title">@item.ResellerName</span>
+                }
+                @if (ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5)
+                {
+                    searchId = item.SolarCompanyId;
+                    <span class="stage_title">@item.CompanyName</span>
+                }
+
+                <div class="filters-row">
+                    <ul class="fdb-list">
+                        <li class="daNewInst"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "21" })" style="cursor:pointer;" title="New installation">New Submission<span>@item.NewSubmission</span></a></li>
+                        <li class="dsres"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "11" })" style="cursor:pointer;" title="Re-Submission">Re-Submission<span>@item.ReSubmission</span></a></li>
+                        <li class="dsunderR"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "16" })" style="cursor:pointer;" title="Under Review">Under Review<span>@item.UnderReview</span></a></li>
+                        <li class="dsReadyC"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "19" })" style="cursor:pointer;" title="Ready To Create">Ready To Create<span>@item.ReadyToCreate</span></a></li>
+                        <li class="dacomIssue"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "17" })" style="cursor:pointer;" title="Compliance Issues">Compliance Issues<span>@item.ComplianceIssues</span></a></li>
+                        <li class="daReqAutho"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "13" })" style="cursor:pointer;" title="Request Authorize">Awaiting Authorization<span>@item.AwaitingAuthorization</span></a></li>
+                        <li class="daCERFail"><a href="@Url.Action("RedirectToJobSTCSubmission", "Dashboard", new { SearchId = searchId, status = "14" })" style="cursor:pointer;" title="CER Failure">CER Failure<span>@item.CERFailed</span></a></li>
+
+                        @*<li style="width:20%">@item.ResellerName</li>*@
+                        @*@if (ProjectSession.UserTypeId == 1)
+        {
+            <li><a title="New installation">New installation<span>@item.NewSubmission</span></a></li>
+        }
+        <li><a title="Re-Submission">Re-Submission<span>@item.ReSubmission</span></a></li>
+        <li><a title="Under Review">Under Review<span>@item.UnderReview</span></a></li>
+        <li><a title="Compliance Issues">Compliance Issues<span>@item.ComplianceIssues</span></a></li>
+        <li><a title="Request Autorize">Request Autorize<span>@item.AwaitingAuthorization</span></a></li>
+        <li><a title="CER Failure">CER Failure<span>@item.CERFailed</span></a></li>*@
+
+                    </ul>
+                    <div class="clear"></div>
+                </div>
+
+            </div>
+        }
+    }
+    else
+    {
+        <div class="submission-filters">
+            <div class="panel-heading emailThread" role="tab">
+                No Record(s) Found.
+            </div>
+        </div>
+    }
+</div>
+
+

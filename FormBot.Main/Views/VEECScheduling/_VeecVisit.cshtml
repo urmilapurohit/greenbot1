@@ -1,0 +1,834 @@
+﻿@model FormBot.Entity.VEEC.VEECScheduling
+@using FormBot.Helper;
+
+<script src="~/Scripts/Calendar/moment.min.js"></script>
+@{
+    Layout = null;
+}
+
+@{
+    ////Todo
+    bool isAddEditJobScheduling = true;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditJobScheduling = true; }
+        });
+    }
+}
+<div id="divvisitgridview" class="veecschedulingview">
+    @Html.Partial("~/Views/VEECScheduling/_VisitGridView.cshtml", Model)
+
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="popupjobdetail12">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form id="komal"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade add-visits" tabindex="-1" id="notification" style="z-index:10000 !important">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form id="jv">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Notification</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <h5 class="notification">Already assign maximum job to this same electrician.Are you sure you want to continue?</h5>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesNotification">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noNotification">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="popUpVeecDetail">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <form id="jobScheduling">
+                    @Html.HiddenFor(m => m.VeecSchedulingID)
+                    @Html.HiddenFor(m => m.Status)
+                    @Html.Partial("~/Views/VeecScheduling/_SchedulePopup.cshtml", Model)
+                </form>
+                @if (Model.IsCheckListView)
+
+                {
+                    <div id="checkListTemplateForm" style="padding:15px"></div>
+                }
+                <div class="modal-footer">
+                    @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+            Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                    {
+                        if (isAddEditJobScheduling)
+                        {
+                            <button type="button" class="btn primary icon-btn" id="saveVEECSchedule"><span class="sprite-img save_ic"></span>Save</button>
+                        }
+
+                    }
+                    <button type="button" class="btn default cancel_ic" data-dismiss="modal">Cancel</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+
+<div class="modal fade view-signature" id="popupboxViewSignature" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxViewSignature"></button>
+                    <h4 class="modal-title" id="myModalLabel">View Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOwnerSignature">Owner Signature:</label>
+                            <div class="signechar-box"><img id="imgOwnerSignature" width="50px" height="50px" /></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewInstallerSignature">Installer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgInstallerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewDesignerSignature">Designer Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgDesignerSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewElectricianSignature">Electrician Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgElectricianSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="control-label" id="lblViewOtherSignature">Other Signature:</label>
+                            <div class="signechar-box">
+                                <img id="imgOtherSignature" width="50px" height="50px" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="popupboxPopulateSignature" tabindex="-1" role="dialog">
+    <div>
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxPopulateSignature"></button>
+                    <h4 class="modal-title" id="myModalLabel">Populate Signature</h4>
+                </div>
+                <div class="modal-body">
+                    <input class="checkbox" type="hidden" id="hdnJobSchedulingId" />
+                    <ul class="populate-signature" id="jobDocumentPopulate"></ul>
+                </div>
+                <div class="modal-footer" style="border-top:0px !important;">
+                    <button type="button" class="btn primary save_ic" onclick="SaveSignatureToDocument()">Save</button>
+                    <button type="button" class="btn default cancel_ic" onclick="ClearSignatureToDocument()">Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@Html.Partial("~/views/VEECScheduling/_CommonCheckListForVisit.cshtml", Model)
+
+@Html.Partial("~/Views/VEECCheckListItem/_VEECCommonCheckListMethod.cshtml")
+
+@*<link href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" />*@
+@*<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+@Scripts.Render("~/bundles/jqueryval")
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+        $("#VisitHeader").html($("#jobHeader").html())
+
+        //$("#checkListTemplate_SolarCompanyId").val('@ProjectSession.SolarCompanyId');
+
+        ShowHideCompletedDate(1);
+
+       
+
+        $(".switch").on("click", function (e) {
+            e.stopImmediatePropagation();
+        });
+
+       
+
+        $("#jobVisitDetail").find('.panel').each(function () {
+            ShowHideVisitNotes($(this).find("#jobNotesUL"), false);
+
+            $(this).find("#viewMoreNotes").click(function (e) {
+                if ($(this).attr('isShowMore') == '0') {
+                    ShowHideVisitNotes($(this).parent().find('#jobNotesUL'), true);
+                    $(this).attr('isShowMore', '1');
+                    $(this).text('Show Less Notes');
+                }
+                else {
+                    ShowHideVisitNotes($(this).parent().find('#jobNotesUL'), false);
+                    $(this).attr('isShowMore', '0');
+                    $(this).text('Show More Notes');
+                }
+                e.preventDefault();
+            });
+        });
+
+
+        Array.prototype.pushArray = function () {
+            var toPush = this.concat.apply([], arguments);
+            for (var i = 0, len = toPush.length; i < len; ++i) {
+                this.push(toPush[i]);
+            }
+        };
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        
+
+    });
+
+    //function OpenCheckListItemPopup(templateId, isTemplateChange) {
+    //    CommonOpenCheckListItemPopup(templateId, false, $("#JobSchedulingID").val(), isTemplateChange);
+    //}
+
+    function ShowHideVisitNotes(objUL, isShowMore) {
+        if (isShowMore == false) {
+            objUL.find('li').each(function () {
+                if ($(this).attr('number') == 1 || $(this).attr('number') == 2)
+                    $(this).show();
+                else
+                    $(this).hide();
+            });
+        }
+        else {
+            objUL.find('li').each(function () {
+                $(this).show();
+                $(".mCustomScrollbar").mCustomScrollbar();
+            });
+        }
+    }
+
+    function addTemplate() {
+        
+        if ($("#addVEECTemplateForm").valid()) {
+            CommonAddTemplate('@Model.IsCheckListView.ToString().ToLower()');
+
+            var data = JSON.stringify($('#addVEECTemplateForm').serializeToJson());
+            var id = $("#veecCheckListTemplate_VEECCheckListTemplateId").val();
+            var copyTemplateId = $("#veecCheckListTemplate_CopyOfCheckListTemplateId").val();
+
+            $.ajax(
+               {
+                   url: '@Url.Action("AddTemplate", "CheckListTemplate")',
+                   dataType: 'json',
+                   contentType: 'application/json; charset=utf-8',
+                   type: 'post',
+                   data: data,
+                   success: function (response) {
+                       if (response.id && response.id > 0) {
+                           $('#popupAddTemplate').modal('toggle');
+                           $(".datatableTemplateList").dataTable().fnDraw();
+
+                           if (copyTemplateId) {
+                               OpenCheckListItemPopup(response.templateEncodedId);
+                           }
+
+                           if (id > 0)
+                               showSuccessMessage("CheckList template has been updated successfully.");
+                           else
+                               showSuccessMessage("CheckList template has been added successfully.");
+                       }
+                       else {
+                           showErrorMessageAddTemplate(response.error);
+                       }
+                   },
+                   error: function () {
+                       if (id > 0)
+                           showErrorMessageAddTemplate("CheckList template has not been updated.");
+                       else
+                           showErrorMessageAddTemplate("CheckList template has not been added.");
+                   }
+               });
+        }
+    }
+
+    //function clearTemplate() {
+    //    $("#checkListTemplate_CheckListTemplateName").val('');
+    //    $("#checkListTemplate_IsDefault").prop("checked", false);
+    //}
+
+    function OpenaAddTemplate(templateId, itemId) {
+        if (templateId == '') {
+            var itemCount = $("#chkListOfScheduling").find(".checklist").find('li').length;
+            if (itemCount == 0) {
+                alert('Please add checklist item first.');
+                return false;
+            }
+        }
+        CommonOpenaAddTemplate(templateId, itemId);
+    }
+
+    function ResponseSaveScheduleOnDropAndInsertEdit(response, responseID, responseData, isDrop) {
+
+        //console.log("3 = " + new Date());
+        
+        var ret = false;
+        if (responseID > 0) {
+            $("#loading-image").show();
+            message = "Job schedule has been saved successfully."
+
+            $.ajax(
+               {
+                   url: '@Url.Action("ReloadSectionOnVisitSave", "VEEC")',
+                   dataType: 'json',
+                   data: { id: '@Model.VisitVeecId', isCheckListView: true, isReloadGridView: true, solarCompanyId: $("#BasicDetails_SolarCompanyId").val() },
+                   contentType: 'application/json; charset=utf-8',
+                   type: 'get',
+                   async: false,
+                   success: function (response) {
+
+                       if (response != null) {
+                           
+                           visitCheckListItemIds = [];
+
+                           HideInstaller();
+
+                           $("#notification").modal('hide');
+                           $("#popUpVeecDetail").modal('hide');
+
+                           $("#divvisitgridview").empty();
+                           $("#divvisitgridview").html(response.visitPartialView);
+                           $("#VisitHeader").html($("#jobHeader").html());
+
+                           //$('.reloadCustomJobField').empty();
+                           //$('.reloadCustomJobField').append(response.customFieldView);
+
+                           $('#veecCheckListPhoto').empty();
+                           $('#veecCheckListPhoto').append(response.photoView);
+
+                           //$('#checkListItemForTrade').html(response.checkListView).promise().done(function () {
+                           //    callbackCheckList();
+                           //});
+
+                           $("#loading-image").hide();
+
+                       }
+                       else {
+                       }
+                   },
+                   error: function () {
+                   }
+               });
+
+            @*$('#divVisitGridView').load('@Url.Action("JobSchedulingDetail","JobScheduling")?id=' + '@Model.VisitJobId' + '&isCheckListView=' + "true" + '&isReloadGridView=' + "true", function () {
+                $("#loading-image").hide();
+            });*@
+
+            @*$.get('@Url.Action("ReloadCustomFields", "job")?jobId=' + '@Model.JobID', function (data) {
+                $('#reloadCustomJobField').empty();
+                $('#reloadCustomJobField').append(data);
+                DistinctCustomField();
+            });
+
+            visitCheckListItemIds = [];
+
+            ReloadJobPhotoSection(jobId);
+
+            HideInstaller();
+
+            $('#checkListItemForTrade').load(actionCheckListItemForTrade, callbackCheckList);*@
+
+            showSuccessMessageJobVisit(message);
+        }
+        else if (parseInt(response) == -1) {
+            $("#notification").modal();
+        }
+        else if (parseInt(responseID) == 0) {
+            message = responseData;
+            showErrorMessageSchedulingPopup(message);
+            $("#notification").modal('hide');
+        }
+        else {
+            message = "Job Schedule has not been saved."
+            showErrorMessageSchedulingPopup(message);
+            $("#notification").modal('hide');
+        }
+        return ret;
+    }
+
+    function showErrorMessageSchedulingPopup(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForPopUp").html(closeButton + message);
+        
+        $("#errorMsgRegionForPopUp").show();
+    }
+
+    function showErrorMessageCalendar(message) {
+        showErrorMessageJobVisit(message);
+    }
+
+    function showJobSchedulingDetail(jobSchedulingID, e) {
+        e.preventDefault();
+        $(".visitPopupMsg").hide();
+        $("#loading-image").show();
+        setTimeout(function () {
+            FillJobSchedulingDetail(jobSchedulingID);
+            GenerateRandomNumber();
+            visitCheckListItemIds = [];
+            isVisitCheckListTemplateChange = false;
+        }, 500);
+
+    }
+
+    function DeleteJobScheduling(jobSchedulingID, userId, e) {
+        e.preventDefault();
+        DeleteJobSchedulingDetail(jobSchedulingID, userId, '@Model.VeecID');
+    }
+
+    function ResponseShowJobSchedulingDetail(response) {
+        var jobID = '@Model.VeecID';
+        $("#VeecID").val(jobID);
+        $("#VeecID").attr("disabled", "disabled");
+    }
+
+    function ResponseDelete(responseID, jobSchedulingID) {
+        if (responseID && responseID > 0) {
+            var strEmailConfigureMsg = '';
+
+            //Email configuration not required
+            if ('@ProjectSession.IsUserEmailAccountConfigured' == 'False') {
+                strEmailConfigureMsg = '(Can not send mail because email account is not configured)';
+            }
+
+            message = "Job schedule has been deleted successfully. " + strEmailConfigureMsg;
+
+            $("#jobVisitDetail").find('[data-panelid=' + jobSchedulingID + ']').remove();
+
+            var span = '<span class="deleteInfo" title="Visit item has been deleted">&nbsp;</span>'
+
+            $("#divVisitList").find('[data-jobSchedulingId=' + jobSchedulingID + ']').find('.visitParent').addClass('deleteJobVisit').prepend(span);
+            $("#divVisitList").find('[data-jobSchedulingId=' + jobSchedulingID + ']').find('.visitParent').find('.submission').remove();
+            MakeDefaultFolderAsDefaultSubmission();
+            @*$('#divSchedulingEdit').load('@Url.Action("JobSchedulingDetail","JobScheduling")?id=' + '@Model.VisitJobId' + '&isCheckListView=' + "true");*@
+
+            @*ReloadJobPhotoSection('@Model.JobID', jobSchedulingID);*@
+
+            //$('#checkListItemForTrade').load(actionCheckListItemForTrade, callbackCheckList);
+            ReloadSTCJobScreen(jobID);
+
+            showSuccessMessageJobVisit(message);
+            if ($('#jobVisitDetail').find('.panel').length < 1) {
+                $('.installer-text').css('display', '');
+                $('.schedule-an-installer').css('display', '');
+            }
+
+        }
+        else {
+            message = "Job schedule has not been deleted.";
+            showErrorMessageJobVisit(message);
+        }
+    }
+
+    function ReloadJobPhotoSection(jobId, jobSchedulingID) {
+        $("#loading-image").show();
+        setTimeout(function () {
+            $.get('@Url.Action("ReloadJobPhoto", "job")?jobId=' + jobId, function (data) {
+                $('#loadNewJobPhoto').empty();
+                $('#loadNewJobPhoto').append(data);
+            });
+        }, 500);
+
+
+    }
+
+    function MakeVisitAsDefaultSubmission(veecId, veecSchedulingId, isDefault) {
+        
+        $.ajax(
+           {
+               url: '@Url.Action("MakeVisitAsDefaultSubmission", "VeecScheduling")',
+               dataType: 'json',
+               contentType: 'application/json; charset=utf-8',
+               type: 'get',
+               data: { veecId: veecId, veecSchedulingId: veecSchedulingId, isDefault: isDefault },
+               success: function (response) {
+                   if (response.status) {
+                       
+                       if (isDefault == true) {
+                           $(".schedule-option li").find('#visitDefaultSubmission').each(function () {
+                               if ($(this).attr('veecSchedulingId') != veecSchedulingId) {
+                                   $(this).prop('checked', false);
+                                   var removeDefaultSubfromPhoto = $("#divVisitList").find('[data-veecSchedulingId=' + $(this).attr('veecSchedulingId') + ']').find('.visitParent').find('.submission');
+                                   if (removeDefaultSubfromPhoto) {
+                                       removeDefaultSubfromPhoto.remove();
+                                   }
+                               }
+                               else {
+                                   var defaultSpan = "<span class=submission>STC Submission <i class='sprite-img submission-icon'></i></span>";
+                                   $("#divVisitList").find('[data-veecSchedulingId=' + $(this).attr('veecSchedulingId') + ']').find('.visitParent').prepend(defaultSpan);
+                               }
+                           });
+                           $("#divVisitList").find("#pnlMainDefault").find('.visitParent').find('.submission').remove();
+                           showSuccessMessageJobVisit("Visit has been marked as default successfully.");
+                       }
+                       else {
+                           $("#divVisitList").find('[data-veecSchedulingId=' + veecSchedulingId + ']').find('.visitParent').find('.submission').remove();
+                           showSuccessMessageJobVisit("Visit has been re-Marked as default successfully.");
+                       }
+
+                       MakeDefaultFolderAsDefaultSubmission();
+
+                       //$('#checkListItemForTrade').load(actionCheckListItemForTrade, callbackCheckList);
+                       //ReloadSTCVeecScreen(veecId);
+
+                       //  ReloadJobPhotoSection(jobId);
+                   }
+                   else {
+                       if (response.error.toLowerCase() == 'sessiontimeout')
+                           window.location.href = '@Url.Action("Logout", "Account")';
+                       if (response.error) {
+                           showErrorMessageJobVisit(response.error);
+                       }
+                       else {
+                           if (isDefault == true)
+                               showErrorMessageJobVisit("Visit has not been marked as default successfully.");
+                           else
+                               showErrorMessageJobVisit("Visit has not been re-Marked as default successfully.");
+                       }
+                   }
+               },
+               error: function () {
+
+                   if (isDefault == true)
+                       showErrorMessageJobVisit("Visit has not been marked as default.");
+                   else
+                       showErrorMessageJobVisit("Visit has not been re-Marked as default.");
+               }
+           });
+    }
+
+    function ChangeVisitStatus(veecSchedulingId, visitStatus, objSwitch) {
+
+        $.ajax(
+          {
+              url: '@Url.Action("ChangeVisitStatus", "VeecScheduling")',
+              dataType: 'json',
+              contentType: 'application/json; charset=utf-8',
+              type: 'get',
+              data: { veecSchedulingId: veecSchedulingId, visitStatus: visitStatus },
+                success: function (response) {
+                  if (response.status) {
+                      @*$('#divSchedulingEdit').load('@Url.Action("JobSchedulingDetail","JobScheduling")?id=' + '@Model.VisitJobId' + '&isCheckListView=' + "true");*@
+
+                      objSwitch.attr('visitStatus', visitStatus);
+                      objSwitch.closest('.schedule-heading').next('div').find('.visit-completed').attr('status', visitStatus);
+                      ShowHideCompletedDate(0, response.completedDate, veecSchedulingId);
+                      showSuccessMessageJobVisit("Visit status has been changed successfully.");
+                  }
+                  else {
+                      if (response.error.toLowerCase() == 'sessiontimeout')
+                          window.location.href = '@Url.Action("Logout", "Account")';
+                      if (response.error) {
+                          showErrorMessageJobVisit(response.error);
+                      }
+                      else {
+                          showErrorMessageJobVisit("Visit status has not been changed.");
+                      }
+                  }
+              },
+              error: function () {
+                  showErrorMessageJobVisit("Visit status has not been changed.");
+              }
+          });
+    }
+
+    function PopulateSignature(jobId, jobScedulingId, e) {
+        e.preventDefault();
+        $("#jobDocumentPopulate").empty();
+        $("#hdnJobSchedulingId").val('');
+
+        $.ajax(
+         {
+             url: '@Url.Action("GetCheckListDocument", "Job")',
+             dataType: 'json',
+             contentType: 'application/json; charset=utf-8',
+             type: 'get',
+             data: { jobId: jobId },
+             success: function (response) {
+                 if (response.length > 0) {
+                     for (var i = 0; i < response.length; i++) {
+
+                         if (response[i].FileName.substr((response[i].FileName.lastIndexOf('.') + 1)).toString().toLowerCase() == "pdf") {
+                             //var checkbox = '<li><input type=checkbox class="checkbox" jobDocumentId=' + response[i].JobDocumentId + ' jobId=' + response[i].JobId + ' stage=' + response[i].Stage + ' name=' + response[i].Name + ' />' + response[i].Name + '</li>';
+                             var checkbox = '<li><input type=checkbox class="checkbox" jobDocumentId=' + response[i].JobDocumentId + ' jobId=' + response[i].JobId + ' DownloadURLPath=' + response[i].DownloadURLPath + ' name=' + response[i].FileName + ' />' + response[i].FileName + '</li>';
+                             $("#jobDocumentPopulate").append(checkbox);
+                         }
+                     }
+                     $("#hdnJobSchedulingId").val(jobScedulingId);
+                     $("#popupboxPopulateSignature").modal({ backdrop: 'static', keyboard: false });
+                 }
+                 else {
+                     alert('This job has not any document');
+                 }
+             },
+             error: function () {
+                 showErrorMessageJobVisit("Error while populating signature to documents");
+             }
+         });
+    }
+
+    function SaveSignatureToDocument() {
+        var jobDocuments = [];
+        $("#jobDocumentPopulate").find('input[type=checkbox]').each(function () {
+            if ($(this).is(':checked')) {
+                //jobDocuments.push({ JobId: $(this).attr('jobId'), Stage: $(this).attr('stage'), JobDocumentId: $(this).attr('jobDocumentId'), Name: $(this).attr('name') });
+                jobDocuments.push({ JobId: $(this).attr('jobId'), JobDocumentId: $(this).attr('jobDocumentId'), DownloadURLPath: $(this).attr('DownloadURLPath') });
+            }
+        });
+        var jobDocumentIds = JSON.stringify(jobDocuments);
+        var jobSchedulingId = $("#hdnJobSchedulingId").val();
+
+        $.ajax(
+         {
+             url: '@Url.Action("SaveSignatureToDocument", "Job")',
+             dataType: 'json',
+             contentType: 'application/json; charset=utf-8',
+             type: 'post',
+             data: JSON.stringify({ 'documentIds': jobDocumentIds, 'jobSchedulingId': jobSchedulingId }),
+             success: function (response) {
+                 if (response.status) {
+                     $('#popupboxPopulateSignature').modal('toggle');
+                     showSuccessMessageJobVisit("Visit signature has been populated successfully.");
+                 }
+                 else {
+                     if (response.error)
+                         showErrorMessageJobVisit("Visit signature has not been populated.");
+                     else
+                         showErrorMessageJobVisit(response.error);
+                 }
+             },
+             error: function () {
+                 showErrorMessageJobVisit("Visit signature has not been populated.");
+             }
+         });
+    }
+
+    function ClearSignatureToDocument() {
+        $("#jobDocumentPopulate").find('input[type=checkbox]').each(function () {
+            $(this).prop('checked', false);
+        });
+    }
+
+    function ViewVisitSignature(jobSchedulingId, e) {
+        e.preventDefault();
+        $.ajax(
+         {
+             url: '@Url.Action("ViewVisitSignature", "Job")',
+             dataType: 'json',
+             contentType: 'application/json; charset=utf-8',
+             type: 'get',
+             data: { jobSchedulingId: jobSchedulingId },
+             success: function (response) {
+                 if (response.status) {
+                     for (var i = 0; i < response.signatures.length; i++) {
+                         var path = '@ProjectSession.UploadedDocumentPath' + response.signatures[i].Path;
+                         if (response.signatures[i].SignatureTypeId == '@Convert.ToInt32(FormBot.Helper.SystemEnums.TypeOfSignature.Designer)') {
+                             $("#imgDesignerSignature").attr('src', path);
+                         }
+                         if (response.signatures[i].SignatureTypeId == '@Convert.ToInt32(FormBot.Helper.SystemEnums.TypeOfSignature.Electrician)') {
+                             $("#imgElectricianSignature").attr('src', path);
+                         }
+                         if (response.signatures[i].SignatureTypeId == '@Convert.ToInt32(FormBot.Helper.SystemEnums.TypeOfSignature.Home_Owner)') {
+                             $("#imgOwnerSignature").attr('src', path);
+                         }
+                         if (response.signatures[i].SignatureTypeId == '@Convert.ToInt32(FormBot.Helper.SystemEnums.TypeOfSignature.Installer)') {
+                             $("#imgInstallerSignature").attr('src', path);
+                         }
+                         if (response.signatures[i].SignatureTypeId == '@Convert.ToInt32(FormBot.Helper.SystemEnums.TypeOfSignature.Other)') {
+                             $("#imgOtherSignature").attr('src', path);
+                         }
+                     }
+                     $("#popupboxViewSignature").modal({ backdrop: 'static', keyboard: false });
+                 }
+                 else {
+                 }
+             },
+             error: function () {
+             }
+         });
+    }
+
+    function ShowHideCompletedDate(isFirstTimeLoad, completedDate, jobSchedulingId) {
+        $(".visit-completed").each(function () {
+            var status = $(this).attr('status');
+            if (status == 1) {
+                $(this).find('#openStatus').show();
+                $(this).find('#completedStatus').hide();
+                $(this).find('#displayCompletedDate').hide();
+            }
+            else {
+                $(this).find('#openStatus').hide();
+                $(this).find('#completedStatus').show();
+                $(this).find('#displayCompletedDate').show();
+                if (isFirstTimeLoad == 0 && jobSchedulingId == $(this).attr('id')) {
+                    $(this).find('#displayCompletedDate').find('span').html(completedDate);
+                }
+            }
+        });
+    }
+
+    function GenerateRandomNumber() {
+        $.ajax(
+                 {
+                     url: '@Url.Action("GenerateRandomNumber", "JobScheduling")',
+                     dataType: 'json',
+                     contentType: 'application/json; charset=utf-8',
+                     type: 'get',
+                     async: true,
+                     success: function (response) {
+                         if (response.status) {
+                             var number = response.randomNumber;
+                             $("#TempJobSchedulingId").val(number);
+                         }
+                         else {
+                         }
+                     },
+                     error: function () {
+                     }
+                 });
+    }
+
+    function addVisit() {
+        
+        $(".visitPopupMsg").hide();
+        $("#VeecSchedulingID").val(0);
+        $("#UserId").val('');
+
+        $("#popUpVeecDetail").modal({ backdrop: 'static', keyboard: false });
+        //$('#popUpVeecDetail').modal('hide');
+        $("#popUpVeecDetail").find('input[type=text]').each(function () {
+            $(this).val('');
+            $(this).attr('class', 'form-control valid');
+        });
+        $("#popUpVeecDetail").find('.field-validation-error').attr('class', 'field-validation-valid');
+        $("#popUpVeecDetail").find('Select').each(function () {
+
+            $(this).find('option:first').attr('selected', 'selected');
+        });
+
+        $("#popUpVeecDetail").find('textarea').each(function () {
+            $(this).val('');
+        });
+        var jobID = '@Model.VeecID';
+        $("#VeecID").val(jobID);
+        $("#VeecID").attr("disabled", "disabled");
+
+        $("#popUpVeecDetail").find("#Label").val($("#BasicDetails_Title").val());
+        $("#popUpVeecDetail").find("#Detail").val($("#BasicDetails_Description").val());
+
+        //OpenCheckListItemPopup('@Model.DefaultVEECTemplateId');
+
+        GenerateRandomNumber();
+        visitCheckListItemIds = [];
+        isVisitCheckListTemplateChange = false;
+        TempCheckListTemplateItemAdd('@Model.DefaultVEECTemplateId', true, $("#VeecID").val());
+
+    }
+
+    if ($('#btnAssignInstaller').length > 0) {
+        $('#btnAssignInstaller').click(function (e) {
+            e.preventDefault();
+          //  addVisit();
+        });
+    }
+
+    HideInstaller();
+
+    function HideInstaller() {
+        if ($('[name="JobSchedule"]').length > 0) {
+            $('#btnAssignInstaller').css('display', 'none');
+            $('.installer-text').css('display', 'none');
+            $('.schedule-an-installer').css('display', 'none');
+        }
+    }
+
+
+
+    function showErrorMessageJobVisit(message) {
+        $(".alert").hide();
+        $("#successMsgRegionJobVisit").hide();
+        $("#errorMsgRegionJobVisit").html(closeButton + message);
+        $("#errorMsgRegionJobVisit").show();
+    }
+    function showSuccessMessageJobVisit(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionJobVisit").hide();
+        $("#successMsgRegionJobVisit").html(closeButton + message);
+        $("#successMsgRegionJobVisit").show();
+    }
+
+</script>

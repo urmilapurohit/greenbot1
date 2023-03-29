@@ -1,0 +1,1235 @@
+﻿@model FormBot.Entity.User
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "SCA";
+}
+@{
+    bool isView = false, isDelete = false, isSCAComplianceChek = false; bool isAllScaJobView = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.SCAView.GetHashCode()) { isView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SCADelete.GetHashCode()) { isDelete = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.SCAComplianceChek.GetHashCode()) { isSCAComplianceChek = true; }
+        });
+    }
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+}
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid">
+    <div class="title">
+        <h1>Solar Companies</h1>
+        @if (Model.UserTypeID == 2)
+        {
+            <input type="button" id="btnAssignRam" value="Assign RAM" class="primary pull-right assign_ic" style="" onclick="AssignSCtoRAM()">
+        }
+        <input type="button" id="btnSendMail" value="Send Mail" class="primary pull-right mail_ic" data-toggle="modal" data-target="" data-backdrop="static" data-keyboard="false" onclick="SendMail();" />
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <form class="form-block" style="margin-top:10px;">
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Name:</label>
+                <input type="text" id="txtName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">UserName:</label>
+                <input type="text" id="txtUserName" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Email:</label>
+                <input type="text" id="txtEmail" class="form-control" maxlength="256" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Company Name:</label>
+                <input type="text" id="txtCompanyName" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Company ABN:</label>
+                <input type="text" id="txtCompanyabn" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Reseller:</label>
+                    @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                </div>
+            </div>
+        }
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.RAMId, new { @class = "control-label" })
+                    @Html.HiddenFor(m => m.RAMId)
+                    <input type="hidden" id="hdnRAMID" />
+                    <input type="text" id="searchRAM" name="searchRAM" class="form-control" maxlength="50" />
+                </div>
+            </div>
+        }
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Status:</label>
+                    @Html.DropDownList("UserStatus", null, "Select", new { id = "UserStatusId", @class = "form-control" })
+                </div>
+            </div>
+        }
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">State:</label>
+                    <input type="text" id="txtAddressState" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+            </div>
+        }
+
+        @if (Model.UserTypeID == 7 || Model.UserTypeID == 6)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Status:</label>
+                    @Html.DropDownList("ElectricianStatus", null, "Select", new { id = "ElectricianStatusId", @class = "form-control" })
+                </div>
+            </div>
+        }
+
+        @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 5 || Model.UserTypeID == 3)
+        {
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label class="control-label">Is Allow SPV:</label>
+                    @Html.DropDownList("IsAllowSPV", new List<SelectListItem>
+                                        {
+                                           new SelectListItem{ Text="All"},
+                                           new SelectListItem{ Text="Yes", Value = "1" },
+                                           new SelectListItem{ Text="No", Value = "0" },
+                                        }, new { @id = "IsAllowSPV", @class = "form-control" }
+                               )
+                </div>
+            </div>
+        }
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Role:</label>
+                @Html.DropDownListFor(model => model.RoleID, new List<SelectListItem>(), new { id = "RoleID", @class = "form-control" })
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Mobile/Phone:</label>
+                <input type="text" id="txtMobile" class="form-control" maxlength="50" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4 col-lg-3" style="margin-bottom: 18px;">
+            <label class="control-label">IsSaasUser:</label>
+            <select class="form-control valid" id="IsSaasUser" name="IsSaasUser">
+                <option value="All">All</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchUsers();">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    </form>
+    
+    <div class="clearfix">
+        <div class="pull-right">
+            @if (Model.UserTypeID == 1)
+            {
+                <div class="form-group m-b-0 pull-left">
+                    <input type="button" id="btnRestore" value="Restore User" class="primary pull-right">
+                </div>
+            }
+            @if (Model.UserTypeID == 1 && (ProjectSession.LoggedInUserId == 340 || ProjectSession.LoggedInUserId == 144))
+            {
+                <div class="form-group m-b-0 pull-left">
+                    <input type="button" id="btnMakeSCARegisteredWithGST" value="Make SCA Registered With GST" class="primary pull-right" onclick="MakeSCARegisteredWithGST($('#ResellerId').val())">
+                </div>
+            }
+            @if (Model.UserTypeID == 1)
+            {
+                <div class="form-group m-b-0 pull-left">
+                    <input type="button" id="btnExportExcelSCA" value="Export Excel" class="primary pull-right exporth_ic" onclick="ExportExcelSCA()">
+                </div>
+            }
+                <div class="form-group m-b-0 pull-left">
+                    <div class="dropdown">
+                        <button class="btn primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Allowed SPV
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                            <li onclick="ChangeAllowedSPV(1)"><a href="#">Yes</a></li>
+                            <li onclick="ChangeAllowedSPV(0)"><a href="#">No</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <div class="grid_topbar col-xs-12">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="background-image:none !important;"><input type="checkbox" id="chkAll" name="select_all"></th>
+                            <th><span>@Html.DisplayName("Name")</span></th>
+                            <th><span>@Html.DisplayName("UserName ")</span></th>
+                            <th><span>@Html.DisplayName("Email ") </span></th>
+                            <th><span>@Html.DisplayName("Mobile ")</span></th>
+                            <th><span>@Html.DisplayName("Phone ")</span></th>
+                            <th><span>@Html.DisplayName("Company Name")</span></th>
+                            <th><span>@Html.DisplayName("Account Manager")</span></th>
+                            <th><span>@Html.DisplayName("Address")</span></th>
+                            <th><span>@Html.DisplayName("State ")</span></th>
+                            <th><span>@Html.DisplayName("Reseller")</span></th>
+                            <th><span>@Html.DisplayName("Created Date")</span></th>
+                            <th><span>@Html.DisplayName("Modified Date")</span></th>
+                            <th><span>@Html.DisplayName("Last Login Date")</span></th>
+                            <th><span>@Html.DisplayName("Status ")</span></th>
+                            <th><span>@Html.DisplayName("Role ")</span></th>
+                            <th><span>@Html.DisplayName("Allowed SPV ")</span></th>
+                            <th><span>@Html.DisplayName("IsSaasUser")</span></th>
+                            <th style="max-width:100px;" class="action actionth">@Html.DisplayName("Action")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+@*style="height:450px;width:900px;"*@
+@if (Model.UserTypeID == 2)
+{
+    <div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog  modal-lg" role="document">
+            <div class="modal-content" style="margin:50px;">
+                <div class="modal-header ">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Assign Solar Company to RAM</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-border">
+                        @Html.Action("_Create", "RAMSolarCompany")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<div class="modal fade newemail-modal" id="emailbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button aria-label="Close" data-dismiss="modal" class="close newEmailClose" type="button" style="margin-right:9px !important;margin-top:5px !important;">
+                    <img alt="" src="@Url.Content("~/images/close-btn.png")">
+                </button>
+                <div class="email-hed"> <a href=" #" class="admin-id"> <img alt="" src="@Url.Content("~/images/admin-id-icon.png")" class="mail-icon"><span id="emailBoxEmailId">Admin@tatvasoft.com</span>  </a> </div>
+            </div>
+            <div class="form-border">
+                <ul class="navbar-nav">
+                    <!--<li class="active"><a href="#" title="Back to List" data-dismiss="modal" aria-label="Close"> <img class="icon" src="images/back-list.png" alt="Back to List">Back to List</a></li>-->
+                    <li class="active" id="SendMail"><a href="javascript:void(0)" title="Send"> <img class="icon" src="@Url.Content("~/images/send-icon.png")" alt="Send">Send</a></li>
+                    <li class="active"> <a href="javascript:void(0)" title="Save" id="SaveMail"><img class="icon" src="@Url.Content("~/images/save-icon.png")" alt="Save">Save</a> </li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="guid" id="guid" value="" />
+                <!-- menu End -->
+                <div class="mail-box-input">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">To</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="ToMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Cc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="CcMail">
+                                <!--<div class="text-right"><a class="show-bcc" href="#" title="">Show BCc</a></div>-->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Bcc</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="BccMail">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Subject</label>
+                            <div class="col-sm-11">
+                                <input type="text" class="form-control" id="SubjectMail" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Body</label>
+                            <div class="col-sm-11">
+                                <div id="editor">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Selected Files :</label>
+                            <div class="col-sm-11">
+                                <table class="table table-bordered" id="tblSelectedFile">
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Attach File :</label>
+                            <div class="col-sm-11">
+                                <table class="uf">
+                                    <tr>
+                                        <td><input id="uploadFile" placeholder="Choose File" class="form-control" disabled="disabled" /></td>
+                                        <td width="70" style="vertical-align:top;">
+                                            <div class="fileUpload primary">
+                                                <span>Upload</span>
+                                                <input id="uploadBtn" type="file" class="upload" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <script type="text/javascript">
+                                    document.getElementById("uploadBtn").onchange = function () {
+                                        //document.getElementById("uploadFile").value = this.value;
+                                        $("#uploadFile").val("");
+                                    };
+                                </script>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>*@
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript" src="~/Areas/Email/js/ckeditor/samples/js/sample.js"></script>
+    @*@Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        var isAllScaJobView = '@isAllScaJobView.ToString().ToLower()';
+        initSample();
+        var ramList = [];
+
+        $(document).ready(function () {
+            // Initialize select2
+            $("#ResellerId").select2();
+            $('#searchRAM').autocomplete({
+                minLength: 0,
+                source: function (request, response) {
+                    var data=[];
+                    $.each(ramList,function(key,value){
+                        if (value.text.toLowerCase().indexOf($("#searchRAM").val().toLowerCase()) > -1 ) {
+                            data.push({Title : value.text,id:value.value});
+                        }
+                    });
+
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title,id:item.id };
+                    }))
+                },
+                select: function (event, ui) {
+                    $("#hdnRAMID").val(ui.item.id); // save selected id to hidden input
+                }
+            }).on('focus', function() { $(this).keydown(); });
+
+            $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+                var re = new RegExp($.trim(this.term.toLowerCase()));
+                var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                    "</span>");
+                return $("<li style='font-size:14px;'></li>")
+                    .data("item.autocomplete", item)
+                    .append("<a>" + t + "</a>")
+                    .appendTo(ul);
+            };
+
+            $("#ResellerId").change(function(){
+                BindRAM();
+            });
+            //solarcompany usertype
+            getRole(4);
+
+            var chkCount=0;
+            var ajaxurl = @Model.UserTypeID !=6 ? '@Url.Action("GetUserList", "User")' : '@Url.Action("GetRequestingSCAforSSC", "User")';
+            SetParamsFromLocalStorage();
+            $("#txtName").focus();
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'Id',
+                            "orderable": false,
+                            "render": function (data, type, full, meta) {
+                                if($('#chkAll').prop('checked')==true){
+                                    return '<input type="checkbox" id="chk_' + full.Id + '" checked email="' + full.Email + '" scaid= "' + full.SolarCompanyId + '" rid= "' + full.ResellerID + '">';
+                                }
+                                else{
+                                    return '<input type="checkbox" id="chk_' + full.Id + '" email="' + full.Email + '" scaid= "' + full.SolarCompanyId + '" rid= "' + full.ResellerID + '">';
+                                }
+                            }
+                        },
+                        { 'data': 'Name' },
+                        { 'data': 'UserName' },
+                        { 'data': 'Email' },
+                        { 'data': 'Mobile' },
+                        { 'data': 'Phone' },
+                        { 'data': 'CompanyName' },
+                        { 'data': 'RAMName',
+                            visible: (@Model.UserTypeID == 1 || @Model.UserTypeID == 2 || @Model.UserTypeID == 3 || @Model.UserTypeID == 5) ? true : false
+                        },
+                        { 'data': 'Address',
+                            visible: (@Model.UserTypeID == 7 || @Model.UserTypeID ==6 || @Model.UserTypeID ==10 ) ? true : false,
+                        },
+                        { 'data': 'State'},
+                    { 'data': 'ResellerName',
+                        visible: @Model.UserTypeID==1?true:false
+                    },
+                    { 'data': 'strCreatedDate' },
+                    { 'data': 'strModifiedDate' },
+                    { 'data': 'strLastLogIn' },
+                    { 'data': 'Status',
+                        "render": function (data, type, full, meta) {
+                            if(@Model.UserTypeID==1 || @Model.UserTypeID==2 || @Model.UserTypeID==5)
+                            {
+                                if(full.Status==1){
+                                    return '<p>Pending</p>'
+                                }
+                                else if(full.Status==2){
+                                    return '<p>Approved</p>'
+                                }
+                                else if(full.Status==3){
+                                    return '<p>Rejected</p>'
+                                }
+                                else if(full.Status==4){
+                                    return '<p>Require More Paperwork</p>'
+                                }
+                                else{
+
+                                    return '';
+                                }
+                            }
+                            else
+                            {
+                                if(full.Status==1){
+                                    return '<p>Request Send</p>'
+                                }
+                                else if(full.Status==2){
+                                    return '<p>Request Accepted</p>'
+                                }
+                                else if(full.Status==3){
+                                    return '<p>Request Rejected</p>'
+                                }
+                                else{
+                                    return '';
+                                }
+                            }
+                        },
+                    },
+                    {
+                        'data': 'Role'
+                    },
+                    {
+                        'data': 'SCisAllowedSPV',
+                        "render": function (data, type, full, meta) {
+                            if (full.SCisAllowedSPV == true) {
+                                return '<p>Yes</p>'
+                            }
+                            else if (full.SCisAllowedSPV == false) {
+                                return '<p>No</p>'
+                            }
+                            else {
+                                return 'No';
+                            }
+                        }
+                    },
+                    {
+                        'data': 'IsSAASUser',
+                        "render": function (data, type, full, meta) {
+                            if (data) {
+                                return "Yes";
+                            }
+                            else {
+                                return "No"
+                            }
+                        }
+                    },
+                    {
+                        'data': 'Id',
+                        "render": function (data, type, full, meta) {
+                            var deleteButton = "";
+                            var acceptButton = "";
+                            var rejectButton = "";
+                            var viewButton = "";
+                            var title="";
+
+                            if(@Model.UserTypeID==1){
+                                imgdelete = 'background:url(../Images/delete-icon.png) no-repeat center; text-decoration:none;';
+                                var deleteHref = "javascript:D:DeleteUser('" + full.Id + "')";
+                                deleteButton = '&nbsp;&nbsp;'+ '<a href="' + deleteHref + '" class="action delete" style="' + imgdelete + '" title="Delete">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+                            if(@Model.UserTypeID!=7 && @Model.UserTypeID!=6 && @Model.UserTypeID!=10){
+                                title = ('@isSCAComplianceChek.ToString().ToLower()' == 'true')? 'Compliance Check' : 'View';
+                                imgview = 'background:url(../Images/view-icon.png) no-repeat center; text-decoration:none;';
+                                var viewHref = ("@Url.Action("ViewDetail", "User")" + "/" + full.Id);
+                                viewButton = '&nbsp;&nbsp;'+ '<a href="' + viewHref + '" class="action delete" style="' + imgview + '" title="'+title+'">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                            }
+
+                            if(@Model.UserTypeID==7 || @Model.UserTypeID==6 || @Model.UserTypeID==10){
+                                imgaccept = 'background:url(../Images/ic-accept.png) no-repeat center; text-decoration:none;';
+                                imgreject = 'background:url(../Images/ic-reject.png) no-repeat center; text-decoration:none;';
+
+                                if(full.Status==2){
+                                    var acceptHref = "javascript:void(0)";
+                                    acceptButton = '&nbsp;&nbsp;'+ '<a href="' + acceptHref + '" class="action delete disabled" style="' + imgaccept + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                }
+                                else{
+                                    var acceptHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.SolarCompanyId + "'" +","+true+ ")";
+                                    acceptButton = '&nbsp;&nbsp;'+ '<a href="' + acceptHref + '" class="action delete" style="' + imgaccept + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                }
+                                if(full.Status==3){
+                                    var rejectHref = "javascript:void(0)";
+                                    rejectButton = '&nbsp;&nbsp;'+ '<a href="' + rejectHref + '" class="action delete disabled" style="' + imgreject + '" title="Reject">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                }
+                                else{
+                                    var rejectHref = "javascript:AcceptRejectSolarCompanyRequest('" + full.SolarCompanyId + "'" +","+false+ ")";
+                                    rejectButton = '&nbsp;&nbsp;'+ '<a href="' + rejectHref + '" class="action delete" style="' + imgreject + '" title="Reject">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                }
+                            }
+
+                            return viewButton+ deleteButton + acceptButton + rejectButton;                                },
+
+                        "orderable": false
+                    },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function (settings, json) {
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                },
+                bServerSide: true,
+                sAjaxSource: ajaxurl,
+                "fnDrawCallback": function () {
+                    if($('#chkAll').prop('checked')==true){
+                        chkCount=$('#datatable >tbody >tr').length;
+                    }
+                    else{
+                        chkCount=0;
+                    }
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length >= 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> Solar Company(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> Solar Company(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+
+                },
+
+                "fnServerParams": function (aoData) {  //These are the extra parameters from my custom filters
+                    var SelectedUserTypeId ='';
+                    if(@Model.UserTypeID==1 || @Model.UserTypeID==2 || @Model.UserTypeID==5 ||@Model.UserTypeID==3){
+                        SelectedUserTypeId ='4';
+                    }
+                    if(@Model.UserTypeID==7 || @Model.UserTypeID==10){
+                        SelectedUserTypeId ='4,6';
+                    }
+                    aoData.push({ "name": "SelectedUserTypeId", "value": SelectedUserTypeId });
+                    aoData.push({ "name": "view", "value": 2 });
+                    aoData.push({ "name": "name", "value": $("#txtName").val() });
+                    aoData.push({ "name": "username", "value": $("#txtUserName").val() });
+                    aoData.push({ "name": "state", "value": $("#txtAddressState").val() });
+                    aoData.push({ "name": "email", "value": $("#txtEmail").val() });
+                    aoData.push({ "name": "companyname", "value": $("#txtCompanyName").val() });
+                    aoData.push({ "name": "companyabn", "value": $("#txtCompanyabn").val() });
+                    aoData.push({ "name": "isAllScaJobView", "value": isAllScaJobView });
+                    aoData.push({ "name": "isallowspv", "value": $("#IsAllowSPV").val() });
+                    aoData.push({ "name": "role", "value": localStorage.getItem('User_RoleID') });
+                    aoData.push({ "name": "mobile", "value": localStorage.getItem('User_Mobile') });
+
+                    if(@Model.UserTypeID == 1){
+                        aoData.push({ "name": "Reseller", "value": localStorage.getItem('SCA_ResellerId') });
+                    }
+                    if(@Model.UserTypeID == 1 || @Model.UserTypeID == 2){
+                        aoData.push({ "name": "RAM", "value": localStorage.getItem('SCA_RAMId') });
+                    }
+                    if(@Model.UserTypeID == 1 || @Model.UserTypeID == 2 || @Model.UserTypeID == 5){
+                        aoData.push({ "name": "status", "value": localStorage.getItem('SCA_UserStatusId') });
+                    }
+                    if(@Model.UserTypeID == 7 || @Model.UserTypeID == 6){
+                        aoData.push({ "name": "electricianstatus", "value": localStorage.getItem('SCA_ElectricianStatusId') });
+                    }
+                    aoData.push({ "name": "IsSaasUser", "value": document.getElementById("IsSaasUser").value });
+                }
+            });
+
+            var table = $('#datatable').DataTable();
+
+            $('#chkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                chkCount = this.checked ? $('#datatable >tbody >tr').length : 0;
+            });
+
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (this.checked) {
+                    chkCount++;
+                    if (chkCount == $('#datatable >tbody >tr').length) {
+                        $('#chkAll').prop('checked', this.checked)
+                    }
+                }
+                else{
+                    chkCount--;
+                    $('#chkAll').prop('checked', this.checked)
+                }
+            });
+
+            $('#btnRestore').click(function(){
+                window.location.href=document.location.origin+"/User/RestoreUser"
+            })
+
+        });
+
+        if('@Model.UserTypeID'==1){
+            FillDropDown('ResellerId', '@Url.Action("GetReseller", "Reseller")', localStorage.getItem('SCA_ResellerId'), true, BindRAM);
+        }
+        if('@Model.UserTypeID' == 2)
+        {
+            BindRAM();
+        }
+
+        function ResetSearchFilters() {
+            localStorage.setItem('SCA_Name','');
+            localStorage.setItem('SCA_UserName','');
+            localStorage.setItem('SCA_Email','');
+            localStorage.setItem('SCA_CompanyName','');
+            localStorage.setItem('SCA_CompanyABN', '');
+            localStorage.setItem('SCA_State', '');
+            if('@Model.UserTypeID'==1){
+                localStorage.setItem('SCA_ResellerId',0);
+                document.getElementById("ResellerId").selectedIndex = 0;
+                localStorage.setItem('SCA_RAMId',0);
+                $("#searchRAM").val('');
+                BindRAM();
+            }
+            if(@Model.UserTypeID == 1 || @Model.UserTypeID == 2 || @Model.UserTypeID == 5){
+                localStorage.setItem('SCA_UserStatusId',0);
+                document.getElementById("UserStatusId").selectedIndex = 0;
+            }
+            if(@Model.UserTypeID == 7 || @Model.UserTypeID == 6){
+                localStorage.setItem('SCA_ElectricianStatusId',0);
+                document.getElementById("ElectricianStatusId").selectedIndex = 0;
+            }
+            if('@Model.UserTypeID' == 2)
+            {
+                localStorage.setItem('SCA_RAMId',0);
+                $("#searchRAM").val('');
+            }
+            localStorage.setItem('User_RoleID', 0);
+            localStorage.setItem('User_Mobile', '');
+            //document.getElementById("IsAllowSPV").val("All");
+            document.getElementById("IsAllowSPV").selectedIndex = 0;
+            document.getElementById("RoleID").selectedIndex = 0;
+            $('#IsSaasUser').val('All');
+            SetParamsFromLocalStorage();
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function SearchUsers(){
+            localStorage.setItem('SCA_Name',$("#txtName").val());
+            localStorage.setItem('SCA_UserName', $("#txtUserName").val());
+            localStorage.setItem('SCA_State', $("#txtAddressState").val());
+            localStorage.setItem('SCA_Email',$("#txtEmail").val());
+            localStorage.setItem('SCA_CompanyName',$("#txtCompanyName").val());
+            localStorage.setItem('SCA_CompanyABN', $("#txtCompanyabn").val());
+            //localStorage.setItem('SCA_IsAllowSPV', $("#IsAllowSPV").val());
+            localStorage.setItem('User_RoleID', document.getElementById("RoleID").value);
+            localStorage.setItem('User_Mobile', $("#txtMobile").val());
+
+            if('@Model.UserTypeID'==1){
+                localStorage.setItem('SCA_ResellerId',document.getElementById("ResellerId").value);
+            }
+            if(@Model.UserTypeID == 1 || @Model.UserTypeID == 2 || @Model.UserTypeID == 5){
+                localStorage.setItem('SCA_UserStatusId',document.getElementById("UserStatusId").value);
+            }
+            if(@Model.UserTypeID == 7 || @Model.UserTypeID == 6){
+                localStorage.setItem('SCA_ElectricianStatusId',document.getElementById("ElectricianStatusId").value);
+            }
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID' == 2){
+                if($("#searchRAM").val() !=null && $("#searchRAM").val() !='')
+                    localStorage.setItem('SCA_RAMId',$("#hdnRAMID").val());
+                else
+                    localStorage.setItem('SCA_RAMId',0);
+            }
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function AssignSCtoRAM(){
+            $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+            setTimeout(function(){
+                $('#UserTypeId').focus();
+            },1000);
+        }
+
+        function ConvertToDate(data){
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+
+        function ExportExcelSCA() {
+            window.location.href = '@Url.Action("ExportSCA","User")' + '?name= ' + $("#txtName").val() + '&username=' + $("#txtUserName").val() + '&state=' + $("#txtAddressState").val() + '&companyname=' + $("#txtCompanyName").val() + '&email=' + $("#txtEmail").val() + '&companyabn=' + $("#txtCompanyabn").val() + '&status=' + localStorage.getItem('SCA_UserStatusId') + '&Reseller=' + localStorage.getItem('SCA_ResellerId') + '&RamId=' + localStorage.getItem('SCA_RAMId') + '&mobile=' + localStorage.getItem('User_Mobile');
+        }
+
+        function DeleteUser(userid){
+            var result = confirm("Are you sure you want to delete this record ?");
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("DeleteUser", "User")',
+                    type: "POST",
+                    async: false,
+                    data: JSON.stringify({ userId: userid }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data.success) {
+                            //Email configuration not required
+                            var strEmailConfigureMsg='';
+                            if('@ProjectSession.IsUserEmailAccountConfigured'=='False'){
+                                strEmailConfigureMsg='(Can not send mail to deleted user because email account is not configured)';
+                            }
+                            $(".alert").hide();
+                            $("#successMsgRegion").html(closeButton + "User deleted successfully. "+strEmailConfigureMsg);
+                            $("#successMsgRegion").show();
+                            $("#datatable").dataTable().fnDraw();
+                        }
+                    },
+                });
+            }
+        }
+
+        function AcceptRejectSolarCompanyRequest(solarcompanyid,acceptreject){
+            $.ajax({
+                url: '@Url.Action("AcceptRejectSolarCompanyRequest", "User")',
+                type: "POST",
+                async: false,
+                data: JSON.stringify({ solarcompanyId: solarcompanyid,status: acceptreject }),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data.success) {
+                        //Email configuration not required
+                        var strEmailConfigureMsg='';
+                        if('@ProjectSession.IsUserEmailAccountConfigured'=='False'){
+                            strEmailConfigureMsg='(Can not send mail to solar company because email account is not configured)';
+                        }
+
+                        $(".alert").hide();
+                        $("#successMsgRegion").html(closeButton + "Status changed successfully. "+strEmailConfigureMsg);
+                        $("#successMsgRegion").show();
+                        $("#datatable").dataTable().fnDraw();
+                    }
+                },
+            });
+        }
+
+        function SetParamsFromLocalStorage(){
+            $("#txtName").val(localStorage.getItem('SCA_Name'));
+            $("#txtUserName").val(localStorage.getItem('SCA_UserName'));
+            $("#txtAddressState").val(localStorage.getItem('SCA_State'));
+            $("#txtEmail").val(localStorage.getItem('SCA_Email'));
+            $("#txtCompanyName").val(localStorage.getItem('SCA_CompanyName'));
+            $("#txtCompanyabn").val(localStorage.getItem('SCA_CompanyABN'));
+            $("txtMobile").val(localStorage.getItem('User_Mobile'));
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==2 || '@Model.UserTypeID'==5){
+                if(localStorage.getItem('SCA_UserStatusId')=="0"){
+                    document.getElementById("UserStatusId").selectedIndex = 0;
+                }
+                else{
+                    document.getElementById("UserStatusId").value = localStorage.getItem('SCA_UserStatusId');
+                }
+            }
+            if('@Model.UserTypeID'==7 || '@Model.UserTypeID'==6 || '@Model.UserTypeID' == 10){
+                if(localStorage.getItem('SCA_UserStatusId')=="0"){
+                    document.getElementById("ElectricianStatusId").selectedIndex = 0;
+                }
+                else{
+                    document.getElementById("ElectricianStatusId").value = localStorage.getItem('SCA_ElectricianStatusId');
+                }
+            }
+        }
+
+        function BindRAM(){
+
+            var resellerID = 0;
+            if('@Model.UserTypeID' == 2)
+                resellerID = '@ProjectSession.ResellerId';
+            else
+                resellerID = $("#ResellerId").val();
+
+            $("#searchRAM").val("");
+            var IsRAMExist=false;
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetRAMByReseller", "RAMSolarCompany")',
+                dataType: 'json',
+                async: false,
+                data: { resellerId: resellerID },
+                success: function (ram) {
+                    ramList=[];
+                    $.each(ram, function (i, manager) {
+                        ramList.push({ value:manager.Value,text:manager.Text });
+                        if(IsRAMExist==false && manager.Value==localStorage.getItem('SCA_RAMId')){
+                            IsRAMExist=true;
+                        }
+                    });
+
+                    if(IsRAMExist){
+                        $('#hdnRAMID').val(localStorage.getItem('SCA_RAMId'));
+                    }
+                    //else{
+                    //    $('#hdnRAMID').val(ramList.length > 0 ? ramList[0].value : 0);
+                    //    localStorage.setItem('SCA_RAMId',$('#hdnRAMID').val());
+                    //}
+
+                    //if (localStorage.getItem('SCA_RAMId') == '') {
+                    //    $('#hdnRAMID').val(ramList.length > 0 ? ramList[0].value : 0);
+                    //    localStorage.setItem('SCA_RAMId',$('#hdnRAMID').val());
+                    //}
+
+                    $.each(ramList,function(key,value){
+                        if (value.value ==  localStorage.getItem('SCA_RAMId')) {
+                            $("#searchRAM").val(value.text);
+                            $('#hdnRAMID').val(localStorage.getItem('SCA_RAMId'));
+                        }
+                    });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve account manager.' + ex);
+                }
+            });
+            return false;
+        }
+
+        // send Email
+
+        function SendMail(){
+            var selectedUser=[];
+            $('#datatable tbody input[type="checkbox"]').each(function(){
+                if($(this).prop('checked')==true){
+                    selectedUser.push(($(this).attr('email')));
+                }
+            })
+            if(selectedUser==null || selectedUser.length==0){
+                alert("Please select any user.");
+            }
+            else if(selectedUser!=null && selectedUser.length>25){
+                alert("Please select Users upto 25.");
+            }
+            else if(selectedUser!=null && selectedUser.length > 0 && selectedUser.length < 25){
+                var result = confirm("Are you sure you want to send mail to selected users ?");
+                if (result) {
+                    $("#emailBoxEmailId").html('@ViewBag.email');
+                    //$("#ToMail").val(selectedUser.join(";"));
+                    $("#ToMail").val('@Model.ToEmailAddress');
+                    $("#BccMail").val(selectedUser.join(";"));
+                    $('#emailbox').modal('show');
+                    $("#guid").val(guid());
+                }
+            }
+        }
+        function CreateCommaSeparetedArray(element) {
+            var x = element;
+            x = x.replace(/,/g,";");
+            var emailList = x.trim().replace(/(^;)|(;$)/g, "").split(";");
+            emailList = cleanArray(emailList);
+            return emailList;
+        }
+
+        function cleanArray(actual) {
+            var newArray = new Array();
+            for (var i = 0; i < actual.length; i++) {
+                if (actual[i]) {
+                    newArray.push(actual[i]);
+                }
+            }
+            return newArray;
+        }
+
+        function validateForm(emailList,message,lengthExceedMessage) {
+            var flag = true;
+            var testing;
+            emailList.forEach(function(i,j){
+                var filter = /^([\w-\.]+)@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/
+                testing = i.trim();
+                if (filter.test(testing)) {
+                }
+                else {
+                    flag = false;
+                }
+            });
+            if (emailList.length == 0) {
+                flag = false;
+            }
+
+            if (flag == false) {
+                alert(message);
+            }else {
+                if (emailList.length > 25) {
+                    alert(lengthExceedMessage);
+                    flag = false;
+                }
+            }
+
+            return flag;
+        }
+
+        $("#ToMail,#CcMail,#BccMail").keypress(function (event) {
+            if (event.which == 44) {event.preventDefault();
+                $(this).val($(this).val() + ";");
+            }
+            if (event.which == 9) {alert('1');
+                $(this).val($(this).val().replace(",",";"));
+            }
+        });
+
+        $("#ToMail,#CcMail,#BccMail").blur(function (event) {
+            $(this).val($(this).val().replace(/,/g,";"));
+        });
+
+        $("#SendMail").click(function () {
+            var JsonRequestData = {
+                QueuedEmailId: "",
+                FromEmail: "",
+                ToEmail: "",
+                CC: "",
+                Bcc: "",
+                Subject: "",
+                Body: "",
+                Guid: "",
+                IsSent: "",
+                SentTries: "",
+                SentOn: "",
+                CreatedDate: "",
+                ModifiedDate: ""
+            };
+            var flag = true;
+            var toEmailArray,ccEmailArray,bccEmailArray;
+            if ($("#ToMail").val() == '') {
+                alert('You cannot leave "To" field blank');
+                flag = false;
+            }else {
+                toEmailArray = CreateCommaSeparetedArray($("#ToMail").val());
+                flag = validateForm(toEmailArray,'The specified email address for "To" is invalid.','Maximum 25 emails are allowed in "To" field.');
+            }
+            if ($("#CcMail").val() != "" && flag == true) {
+                ccEmailArray = CreateCommaSeparetedArray($("#CcMail").val());
+                flag = validateForm(ccEmailArray,'The specified email address for "Cc" is invalid.','Maximum 25 emails are allowed in "Cc" field.');
+            }
+            if ($("#BccMail").val() != "" && flag == true) {
+                bccEmailArray= CreateCommaSeparetedArray($("#BccMail").val());
+                flag = validateForm(bccEmailArray,'The specified email address for "Bcc" is invalid.','Maximum 25 emails are allowed in "Bcc" field.');
+            }
+            if (flag == true && $("#SubjectMail").val() == "") {
+                var flag = confirm("The subject field is empty. Do you wish to continue?");
+            }
+            if (flag) {
+                //return false;
+                var getUrl = '@Url.Action("SendMail", "Email", new { area = "Email" })';
+                var attachmentObject = [];
+                var selectedFiles = $("#tblSelectedFile tr");
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var tmp_name = $(selectedFiles[i]).data('tmpname');
+                    var filename = $(selectedFiles[i]).data('filename');
+                    attachmentObject.push({GeneratedName : tmp_name,FileName : filename});
+                }
+                var selectedFolder = $("#FolderStructure li.active");
+                var selectedMessage = -1;
+                if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                    var selectedMessage = $("#SelectedMessageId").val();
+                }
+                var toEmailString = toEmailArray.length > 0 ? toEmailArray.join(";") : "";
+                var ccEmailString = ccEmailArray != undefined ? ccEmailArray.join(";") : "";
+                var bccMailEmailString = bccEmailArray != undefined ? bccEmailArray.join(";") : "";
+                var inboxFolder = $(".foldersList li:first");
+                //var data = JSON.stringify({ "From": "", "To": toEmailString, "Cc": ccEmailString, "Bcc": bccMailEmailString, "Subject": $("#SubjectMail").val(), "Body": { "body": CKEDITOR.instances['editor'].getData() }, "Attachment": $("#uploadFile").val(), "IsSave": "false", "IsToSameAsFrom": "true","Attachments" :attachmentObject,SaveMailFolderId : inboxFolder.data('id'),eventType : 'send',selectedMessageid : selectedMessage });
+                var data = JSON.stringify({ "From": "", "To": toEmailString, "Cc": ccEmailString, "Bcc": bccMailEmailString, "Subject": $("#SubjectMail").val(), "Body": { "body": CKEDITOR.instances['editor'].getData() }, "Attachment": $("#uploadFile").val(), "IsSave": "false", "IsToSameAsFrom": "true", "Attachments": attachmentObject, SaveMailFolderId: inboxFolder.data('id'), eventType: 'send', selectedMessageid: selectedMessage });
+                JsonRequestData.ToEmail = toEmailString;
+                JsonRequestData.CC = ccEmailString;
+                JsonRequestData.Bcc = bccMailEmailString;
+                JsonRequestData.Subject = $("#SubjectMail").val();
+                JsonRequestData.Body = CKEDITOR.instances['editor'].getData();
+                JsonRequestData.Guid = $("#guid").val();
+                //$.ajax({
+                //    url: getUrl,
+                //    type: "POST",
+                //    dataType: "json",
+                //    data: data,
+                //    async: true,
+                //    processData: false,
+                //    cache: false,
+                //    contentType: 'application/json; charset=utf-8',
+                //    success: function (Data) {
+                //        if (Data.isSuccess == false) {
+                //            alert(Data.errorMessage);
+                //            return false;
+                //        }
+
+                //        if (selectedFolder.data("type") == "3" && isEditClickedDraft == true) {
+                //            isEditClickedDraft  = false;
+                //            $("#emailDisplay").hide();
+                //            $(".selectedMessage").remove();
+                //            SetDefaultMessageSelected();
+                //        }
+                //        $(".newEmailClose").click();
+                //    }
+                //});
+                 $.ajax({
+                    url: '@Url.Action("SendMail", "EmailManage", new { area = "QueuedEmail" })',
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify(JsonRequestData),
+                    async: true,
+                    processData: false,
+                    cache: false,
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (Data) {
+                        if (Data == "1") {
+                            CKEDITOR.instances['editor'].setData('');
+                            $('#emailbox').find('input:text').val('');
+                            $("#tblSelectedFile").html("");
+                            $(".newEmailClose").click();
+                        }
+                        else {
+                            alert("Mail is not sent.");
+                        }
+                    }
+                });
+            }
+        });
+
+        @*$("#uploadBtn").change(function(){
+            var fileInput = document.getElementById('uploadBtn');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("Upload", "Email", new {area = "Email" })');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var tmp_name = JSON.parse(xhr.response);
+                    var result = "<tr class='success' data-tmpname='"+tmp_name.tmp_name+"' data-filename='"+fileInput.files[0].name+"'><td>"+fileInput.files[0].name+"</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                    $("#tblSelectedFile").append(result);
+                }
+            }
+            return false;
+        });*@
+
+        $("#uploadBtn").change(function(){
+            var fileInput = document.getElementById('uploadBtn');
+            var formdata = new FormData(); //FormData object
+            //Iterating through each files selected in fileInput
+            for (i = 0; i < fileInput.files.length; i++) {
+                //Appending each file to FormData object
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            //xhr.open('POST', '/Home/Upload');
+            xhr.open('POST', '@Url.Action("UploadFiles", "EmailManage", new {area = "QueuedEmail" })?Guid=' + $("#guid").val());
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var JsonResultOfResponse = JSON.parse(xhr.response);
+                    var fileName = JsonResultOfResponse.filenameWithFullPath;
+                    if (JsonResultOfResponse.status == 0) {
+                        var result = "<tr class='danger' data-tmpname='" + fileName + "' data-filename='" + fileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                        $("#tblSelectedFile").append(result);
+                    }
+                    else if (JsonResultOfResponse.status == 1) {
+                        var result = "<tr class='success' data-tmpname='" + fileName + "' data-filename='" + fileName + "'><td>" + fileName + "</td><td><a href='#' class='close attachmentclose delete-attechement' data-id=" + JsonResultOfResponse.Id +" data-dismiss='alert' aria-label='close'>&times;</a></td></tr>";
+                        $("#tblSelectedFile").append(result);
+                    }
+                    DeleteAttechementBind();
+                }
+            }
+            return false;
+        });
+
+        $(document).on("click", ".attachmentclose", function () {
+            $(this).parent().parent().remove();
+        });
+
+        function MakeSCARegisteredWithGST(rId) {
+            if (rId == 0) {
+                alert("Please select reseller.")
+            }
+            else {
+                $.ajax({
+                    url: '@Url.Action("MakeSCARegisteredWithGSTFromResellerId", "SolarCompany")',
+                    type: "POST",
+                    data: { "resellerId": rId },
+                    success: function (result) {
+                        if (result) {
+                            $("#successMsgRegion").html(closeButton + "SCA registered with GST successfully.");
+                            $("#successMsgRegion").show();
+                        }
+                    }
+                });
+            }
+        }
+
+        function ChangeAllowedSPV(isSPVAllowed) {
+            var selectedRows_SCAIDs = [];
+            var selectedRows_RIDs = [];
+            $('#datatable tbody input[type="checkbox"]').each(function(){
+                if($(this).prop('checked')==true){
+                    selectedRows_SCAIDs.push(($(this).attr('scaid')));
+                    selectedRows_RIDs.push(($(this).attr('rid')));
+                }
+            })
+                if (selectedRows_SCAIDs == null || selectedRows_SCAIDs.length==0){
+                alert("Please select any user.");
+            }
+                else if (selectedRows_SCAIDs != null && selectedRows_SCAIDs.length > 0){
+                var result = confirm("Are you sure you want to update allowed spv of selected users ?");
+                if (result) {
+                    $.ajax({
+                        type: 'POST',
+                         url: '@Url.Action("UpdateAllowedSPV", "SolarCompany")',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({ solarCompanyIds: selectedRows_SCAIDs.join(','), isSPVAllowedSPV: isSPVAllowed, resellerIds: selectedRows_RIDs.join(',') }),
+                        success: function (data) {
+                            if (data.success) {
+                                $(".alert").hide();
+                                $("#successMsgRegion").html(closeButton + "Update allowed spv for selected users done successfully.");
+                                $("#successMsgRegion").show();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        },
+                        error: function (ex) {
+
+                        }
+                    });
+                }
+            }
+        }
+        function getRole(userTypeId) {
+             $.ajax({
+                    url: '@Url.Action("GetRole", "Role")',
+                    type: "get",
+                    data: { id: userTypeId },
+                    async: false,
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                     if (data == 0) {
+                            $("#RoleID").empty();
+                            $("#RoleID").append('<option value="">' + "Select" + '</option>');
+                        }
+                     else {
+                            $("#RoleID").empty();
+                            $("#RoleID").append('<option value="" selected>' + "Select" + '</option>');
+                           
+                            $.each(data, function (i, role) {
+                                $("#RoleID").append('<option value="' + role.Value + '">' +
+                                                                      role.Text + '</option>');
+                         });
+
+                    }
+                },
+                });
+                
+        }
+
+    </script>
+    <script>
+        function guid() {
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+        }
+
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+    </script>
+}

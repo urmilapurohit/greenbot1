@@ -1,0 +1,243 @@
+﻿@using FormBot.Helper
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .download_ic {
+        background-image: url(../Images/ic-download.png);
+        background-position: 6px 9px;
+        background-repeat: no-repeat;
+        padding: 0 10px 0 28px !important;
+    }
+</style>
+
+<div class="container-fluid">
+    <h1 class="title">Bulk Upload Solar Jobs</h1>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    @using (Html.BeginForm("BulkUploadSolarJobs", "Job", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.ValidationSummary()
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label">Reseller:</label>
+                        <select class="form-control" id="ResellerId"></select>
+                    </div>
+                </div>
+            }
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+            {
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label">Solar Company:</label>
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompanyBulkUplaodSolarjob" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+                </div>
+            }
+        </div>
+        <br />
+        <div>
+            <text class="fileUpload primary upload_ic pull-left" style="margin: inherit;margin-right: 5px;">
+                <span>Bulk Upload Solar Jobs</span>
+                <input type="file" id="fileBulkUploadSolarJobs" class="upload" value="Bulk Upload Solar Jobs" />
+            </text>
+            <text>
+                <input type="button" id="btnDownloadTemplateBulkUploadPVDSolarJobs" class="primary download_ic  pull-left" value="Download template for bulk upload pvd solar jobs" onclick="DownloadTemplateForBulkUploadSolarJobs(1);" />
+            </text>
+            @*<text>
+                    <input type="button" id="btnDownloadTemplateBulkUploadSWHSolarJobs" class="primary download_ic  pull-left" value="Download template for bulk upload swh solar jobs" onclick="DownloadTemplateForBulkUploadSolarJobs(2);" />
+                </text>*@
+        </div>
+    }
+
+</div>
+
+<script type="text/javascript">
+    var ProjectSession_LoggedInUserId = '@FormBot.Helper.ProjectSession.LoggedInUserId',
+        ProjectSession_ResellerId = '@FormBot.Helper.ProjectSession.ResellerId',
+        urlGetSolarCompanyByResellerId = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")',
+        urlDownloadTemplateForBulkUploadSolarJobs = '@Url.Action("DownloadTemplateForBulkUploadSolarJobs", "BulkUploadSolarJob")?JobType=';
+    urlBulkUploadSolarJobs = '@Url.Action("BulkUploadSolarJobs", "BulkUploadSolarJob")';
+
+    $(document).ready(function () {
+        FillDropDown('ResellerId', '@Url.Action("GetReseller", "Reseller")', 0, true, null);
+
+        $("#ResellerId").change(function () {
+            BindSolarCompany(document.getElementById("ResellerId").value, 0);
+            $('#searchSolarCompanyBulkUplaodSolarjob').focus();
+        })
+        BindSolarCompany(ProjectSession_ResellerId, 0);
+        $('#searchSolarCompanyBulkUplaodSolarjob').focus();
+
+        $('#searchSolarCompanyBulkUplaodSolarjob').autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var data = [];
+                $.each(solarCompanyList, function (key, value) {
+                    if (value.text.toLowerCase().indexOf($("#searchSolarCompanyBulkUplaodSolarjob").val().toLowerCase()) > -1) {
+                        data.push({ Title: value.text, id: value.value });
+                    }
+                });
+
+                response($.map(data, function (item) {
+                    return { label: item.Title, value: item.Title, id: item.id };
+                }))
+            },
+            select: function (event, ui) {
+                $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+                //BindFileUploadEvent();
+            }
+        }).on('focus', function () { $(this).keydown(); });
+
+        $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+            var re = new RegExp($.trim(this.term.toLowerCase()));
+            var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                "</span>");
+            return $("<li style='font-size:14px;'></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + t + "</a>")
+                .appendTo(ul);
+        };
+
+
+
+        $('#fileBulkUploadSolarJobs').click(function () {
+
+            if ($("#ResellerId").val() == '' && $("#ResellerId").val() <= 0) {
+                alert("Please select reseller and solarCompany");
+                return false;
+            }
+            if ($("#hdnsolarCompanyid").val() == '') {
+                alert("Please select solar company");
+                return false;
+            }
+
+            BindFileUploadEvent();
+        })
+    });
+
+    function BindFileUploadEvent() {
+        var solarCompanyId;
+        if(@ProjectSession.UserTypeId == 4 || @ProjectSession.UserTypeId == 8){
+            solarCompanyId = @ProjectSession.SolarCompanyId;
+        }
+        else{
+            solarCompanyId = $("#hdnsolarCompanyid").val();
+        }
+
+        $('#fileBulkUploadSolarJobs').fileupload({
+            url: urlBulkUploadSolarJobs,
+            type: 'POST',
+            dataType: 'json',
+            formData: { solarCompanyId: solarCompanyId },
+            done: function (e, data) {
+                if (data.result.status) {
+                    $("#datatable").dataTable().fnDraw();
+                    showSuccessMessage("File has been imported successfully.");
+                }
+                else {
+                    var errorMsg = [];
+                    var msg = '';
+                    errorMsg = JSON.parse(data.result.msg);
+                    if (errorMsg.length > 0) {
+                        errorMsg.forEach(function (elem) {
+                            //msg += "Row No. " + elem.RowNo + " " + elem.ErrorMsg + "<br >";
+                            msg += elem.ErrorMsg + "<br >";
+                        })
+
+                        showErrorMessage("File has not been imported, please verify following records.<br>" + msg);
+
+                        //if (data.result.dtResult) {
+                        //    showErrorMessage("File has been imported but following records are invalid.<br>" + msg);
+                        //}
+
+                        //if (data.result.dtSpreadsheetSolarJobs) {
+                        //    showErrorMessage("Please verify following records.<br>" + msg);
+                        //}
+                    }
+                }
+            },
+            progressall: function (e, data) { },
+            singleFileUploads: false,
+            send: function (e, data) {
+                var mimeType = data.files[0].type;
+                if (!(mimeType == "text/xlsx" || mimeType == "application/xlsx" || mimeType == "xlsx" || mimeType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+                    showErrorMessage("Please upload a file with .xlsx extension.");
+                    return false;
+                } else if (CheckSpecialCharInFileName(data.files[0].name)) {
+                    showErrorMessage("Please upload file that not conatain<> ^ [].");
+                    return false;
+                }
+                $('<input type="hidden">').attr({
+                    name: 'Guid',
+                    value: USERID,
+                    id: USERID,
+                }).appendTo('form');
+                return true;
+            }
+        }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+    }
+
+    function BindSolarCompany(rId, ramId) {
+
+        var IsCompanyExist = false;
+        $("#searchSolarCompanyBulkUplaodSolarjob").val("");
+        var scurl = '';
+        var searchid = '';
+        scurl = urlGetSolarCompanyByResellerId
+        searchid = rId
+
+        $.ajax({
+            type: 'POST',
+            url: scurl,
+            dataType: 'json',
+            async: false,
+            data: { id: searchid },
+            success: function (solarcompany) {
+                solarCompanyList = [];
+                $.each(solarcompany, function (i, company) {
+                    solarCompanyList.push({ value: company.Value, text: company.Text });
+                });
+            },
+            error: function (ex) {
+                alert('Failed to retrieve Solar Companies.' + ex);
+            }
+        });
+        return false;
+    }
+
+    function DownloadTemplateForBulkUploadSolarJobs(jobType) {
+        window.location.href = urlDownloadTemplateForBulkUploadSolarJobs + jobType;
+    }
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegion").hide();
+        $("#errorMsgRegion").html(closeButton + message);
+        $("#errorMsgRegion").show();
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegion").hide();
+        $("#successMsgRegion").html(closeButton + message);
+        $("#successMsgRegion").show();
+    }
+</script>
+

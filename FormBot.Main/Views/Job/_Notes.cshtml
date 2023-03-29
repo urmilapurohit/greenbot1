@@ -1,0 +1,228 @@
+﻿@model FormBot.Entity.CreateJob
+    <style>
+        
+        .important-note {
+            visibility: hidden;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+            .important-note:before {
+                content: "\2606";
+                position: absolute;
+                visibility: visible;
+            }
+
+            .important-note:checked:before {
+                content: "\2605";
+                position: absolute;
+            }
+
+        input#IsImportantNote {
+            line-height: inherit;
+        }
+
+        .cke_autocomplete_panel {
+            z-index: 9999 !important;
+        }
+
+        #cke_11 {
+            margin-left: 200px !important;
+        }
+        #cke_20,#cke_43{
+    display:none;
+}
+    </style>
+@{
+    ViewBag.Title = "Edit Email Template";
+}
+@*<div class="row">
+    <div class="col-sm-12">
+        <a role="button" data-toggle="collapse" data-name="Job Notes" data-parent="#accordion" href="#userNotesCollapse" aria-expanded="false" aria-controls="userNotesCollapse">
+            <i class="sprite-img folder-icon"></i>
+            <span>Notes</span>
+            <i class="sprite-img arrow-icon"></i>
+        </a>
+    </div>
+</div>*@    
+<div id="userNotesCollapse">
+<div class="row">
+    <div class="col-sm-12">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionNotes" style="display: none;margin-left:15px;margin-right:15px;">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionNotes" style="display: none;margin-left:15px;margin-right:15px;">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="error-space" style="margin-right:15px;margin-left:15px;"></div>
+        <input id="hiddenNoteID" name="NoteID" type="hidden" />
+        <div class="form-group" style="margin-left:15px !important;margin-right:15px !important">
+            @Html.TextAreaFor(model => model.BasicDetails.Notes, new { @class = "ckeditor", @id = "contenteditor" })
+        </div>
+    </div>
+    
+</div>
+<div class="row divSaveCancelNote">
+    <div class="col-sm-6">
+        <div style="margin-left:10px !important;float:left">
+            <input type="button" value="Cancel" id="btnCancelNotes" class="default cancel_ic" style="
+    float: right;">
+            <div class="btn primary icon-btn">
+                <span class="sprite-img save_ic"></span>
+                <input type="button" name="Submit" value="Save" autofocus="" class="" id="btnSaveNote" tabindex="4">
+            </div>
+        </div>
+        </div>
+    <div class="col-sm-6">
+        <div style="float:right; margin-right:50px;">
+            This post is visible to
+            <b>
+            <select id="post-visibility" style="border:0px; outline:0px; background:none; color:blue">
+               
+            </select>
+                </b>
+           | <input class="important-note" type="checkbox" title="Star Note" id="IsImportantNote" style="margin-top:0px !important">
+        </div>
+        @*<div style="margin-right:30px !important; float:right">
+
+            <input class="important-note" type="checkbox" title="bookmark page" id="IsImportantNote">
+        </div>*@
+    </div>
+    </div>
+    </div>
+<div class="modal fade popupAddReplyNote" tabindex="-1" role="dialog" id="popupAddReplyNote">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <input type="hidden" id="hdnReplyNoteID" />
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Add Reply</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionJobReplyNote" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    </div>
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group">
+                            <label for="replytonote"></label>
+                            <textarea id="notecontenteditor" class="ckeditor"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn default icon-btn" id="ClearNoteReply" onclick="ClearReplyForNotes()"><span class="sprite-img reset_ic"></span>Clear</button>
+                    <button type="button" class="btn primary icon-btn" id="SaveNoteReply" onclick="SaveReplyForNotes()"><span class="sprite-img save_ic"></span>Save</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+<script>
+
+    var urlSaveNote = '@Url.Action("SaveNotes","Job")';
+    var jobid = '@Model.BasicDetails.JobID';
+    var jobrefno = '@Model.BasicDetails.RefNumber';
+    var UserIDforckeditor = 0;
+    $(document).ready(function () {
+        $("#btnSaveNote").click(function () {            
+            var note = CKEDITOR.instances.contenteditor.getData();
+            if (note == "") {
+                showErrorMessageNotes("Please add some detail in notes section for save note.");
+            }
+            var isimportantnote = document.getElementById("IsImportantNote").checked;
+            var postvisible = $("#post-visibility").val();
+            var JobRefNo = $("#BasicDetails_RefNumber").val();
+            var NoteID = $("#hiddenNoteID").val();
+
+            
+            if (note != "") {                
+                var obj = {};
+                obj.JobID = jobid;
+                obj.Notes = note;
+                obj.JobRefno = jobrefno;
+                obj.NoteID = NoteID;
+                obj.PostVisibility = postvisible;
+                obj.IsImportantNote = isimportantnote;
+                var dataNotes = JSON.stringify(obj);
+                $.ajax({
+                    url: urlSaveNote,
+                    data: dataNotes,
+                    type: 'post',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (data) {
+                        if (data.status) {
+                            showSuccessMessageNotes(data.message);
+                            CKEDITOR.instances.contenteditor.setData('');
+                            SearchHistory();
+                            $("#IsImportantNote").prop('checked', false);
+                            $('#hiddenNoteID').val("");
+                        }
+                        else {
+                            showErrorMessageNotes(data.message);
+                            $('#hiddenNoteID').val("");
+                        }
+
+                    },
+                    error: function (data) {
+                    }
+                })
+            }
+        });
+        $("#btnCancelNotes").click(function () {
+            CKEDITOR.instances.contenteditor.setData('');
+            $('#hiddenNoteID').val('');
+        });
+        CKEDITOR.instances.contenteditor.on("focus", function () {
+            $("#cke_1_bottom").css("display", "block");
+            $(".divSaveCancelNote").css("display", "block");
+            $("#cke_1_contents").css("cssText", "height: 120px !important;");
+        });
+        CKEDITOR.instances.contenteditor.on("blur", function () {
+            var text = CKEDITOR.instances.contenteditor.getData();
+            if (text == "") {
+                $("#cke_1_bottom").css("display", "none");
+                $(".divSaveCancelNote").css("display", "none");
+                $("#cke_1_contents").css("cssText", "height: 60px !important;");
+            }
+        });
+        CKEDITOR.instances.notecontenteditor.on("focus", function () {
+            $("#cke_1_bottom").css("display", "block");
+            $(".divSaveCancelNote").css("display", "block");
+            $("#cke_1_contents").css("cssText", "height: 120px !important;");
+        });
+        CKEDITOR.instances.notecontenteditor.on("blur", function () {
+            var text = CKEDITOR.instances.notecontenteditor.getData();
+            if (text == "") {
+                $("#cke_1_bottom").css("display", "none");
+                $(".divSaveCancelNote").css("display", "none");
+                $("#cke_1_contents").css("cssText", "height: 60px !important;");
+            }
+        });
+        //$("#userNotesCollapse").focusin(function () {
+
+        //    $("#cke_1_bottom").css("display", "block");
+        //    $(".divSaveCancelNote").css("display", "block");
+        //    $("#cke_1_contents").css("cssText", "height: 120px !important;");
+        //})
+        //$("#userNotesCollapse").focusout(function () {
+        //    $("#cke_1_bottom").css("display", "none");
+        //    $(".divSaveCancelNote").css("display", "none");
+        //    $("#cke_1_contents").css("cssText", "height: 70px !important;");
+        //})
+    })
+    
+    function showSuccessMessageNotes(message) {
+        $("#errorMsgRegionNotes").hide();
+        $("#successMsgRegionNotes").html(closeButton + message);
+        $("#successMsgRegionNotes").show();
+    }
+    function showErrorMessageNotes(message) {
+        $("#successMsgRegionNotes").hide();
+        $("#errorMsgRegionNotes").html(closeButton + message);
+        $("#errorMsgRegionNotes").show();
+    }
+</script>

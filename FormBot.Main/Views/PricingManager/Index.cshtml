@@ -1,0 +1,1426 @@
+﻿@model FormBot.Entity.PricingManager
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "PricingManager";
+}
+<style>
+    .ddlResellerWholeseller .form-group {
+        padding-left: 15px;
+    }
+</style>
+
+<div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="container-fluid">
+    @*<div class="title">
+            <h1>Pricing Manager</h1>
+
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+            {
+                <div class="form-group col-sm-3 col-md-3 pull-right">
+                    <label class="col-md-4 control-label reseller">Acc. Manager :</label>
+                    <div class="col-md-8 pad-r-0 pad-l-0">
+                        @Html.DropDownListFor(model => model.RAMID, new List<SelectListItem>(), "Select", new { id = "RamId", @class = "form-control" })
+                    </div>
+                </div>
+            }
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+            {
+                <div class="form-group col-sm-3 col-md-3 pull-right">
+                    <label class="col-md-4 control-label reseller">Reseller:</label>
+                    <div class="col-md-8 pad-r-0 pad-l-0">
+                        @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                    </div>
+                </div>
+            }
+        </div>*@
+
+
+    @*******************@
+    <div class="title">
+        <div class="row">
+
+            <div class="col-md-6">
+                <h1>Pricing Manager</h1>
+            </div>
+
+            <div class="col-md-6" @*style="top:5px;"*@>
+                <div class="form-inline">
+                    <div class="form-group pull-right">
+                        @*<label class="control-label">User Type :</label>*@
+                        <label class="radio-inline">
+                            <input type="radio" name="userTypeRadios" id="rbReseller" value="1" style="top: 10px;" checked>
+                            <h4>Reseller</h4>
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="userTypeRadios" id="rbWholeSaler" value="2" style="top: 10px;">
+                            <h4>WholeSaler</h4>
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="userTypeRadios" id="rbSAAS" value="3" style="top: 10px;">
+                            <h4>SAAS</h4>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="row" id="PricingCommon">
+        <div class="col-lg-7">
+            <div class="form-block ddlResellerWholeseller">
+                <div class="form-inline">
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3)
+                    {
+                        <div class="form-group" id="ddlReseller">
+                            <label class="control-label">Reseller:</label>
+                            @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+                        </div>
+                    }
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+                        <div class="form-group" id="ddlAccountManager">
+                            <label class="control-label">Account Manager:</label>
+                            @Html.DropDownListFor(model => model.RAMID, new List<SelectListItem>(), "Select", new { id = "RamId", @class = "form-control" })
+                        </div>
+                    }
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+                        <div class="form-group" id="ddlWholesaler" style="display:none;">
+                            <label class="control-label">WholeSaler:</label>
+                            @Html.DropDownListFor(model => model.WholeSalerID, new List<SelectListItem>(), "Select", new { id = "WholeSalerID", @class = "form-control" })
+                        </div>
+                    }
+                </div>
+            </div>
+
+
+            <div class="form-inline pricing-form row" style="margin-top: -20px;">
+                <div class="form-group col-sm-12 col-md-6">
+                    <label class="control-label">Search Type :</label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optionsRadios" id="rbSolarCompany" value="1" checked>
+                        Solar Company
+                    </label>
+                    <label class="radio-inline">
+                        <input type="radio" name="optionsRadios" id="rbSolarJob" value="2">
+                        Solar Job
+                    </label>
+                </div>
+
+                <div class="form-group col-sm-12 col-md-6" id="dvSystemSize">
+                    <label class="col-md-4 control-label reseller">Search System Size:</label>
+                    <div class="col-md-8 pad-r-0 pad-l-0">
+                        @Html.DropDownList("SystemSize", new List<SelectListItem>
+                                                                                    {
+                                                                                       new SelectListItem{ Text="Search System < 60kW", Value = "1",Selected=true },
+                                                                                       new SelectListItem{ Text="Search System > 60kW", Value = "2" }
+                                                                                    }, new { id = "drpSystemSize", @class = "form-control" })
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="box1" class="form-block">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Search for solar company :</label>
+                    <input id="txtSolarCompany" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Name:</label>
+                    <input id="txtName" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+                </div>
+
+                <div class="form-group col-sm-12">
+                    <input id="btnSearch" type="button" value="Search" class="primary search_ic" onclick="SearchRecords();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                        <span class="sprite-img reset_ic"></span>
+                        <input id=" btnreset" type="button" value="Reset" class="">
+                    </div>
+                </div>
+            </div>
+
+            <div id="box2" class="form-block" style="display:none;">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Name:</label>
+                    <input id="txtHomeOwnerName" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearchJob').click()">
+                </div>
+
+                @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2 || Model.UserTypeID == 5)
+                {
+                    <div class="form-group col-sm-6">
+                        <label class="control-label">Solar Company :</label>
+                        @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), "Select", new { id = "SolarCompanyId", @class = "form-control" })*@
+                        <input type="hidden" id="hdnsolarCompanyid" />
+                        <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+                    </div>
+                }
+
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Installation Address:</label>
+                    <input id="txtHomeOwnerAddress" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearchJob').click()">
+                </div>
+
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Job ID / Ref Number:</label>
+                    <input id="txtJobRef" type="text" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearchJob').click()">
+                </div>
+
+                <div class="form-group col-sm-12">
+                    <input id="btnSearchJob" type="button" value="Search" class="primary search_ic" onclick="SearchRecords();">
+                    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                        <span class="sprite-img reset_ic"></span>
+                        <input id=" btnresetjob" type="button" value="Reset" class="">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-5 processing-block">
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3)
+            {
+                <div id="dvglobalprice" class="action ">
+                    <a href="javascript:void(0);" title="Set Global Price" class="edit sprite-img price-edit" onclick="ManageGlobalPrice();">
+                        @*<span class=" edit"></span>*@
+                    </a>
+                </div>
+            }
+            <ul class="Processing-time" id="PricingBlock">
+                <li id="liDay1" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Hour24.GetHashCode()">
+                    <span class="time">24 Hour</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Hour24), "")</span>
+                    <span id="day1span" class="price">$@Model.Hour24</span>
+                </li>
+                <li id="liDay3" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Days3.GetHashCode()">
+                    <span class="time">3 Days</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Days3), "")</span>
+                    <span id="day3span" class="price">$@Model.Days3</span>
+                </li>
+                <li id="liDay7" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Days7.GetHashCode()">
+                    <span class="time">7 Days</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Days7), "")</span>
+                    <span id="day7span" class="price">$@Model.Days7</span>
+                </li>
+                <li class="approved" id="liCERApproved" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.CERApproved.GetHashCode()">
+                    <span class="time"><img src="../images/approved.png" alt=""></span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.CERApproved), "")</span>
+                    <span id="onApprovalspan" class="price">$@Model.CERApproved</span>
+                </li>
+
+                <li id="liRapidPay" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.RapidPay.GetHashCode()">
+                    <span class="time">Rapid-Pay</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.RapidPay), "")</span>
+                    <span id="rapidPaySpan" class="price">$@Model.RapidPay</span>
+                </li>
+                <li id="liOptiPay" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.OptiPay.GetHashCode()">
+                    <span class="time">Opti-Pay</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.OptiPay), "")</span>
+                    <span id="optiPaySpan" class="price">$@Model.OptiPay</span>
+                </li>
+                <li id="liCommercial" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Commercial.GetHashCode()">
+                    <span class="time">Commercial</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.Commercial), "")</span>
+                    <span id="commercialSpan" class="price">$@Model.Commercial</span>
+                </li>
+                <li id="liCustom" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.Custom.GetHashCode()">
+                    @*<span class="time">Custom</span>*@
+                    <span class="time">@Model.CustomTermText</span>
+                    <span class="processing-text" id="Customsettlement"></span>
+                    <span id="customSpan" class="price">$@Model.Custom</span>
+                </li>
+                <li id="liInvoiceStc" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.InvoiceStc.GetHashCode()">
+                    <span class="time">Invoice Stc</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.InvoiceStc), "")</span>
+                    <span id="invoiceStcSpan" class="price">$@Model.InvoiceStc</span>
+                </li>
+                <li id="liPeakPay" style="display:none" settlementterm="@FormBot.Helper.SystemEnums.STCSettlementTerm.PeakPay.GetHashCode()">
+                    <span class="time">Peak Pay</span>
+                    <span class="processing-text">@FormBot.Helper.Helper.Common.GetSubDescription((SystemEnums.STCSettlementTerm.PeakPay), "")</span>
+                    <span id="peakPaySpan" class="price">$@Model.PeakPay</span>
+                </li>
+            </ul>
+
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+            {
+                <p class="set-global-text"><a href="javascript:void(0);" title="" onclick="ManageCustomPrice();">+Set custom pricing for all solar company(s) or Job(s) based on search</a></p>
+            }
+
+        </div>
+    </div>
+
+    <div class="grid_topbar" id="JobResult">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+
+    <div class="row" id="SolarCompanyResult">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><span>@Html.DisplayName("SolarCompany")</span></th>
+                            <th><span>@Html.DisplayName("Name ")</span></th>
+                            <th><span>@Html.DisplayName("Owner Name")</span></th>
+                            <th><span>@Html.DisplayName("Installation Address")</span></th>
+                            <th><span>@Html.DisplayName("Account Manager")</span></th>
+                            <th><span><p style="color:green;display:inline-block"><b>@Html.DisplayName("Traded STCs")</b></p></span></th>
+                            <th><span><p style="color:green;display:inline-block"><b>@Html.DisplayName("In Progress STCs")</b></p></span></th>
+                            <th><span><p style="color:red;display:inline-block"><b>@Html.DisplayName("Last traded price")</b></p></span></th>
+
+                            <th><span>@Html.DisplayName("SolarCompany")</span></th>
+                            <th><span>@Html.DisplayName("STC")</span></th>
+                            <th><span>@Html.DisplayName("+GST?")</span></th>
+
+                            <th><span>@Html.DisplayName("24 Hour")</span></th>
+                            <th><span>@Html.DisplayName("UpFront")</span></th>
+                            <th><span>@Html.DisplayName("3 Days")</span></th>
+                            <th><span>@Html.DisplayName("7 Days")</span></th>
+
+                            <th><span>@Html.DisplayName("RapidPay")</span></th>
+                            <th><span>@Html.DisplayName("OptiPay")</span></th>
+                            <th><span>@Html.DisplayName("Commercial")</span></th>
+                            <th><span>@Html.DisplayName("Custom")</span></th>
+
+                            <th><span>@Html.DisplayName("Invoice Stc")</span></th>
+                            <th><span>@Html.DisplayName("Peak Pay")</span></th>
+                            <th><span>@Html.DisplayName("Partial Payment")</span></th>
+                            <th><span>@Html.DisplayName("CER Approved")</span></th>
+                            <th><span>@Html.DisplayName("Offer Expiry")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="PricingSAAS">
+        <div class="col-lg-7">
+            <div class="form-block ddlResellerWholeseller">
+                <div class="form-inline">
+                    @if (Model.UserTypeID == 1 || Model.UserTypeID == 3 || Model.UserTypeID == 2)
+                    {
+                    <div class="form-group" id="ddlSAAS">
+                        <label class="control-label">SAAS User:</label>
+                        <input type="hidden" id="hdnresellerId" />
+                        <input type="text" id="SAASUserId" name="SAASUserId" class="form-control" style="width:300px !important" maxlength="50" />
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 processing-block">
+            @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3)
+            {
+                <div id="dvglobalprice" class="action ">
+                    <a href="javascript:void(0);" title="Set Global Price" class="edit sprite-img price-edit" onclick="ManageSAASGlobalPrice();">
+                    </a>
+                </div>
+            }
+            <ul class="Processing-time" id="PricingBlockSAAS"></ul>
+        </div>
+    </div>
+
+    @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+    {
+        <div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog  modal-lg" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Manage Price</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-border" id="dvPriceManager">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (Model.UserTypeID == 1 || Model.UserTypeID == 2 || Model.UserTypeID == 3 || Model.UserTypeID == 5)
+    {
+        <div class="modal fade" id="popupProofSAAS" tabindex="-1" role="dialog" aria-labelledby="myModalLabelSAAS">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content" style="margin:50px;">
+                    <div class="modal-header ">
+
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src="~/images/close-btn.png" alt="">
+                        </button>
+                        <h4 class="modal-title" id="myModalLabelSAAS">Manage Price</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-border" id="dvPriceManagerSAAS">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@*<div class="modal fade" id="popupOptions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+
+                    <button type="button" class="close" aria-label="Close" id="btnParaOption">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">OPTI-PAY PARAMETERS</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-border">
+                        @Html.Partial("_OptiPayOptions", Model)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="popupCustomOptions" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+
+                    <button type="button" class="close" aria-label="Close" id="btnCustomParaOption">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">OPTI-PAY PARAMETERS</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-border" id="dvCustomOption">
+                        @Html.Partial("_CustomOptiPayOptions", Model)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-1.10.2.js"></script>
+        <script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+
+        var mode = 1;
+        var userTypeMode = 1;
+        var ajaxurl = mode==1 ? '@Url.Action("GetSolarCompanyForPricingManager", "PricingManager")' : '@Url.Action("GetJobsForPricingManager", "PricingManager")';
+        var saasUsersList = [];
+        $(document).ready(function () {
+
+            ShowHidePrice('@Model.Hour24', '@Model.Days3', '@Model.Days7', '@Model.CERApproved', '@Model.RapidPay', '@Model.OptiPay', '@Model.Commercial', '@Model.Custom', '@Model.InvoiceStc', '@Model.PeakPay');
+
+            $('#SAASUserId').autocomplete({
+                minLength: 1,
+                source: function (request, response) {
+                    var data = [];
+                    $.each(saasUsersList, function (key, value) {
+                        if (value.text.toLowerCase().indexOf($("#SAASUserId").val().toLowerCase()) > -1) {
+                            data.push({ Title: value.text, id: value.value });
+                        }
+                    });
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title, id: item.id };
+                    }))
+                },
+                select: function (event, ui) {
+                    $("#hdnresellerId").val(ui.item.id);
+                }
+            }).on('focus', function () { $(this).keydown(); });
+
+            $('#searchSolarCompany').autocomplete({
+                minLength: 0,
+                source: function (request, response) {
+                    var data=[];
+                    $("#hdnsolarCompanyid").val(0);
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.text.toLowerCase().indexOf($("#searchSolarCompany").val().toLowerCase()) > -1 ) {
+                            data.push({Title : value.text,id:value.value});
+                        }
+                    });
+
+                    response($.map(data, function (item) {
+                        return { label: item.Title, value: item.Title,id:item.id };
+                    }))
+                },
+                select: function (event, ui) {
+                    $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+                }
+            }).on('focus', function() { $(this).keydown(); });
+
+            $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+                debugger;
+                var re = new RegExp($.trim(this.term.toLowerCase()));
+                var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                    "</span>");
+                return $("<li style='font-size:14px;'></li>")
+                    .data("item.autocomplete", item)
+                    .append("<a>" + t + "</a>")
+                    .appendTo(ul);
+            };
+
+            $("#dvSystemSize").hide();
+            $("#PricingSAAS").hide();
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3)
+            {
+                var IsResellerExist = false;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetResellerForPricingManager", "Reseller")?IsWholeSaler=false',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (reseller) {
+                        $.each(reseller, function (i, res) {
+                            $("#ResellerId").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                            if(IsResellerExist==false && res.Value==localStorage.getItem('PricingManager_ResellerId')){
+                                IsResellerExist=true;
+                            }
+                        });
+
+                        if(IsResellerExist){
+                            document.getElementById("ResellerId").value = localStorage.getItem('PricingManager_ResellerId')
+                        }
+                        else{
+                            $("#ResellerId").val($("#ResellerId option:first").val());
+                            localStorage.setItem('PricingManager_ResellerId',$("#ResellerId option:first").val());
+                        }
+                        GetGlobalPriceForReseller($("#ResellerId").val());
+                        GetRAMByResellerId($("#ResellerId").val());
+                        BindSolarCompany($("#ResellerId").val(),document.getElementById("RamId").value);
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve Resellers.' + ex);
+                    }
+                });
+
+                var IsWholeSalerExist = false;
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("GetResellerForPricingManager", "Reseller")?IsWholeSaler=true',
+                    dataType: 'json',
+                    data: '',
+                    async: false,
+                    success: function (wholesaler) {
+                        $("#WholeSalerID option[value='']").remove();
+                        $.each(wholesaler, function (i, wholesaler) {
+                            $("#WholeSalerID").append('<option value="' + wholesaler.Value + '">' + wholesaler.Text + '</option>');
+                            if(IsWholeSalerExist==false && wholesaler.Value==localStorage.getItem('PricingManager_WholesalerId')){
+                                IsWholeSalerExist=true;
+                            }
+                        });
+
+                        if(IsWholeSalerExist){
+                            document.getElementById("WholeSalerID").value = localStorage.getItem('PricingManager_WholesalerId')
+                        }
+                        else{
+                            $("#WholeSalerID").val($("#WholeSalerID option:first").val());
+                            localStorage.setItem('PricingManager_WholesalerId',$("#WholeSalerID option:first").val());
+                        }
+                    },
+                    error: function (ex) {
+                        alert('Failed to retrieve WholeSalers.' + ex);
+                    }
+                });
+
+                BindSAASUser();
+            }
+
+            if('@Model.UserTypeID'==2){
+                GetGlobalPriceForReseller('@ProjectSession.ResellerId');
+                GetRAMByResellerId('@ProjectSession.ResellerId');
+                BindSolarCompany('@ProjectSession.ResellerId',document.getElementById("RamId").value);
+            }
+
+            if('@Model.UserTypeID'==5){
+                GetGlobalPriceForReseller('@ProjectSession.ResellerId');
+                BindSolarCompany(0,'@ProjectSession.LoggedInUserId');
+            }
+
+            BindDataTable();
+            $("[name=userTypeRadios]").click(function(){
+                userTypeMode = $(this).val();
+                if(userTypeMode==3){
+                    $("#ddlWholesaler").hide();
+                    $("#ddlReseller").hide();
+                    $("#ddlAccountManager").hide();
+                    $("#PricingCommon").hide();
+                    $("#JobResult").hide();
+                    $("#SolarCompanyResult").hide();
+                    $("#PricingSAAS").show();
+                    GetGlobalPriceForSAAS($("#hdnresellerId").val());
+                }
+                else if (userTypeMode == 2) {
+                    $("#ddlWholesaler").show();
+                    $("#ddlReseller").hide();
+                    $("#ddlAccountManager").hide();
+                    $("#PricingCommon").show();
+                    $("#JobResult").show();
+                    $("#SolarCompanyResult").show();
+                    $("#PricingSAAS").hide();
+                    GetGlobalPriceForReseller($("#WholeSalerID").val());
+                    BindSolarCompany($("#WholeSalerID").val(), 0);
+                }
+                else{
+                    $("#ddlWholesaler").hide();
+                    $("#ddlReseller").show();
+                    $("#ddlAccountManager").show();
+                    $("#PricingCommon").show();
+                    $("#JobResult").show();
+                    $("#SolarCompanyResult").show();
+                    $("#PricingSAAS").hide();
+                    GetGlobalPriceForReseller($("#ResellerId").val());
+                    BindSolarCompany($("#ResellerId").val(),0);
+                }
+                SetParamsFromLocalStorage();
+                if (userTypeMode != 3) {
+                    ajaxurl = mode == 1 ? '@Url.Action("GetSolarCompanyForPricingManager", "PricingManager")' : '@Url.Action("GetJobsForPricingManager", "PricingManager")';
+                    BindDataTable();
+                }
+            });
+
+            $("[name=optionsRadios]").click(function () {
+                var $this = $(this);
+                if (!$this.hasClass("checked")) {
+                    $("[name=optionsRadios]").removeClass("checked");
+                    $this.addClass("checked");
+                    $('.form-block').hide();
+                    $('.ddlResellerWholeseller').show();
+                    $("#box" + $(this).val()).slideDown('slow');
+                    mode = $(this).val();
+                    if(mode==1){
+                        $("#txtSolarCompany").focus();
+                        if('@Model.UserTypeID'==1 ||'@Model.UserTypeID'==2 || '@Model.UserTypeID'==3){
+                            $("#dvglobalprice").show();
+                        }
+                        $("#dvSystemSize").hide();
+                    }
+                    else if(mode == 2){
+                        $("#txtHomeOwnerName").focus();
+                        if('@Model.UserTypeID'==1 ||'@Model.UserTypeID'==2 || '@Model.UserTypeID'==3){
+                            $("#dvglobalprice").hide();
+                        }
+                        $("#dvSystemSize").show();
+                    }
+                    else{
+                        BindSAASUser();
+                    }
+
+                    SetParamsFromLocalStorage();
+                    ajaxurl = mode==1 ? '@Url.Action("GetSolarCompanyForPricingManager", "PricingManager")' : '@Url.Action("GetJobsForPricingManager", "PricingManager")';
+                    BindDataTable();
+                }
+            });
+
+            if (mode == 1) {
+                $("#txtSolarCompany").focus();
+            }
+            else if (mode == 2) {
+                $("#txtHomeOwnerName").focus();
+            }
+            else {
+                $("#SAASUserId").focus();
+            }
+
+            SetParamsFromLocalStorage();
+
+            ajaxurl = mode==1 ? '@Url.Action("GetSolarCompanyForPricingManager", "PricingManager")' : '@Url.Action("GetJobsForPricingManager", "PricingManager")';
+
+            $("#WholeSalerID").change(function () {
+                GetGlobalPriceForReseller($("#WholeSalerID").val());
+                BindSolarCompany($("#WholeSalerID").val(),0);
+            })
+
+            $("#SAASUserId").change(function () {
+                GetGlobalPriceForSAAS($("#hdnresellerId").val());
+            });
+
+            $("#ResellerId").change(function () {
+                if ($("#ResellerId").val() > 0 ) {
+                    GetGlobalPriceForReseller($("#ResellerId").val());
+                    GetRAMByResellerId($("#ResellerId").val());
+                    BindSolarCompany($("#ResellerId").val(),0);
+                }
+                else {
+                    $("#RamId").empty();
+                    $("#RamId").append('<option value="0">Select</option>');
+                }
+                BindDataTable();
+                localStorage.setItem('PricingManager_ResellerId',document.getElementById("ResellerId").value);
+            })
+
+            $("#RamId").change(function () {
+                //if(mode==2){
+                if ($("#RamId").val() > 0 ) {
+                    BindSolarCompany(0,$("#RamId").val());
+                }
+                else {
+                    BindSolarCompany($("#ResellerId").val(),0);
+                }
+                //}
+                BindDataTable();
+                localStorage.setItem('PricingManager_RamId',document.getElementById("RamId").value);
+            })
+
+            $("#drpSystemSize").change(function () {
+                if(mode==2){
+                    BindDataTable();
+                    localStorage.setItem('PricingManager_SystemSize',document.getElementById("drpSystemSize").value);
+                }
+            })
+        });
+
+        function BindSAASUser() {
+            $.ajax({
+                url: "/Reseller/GetSAASForPricingManager",
+                dataType: "json",
+                data: {},
+                success: function (SAASUsers) {
+                    
+                    $.each(SAASUsers, function (i, company) {
+                        saasUsersList.push({ value: company.Value, text: company.Text });
+                    });
+                    $('#hdnresellerId').val(saasUsersList.length > 0 ? saasUsersList[0].value : 0);
+                    $('#SAASUserId').val(saasUsersList.length > 0 ? saasUsersList[0].text : '');
+                }
+            });
+        }
+
+        function BindDataTable() {
+            var sSize = document.getElementById("drpSystemSize").value;
+            if($('#datatable')){
+                var table = $('#datatable').DataTable();
+                table.destroy();
+            }
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+
+                columns: [
+                        //{ 'data': 'Id',
+                        //    "orderable": false,
+                        //    "render": function (data, type, full, meta) {
+                        //        if($('#chkAll').prop('checked')==true){
+                        //            return '<input type="checkbox" id="chk_'+full.Id+'" checked >';
+                        //        }
+                        //        else{
+                        //            return '<input type="checkbox" id="chk_'+full.Id+'" >';
+                        //        }
+                        //    }
+                        //},
+
+                        { 'data': 'SolarCompany',
+                            visible: mode==1 || (userTypeMode==2 && mode==1 )?true:false
+                        },
+
+                        { 'data': 'Name',
+                            visible: mode==1 || (userTypeMode==2 && mode==1 )?true:false
+                        },
+
+                        { 'data': 'HomeOwnerName' ,
+                            visible: mode==2?true:false,
+                            "render": function (data, type, full, meta) {
+                                return full.ID + ' - ' + full.RefNumber + '-' + full.HomeOwnerName;
+                            }
+                        },
+
+                        { 'data': 'HomeOwnerAddress' ,
+                            visible: mode==2?true:false
+                        },
+
+                        { 'data': 'AccountManager' },
+
+                        { 'data': 'TradedSTCs' ,
+                            visible: mode==1 || (userTypeMode==2 && mode==1 )?true:false,
+                            "render": function (data, type, full, meta) {
+                                return full.TradedSTCs;
+                            }
+                        },
+
+                        { 'data': 'InProgressSTCs',
+                            visible: mode==1 || (userTypeMode==2 && mode==1 )?true:false
+                        },
+
+                        { 'data': 'LastTradedPrice',"sClass": "dt-right",
+                            visible: mode==1 || (userTypeMode==2 && mode==1 )?true:false,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.LastTradedPrice);
+                            }
+                        },
+
+                        { 'data': 'CompanyName' ,
+                            visible: mode==2?true:false
+                        },
+
+                        { 'data': 'STCAmount' ,
+                            visible: mode==2?true:false
+                        },
+
+                        { 'data': 'IsGst' ,
+                            visible: mode==2?true:false,
+                            "orderable": false,
+                            "render": function (data, type, full, meta) {
+                                if(full.IsGst){
+                                    return '<input type="checkbox" id="'+full.Id+'" onchange="UpdateGST(this);" checked/>';
+                                }
+                                else{
+                                    return '<input type="checkbox" id="'+full.Id+'" onchange="UpdateGST(this);"/>';
+                                }
+                            }
+                        },
+
+                        { 'data': 'Hour24',"sClass": "dt-right",
+                            visible: mode==2 ? sSize==1?true:false :true,
+                            //visible: $("#liDay1").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Hour24);
+                            }
+                        },
+
+                        { 'data': 'UpFront' ,"sClass": "dt-right",
+                            visible: mode==2 && sSize==2?true:false,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.UpFront);
+                            }
+                        },
+
+                        { 'data': 'Days3' ,"sClass": "dt-right",
+                            visible:  mode==2 ? sSize==1 ?true : false : true ,
+                            //visible: $("#liDay3").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Days3);
+                            }
+                        },
+
+                        { 'data': 'Days7' ,"sClass": "dt-right",
+                            //visible: $("#liDay7").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                            visible: mode==2 ? sSize==1 ?true : false : true ,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Days7);
+                            }
+                        },
+
+                        { 'data': 'RapidPay',"sClass": "dt-right",
+                            //visible: $("#liRapidPay").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                            visible:  mode==2 ? sSize==1 ?true : false : true,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.RapidPay);
+                            }
+                        },
+
+                          { 'data': 'OptiPay',"sClass": "dt-right",
+                              //visible: $("#liOptiPay").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                              //visible: mode==2 ? sSize==1 ?true : false : true ,
+                              "render": function (data, type, full, meta) {
+                                  return PrintDecimal(full.OptiPay);
+                              }
+                          },
+
+                           { 'data': 'Commercial',"sClass": "dt-right",
+                               //visible: $("#liCommercial").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                               visible: mode==2 ? sSize==1 ?true : false : true ,
+                               "render": function (data, type, full, meta) {
+                                   return PrintDecimal(full.Commercial);
+                               }
+                           },
+
+                           { 'data': 'Custom',"sClass": "dt-right",
+                               //visible: $("#liCustom").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                               visible: mode==2 ? sSize==1 ?true : false : true ,
+                               "render": function (data, type, full, meta) {
+                                   return PrintDecimal(full.Custom);
+                               }
+                           },
+
+                            { 'data': 'InvoiceStc',"sClass": "dt-right",
+                                //visible: $("#liInvoiceStc").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                                visible: mode==2 ? sSize==1 ?true : false : true ,
+                                "render": function (data, type, full, meta) {
+                                    return PrintDecimal(full.InvoiceStc);
+                                }
+                            },
+
+                            { 'data': 'PeakPay',"sClass": "dt-right",
+                                //visible: $("#liInvoiceStc").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                                visible: mode==2 ? sSize==1 ?true : false : true ,
+                                "render": function (data, type, full, meta) {
+                                    return PrintDecimal(full.PeakPay);
+                                }
+                            },
+
+                        { 'data': 'PartialPayment' ,"sClass": "dt-right",
+                            visible: mode==2 && sSize==2?true:false,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.PartialPayment);
+                            }
+                        },
+
+                        { 'data': 'CERApproved',"sClass": "dt-right",
+                            //visible: $("#liCERApproved").is(":visible") ? mode==2 ? sSize==1 ?true : false : true : false,
+                            //visible: mode==2 ? sSize==1 ?true : false : true ,
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.CERApproved);
+                            }
+                        },
+
+                        { 'data': 'strOfferExpires',
+                            "render": function (data, type, full, meta) {
+                                //return ConvertToDate(data);
+                                //return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                                return ToDate(data);
+                            }
+                        },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function (settings, json) {
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+                },
+                bServerSide: true,
+                sAjaxSource: ajaxurl,
+
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length >= 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+                    var recordType = mode==1?"Solar Company(s)":"Job(s)";
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> '+recordType+' found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> '+recordType+' found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                },
+
+                "fnServerParams": function (aoData) {
+                    if(userTypeMode == 1)
+                    {
+                        if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3){
+                            aoData.push({ "name": "reseller", "value": document.getElementById("ResellerId").value });
+                        }
+                        if(@Model.UserTypeID == 1 || @Model.UserTypeID == 3 || @Model.UserTypeID == 2){
+                            aoData.push({ "name": "RAM", "value": document.getElementById("RamId").value });
+                        }
+                    }
+                    else{
+                        if((@Model.UserTypeID == 1 || @Model.UserTypeID == 3) && userTypeMode==2){
+                            aoData.push({ "name": "wholeSaler", "value": document.getElementById("WholeSalerID").value });
+                        }
+                    }
+                    if(mode==1){
+                        aoData.push({ "name": "solarcompany", "value": $("#txtSolarCompany").val() });
+                        aoData.push({ "name": "name", "value": $("#txtName").val() });
+                    }
+                    else{
+                        aoData.push({ "name": "systemsize", "value": document.getElementById("drpSystemSize").value });
+                        //aoData.push({ "name": "solarcompanyid", "value": document.getElementById("SolarCompanyId").value });
+                        aoData.push({ "name": "solarcompanyid", "value": $('#hdnsolarCompanyid').val() });
+                        aoData.push({ "name": "jobref", "value": $("#txtJobRef").val() });
+                        aoData.push({ "name": "homeownername", "value": $("#txtHomeOwnerName").val() });
+                        aoData.push({ "name": "homeowneraddress", "value": $("#txtHomeOwnerAddress").val() });
+                        aoData.push({ "name": "homeowneraddress", "value": $("#txtHomeOwnerAddress").val() });
+                    }
+                }
+            });
+        }
+
+        function GetGlobalPriceForReseller(resellerId){
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetGlobalPriceForReseller", "PricingManager")',
+                dataType: 'json',
+                async: false,
+                data: { rId: resellerId },
+                success: function (price) {
+
+                    SetPrice(price.price.Hour24,price.price.Days3,price.price.Days7,price.price.CERApproved,price.price.RapidPay,price.price.OptiPay,price.price.Commercial,price.price.Custom,price.price.InvoiceStc,price.price.CustomTermText,price.price.PeakPay,price.price.PeakPayStcPrice,price.price.CustomPeakPayStcPrice,price.price.CustomSettlementTerm);
+
+                    ShowHidePrice(price.price.IsPriceDay1,price.price.IsPriceDay3,price.price.IsPriceDay7,price.price.IsPriceApproval,price.price.IsPriceRapidPay,price.price.IsPriceOptiPay,price.price.IsPriceCommercial,price.price.IsPriceCustom,price.price.IsPriceInvoiceStc,price.price.IsPricePeakPay);
+
+                    SetCustomSubDescription(price.price.CustomSettlementTerm);
+
+                    //document.getElementById("day1span").innerHTML = (price.price.Hour24==null || price.price.Hour24=='') ? '$' +'0': '$' +parseFloat(price.price.Hour24);
+                    //document.getElementById("day3span").innerHTML = (price.price.Days3==null || price.price.Days3=='')?'$' +'0':'$' +parseFloat(price.price.Days3);
+                    //document.getElementById("day7span").innerHTML = (price.price.Days7==null || price.price.Days7=='')?'$' +'0':'$' +parseFloat(price.price.Days7);
+                    //document.getElementById("onApprovalspan").innerHTML = (price.price.CERApproved==null || price.price.CERApproved=='')?'$' +'0':'$' +parseFloat(price.price.CERApproved);
+
+                    //document.getElementById("rapidPaySpan").innerHTML = (price.price.RapidPay==null || price.price.RapidPay=='')?'$' +'0':'$' +parseFloat(price.price.RapidPay);
+                    //document.getElementById("optiPaySpan").innerHTML = (price.price.OptiPay==null || price.price.OptiPay=='')?'$' +'0':'$' +parseFloat(price.price.OptiPay);
+                    //document.getElementById("commercialSpan").innerHTML = (price.price.Commercial==null || price.price.Commercial=='')?'$' +'0':'$' +parseFloat(price.price.Commercial);
+                    //document.getElementById("customSpan").innerHTML = (price.price.Custom==null || price.price.Custom=='')?'$' +'0':'$' +parseFloat(price.price.Custom);
+
+
+                    //ShowHidePrice(price.price.Hour24,price.price.Days3,price.price.Days7,price.price.CERApproved,price.price.RapidPay,price.price.OptiPay,price.price.Commercial,price.price.Custom);
+
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Account Managers.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function GetGlobalPriceForSAAS(saasId){
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetGlobalPriceForSAAS", "PricingManager")',
+                dataType: 'json',
+                async: false,
+                data: { rId: saasId },
+                success: function (data) {
+                    debugger;
+                    $("#PricingBlockSAAS").html(data.response);
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Pricing for SAAS User.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function GetRAMByResellerId(resellerId){
+            var IsRamExist = false;
+            $("#RamId").empty();
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetRAMForReseller", "Reseller")',
+                dataType: 'json',
+                async: false,
+                cache:false,
+                data: { rId: resellerId },
+                success: function (ramuser) {
+                    $("#RamId").append('<option value="0">Select</option>');
+                    $.each(ramuser, function (i, ram) {
+                        $("#RamId").append('<option value="' + ram.Value + '">' + ram.Text + '</option>');
+                        if(IsRamExist == false && ram.Value==localStorage.getItem('PricingManager_RamId')){
+                            IsRamExist=true;
+                        }
+                    });
+
+                    if(IsRamExist){
+                        document.getElementById("RamId").value = localStorage.getItem('PricingManager_RamId')
+                    }
+                    else{
+                        $("#RamId").val($("#RamId option:first").val());
+                        localStorage.setItem('PricingManager_RamId',$("#RamId option:first").val());
+                    }
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Account Managers.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function ManageGlobalPrice(){
+            var Rid = ProjectSession_ResellerId;
+            var GlobalPriceJson = [];
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                if(userTypeMode == 2)
+                    Rid = document.getElementById("WholeSalerID").value;
+                else
+                    Rid = document.getElementById("ResellerId").value;
+            }
+
+
+
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("_ManagePrice", "PricingManager")',
+                dataType: 'html',
+                async: false,
+                data: { PricingMode:mode,PricingType:1,ResellerId:Rid,solarcompany:$("#txtSolarCompany").val(),ram:document.getElementById("RamId").value,name:$("#txtName").val()},
+                success: function (response) {
+                    $("#dvPriceManager").html(response);
+                    if($("#rbSolarCompany").val()==1){
+                        setTimeout(function(){
+                            $('#txt24Hour').focus();
+                        },1000);
+                    }
+                    else{
+                        setTimeout(function(){
+                            $('#txtUpFront').focus();
+                        },1000);
+                    }
+                    $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve data.' + ex);
+                }
+            });
+
+            //var getUrl = '@Url.Action("_ManagePrice", "PricingManager")' + '?PricingMode='+mode+'&PricingType='+1+'&ResellerId='+Rid+'&solarcompany='+encodeURI($("#txtSolarCompany").val())+'&ram='+document.getElementById("RamId").value+'&name='+$("#txtName").val()+'';
+            //$("#dvPriceManager").load(getUrl);
+        }
+
+        function ManageCustomPrice(){
+            var Rid = ProjectSession_ResellerId;
+            var scId ='';
+            var systensize='';
+
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                if(userTypeMode == 2)
+                    Rid = document.getElementById("WholeSalerID").value;
+                else
+                    Rid = document.getElementById("ResellerId").value;
+            }
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3 || '@Model.UserTypeID'==2){
+                ramId = document.getElementById("RamId").value;
+            }
+
+            if(mode==2){
+                //scId = document.getElementById("SolarCompanyId").value;
+                scId = $('#hdnsolarCompanyid').val();
+                systensize = document.getElementById("drpSystemSize").value;
+            }
+
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("_ManagePrice", "PricingManager")',
+                dataType: 'html',
+                async: false,
+                data: { PricingMode:mode,PricingType:2,ResellerId:Rid,solarcompany:$("#txtSolarCompany").val(),
+                    ram:ramId,name:$("#txtName").val(),OwnerName:$("#txtHomeOwnerName").val(),SolarCompanyId:scId,
+                    OwnerAddress:$("#txtHomeOwnerAddress").val(),RefNumber:$("#txtJobRef").val(),systemsize:systensize},
+                success: function (response) {
+                    $("#dvPriceManager").html(response);
+                    if($("#rbSolarCompany").val()==1){
+                        setTimeout(function(){
+                            $('#txt24Hour').focus();
+                        },1000);
+                    }
+                    else{
+                        setTimeout(function(){
+                            $('#txtUpFront').focus();
+                        },1000);
+                    }
+                    $('#popupProof').modal({ backdrop: 'static', keyboard: false });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve data.' + ex);
+                }
+            });
+        }
+
+        function ManageSAASGlobalPrice(){
+            var Rid = ProjectSession_ResellerId;
+            var GlobalPriceJson = [];
+
+            if ($("#SAASUserId").val() == "") {
+                alert("Select User First");
+                return false;
+            }
+            if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3){
+                Rid = document.getElementById("hdnresellerId").value;
+            }
+
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("_ManagePriceSAAS", "PricingManager")',
+                dataType: 'html',
+                async: false,
+                data: { ResellerId:Rid },
+                success: function (response) {
+                    $("#dvPriceManagerSAAS").html(response);
+                    $('#popupProofSAAS').modal({ backdrop: 'static', keyboard: false });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve data.' + ex);
+                }
+            });
+        }
+
+        function BindSolarCompany(resellerID,ramID){
+            var IsCompanyExist=false;
+            //$("#SolarCompanyId").empty();
+            $("#searchSolarCompany").val("");
+            var scurl = '';
+            var searchid='';
+            @*if(wholeSalerId != 0)
+            {
+                scurl = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+                searchid = wholeSalerId
+            }
+            else
+            {*@
+            if(ramID==0){
+                scurl = '@Url.Action("GetSolarCompanyByResellerId","SolarCompany")';
+                searchid = resellerID
+            }
+            else{
+                scurl = '@Url.Action("GetSolarCompanyByRAMID", "SolarCompany")';
+                searchid = ramID
+            }
+            //}
+
+            $.ajax({
+                type: 'POST',
+                url: scurl,
+                dataType: 'json',
+                async: false,
+                data: { id: searchid },
+                success: function (solarcompany) {
+                    solarCompanyList=[];
+                    $.each(solarcompany, function (i, company) {
+                        //$("#SolarCompanyId").append('<option value="' + company.Value + '">' + company.Text + '</option>');
+                        solarCompanyList.push({ value:company.Value,text:company.Text });
+                        if(IsCompanyExist==false && company.Value==localStorage.getItem('PricingManager_SolarCompanyId')){
+                            IsCompanyExist=true;
+                        }
+                    });
+
+                    if(IsCompanyExist){
+                        //document.getElementById("SolarCompanyId").value = localStorage.getItem('PricingManager_SolarCompanyId');
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('PricingManager_SolarCompanyId'));
+                    }
+                    else{
+                        //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                        //localStorage.setItem('PricingManager_SolarCompanyId',$("#SolarCompanyId option:first").val());
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('PricingManager_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    if (localStorage.getItem('PricingManager_SolarCompanyId') == '') {
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('PricingManager_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                    }
+
+                    $.each(solarCompanyList,function(key,value){
+                        if (value.value ==  localStorage.getItem('PricingManager_SolarCompanyId')) {
+                            $("#searchSolarCompany").val(value.text);
+                            $('#hdnsolarCompanyid').val(localStorage.getItem('PricingManager_SolarCompanyId'));
+                        }
+                    });
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function ConvertToDate(data){
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+
+        function ResetSearchFilters() {
+            if(mode==1){
+                localStorage.setItem('PricingManager_SolarCompany','');
+                localStorage.setItem('PricingManager_Name','');
+            }
+            else{
+                if('@Model.UserTypeID'==1 || '@Model.UserTypeID'==3 || '@Model.UserTypeID'==2 || '@Model.UserTypeID'==5){
+                    //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                    $('#hdnsolarCompanyid').val(solarCompanyList.length>0?solarCompanyList[0].value:0);
+                    $('#searchSolarCompany').val(solarCompanyList.length>0?solarCompanyList[0].text:'');
+                    //localStorage.setItem('PricingManager_SolarCompanyId',document.getElementById("SolarCompanyId").value);
+                    localStorage.setItem('PricingManager_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                }
+                localStorage.setItem('PricingManager_HomeOwnerName','');
+                localStorage.setItem('PricingManager_HomeOwnerAddress','');
+                localStorage.setItem('PricingManager_JobRef','');
+            }
+
+            SetParamsFromLocalStorage();
+            var table = $('#datatable').DataTable();
+            table.destroy();
+            BindDataTable();
+        }
+
+        function SearchRecords(){
+            if(mode==1){
+                localStorage.setItem('PricingManager_SolarCompany',$("#txtSolarCompany").val());
+                localStorage.setItem('PricingManager_Name',$("#txtName").val());
+            }
+            else{
+                if ('@Model.UserTypeID' == 1 || '@Model.UserTypeID' == 2 || '@Model.UserTypeID' == 3 || '@Model.UserTypeID' == 5) {
+                    //localStorage.setItem('PricingManager_SolarCompanyId',document.getElementById("SolarCompanyId").value);
+                    localStorage.setItem('PricingManager_SolarCompanyId',$('#hdnsolarCompanyid').val());
+                }
+                localStorage.setItem('PricingManager_HomeOwnerName',$("#txtHomeOwnerName").val());
+                localStorage.setItem('PricingManager_HomeOwnerAddress',$("#txtHomeOwnerAddress").val());
+                localStorage.setItem('PricingManager_JobRef',$("#txtJobRef").val());
+
+            }
+
+            var table = $('#datatable').DataTable();
+            table.destroy();
+            BindDataTable();
+        }
+
+        function UpdateGST(job){
+            $.ajax({
+                url: '@Url.Action("UpdateGST", "PricingManager")',
+                type: "POST",
+                async: false,
+                data: JSON.stringify({ jobId: job.id,status:job.checked }),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    if (data.success) {
+                        var sMsg = job.checked==true ? "GST applied successfully to selected job." : "GST reclaimed successfully from selected job.";
+                        $(".alert").hide();
+                        $("#errorMsgRegion").removeClass("alert-danger");
+                        $("#errorMsgRegion").addClass("alert-success");
+                        $("#errorMsgRegion").html(closeButton + sMsg);
+                        $("#errorMsgRegion").show();
+
+                        $("#txtInitialSTC").val('');
+                    }
+                },
+            });
+        }
+
+        function ToDate(data) {
+            if (data != null) {
+                var tickStartDate = ConvertDateToTick(data, 'dd/mm/yyyy');
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                var date = new Date(tDate);
+                //console.log(moment(date).format('@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()'));
+                //console.log(date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2));
+                //return date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2);
+                return moment(date).format('@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()');
+            }
+            else {
+                return '';
+            }
+        }
+
+        function SetParamsFromLocalStorage(){
+            if(mode==1){
+                $("#txtSolarCompany").val(localStorage.getItem('PricingManager_SolarCompany'));
+                $("#txtName").val(localStorage.getItem('PricingManager_Name'));
+            }
+            else {
+                if (localStorage.getItem('PricingManager_SystemSize') != null) { document.getElementById("drpSystemSize").value = localStorage.getItem('PricingManager_SystemSize'); }
+
+                $("#txtHomeOwnerName").val(localStorage.getItem('PricingManager_HomeOwnerName'));
+                $("#txtHomeOwnerAddress").val(localStorage.getItem('PricingManager_HomeOwnerAddress'));
+                $("#txtJobRef").val(localStorage.getItem('PricingManager_JobRef'));
+            }
+        }
+
+        function SetParamsFromLocalStorage1(key){
+            $("#txtSolarCompany").val(localStorage.getItem(key));
+            //if(mode==1){
+            //    $("#txtSolarCompany").val(localStorage.getItem(key));
+            //    $("#txtName").val(localStorage.getItem('PricingManager_Name'));
+            //}
+            //else{
+            //    document.getElementById("drpSystemSize").value = localStorage.getItem('PricingManager_SystemSize');
+            //    $("#txtHomeOwnerName").val(localStorage.getItem('PricingManager_HomeOwnerName'));
+            //    $("#txtHomeOwnerAddress").val(localStorage.getItem('PricingManager_HomeOwnerAddress'));
+            //    $("#txtJobRef").val(localStorage.getItem('PricingManager_JobRef'));
+            //}
+        }
+
+        function ShowHidePrice(IsDay1, IsDays3,IsDays7,IsCERApproved,IsRapidPay,IsOptiPay,IsCommercial,IsCustom,IsInvoiceStc,IsPeakPay) {
+            setWidthAndShowHideLi(IsDay1,$("#liDay1"));
+            setWidthAndShowHideLi(IsDays3,$("#liDay3"));
+            setWidthAndShowHideLi(IsDays7,$("#liDay7"));
+            setWidthAndShowHideLi(IsCERApproved,$("#liCERApproved"));
+            setWidthAndShowHideLi(IsRapidPay,$("#liRapidPay"));
+            setWidthAndShowHideLi(IsOptiPay,$("#liOptiPay"));
+            setWidthAndShowHideLi(IsCommercial,$("#liCommercial"));
+            setWidthAndShowHideLi(IsCustom,$("#liCustom"));
+            setWidthAndShowHideLi(IsInvoiceStc,$("#liInvoiceStc"));
+            setWidthAndShowHideLi(IsPeakPay,$("#liPeakPay"));
+
+            var visibleLiCount = $('.Processing-time > li:visible').length;
+            var liWidth = 0;
+            if(visibleLiCount > 0)
+            {
+                liWidth = 100/visibleLiCount + "%";
+            }
+
+            $('.Processing-time').find('li:visible').each(function(){
+                $(this).css("width",liWidth);
+            });
+        }
+
+        function setWidthAndShowHideLi(IsVisible,objLi)
+        {
+            if(!IsVisible)
+                objLi.hide();
+            else
+                objLi.show();
+        }
+
+        function SetPrice(Day1, Days3,Days7,CERApproved,RapidPay,OptiPay,Commercial,Custom,InvoiceStc,CustomLabel,PeakPay,PeakPayStcPrice,CustomPeakPayStcPrice,CustomSettlementTerm) {
+
+            document.getElementById("day1span").innerHTML = (Day1==null || Day1=='') ? '$' +'0': '$' +parseFloat(Day1);
+            document.getElementById("day3span").innerHTML = (Days3==null || Days3=='')?'$' +'0':'$' +parseFloat(Days3);
+            document.getElementById("day7span").innerHTML = (Days7==null || Days7=='')?'$' +'0':'$' +parseFloat(Days7);
+            document.getElementById("onApprovalspan").innerHTML = (CERApproved==null || CERApproved=='')?'$' +'0':'$' +parseFloat(CERApproved);
+            document.getElementById("rapidPaySpan").innerHTML = (RapidPay==null || RapidPay=='')?'$' +'0':'$' +parseFloat(RapidPay);
+            document.getElementById("optiPaySpan").innerHTML = (OptiPay==null || OptiPay=='')?'$' +'0':'$' +parseFloat(OptiPay);
+            document.getElementById("commercialSpan").innerHTML = (Commercial==null || Commercial=='')?'$' +'0':'$' +parseFloat(Commercial);
+            //document.getElementById("customSpan").innerHTML = (Custom==null || Custom=='')?'$' +'0':'$' +parseFloat(Custom);
+            document.getElementById("customSpan").innerHTML = (Custom==null || Custom=='')?'$' +'0':(CustomSettlementTerm == 12 && CustomPeakPayStcPrice == 1)?'':'$' +parseFloat(Custom);
+
+            document.getElementById("invoiceStcSpan").innerHTML = (InvoiceStc==null || InvoiceStc=='')?'$' +'0':'$' +parseFloat(InvoiceStc);
+            //document.getElementById("peakPaySpan").innerHTML = (PeakPay==null || PeakPay=='')?'$' +'0':'$' +parseFloat(PeakPay);
+            document.getElementById("peakPaySpan").innerHTML = (PeakPay==null || PeakPay=='')?'$' +'0': (PeakPayStcPrice == 1)?'':'$' +parseFloat(PeakPay);
+
+            $("#liCustom").find('.time').text(CustomLabel);
+
+            //ShowHidePrice(Day1, Days3,Days7,CERApproved,RapidPay,OptiPay,Commercial,Custom,InvoiceStc);
+
+        }
+
+        function SetCustomSubDescription(settlementTerm) {
+            $.each($("#PricingBlock").find('li'),function(){
+                if($(this).attr("settlementterm") == settlementTerm)
+                {
+                    $("#liCustom").find('.processing-text').text($(this).find('.processing-text').text());
+                }
+            });
+        }
+
+    </script>
+}
+
+

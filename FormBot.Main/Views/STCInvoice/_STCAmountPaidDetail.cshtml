@@ -1,0 +1,353 @@
+﻿@model FormBot.Entity.STCInvoicePayment
+@using FormBot.Helper
+
+<style type="text/css">
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .form-border img {
+        max-width: none !important;
+    }
+
+    .input-group-addon {
+        top: 36px !important;
+        padding: 0px 24px !important;
+    }
+</style>
+
+<div class="modal-header">
+    <button type="button" class="close" aria-label="Close" data-dismiss="modal" id="AddTimeClose">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title">STC AmountPaid Detail</h4>
+</div>
+
+
+<div class="modal-body">
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionForAmount" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOpenPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <form class="form-block" id="dvUpdatePaidAmount" style="display:none">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label class="control-label required">Amount:</label>
+                        @Html.TextBoxFor(m => m.Amount, new { @id = "txtAmount", @class = "form-control decimal", @maxlength = 8, @tabindex = 1, @autofocus = "autofocus" })
+                        @Html.ValidationMessageFor(m => m.Amount)
+                    </div>
+                </div>
+
+                <div class="col-sm-5">
+                    <div class="form-group">
+                        <label class="control-label required">Amount Date:</label>
+                        @Html.TextBoxFor(m => m.PaymentDate, new { @id = "txtPaymentDate", @class = "form-control", @tabindex = 2, @readonly = "readonly" })
+                        <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+                        @Html.ValidationMessageFor(m => m.PaymentDate)
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group defaultFormBot tab_bottomrow">
+                <button type="button" id="btnSaveUpdatedAmount" class="btn primary save_ic" tabindex="3">Save</button>
+                <button type="button" id="btnCancelUpdatedAmount" class="btn default cancel_ic" tabindex="4">Cancel</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="grid" class="col-sm-14 popupgrid">
+        <button type="button" id="btnAddAmount" class="btn primary pull-right icon-btn" tabindex="6" style="margin-right: 0px;margin-bottom:15px;"><span class="sprite-img add_ic"></span>Add</button>
+        <div class="table-responsive toggle-table-row" style="max-height:350px; overflow-y:scroll;">
+            <table id="AmountPaidDatatable" class="table table-hover" style="width:100% !important;">
+                <thead>
+                    <tr>
+                        <th><span>Payment</span></th>
+                        <th><span>Payment Date</span></th>
+                        <th class="action">Action</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+
+    <button type="button" class="btn default cancel_ic" data-dismiss="modal" tabindex="7">Close</button>
+</div>
+
+
+<script type="text/javascript">
+    var selectedSTCInvoicePaymentID=0;
+    var PrevAmount=0;
+    var PreDate="";
+
+    $('.decimal').keypress(function (event) {
+        var $this = $(this);
+        if ((event.which != 46 || $this.val().indexOf('.') != -1) &&
+            (event.which > 31) &&
+          ((event.which < 48 || event.which > 57) &&
+          (event.which != 0 && event.which != 8))) {
+            event.preventDefault();
+        }
+
+        var text = $(this).val();
+        if ((event.which == 46) && (text.indexOf('.') == -1)) {
+            setTimeout(function () {
+                if ($this.val().substring($this.val().indexOf('.')).length > 5) {
+                    alert('hi');
+                    $this.val($this.val().substring(0, $this.val().indexOf('.') + 3));
+                }
+            }, 1);
+        }
+
+        if ((text.indexOf('.') != -1) &&
+            (text.substring(text.indexOf('.')).length > 2) &&
+            (event.which != 0 && event.which != 8) &&
+        ($(this)[0].selectionStart >= text.length - 2)) {
+            event.preventDefault();
+        }
+
+        if ($this.val().indexOf('.') == -1 && ($this.val().length > 4) && event.which != 46) {
+            event.preventDefault();
+        }
+    });
+
+    $("#txtPaymentDate").datepicker({
+        format: '@ProjectConfiguration.GetDateFormat',
+        autoclose: true
+    });
+
+    $(document).ready(function () {
+        $('#AmountPaidDatatable').DataTable({
+            iDisplayLength: 10,
+            paginate:false,
+            lengthMenu:@ProjectConfiguration.GetPageSize,
+            language: {
+                sLengthMenu: "Page Size: _MENU_"
+            },
+
+            columns: [
+                    { 'data': 'Amount'},
+
+                    { 'data': 'strPaymentDate' ,
+                        "render": function (data, type, full, meta) {
+                            return ToDate(data);
+                        }
+                    },
+
+                    {
+                        'data': 'Id',
+                        "render": function (data, type, full, meta) {
+                            imgedit = 'background:url(../Images/edit-icon.png) no-repeat center; text-decoration:none;';
+                            imgdelete = 'background:url(../Images/delete-icon.png) no-repeat center; text-decoration:none;';
+                            var editHref ='';
+                            var deleteHref = '';
+                            if(full.IsXeroPayment){
+                                editHref = "javascript:void(0)";
+                                deleteHref = "javascript:void(0)";
+                                editButton = '&nbsp;&nbsp;'+ '<a href="' + editHref + '" class="action delete disabled" style="' + imgedit + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                deleteButton = '&nbsp;&nbsp;'+ '<a href="' + deleteHref + '" class="action delete disabled" style="' + imgdelete + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+
+                            }
+                            else{
+
+                                editHref = "javascript:UpdateAmountPaid('"+full.STCInvoicePaymentID+"','"+full.Amount+"','"+ToDate(full.strPaymentDate)+"')";
+                                deleteHref = "javascript:DeleteAmountPaid('"+full.STCInvoicePaymentID+"')";
+                                editButton = '&nbsp;&nbsp;'+ '<a href="' + editHref + '" class="action delete" style="' + imgedit + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+                                deleteButton = '&nbsp;&nbsp;'+ '<a href="' + deleteHref + '" class="action delete" style="' + imgdelete + '" title="Accept">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>';
+
+                            }
+
+                            return editButton + deleteButton;
+                        },
+                        "orderable": false
+                    },
+            ],
+            dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+            initComplete: function (settings, json) {
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+            },
+
+            bServerSide: true,
+            sAjaxSource: '@Url.Action("GetSTCAmountPaidDetailRecords", "STCInvoice")',
+
+            "fnDrawCallback": function () {
+                $("#AmountPaidDatatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                $(".paging a.previous").html("&nbsp");
+                $(".paging a.next").html("&nbsp");
+                $('.grid-bottom span:first').attr('id', 'spanMain');
+                $("#spanMain span").html("");
+                $(".ellipsis").html("...");
+                $(".popupgrid-bottom").hide();
+                $("#AmountPaidDatatable_length").hide();
+            },
+
+            "fnServerParams": function (aoData) {
+                aoData.push({ "name": "stcinvoiceid", "value": @Model.STCInvoiceID });
+            }
+        });
+
+    });
+
+    $('#btnAddAmount').click(function () {
+        PrevAmount=0;
+        PreDate='';
+        selectedSTCInvoicePaymentID=0;
+        $("#txtAmount").val('');
+        $("#txtPaymentDate").val('');
+        $('#dvUpdatePaidAmount').show();
+    });
+    $('#btnCancelUpdatedAmount').click(function () {
+        $('#dvUpdatePaidAmount').hide();
+    });
+
+    function UpdateAmountPaid(STCInvoicePaymentID,Payment,PaymentDate){
+        PrevAmount = Payment;
+        PreDate = PaymentDate;
+        selectedSTCInvoicePaymentID = STCInvoicePaymentID;
+        $('#dvUpdatePaidAmount').show();
+        $("#txtAmount").val(Payment);
+        $("#txtPaymentDate").datepicker("update", PaymentDate);
+    }
+
+    function DeleteAmountPaid(STCInvoicePaymentID){
+        var result = confirm("Are you sure you want to delete this record ?");
+        if (result) {
+            if(parseFloat(STCInvoicePaymentID) > 0){
+                $.ajax({
+                    url: '@Url.Action("DeleteSTCAmountPaidRecord", "STCInvoice")',
+                    dataType: 'json',
+                    method: "post",
+                    data: { id: STCInvoicePaymentID },
+                    success: function (data) {
+                        if (data.success) {
+                            $(".alert").hide();
+                            $("#successMsgRegionForAmount").removeClass("alert-danger");
+                            $("#successMsgRegionForAmount").addClass("alert-success");
+                            $("#successMsgRegionForAmount").html(closeButton + "Payment amount deleted successfully.");
+                            $("#successMsgRegionForAmount").show();
+                            $("#AmountPaidDatatable").dataTable().fnDraw();
+                            $("#datatable").dataTable().fnDraw();
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    $(document).off('click', '#btnSaveUpdatedAmount').on('click', '#btnSaveUpdatedAmount', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if($("#txtAmount").val() > 0)
+        {
+            if (typeof (validateExtraFields) == "function") {
+                if (validateExtraFields() == false) {
+                    return false;
+                }
+            }
+
+            if (typeof (validateForm) != "function" || ((typeof (validateForm) == "function") && validateForm())) {
+                var rID = 0;
+                if('@ProjectSession.UserTypeId'==1 || '@ProjectSession.UserTypeId'==3){
+                    rID = document.getElementById("ResellerId").value;
+                }
+                else{
+                    rID='@ProjectSession.ResellerId';
+                }
+
+                if(selectedSTCInvoicePaymentID!=0 && (PreDate!='')){
+                //if(selectedSTCInvoicePaymentID!=0 && (PrevAmount!=0 && PreDate!='')){
+                    if(parseFloat(PrevAmount)==parseFloat($("#txtAmount").val()) && PreDate==$("#txtPaymentDate").val()){
+                        $(".alert").hide();
+                        $("#successMsgRegionForAmount").removeClass("alert-danger");
+                        $("#successMsgRegionForAmount").addClass("alert-success");
+                        $("#successMsgRegionForAmount").html(closeButton + "Payment amount updated successfully.");
+                        $("#successMsgRegionForAmount").show();
+                    }
+                    else{
+                        var txtPaymentDateTick = ConvertDateToTick($("#txtPaymentDate").val(), '@ProjectConfiguration.GetDateFormat');
+                        var txtPaymentDate = moment(txtPaymentDateTick).format("YYYY-MM-DD");
+                        $.ajax({
+                            url: '@Url.Action("UpdateSTCAmountPaidRecord", "STCInvoice")',
+                            dataType: 'json',
+                            method: "post",
+                            data: { reseller: rID, id: selectedSTCInvoicePaymentID, payment: $("#txtAmount").val(), paymentdate: txtPaymentDate},
+                            success: function (data) {
+                                if (data.success) {
+                                    $(".alert").hide();
+                                    $("#successMsgRegionForAmount").removeClass("alert-danger");
+                                    $("#successMsgRegionForAmount").addClass("alert-success");
+                                    $("#successMsgRegionForAmount").html(closeButton + "Payment amount updated successfully.");
+                                    $("#successMsgRegionForAmount").show();
+                                    PrevAmount = $("#txtAmount").val();
+                                    PreDate = $("#txtPaymentDate").val();
+                                    var PreDateTick = ConvertDateToTick($("#txtPaymentDate").val(), '@ProjectConfiguration.GetDateFormat');
+                                    PreDate = moment(PreDateTick).format("YYYY-MM-DD");
+                                    $("#AmountPaidDatatable").dataTable().fnDraw();
+                                    $("#datatable").dataTable().fnDraw();
+                                }
+                            }
+                        });
+                    }
+                }
+                else{
+                    var txtPaymentDateTick = ConvertDateToTick($("#txtPaymentDate").val(), '@ProjectConfiguration.GetDateFormat');
+                    var txtPaymentDate = moment(txtPaymentDateTick).format("YYYY-MM-DD");
+                    $.ajax({
+                        url: '@Url.Action("AddSTCAmountPaidRecord", "STCInvoice")',
+                        dataType: 'json',
+                        method: "post",
+                        data: { reseller: rID, stcinvoiceid: '@Model.STCInvoiceID', payment: $("#txtAmount").val(), paymentdate: txtPaymentDate},
+                        success: function (data) {
+                            if (data.success) {
+                                $(".alert").hide();
+                                $("#successMsgRegionForAmount").removeClass("alert-danger");
+                                $("#successMsgRegionForAmount").addClass("alert-success");
+                                $("#successMsgRegionForAmount").html(closeButton + "Payment amount added successfully.");
+                                $("#successMsgRegionForAmount").show();
+                                PrevAmount = 0;
+                                PreDate = '';
+                                $("#txtAmount").val('');
+                                $("#txtPaymentDate").val('');
+                                $("#AmountPaidDatatable").dataTable().fnDraw();
+                                $("#datatable").dataTable().fnDraw();
+                            }
+                        }
+                    });
+                }
+            }
+        }
+        else
+        {
+            $(".alert").hide();
+            $("#errorMsgRegionOpenPopUp").html("Payment amount should be greater than 0.");
+            $("#errorMsgRegionOpenPopUp").show();
+            return false;
+        }
+    });
+
+    function validateForm() {
+        $.validator.unobtrusive.parse("#dvUpdatePaidAmount");
+        if ($("#dvUpdatePaidAmount").valid()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+</script>

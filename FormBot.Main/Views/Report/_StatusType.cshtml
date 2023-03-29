@@ -1,0 +1,97 @@
+﻿@model FormBot.Entity.Report
+@{
+    Layout = null;
+}
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstStatusTypeUser, new MultiSelectList(Model.LstStatusTypeUser, "Value", "Text"), new { id = "LstStatusTypeUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoRStatus" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoLStatus" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.RECStatusTypeAssignedUser, new MultiSelectList(Model.LstStatusTypeAssignedUser, "Value", "Text"), new { id = "LstStatusTypeAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnRECStatusTypeAssignedUser, new { id = "hdnStatus" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnStatusType" tabindex="6">
+    <input type="button" value="Clear" id="btnClearStatus" class="default reset_ic" tabindex="7">
+</div>
+
+@*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+<script src="~/Scripts/jquery-1.11.0.min.js"></script>
+<link href="~/Content/jquery-ui.css" rel="stylesheet" />
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+<script type="text/javascript">
+    $(document).on("click", "#btnLtoRStatus", function () {
+        $('#LstStatusTypeUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstStatusTypeAssignedUser");
+        });
+        $('#AvailableStatus').html($('#LstStatusTypeAssignedUser option').length);
+    });
+
+
+    $(document).on("click", "#btnRtoLStatus", function () {
+        $('#LstStatusTypeAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstStatusTypeUser");
+        });
+        $('#AvailableStatus').html($('#LstStatusTypeAssignedUser option').length);
+    });
+
+    //$(document).on("click", "#closeStatusType", function () {
+    //    $('#popupStatusProof').modal('hide');
+    //});
+
+    $(document).on("click", "#btnStatusType", function () {
+        var strAssignedStatusList = [];
+        $('#LstStatusTypeAssignedUser option').each(function (i) {
+            strAssignedStatusList.push($(this).val().trim());
+        });
+
+        $("#hdnStatus").val(strAssignedStatusList);
+        $('#cntStatus').html($('#LstStatusTypeAssignedUser option').length);
+        $('#popupStatusProof').modal('hide');
+    });
+
+    $(document).on("click", "#btnClearStatus", function () {
+        $('#LstStatusTypeAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstStatusTypeUser");
+        });
+        $("#hdnStatus").val('');
+        $('#AvailableStatus').html($('#LstStatusTypeAssignedUser option').length);
+    });
+
+    $(document).on("click", "#closeStatusType", function () {
+        var strAssignedStatusList = [];
+        $('#LstStatusTypeAssignedUser option').each(function (i) {
+            strAssignedStatusList.push($(this).val().trim());
+        });
+
+        $("#hdnStatus").val(strAssignedStatusList);
+        $('#cntStatus').html($('#LstStatusTypeAssignedUser option').length);
+        $('#popupStatusProof').modal('hide');
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

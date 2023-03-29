@@ -1,0 +1,99 @@
+﻿
+
+<div class="col-md-12">
+    <div class="panel pdf-generated def">
+        <div class="visit-list">
+            <div class="panel-heading submission-add visitParent" style="background-color: #f0f0f0; color:black;" role="photo-tab" id="Serialnotab">
+                @*<input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos">*@
+                <a role="button" class="collapsed" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseserialtab" aria-expanded="false" aria-controls="collapseAssets1">
+                    <i class="sprite-img folder-icon" style="left:20px !important"></i>
+                    <span style="background-color: #f0f0f0; color:black;">Serial Numbers<i class="sprite-img submission-icon"></i></span>
+                    <i class="sprite-img arrow-icon"></i>
+                </a>
+            </div>
+        </div>
+        <div id="collapseserialtab" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+            <div class="panel-group inner-panel" id="accordion03" role="tablist" aria-multiselectable="true">
+                <div class="panel" id="loadallserialtab">
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="panel" id="loadallserialtabNew">
+
+    </div>
+</div>
+
+
+@*<script src="~/Scripts/View/Job/_JobSystemDetails.dev.js"></script>*@
+
+<script>
+    var urlLoadSerialTab = '@Url.Action("LoadSerialNumber","Job")'
+    var isSerialTabLoaded = false;
+    $(document).ready(function () {
+
+        @*$("#allphotos1").click(function () {             
+            //jobId = parseInt(jobId);
+            $('#loadallPhotos').empty();
+            $.ajax({
+                type: 'GET',
+                url: urlLoadAllPhotos,
+                data: { JobId: JobId },
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                success: function (result) {                    
+                    $('#loadallPhotos').append(result.photoView);
+                }
+            });
+            //$('#loadallPhotos').innerHTML = '@Url.Action("LoadAllPhotos","Job")?JobId='JobId;
+        });*@
+
+        $("#Serialnotab").click(function () {            
+
+
+            if (isSerialTabLoaded == false) {
+        isSerialTabLoaded = true;
+                $.ajax({
+        type: 'GET',
+                    url: urlLoadSerialTab,
+                    data: {JobId: JobId },
+                    dataType: "json",
+                    contentType: 'application/json; charset=utf-8',
+                    success: function (result) {                        
+                        $('#loadallserialtabNew').empty();
+                        $('#loadallserialtabNew').append(result.SerialTab);
+                    }
+                });
+            }
+            else {
+                $('#loadallserialtabNew').empty();
+                isSerialTabLoaded = false;
+            }
+
+        });
+    });
+    //$("#Serialnotab").click(function () {    
+    //    if (isSerialTabLoaded == false) {
+    //        isSerialTabLoaded = true;
+    //        $.ajax({
+    //            type: 'GET',
+    //            url: urlLoadSerialTab,
+    //            data: { JobId: JobId },
+    //            dataType: "json",
+    //            contentType: 'application/json; charset=utf-8',
+    //            success: function (result) {    
+    //                $('#loadallserialtab').empty();
+    //                $('#loadallserialtab').append(result.SerialTab);
+    //            }
+    //        });
+    //    }
+    //    else {
+    //        $('#loadallserialtab').empty();
+    //        isSerialTabLoaded = false;
+    //    }
+
+    //});
+</script>

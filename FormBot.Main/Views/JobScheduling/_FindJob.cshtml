@@ -1,0 +1,105 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+
+@*<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.findJobDraggable').draggable({
+            revert: "invalid",
+            scroll: false,
+        });
+
+    });
+</script>
+
+@*<div class="title">
+        <h1>Find a Job</h1>
+        <a class="back-btn pull-right" title="Back" href="#"><img alt="" src='@Url.Content("~/images/back-icon.png")'>Back</a>
+    </div>*@
+<div class="find_job_leftpanel">
+    <a href="#" class="jtoggle"></a>
+    <h3>Find a Job</h3>
+    <div class="frmblock">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-xs-6">
+                    <div class="input-group">
+                        <input type="text" placeholder="From" id="Fromdatepick" class="form-control" readonly="readonly">
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <div class="input-group">
+                        <input type="text" placeholder="To" id="Todatepick" class="form-control" readonly="readonly">
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-group jobsearch">
+                <input type="text" id="txtSearxhText" class="form-control" placeholder="JobId / Reference Number">
+                <span class="input-group-btn input-group-icon-btn">
+                    <button type="button" class="search_ic primary" id="btnSearchJobs" onclick="SearchJobsForScheduling(1,6);">Search</button>
+                </span>
+            </div>
+        </div>
+
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 3)
+        {
+            <div class="form-group">
+                <label class="control-label">Reseller:</label>
+                @Html.DropDownListFor(model => model.ResellerID, new List<SelectListItem>(), new { id = "ResellerId", @class = "form-control" })
+            </div>
+        }
+
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 3 || FormBot.Helper.ProjectSession.UserTypeId == 2 || FormBot.Helper.ProjectSession.UserTypeId == 5)
+        {
+            <div class="form-group">
+                <label class="control-label">Solar Company:</label>
+                @*@Html.DropDownListFor(model => model.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })*@
+                <input type="hidden" id="hdnsolarCompanyid" />
+                <input type="text" id="searchSolarCompany" name="searchSolarCompany" class="form-control" maxlength="50" />
+            </div>
+        }
+        @if (FormBot.Helper.ProjectSession.UserTypeId == 1 || FormBot.Helper.ProjectSession.UserTypeId == 3 || FormBot.Helper.ProjectSession.UserTypeId == 2 || FormBot.Helper.ProjectSession.UserTypeId == 5)
+        {
+            <div class="form-group">
+                <label class="control-label">Solar Electricians:</label>
+                <input type="hidden" id="hdnsolarElectricianid" />
+                <select class="report-search-box" id="txtSolarElectrician" style="display:none;" multiple="multiple" placeholder="All solar electricians"></select>
+            </div>
+        }
+
+        <div class="form-group">
+            <label class="control-label">Job Stage:</label>
+            @Html.DropDownList("JobStage", new List<SelectListItem>(), new { id = "JobStageID", @class = "form-control" })
+        </div>
+        <div class="form-group">
+            @*<div class="checkbox"><label> <input type="checkbox" id="chkUnscheduled" checked>Unscheduled</label> <label> <input type="checkbox" id="chkAll" >All</label></div>*@
+            <div class="checkbox">
+                <label>
+                    <input type="radio" name="optionsRadios" id="rbUnscheduled" value="Unscheduled" checked> Unscheduled
+                </label>
+                @*<label>
+                    <input type="radio" name="optionsRadios" id="rbscheduled" value="Scheduled"> Scheduled
+                </label>*@
+                @*<label>
+                        <input type="radio" name="optionsRadios" id="rbAll" value="2"> All
+                    </label>*@
+            </div>
+        </div>
+    </div>
+    <div class="search_result">
+        <div class="stitle"><h5>Search Results:</h5></div>
+        <div class="jobsearch_list">
+            <div id="scrollId" style="max-height:400px; overflow-y:auto">
+                <ul class="searchresult_listing" id="jobSearchList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

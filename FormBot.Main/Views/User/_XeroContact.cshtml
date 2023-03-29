@@ -1,0 +1,1415 @@
+﻿@model FormBot.Entity.UserXeroContact
+@using FormBot.Helper;
+@{
+    IEnumerable<FormBot.Entity.UserXeroContact> users = new List<FormBot.Entity.UserXeroContact>();
+    ViewBag.Company = new SelectList(users, string.Empty, string.Empty);
+    //ViewBag.WholesalerCompany = new SelectList(users, string.Empty, string.Empty);
+    bool isWholesaler = Model.UserView.IsWholeSaler;
+}
+
+@Scripts.Render("~/bundles/jqueryval")
+@Html.ValidationSummary(true)
+
+<style type="text/css">
+    .ui-autocomplete {
+        z-index: 10000 !important;
+    }
+
+    .redBorderXeroContact {
+        border: 1px solid red;
+    }
+
+    .alertForPopup {
+        margin-top: 40px;
+        margin-left: 30px;
+        margin-right: 30px;
+    }
+</style>
+
+
+<button type="button" class="close modal-close-btn" aria-label="Close" id="btnClosepopupboxContact" onclick="ClosepopupboxContact();">
+    <img src="~/images/close-btn.png" alt="">
+</button>
+<div class="alert alert-danger alert-dismissible alertForPopup" role="alert" id="errorMsgRegionForPopup" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible alertForPopup" role="alert" id="successMsgRegionForPopup" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="modal-body">
+    <div class="contact-detail-outer">
+    <div class="border-right-popup contact-detail-block">
+
+        <h4 class="modal-header-title" id="myModalLabel">System Contact Detail</h4>
+        @using (Html.BeginForm("UpdateUserXeroCheck", "User", FormMethod.Post, new { id = "SystemContact", enctype = "multipart/form-data" }))
+        {
+            @*<form id="SystemContact">*@
+            <div class="form-box">
+                <div class="row">
+                    @Html.HiddenFor(m => m.UserView.UserId)
+                    @Html.HiddenFor(m => m.UserView.UserTypeID)
+                    @Html.HiddenFor(m => m.UserView.SolarCompanyId)
+                    @Html.HiddenFor(m => m.UserView.AspNetUserId)
+                    @Html.HiddenFor(m => m.UserView.ClientNumber)
+                    @Html.HiddenFor(m => m.UserView.IsWholeSaler)
+                    @Html.HiddenFor(m => m.UserView.Status)
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.FirstName, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerFirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 1, @autofocus = "autofocus" })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.LastName, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerLastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 2 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.LastName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.Email, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerEmail, new { @class = "form-control", @maxlength = 256, @tabindex = 3 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 3 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.Email)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.Phone, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerPhone, new { @class = "form-control", @maxlength = 20, @tabindex = 4, onkeypress = "return isNumber(event);" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.Phone, new { @class = "form-control", @maxlength = 20, @tabindex = 4, onkeypress = "return isNumber(event);" })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.Phone)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.Mobile, new { @class = "control-label" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerMobile, new { @class = "form-control", @maxlength = 20, @tabindex = 5, onkeypress = "return isNumber(event);" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.Mobile, new { @class = "form-control", @maxlength = 20, @tabindex = 5, onkeypress = "return isNumber(event);" })
+                            }
+                        </div>
+                    </div>
+                    @*<div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.UserView.CompanyWebsite, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.UserView.CompanyWebsite, new { @class = "form-control", @maxlength = 50, @tabindex = 10 })
+                            </div>
+                        </div>*@
+                </div>
+                <div class="row">
+                    @if (!isWholesaler)
+                    {
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.UserView.RAMId, new { @class = "control-label" })
+                                @Html.HiddenFor(m => m.UserView.RAMId)
+                                <input type="hidden" id="hdnRAMIDXero" />
+                                <input type="text" id="searchRAMXero" name="searchRAMXero" class="form-control" maxlength="50" tabindex="6" />
+                            </div>
+                        </div>
+                    }
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.UniqueCompanyNumber, new { @class = "control-label" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.UniqueWholesalerNumber, new { @class = "form-control", @tabindex = 7, @readonly = "readonly" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.UniqueCompanyNumber, new { @class = "form-control", @tabindex = 7, @readonly = "readonly" })
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.CompanyABN, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerCompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 8, @onblur = "checkExist(this,'company ABN'," + Model.UserView.UserId + "," + Model.UserView.UserTypeID + ")" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 8, @onblur = "checkExist(this,'company ABN'," + Model.UserView.UserId + "," + Model.UserView.UserTypeID + ")" })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.CompanyABN)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.CompanyName, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.DropDownListFor(m => m.UserView.WholesalerCompanyName, new SelectList((ViewBag.Company) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", @tabindex = 9 })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(m => m.UserView.CompanyName, new SelectList((ViewBag.Company) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", @tabindex = 9 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.CompanyName)
+                        </div>
+                    </div>
+                    @if (!isWholesaler)
+                    {
+                        <div class="col-sm-4">
+                            <div class="form-group custom-company-name">
+                                @Html.LabelFor(m => m.UserView.CustomCompanyName, new { @class = "control-label required" })
+                                @Html.TextBoxFor(m => m.UserView.CustomCompanyName, new { @class = "form-control", @tabindex = 10 })
+                                @Html.ValidationMessageFor(m => m.UserView.CustomCompanyName)
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.BSB, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerBSB, new { @class = "form-control", @maxlength = 20, @tabindex = 11, onkeypress = "return isNumber(event);" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.BSB, new { @class = "form-control", @maxlength = 20, @tabindex = 11, onkeypress = "return isNumber(event);" })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.BSB)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.AccountNumber, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerAccountNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 12, onkeypress = "return isNumber(event);" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.AccountNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 12, onkeypress = "return isNumber(event);" })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.AccountNumber)
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label required">Postal Address Type :</label>
+                            @if (isWholesaler)
+                            {
+                                @Html.DropDownListFor(m => m.UserView.WholesalerIsPostalAddress, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @tabindex = 13 })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(m => m.UserView.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control", @tabindex = 13 })
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row systemPostal">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.PostalAddressID, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.DropDownListFor(model => model.UserView.WholesalerPostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 14 })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(model => model.UserView.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 14 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.PostalAddressID)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.PostalDeliveryNumber, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerPostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 15 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 15 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.PostalDeliveryNumber)
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row systemStreet">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.UnitTypeID, new { @class = "control-label", @id = "lblUnitTypeIdContact" })
+                            @if (isWholesaler)
+                            {
+                                @Html.DropDownListFor(model => model.UserView.WholesalerUnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 16 })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(model => model.UserView.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 16 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.UnitTypeID)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.UnitNumber, new { @class = "control-label", @id = "lblUnitNumberContact" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerUnitNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 17 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.UnitNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 17 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.UnitNumber)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row systemStreet">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.StreetNumber, new { @class = "control-label required", @id = "lblStreetNumberContact" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerStreetNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 18 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.StreetNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 18 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.StreetNumber)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.StreetName, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerStreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 19 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.StreetName, new { @class = "form-control", @maxlength = 20, @tabindex = 19 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.StreetName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.StreetTypeID, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.DropDownListFor(model => model.UserView.WholesalerStreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 20 })
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(model => model.UserView.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 20 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.StreetTypeID)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.Town, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerTown, new { @class = "form-control", @maxlength = 50, @tabindex = 21 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 21 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.State, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerState, new { @class = "form-control", @maxlength = 20, @tabindex = 22, @readonly = "readonly" })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.State, new { @class = "form-control", @maxlength = 20, @tabindex = 22, @readonly = "readonly" })}
+                            @Html.ValidationMessageFor(m => m.UserView.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.UserView.PostCode, new { @class = "control-label required" })
+                            @if (isWholesaler)
+                            {
+                                @Html.TextBoxFor(m => m.UserView.WholesalerPostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 23 })
+                            }
+                            else
+                            {
+                                @Html.TextBoxFor(m => m.UserView.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 23 })
+                            }
+                            @Html.ValidationMessageFor(m => m.UserView.PostCode)
+                        </div>
+                    </div>
+                </div>
+                @*<div class="row">
+                        <div class="col-sm-4" style="float:right">
+                            <div class="form-group">
+                                <button type="button" class="btn primary save_ic">Update in Greenbot</button>
+                            </div>
+                        </div>
+                    </div>*@
+                <div class="btn-footer clearfix">
+                    @*<button type="submit" class="btn primary pull-right save_ic" tabindex="22" onclick="return validateFormContact();">Update in GreenBot</button>*@
+                    <input type="submit" name="Submit" value="Update in GreenBot" class="btn primary pull-right save_ic" tabindex="24" onclick="return validateFormContact();">
+                    <input type="button" value="OVERRIDE TO XERO" class="btn primary pull-right save_ic" tabindex="25" id="btnOverride">
+                </div>
+
+            </div>
+            @*</form>*@
+        }
+    </div>
+
+    <div class="contact-detail-block">
+
+        <h4 class="modal-header-title" id="myModalLabel">XERO Contact Detail</h4>
+
+        <form id="XeroContact">
+            <div class="form-box">
+                <div class="row">
+                    @Html.HiddenFor(m => m.XeroContact.UserId)
+                    @Html.HiddenFor(m => m.XeroContact.XeroContactId)
+                    @Html.HiddenFor(m => m.XeroContact.IsPostalAddress)
+                    @Html.HiddenFor(m => m.XeroContact.IsActive)
+
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.FirstName, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.FirstName, new { @class = "form-control", @maxlength = 50, @tabindex = 26, @autofocus = "autofocus", onchange = "ChangeBorderColoronDifference($('#UserView_FirstName'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.FirstName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.LastName, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.LastName, new { @class = "form-control", @maxlength = 50, @tabindex = 27, onchange = "ChangeBorderColoronDifference($('#UserView_LastName'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.LastName)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.Email, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.Email, new { @class = "form-control", @maxlength = 256, @tabindex = 28, onchange = "ChangeBorderColoronDifference($('#UserView_Email'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.Email)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.Phone, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.Phone, new { @class = "form-control", @maxlength = 20, @tabindex = 29, onkeypress = "return isNumber(event);", onchange = "ChangeBorderColoronDifference($('#UserView_Phone'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.Phone)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.Mobile, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.Mobile, new { @class = "form-control", @maxlength = 20, @tabindex = 30, onkeypress = "return isNumber(event);", onchange = "ChangeBorderColoronDifference($('#UserView_Mobile'),$(this))" })
+                        </div>
+                    </div>
+                    @*<div class="col-sm-4">
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.XeroContact.CompanyWebsite, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.XeroContact.CompanyWebsite, new { @class = "form-control", @maxlength = 50, @tabindex = 32, onchange = "ChangeBorderColoronDifference($('#UserView_CompanyWebsite'),$(this))" })
+                            </div>
+                        </div>*@
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.purchasesTrackingCategoryOption, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.purchasesTrackingCategoryOption, new { @class = "form-control", @maxlength = 50, @tabindex = 31, onchange = "ChangeBorderColoronDifference($('#searchRAMXero'),$(this))" })
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.UniqueCompanyNumber, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.UniqueCompanyNumber, new { @class = "form-control", @tabindex = 32, @maxlength = 50, onchange = "ChangeBorderColoronDifference($('#UserView_UniqueCompanyNumber'),$(this))" })
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.CompanyABN, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 33, onchange = "ChangeBorderColoronDifference($('#UserView_CompanyABN'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.CompanyABN)
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.CompanyName, new { @class = "control-label required" })
+                            @Html.TextBoxFor(m => m.XeroContact.CompanyName, new { @class = "form-control", @tabindex = 34, @maxlength = 100, onchange = "ChangeBorderColoronDifference($('#UserView_CompanyName'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.CompanyName)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.BSB, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.BSB, new { @class = "form-control", @maxlength = 6, @tabindex = 35, onkeypress = "return isNumber(event);", onchange = "ChangeBorderColoronDifference($('#UserView_BSB'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.BSB)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.BankAccountDetails, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.BankAccountDetails, new { @class = "form-control", @maxlength = 20, @tabindex = 36, onkeypress = "return isNumber(event);", onchange = "ChangeBorderColoronDifference($('#UserView_AccountNumber'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.BankAccountDetails)
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.AddressLine1, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.AddressLine1, new { @class = "form-control", @maxlength = 200, @tabindex = 37 })
+                            @Html.ValidationMessageFor(m => m.XeroContact.AddressLine1)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.AddressLine2, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.AddressLine2, new { @class = "form-control", @maxlength = 200, @tabindex = 38 })
+                            @Html.ValidationMessageFor(m => m.XeroContact.AddressLine2)
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.Town, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.Town, new { @class = "form-control", @maxlength = 50, @tabindex = 39, onchange = "ChangeBorderColoronDifference($('#UserView_Town'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.Town)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.State, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.State, new { @class = "form-control", @maxlength = 20, @tabindex = 40, @readonly = "readonly", onchange = "ChangeBorderColoronDifference($('#UserView_State'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.State)
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.XeroContact.PostCode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.XeroContact.PostCode, new { @class = "form-control", @maxlength = 20, @tabindex = 41, onchange = "ChangeBorderColoronDifference($('#UserView_PostCode'),$(this))" })
+                            @Html.ValidationMessageFor(m => m.XeroContact.PostCode)
+                        </div>
+                    </div>
+                </div>
+                @*<div class="row">
+                        <div class="col-sm-4" style="float:right">
+                            <div class="form-group">
+                                <button type="button" class="btn primary save_ic">Update in XERO</button>
+                            </div>
+                        </div>
+                    </div>*@
+                <div class="btn-footer clearfix">
+                    <button type="button" class="btn primary pull-right save_ic" tabindex="42" id="btnUpdateInXero">Update in XERO</button>
+                    <button type="button" class="btn primary pull-right save_ic" tabindex="43" id="btnSendAnyway">Send Anyway</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var RAMListXero = [];
+    $("#LoadContactDetail").load(function () {
+        //block will be loaded with element with id myid is ready in dom
+
+        //$(document).ready(function () {
+
+
+        GetCompanyNameFromCompanyABNDirect('#UserView_CompanyName', '@Model.UserView.CompanyName');
+        if ('@Model.UserView.IsWholeSaler.ToString().ToLower()' == 'true')
+            GetCompanyNameFromCompanyABNDirect('#UserView_WholesalerCompanyName', '@Model.UserView.WholesalerCompanyName');
+        @*//GetCompanyNamefromCompanyABN('@Model.UserView.CompanyABN', '@Model.UserView.CompanyName');
+        GetCompanyNameFromCompanyABN('@Model.UserView.CompanyABN', $('#UserView_CompanyName'), '@Model.UserView.CompanyName', false);
+
+        if ('@Model.UserView.IsWholeSaler.ToString().ToLower()' == 'true')
+            GetCompanyNameFromCompanyABN('@Model.UserView.WholesalerCompanyABN', $('#UserView_WholesalerCompanyName'), '@Model.UserView.WholesalerCompanyName', true);*@
+
+        @*if ('@Model.UserView.IsWholeSaler.ToString().ToLower()' == "true") {
+            $("#btnSendAnyway").show();
+        }*@
+        ShowHideBtnSendAnyway('@Model.UserView.IsWholeSaler.ToString().ToLower()');
+
+        $("#btnOverride").click(function () {
+            OverrideToXero('@Model.UserView.IsWholeSaler.ToString().ToLower()');
+        });
+
+
+        $("#btnSendAnyway").click(function () {
+            SendDraftsToXero();
+        });
+
+        ShowHidePostalAddress();
+        @*if ('@Model.UserView.IsPostalAddress' == 'True' || '@Model.UserView.WholesalerIsPostalAddress' == 2) {
+            POAddressXeroContact(2);
+            '@Model.UserView.IsWholeSaler' ? $("#UserView_WholesalerIsPostalAddress").val(2) : $("#UserView_AddressID").val(2);
+        }
+        else {
+            POAddressXeroContact(1);
+            '@Model.UserView.IsWholeSaler' ? $("#UserView_WholesalerIsPostalAddress").val(1) : $("#UserView_AddressID").val(1);
+        }*@
+
+        $("#UserView_CompanyABN").change(function () {
+            //GetCompanyNamefromCompanyABN($('#UserView_CompanyABN').val());
+            GetCompanyNameFromCompanyABN('@Model.UserView.CompanyABN', $('#UserView_CompanyName'), '@Model.UserView.CompanyName', false);
+        });
+
+        $('#UserView_WholesalerCompanyABN').change(function () {
+            GetCompanyNameFromCompanyABN('@Model.UserView.WholesalerCompanyABN', $('#UserView_WholesalerCompanyName'), '@Model.UserView.WholesalerCompanyName', true);
+        });
+
+        $("#UserView_AddressID").change(function () {
+            var addressID = $('#UserView_AddressID option:selected').val();
+            POAddressXeroContact(addressID);
+        });
+
+        $("#UserView_WholesalerIsPostalAddress").change(function () {
+            var addressID = $('#UserView_WholesalerIsPostalAddress option:selected').val();
+            POAddressXeroContact(addressID);
+        });
+
+        $("#UserView_UnitTypeID").change(function () {
+            ChangeUnitType($('#UserView_UnitTypeID option:selected').val());
+        });
+
+        $("#UserView_WholesalerUnitTypeID").change(function () {
+            ChangeUnitType($('#UserView_WholesalerUnitTypeID option:selected').val());
+        });
+
+        FillDropDown('UserView_UnitTypeID', '@Url.Action("GetUnitType", "UnitType")', '@Model.UserView.UnitTypeID', true, null);
+        FillDropDown('UserView_StreetTypeID', '@Url.Action("GetStreetType", "StreetType")', '@Model.UserView.StreetTypeID', true, null);
+        FillDropDown('UserView_PostalAddressID', '@Url.Action("GetPostalAddress", "User")', '@Model.UserView.PostalAddressID', true, null);
+        FillDropDown('UserView_WholesalerUnitTypeID', '@Url.Action("GetUnitType", "UnitType")', '@Model.UserView.WholesalerUnitTypeID', true, null);
+        FillDropDown('UserView_WholesalerStreetTypeID', '@Url.Action("GetStreetType", "StreetType")', '@Model.UserView.WholesalerStreetTypeID', true, null);
+        FillDropDown('UserView_WholesalerPostalAddressID', '@Url.Action("GetPostalAddress", "User")', '@Model.UserView.WholesalerPostalAddressID', true, null);
+
+        TownPostcodeAutoComplete($('#UserView_Town'), $('#UserView_State'), $('#UserView_PostCode'));
+        TownPostcodeAutoComplete($('#UserView_WholesalerTown'), $('#UserView_WholesalerState'), $('#UserView_WholesalerPostCode'));
+        TownPostcodeAutoComplete($('#XeroContact_Town'), $('#XeroContact_State'), $('#XeroContact_PostCode'));
+
+        //HeighlightDifference();
+
+        //$("#btnClosepopupboxContact").click(function () {
+        //    $('#popupboxContact').modal('toggle');
+        //});
+
+        $('#btnUpdateInGreenBot').click(function () {
+            validateFormContact();
+        });
+
+        $('#btnUpdateInXero').click(function () {
+            UpdateContactInXero();
+        });
+
+        $("#searchRAMXero").change(function () {
+            GetClientNumberofSCAOnRAMChange();
+            if ($("#hdnRAMIDXero").val() == '')
+                $("#UserView_RAMId").val(0);
+            else
+                $("#UserView_RAMId").val($("#hdnRAMIDXero").val());
+        });
+
+        $('#searchRAMXero').autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var data = [];
+                $("#hdnRAMIDXero").val('');
+                $.each(RAMListXero, function (key, value) {
+                    if (value.text.toLowerCase().indexOf($("#searchRAMXero").val().toLowerCase()) > -1) {
+                        data.push({ Title: value.text, id: value.value });
+                    }
+                });
+
+                response($.map(data, function (item) {
+                    return { label: item.Title, value: item.Title, id: item.id };
+                }))
+            },
+            select: function (event, ui) {
+                $("#hdnRAMIDXero").val(ui.item.id); // save selected id to hidden input
+                GetClientNumberofSCAOnRAMChangeXero();
+                $("#UserView_RAMId").val($("#hdnRAMIDXero").val());
+            }
+        }).on('focus', function () { $(this).keydown(); });
+
+        $("#searchRAMXero").autocomplete('instance')._renderItem = function (ul, item) {
+            var re = new RegExp($.trim(this.term.toLowerCase()));
+            var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) + "</span>");
+
+            return $("<li style='font-size:14px;'></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + t + "</a>")
+                .appendTo(ul);
+
+        };
+
+        BindRAMForSolarCompanyXERO('@Model.UserView.RAMId', '@Model.UserView.ResellerID');
+
+        HeighlightDifference('@Model.UserView.IsWholeSaler.ToString().ToLower()');
+
+        if ('@Model.UserView.CustomCompanyName' == '') {
+            $("#UserView_CustomCompanyName").rules("remove", "required");
+            $("#UserView_CustomCompanyName").prev("label").removeClass("required");
+        }
+
+
+    });
+    //window.onload = function () {
+    //    HeighlightDifference();
+    //}
+    function BindRAMForSolarCompanyXERO(ramId, resellerId) {
+        $("#searchRAMXero").val("");
+        $.ajax({
+            type: 'get',
+            url: '@Url.Action("GetRAMByReseller", "RAMSolarCompany")',
+            dataType: 'json',
+            data: { resellerId: resellerId },
+            success: function (RAMS) {
+                RAMListXero = [];
+                $.each(RAMS, function (i, user) {
+                    RAMListXero.push({ value: user.Value, text: user.Text });
+                });
+
+                if (ramId > 0) {
+                    $('#hdnRAMIDXero').val(ramId);
+                    $.each(RAMListXero, function (key, value) {
+                        if (value.value == ramId) {
+                            $("#searchRAMXero").val(value.text);
+                        }
+                    });
+                    //ChangeBorderColoronDifference($("#searchRAMXero"), $("#XeroContact_purchasesTrackingCategoryOption"));
+                }
+            },
+            error: function (ex) {
+                alert('Failed to retrieve greenbot account manager.' + ex);
+            }
+        });
+        return false;
+    }
+
+    function POAddressXeroContact(addressID) {
+        if (addressID == 1) {
+            $('.systemStreet').show();
+            $('.systemPostal').hide();
+        }
+        else {
+            $('.systemStreet').hide();
+            $('.systemPostal').show();
+        }
+    }
+
+    function HeighlightDifference(isWholesalerDetails) {
+        var objUserView = isWholesalerDetails == 'true' ? "UserView_Wholesaler" : "UserView_";
+
+        ChangeBorderColoronDifference($("#" + objUserView + "FirstName"), $("#XeroContact_FirstName"));
+        ChangeBorderColoronDifference($("#" + objUserView + "LastName"), $("#XeroContact_LastName"));
+        ChangeBorderColoronDifference($("#" + objUserView + "Email"), $("#XeroContact_Email"));
+        ChangeBorderColoronDifference($("#" + objUserView + "Phone"), $("#XeroContact_Phone"));
+        ChangeBorderColoronDifference($("#" + objUserView + "Mobile"), $("#XeroContact_Mobile"));
+        ChangeBorderColoronDifference($("#" + objUserView + "BSB"), $("#XeroContact_BSB"));
+        ChangeBorderColoronDifference($("#" + objUserView + "CompanyABN"), $("#XeroContact_CompanyABN"));
+        if (isWholesalerDetails) {
+            ChangeBorderColoronDifference($("#UserView_WholesalerCompanyName"), $("#XeroContact_CompanyName"));
+        }
+        else {
+            if ($("#UserView_CustomCompanyName").val() != "" && $("#CustomCompanyName").is(':visible'))
+                ChangeBorderColoronDifference($("#UserView_CustomCompanyName"), $("#XeroContact_CompanyName"));
+            else
+                ChangeBorderColoronDifference($("#UserView_CompanyName"), $("#XeroContact_CompanyName"));
+        }
+        //ChangeBorderColoronDifference($("#" + objUserView + "AccountNumber"), $("#XeroContact_AccountNumber"));
+        ChangeBorderColoronDifference($("#" + objUserView + "AccountNumber"), $("#XeroContact_BankAccountDetails"));
+        ChangeBorderColoronDifference($("#" + objUserView + "Town"), $("#XeroContact_Town"));
+        ChangeBorderColoronDifference($("#" + objUserView + "State"), $("#XeroContact_State"));
+        ChangeBorderColoronDifference($("#" + objUserView + "PostCode"), $("#XeroContact_PostCode"));
+        //ChangeBorderColoronDifference($("#searchRAMXero"), $("#XeroContact_purchasesTrackingCategoryOption"));
+        ChangeBorderColoronDifference($("#UserView_ClientNumber"), $("#XeroContact_ClientNumber"));
+
+    }
+
+    function ChangeBorderColoronDifference(sysObj, xeroObj) {
+        if (sysObj.val() != null && sysObj.val() != undefined) {
+            if (xeroObj.val() != null && xeroObj.val() != undefined) {
+                if ($.trim(sysObj.val().toLowerCase()) != $.trim(xeroObj.val().toLowerCase())) {
+                    xeroObj.addClass("redBorderXeroContact");
+                }
+                else
+                    $(xeroObj).removeClass("redBorderXeroContact");
+            }
+        }
+    }
+
+    function addressValidationContactPopup(isWholesalerDetails) {
+        if (!isWholesalerDetails) {
+            $("#UserView_UnitTypeID").rules("add", {
+                required: false,
+            });
+            $("#UserView_UnitNumber").rules("add", {
+                required: false,
+            });
+            if ($("#UserView_UnitTypeID").val() == "" && $("#UserView_UnitNumber").val() == "") {
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_UnitTypeID").rules("add", {
+                    required: false,
+                });
+                $("#UserView_UnitNumber").next("span").attr('class', 'field-validation-valid');
+
+                $('#lblStreetNumberContact').addClass("required");
+                $("#UserView_StreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+
+            if ($("#UserView_UnitTypeID").val() > 0 && $("#UserView_UnitNumber").val() != "") {
+                $('#lblStreetNumberContact').removeClass("required");
+                $("#UserView_StreetNumber").rules("add", {
+                    required: false,
+                });
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_UnitTypeID").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UserView_UnitTypeID").val() > 0 && $("#UserView_UnitNumber").val() == "") {
+                $("#UserView_UnitNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Unit Number is required."
+                    }
+                });
+                $('#lblUnitNumberContact').addClass("required");
+                $('#lblStreetNumberContact').removeClass("required");
+                $("#UserView_StreetNumber").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UserView_UnitTypeID").val() == "" && $("#UserView_UnitNumber").val() != "") {
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_UnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_UnitTypeID").rules("add", {
+                    required: false,
+                });
+                $('#lblStreetNumberContact').addClass("required");
+                $("#UserView_StreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+        }
+        else {
+            $("#UserView_WholesalerUnitTypeID").rules("add", {
+                required: false,
+            });
+            $("#UserView_WholesalerUnitNumber").rules("add", {
+                required: false,
+            });
+            if ($("#UserView_WholesalerUnitTypeID").val() == "" && $("#UserView_WholesalerUnitNumber").val() == "") {
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+                $("#UserView_WholesalerUnitNumber").next("span").attr('class', 'field-validation-valid');
+
+                $('#lblStreetNumberContact').addClass("required");
+                $("#UserView_WholesalerStreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+
+            if ($("#UserView_WholesalerUnitTypeID").val() > 0 && $("#UserView_WholesalerUnitNumber").val() != "") {
+                $('#lblStreetNumberContact').removeClass("required");
+                $("#UserView_WholesalerStreetNumber").rules("add", {
+                    required: false,
+                });
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UserView_WholesalerUnitTypeID").val() > 0 && $("#UserView_WholesalerUnitNumber").val() == "") {
+                $("#UserView_WholesalerUnitNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Unit Number is required."
+                    }
+                });
+                $('#lblUnitNumberContact').addClass("required");
+                $('#lblStreetNumberContact').removeClass("required");
+                $("#UserView_WholesalerStreetNumber").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#UserView_WholesalerUnitTypeID").val() == "" && $("#UserView_WholesalerUnitNumber").val() != "") {
+                $('#lblUnitNumberContact').removeClass("required");
+                $('#lblUnitTypeIdContact').removeClass("required");
+                $("#UserView_WholesalerUnitNumber").rules("add", {
+                    required: false,
+                });
+                $("#UserView_WholesalerUnitTypeID").rules("add", {
+                    required: false,
+                });
+                $('#lblStreetNumberContact').addClass("required");
+                $("#UserView_WholesalerStreetNumber").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+        }
+    }
+
+    function validateFormContact() {
+        addressValidationContactPopup('@Model.UserView.IsWholeSaler');
+        $.validator.unobtrusive.parse("#SystemContact");
+
+        if ($("#SystemContact").valid()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    function showErrorMessageXero(message) {
+        $(".alertForPopup").hide();
+        $("#successMsgRegionForPopup").hide();
+        $("#errorMsgRegionForPopup").html(closeButton + message);
+        $("#errorMsgRegionForPopup").show();
+    }
+
+    function showSuccessMessageXero(message) {
+        $(".alertForPopup").hide();
+        $("#errorMsgRegionForPopup").hide();
+        $("#successMsgRegionForPopup").html(closeButton + message);
+        $("#successMsgRegionForPopup").show();
+    }
+
+    function GetClientNumberOnRAMChangeXero(userTypeId, resellerId, userId, url) {
+        $.ajax({
+            type: 'get',
+            url: url,
+            dataType: 'json',
+            data: { userTypeId: userTypeId, resellerId: resellerId, userId: userId },
+            success: function (data) {
+                if (data) {
+                    if (userTypeId == data.userTypeIdOfPrefix) {
+                        if (data.clientNumber && data.clientNumber != null && data.clientNumber != "") {
+                            $("#UserView_ClientNumber").val(data.clientNumber);
+                            $("#errorMsgRegionForPopup").hide();
+                        }
+                        else {
+                            showErrorMessageXero("Reseller or RAM don't have client code.");
+                            $("#UserView_ClientNumber").val("");
+                        }
+
+                    }
+                    else {
+                        if (data.clientNumber && data.clientNumber != null && data.clientNumber != "") {
+                            $("#UserView_ClientNumber").val(data.clientNumber);
+                            showErrorMessageXero("Selected account manager don't have client code, so displying client number is based on reseller." + '<br/>' + "When account manager set its own client code then client number will be set accordingly.");
+                        }
+                        else {
+                            showErrorMessageXero("Reseller or RAM don't have client code.");
+                            $("#UserView_ClientNumber").val("");
+                        }
+                    }
+                }
+            },
+            error: function (ex) {
+                alert('Failed to get client number.');
+            }
+        });
+    }
+
+    function GetClientNumberofSCAOnRAMChangeXero(clientNum) {
+        var resellerId = '@Model.UserView.ResellerID';
+        var url = '@Url.Action("GetClientNumberOnRAMChange", "Account")';
+        var userTypeId = '';
+
+        var ramId = 0;
+        if ($("#hdnRAMIDXero").val() == "") {
+            ramId = 0;
+            userTypeId = 2;
+        }
+        else {
+            ramId = $("#hdnRAMIDXero").val();
+            userTypeId = 5;
+        }
+        if (clientNum) {
+            ChangeClientNumber(userTypeId, resellerId, ramId, url, clientNum);
+        }
+        else {
+            GetClientNumberOnRAMChangeXero(userTypeId, resellerId, ramId, url);
+        }
+    }
+
+    function UpdateContactInXero() {
+        if ($("#XeroContact").valid()) {
+
+            var data = JSON.stringify($("#XeroContact").serializeToJson());
+            var objData = JSON.parse(data);
+            var obj = {};
+
+            obj.FirstName = objData.XeroContact.FirstName;
+            obj.LastName = objData.XeroContact.LastName;
+            obj.XeroContactId = objData.XeroContact.XeroContactId;
+            obj.UserId = objData.XeroContact.UserId;
+            obj.Email = objData.XeroContact.Email;
+            obj.Phone = objData.XeroContact.Phone;
+            obj.Mobile = objData.XeroContact.Mobile;
+            obj.BSB = objData.XeroContact.BSB;
+            obj.CompanyName = objData.XeroContact.CompanyName;
+            obj.CompanyABN = objData.XeroContact.CompanyABN;
+            obj.ClientNumber = objData.XeroContact.ClientNumber;
+            obj.IsPostalAddress = objData.XeroContact.IsPostalAddress;
+            obj.IsActive = objData.XeroContact.IsActive;
+            //obj.CompanyWebsite = objData.XeroContact.CompanyWebsite;
+            obj.AddressLine1 = objData.XeroContact.AddressLine1;
+            obj.AddressLine2 = objData.XeroContact.AddressLine2;
+            obj.Town = objData.XeroContact.Town;
+            obj.State = objData.XeroContact.State;
+            obj.PostCode = objData.XeroContact.PostCode;
+
+            obj.BankAccountDetails = objData.XeroContact.BankAccountDetails;
+            obj.purchasesTrackingCategoryName = objData.XeroContact.purchasesTrackingCategoryName;
+            obj.purchasesTrackingCategoryOption = objData.XeroContact.purchasesTrackingCategoryOption;
+
+            var dataXeroContact = JSON.stringify(obj);
+
+            $.ajax(
+                   {
+                       url: '@Url.Action("UpdateContactInXero", "User")',
+                       dataType: 'json',
+                       contentType: 'application/json; charset=utf-8', // Not to set any content header
+                       type: 'post',
+                       data: dataXeroContact,
+                       success: function (response) {
+                           if (response && response.status == false) {
+                               if (response.error.toLowerCase() == 'specified method is not supported.' || response.error.toLowerCase() == 'renewtokenexception' || response.error.toLowerCase() == 'invalid_grant') {
+                                   window.open('@Url.Action("Connect", "XeroConnect")', "_blank");
+                               }
+                               else if (response.error.toLowerCase() == 'sessiontimeout')
+                                   window.location.href = '@Url.Action("Logout", "Account")';
+                               else if (response.error.toLowerCase() == "the account number already exists. please enter a different account number.") {
+                                   var result = confirm("The Account Number already exists in xero so do you want to change client number in greenbot system?");
+                                   if (result) {
+                                       GetClientNumberofSCAOnRAMChangeXero($("#UserView_ClientNumber").val());
+                                   }
+                                   else {
+                                       showErrorMessageXero(response.error);
+                                   }
+                               }
+                               else if (response.error)
+                                   showErrorMessageXero(response.error);
+                               else
+                                   showErrorMessageXero("Contact has not been updated in XERO.");
+                           }
+                           else {
+                               showSuccessMessage("Contact has been updated successfully in XERO.");
+                               $('#popupboxContact').modal('toggle');
+                           }
+                       },
+                       error: function () {
+                           showErrorMessageXero("Contact has not been updated in XERO.");
+                       }
+                   });
+        }
+    }
+    function OverrideToXero(isWholesalerDetails) {
+        HeighlightDifference('@Model.UserView.IsWholeSaler.ToString().ToLower()');
+        var objUserView = isWholesalerDetails == 'true' ? "UserView_Wholesaler" : "UserView_";
+        var result = confirm("Are you sure you want to override detail in XERO?");
+        if (result) {
+            $("#XeroContact_FirstName").val($("#" + objUserView + "FirstName").val());
+            $("#XeroContact_LastName").val($("#" + objUserView + "LastName").val());
+            $("#XeroContact_Email").val($("#" + objUserView + "Email").val());
+            $("#XeroContact_Phone").val($("#" + objUserView + "Phone").val());
+            $("#XeroContact_Mobile").val($("#" + objUserView + "Mobile").val());
+
+            $("#XeroContact_purchasesTrackingCategoryOption").val($("#searchRAMXero").val());
+            $("#XeroContact_ClientNumber").val($("#UserView_ClientNumber").val());
+
+            $("#XeroContact_CompanyABN").val($("#" + objUserView + "CompanyABN").val());
+            if (isWholesalerDetails == 'false') {
+                if ($("#UserView_CustomCompanyName").val() != "")
+                    $("#XeroContact_CompanyName").val($("#UserView_CustomCompanyName").val());
+                else
+                    $("#XeroContact_CompanyName").val($("#UserView_CompanyName").val());
+            }
+            else {
+                $("#XeroContact_CompanyName").val($("#UserView_WholesalerCompanyName").val());
+            }
+
+            $("#XeroContact_BankAccountDetails").val($("#" + objUserView + "AccountNumber").val());
+            $("#XeroContact_Town").val($("#" + objUserView + "Town").val());
+            $("#XeroContact_State").val($("#" + objUserView + "State").val());
+            $("#XeroContact_PostCode").val($("#" + objUserView + "PostCode").val());
+
+            if ($("#" + objUserView + "BSB").val().trim() != '' && $("#" + objUserView + "BSB").val().trim() != null) {
+                $("#XeroContact_BSB").val($("#" + objUserView + "BSB").val().trim().substring(0, 6));
+            }
+
+            var addressLine1, addressLine2, streetAddress;
+            var PostalDeliveryType = $("#" + objUserView + "PostalAddressID").val() > 0 ? $("#" + objUserView + "PostalAddressID option:selected").text() : "";
+            var UnitTypeName = $("#" + objUserView + "UnitTypeID").val() > 0 ? $("#" + objUserView + "UnitTypeID option:selected").text() : "";
+            var StreetNumber = $("#" + objUserView + "StreetNumber").val();
+            var StreetName = $("#" + objUserView + "StreetName").val();
+            var StreetTypeName = $("#" + objUserView + "StreetTypeID").val() > 0 ? $("#" + objUserView + "StreetTypeID option:selected").text() : "";
+            var PostalDeliveryNumber = $("#" + objUserView + "PostalDeliveryNumber").val();
+            var UnitNumber = $("#" + objUserView + "UnitNumber").val();
+
+            PostalDeliveryType = (PostalDeliveryType == "" || PostalDeliveryType == null) ? "" : PostalDeliveryType;
+            UnitTypeName = (UnitTypeName == "" || UnitTypeName == null) ? "" : UnitTypeName;
+            StreetNumber = (StreetNumber == "" || StreetNumber == null) ? "" : StreetNumber;
+            streetAddress = StreetNumber + ((StreetName == "" || StreetName == null) ? "" : ' ' + StreetName) + ((StreetTypeName == "" || StreetTypeName == null) ? '' : ' ' + StreetTypeName);
+
+            if ($("#UserView_AddressID").val() == 1 || (isWholesalerDetails == 'true' && $("#UserView_WholesalerIsPostalAddress").val() == 1)) {
+                // physical address
+                $("#XeroContact_IsPostalAddress").val("False");
+                if ((UnitTypeName == "" || UnitTypeName == null) && (UnitNumber == "" || UnitNumber == null)) {
+                    addressLine1 = streetAddress;
+                    addressLine2 = "";
+                }
+                else {
+                    addressLine1 = UnitTypeName + ((UnitNumber == "" || UnitNumber == null) ? "" : ' ' + UnitNumber)
+                    addressLine2 = streetAddress;
+
+                    //if ((UnitTypeName != "" && UnitTypeName != null) || (UnitNumber != "" || UnitNumber != null))
+                    //    addressLine2 = streetAddress;
+                }
+            }
+            else {
+                // P.o.box
+                $("#XeroContact_IsPostalAddress").val("True");
+                addressLine1 = PostalDeliveryType + ((PostalDeliveryNumber == "" || PostalDeliveryNumber == null) ? "" : ' ' + PostalDeliveryNumber);
+            }
+            $("#XeroContact_AddressLine1").val(addressLine1);
+            $("#XeroContact_AddressLine2").val(addressLine2);
+
+            @*HeighlightDifference('@Model.UserView.IsWholeSaler');*@
+        }
+    }
+
+    function ChangeClientNumber(userTypeId, resellerId, ramId, url, clientNum) {
+        $.ajax(
+        {
+            url: url,
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8', // Not to set any content header
+            type: 'get',
+            data: { userTypeId: userTypeId, resellerId: resellerId, userId: ramId, existClientNumber: clientNum, solarCompanyId: parseInt($("#UserView_SolarCompanyId").val()) },
+            success: function (data) {
+                if (data) {
+                    if (data.clientNumber && data.clientNumber != null && data.clientNumber != "") {
+                        $("#ClientNumber").val(data.clientNumber);
+                        $("#UserView_ClientNumber").val(data.clientNumber);
+                        showSuccessMessageXero("Client Number has been changed successfully.");
+                    }
+                    else
+                        showErrorMessageXero("Client Number has not been changed.");
+                }
+                else
+                    showErrorMessageXero("Client Number has not been changed.");
+            },
+            error: function () {
+                showErrorMessageXero("Client Number has not been changed.");
+            }
+        });
+    }
+
+    function TownPostcodeAutoComplete(objTown, objState, objPostCode) {
+        objTown.autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest","User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        console.log(data1);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                objState.val(ui.item.state);
+                objPostCode.val(ui.item.postcode);
+            }
+        });
+
+        objPostCode.autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest", "User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                objState.val(ui.item.state);
+                objTown.val(ui.item.location);
+            }
+        });
+    }
+
+    function GetCompanyNameFromCompanyABNDirect(id,strCompanyName) {
+
+         var CompanyNameFirstTimeBind = strCompanyName;//GetCompnayName();
+            if (CompanyNameFirstTimeBind.indexOf('&#39') != -1) {
+                CompanyNameFirstTimeBind = CompanyNameFirstTimeBind.replace(/&#39;/g, "'");
+            }
+            else if (CompanyNameFirstTimeBind.indexOf('&amp') != -1) {
+                str = CompanyNameFirstTimeBind.replace(/&amp;/g, '&');
+            }
+            else if (CompanyNameFirstTimeBind.indexOf('&quot') != -1) {
+                CompanyNameFirstTimeBind = CompanyNameFirstTimeBind.replace(/&quot;/g, '"');
+            }
+            else if (CompanyNameFirstTimeBind.indexOf('&lt') != -1) {
+                CompanyNameFirstTimeBind = CompanyNameFirstTimeBind.replace(/&lt;/g, '<');
+            }
+            else if (CompanyNameFirstTimeBind.indexOf('&gt') != -1) {
+                CompanyNameFirstTimeBind = CompanyNameFirstTimeBind.replace(/&gt;/g, '>');
+            }
+        $(id).append($("<option></option>").val(CompanyNameFirstTimeBind).html(CompanyNameFirstTimeBind));
+        $(id).val(CompanyNameFirstTimeBind);
+    }
+    function GetCompanyNameFromCompanyABN(id, objCompanyName, strCompanyName, isWholesalerDetails) {
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetCompanyABN", "User")',
+            data: { id: id },
+            async: false,
+            contentType: "application/json; charset=utf-8",
+            dataType: 'json',
+            success: function (data) {
+                if (data == 0) {
+                    objCompanyName.empty();
+                    objCompanyName.append($("<option></option>").val("").html("Select"));
+
+                    showErrorMessageForPopup("Invalide Company ABN.");
+                    return false;
+                }
+                else {
+                    if (objCompanyName.find('option').length > 1) {
+                        objCompanyName.empty();
+                        objCompanyName.append($("<option></option>").val("").html("Select"));
+                        $.each(data, function (key, value) {
+                            objCompanyName.append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                        });
+                    }
+                    else {
+                        $.each(data, function (key, value) {
+                            objCompanyName.append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                        });
+                    }
+
+                    if (strCompanyName != '') {
+                        var str = strCompanyName;
+                        if (str.indexOf('&#39') != -1) {
+                            var str = str.replace(/&#39;/g, "'");
+                        }
+                        else if (str.indexOf('&amp') != -1) {
+                            var str = str.replace(/&amp;/g, '&');
+                        }
+                        else if (str.indexOf('&quot') != -1) {
+                            var str = str.replace(/&quot;/g, '"');
+                        }
+                        else if (str.indexOf('&lt') != -1) {
+                            var str = str.replace(/&lt;/g, '<');
+                        }
+                        else if (str.indexOf('&gt') != -1) {
+                            var str = str.replace(/&gt;/g, '>');
+                        }
+                        objCompanyName.val(str);
+
+                        if (!isWholesalerDetails) {
+                            if ($("#UserView_CustomCompanyName").val() != "")
+                                ChangeBorderColoronDifference($("#UserView_CustomCompanyName"), $("#XeroContact_CompanyName"));
+                            else
+                                ChangeBorderColoronDifference(objCompanyName, $("#XeroContact_CompanyName"));
+                        }
+                        else {
+                            ChangeBorderColoronDifference(objCompanyName, $("#XeroContact_CompanyName"));
+                        }
+                    }
+                    return data;
+                }
+            }
+        });
+    }
+
+    function ChangeUnitType(unitTypeId) {
+        if (unitTypeId == "") {
+            $('#lblUnitNumberContact').removeClass("required");
+            $('#lblUnitTypeIdContact').removeClass("required");
+            $('#lblStreetNumberContact').addClass("required");
+        }
+        else {
+            $('#lblUnitNumberContact').addClass("required");
+            $('#lblUnitTypeIdContact').addClass("required");
+            $('#lblStreetNumberContact').removeClass("required");
+        }
+    }
+
+    function ClosepopupboxContact() {
+        $('#popupboxContact').modal('toggle');
+    }
+
+    function ShowHideBtnSendAnyway(isWholesaler) {
+        if (isWholesaler == "true") {
+            $("#btnSendAnyway").show();
+        }
+        else {
+            $("#btnSendAnyway").hide();
+        }
+    }
+
+    function ShowHidePostalAddress() {
+        if ('@Model.UserView.IsPostalAddress' == 'True' || '@Model.UserView.WholesalerIsPostalAddress' == 2) {
+            POAddressXeroContact(2);
+            '@Model.UserView.IsWholeSaler' ? $("#UserView_WholesalerIsPostalAddress").val(2) : $("#UserView_AddressID").val(2);
+        }
+        else {
+            POAddressXeroContact(1);
+            '@Model.UserView.IsWholeSaler' ? $("#UserView_WholesalerIsPostalAddress").val(1) : $("#UserView_AddressID").val(1);
+        }
+    }
+</script>

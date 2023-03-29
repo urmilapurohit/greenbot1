@@ -1,0 +1,559 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper;
+@{
+    /**/
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<style type="text/css">
+    .SumoSelect  > .optWrapper {
+        position: initial !important;
+    }
+</style>
+@{
+    bool isAllScaJobView = false;
+    bool isShowOnlyAssignJobsSCO = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.SCOViewAssignJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.SCOViewAssignJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.ShowOnlyAssignJobsSCO.GetHashCode()) { isShowOnlyAssignJobsSCO = true; }
+        });
+    }
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+}
+<script>
+    console.log('@isAllScaJobView')
+</script>
+@*<link type="text/css" href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" media="all" />*@
+@*<script src="~/Scripts/jquery-ui-1.0.js"></script>*@
+@*<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+@*<script src="~/Scripts/Calendar/moment.min.js"></script>*@
+<script src="~/Scripts/Calendar/TimeShifts.js?v=@ProjectConfiguration.ScriptVersion"></script>
+<link href="~/Content/Calendar/custom.css" rel="stylesheet" />
+<link href="~/Content/sumoselect.css" rel="stylesheet" />
+
+
+@*@Scripts.Render("~/bundles/jqueryval")*@
+<script type="text/javascript">
+    var message;
+    var electricianArray = [];
+    var jobSchedulingArray = [];
+    var jobArray = [];
+    var electricianJson = [];
+    var jobSchedulingJson = [];
+    var jobJson = [];
+    var viewType = "W";
+    var isOnlyView;
+    var isDroppable = false;
+
+    $(document).ready(function () {
+
+        $('#searchSolarCompany').autocomplete({
+            minLength: 0,
+            source: function (request, response) {
+                var data = [];
+                $.each(solarCompanyList, function (key, value) {
+                    if (value.text.toLowerCase().indexOf($("#searchSolarCompany").val().toLowerCase()) > -1) {
+                        data.push({ Title: value.text, id: value.value });
+                    }
+                });
+
+                response($.map(data, function (item) {
+                    return { label: item.Title, value: item.Title, id: item.id };
+                }))
+            },
+            select: function (event, ui) {
+                $("#hdnsolarCompanyid").val(ui.item.id); // save selected id to hidden input
+            }
+        }).on('focus', function () { $(this).keydown(); });
+
+        $.ui.autocomplete.prototype._renderItem = function (ul, item) {
+            var re = new RegExp($.trim(this.term.toLowerCase()));
+            var t = item.label.replace(re, "<span style='font-weight:600;'>" + $.trim(this.term.toLowerCase()) +
+                "</span>");
+            return $("<li style='font-size:14px;'></li>")
+                .data("item.autocomplete", item)
+                .append("<a>" + t + "</a>")
+                .appendTo(ul);
+        };
+
+        var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+
+        $('#Fromdatepick').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#Todatepick").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#Fromdatepick").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#Todatepick").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#Todatepick").val('');
+                }
+            }
+            var tickStartDate = ConvertDateToTick($("#Fromdatepick").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#Todatepick').data('datepicker')) {
+                $('#Todatepick').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#Todatepick").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#Todatepick').change(function () {
+            var fromDate = new Date(ConvertDateToTick($("#Fromdatepick").val(), dateFormat));
+            var toDate = new Date(ConvertDateToTick($("#Todatepick").val(), dateFormat));
+        });
+
+    });
+
+    function BindCalendarDataForAdmin(solarElectricianId) {
+        var solarcompanyId = document.getElementById("hdnsolarCompanyid").value;
+        ////var solarcompanyId = $('#hdnsolarCompanyid').val();
+        //var solarElectricianId = $("#txtSolarElectrician").val();
+
+        //solarElectricianId = $('.report-search-box').val() == null ? 'All' : $('.report-search-box').val().join();
+        $.ajax({
+            type: 'GET',
+            url: '@Url.Action("GetAdminData", "JobScheduling")',
+            dataType: 'json',
+            async: false,
+            data: { solarCompanyId: solarcompanyId, solarElectricianId: solarElectricianId },
+            success: function (Data) {
+                electricianArray = [];
+                jobSchedulingArray = [];
+                jobArray = [];
+                if (Data.solarElectrician != null) {
+                    $.each(Data.solarElectrician, function (i, e) {
+                        electricianArray.push({ id: e.UserId, name: e.Name, usertypeid: e.UserTypeID, IsPVDUser: e.IsPVDUser, IsSWHUser: e.IsSWHUser });
+                        $('#UserId').append($('<option></option>').val(e.UserId).html(e.Name));
+                    });
+                }
+                if (Data.jobSchedulingData != null && Data.jobSchedulingData != '') {
+                    var jsonScheduling = JSON.parse(Data.jobSchedulingData);
+                    $.each(jsonScheduling, function (i, e) {
+                        var label = e.Label;
+                        jobSchedulingArray.push({ id: e.JobSchedulingID, jobID: e.JobID, refNum: e.RefNumber, priority: e.Priority, jobLocation: e.Location, client: e.Client, jobStage: e.JobStage, status: e.Status, jobTitle: e.JobTitle, fullLabel: e.Label, userID: e.UserId, SESCName: e.SESCName, startDate: e.strVisitStartDate, startTime: e.strVisitStartTime, endDate: e.strVisitEndDate, endTime: e.strVisitEndTime, label: label, detail: e.Detail, jobType: e.JobType, IsClassic: e.IsClassic, userTypeID: e.UserTypeID, IsPVDUser: e.IsPVDUser, IsSWHUser: e.IsSWHUser,ID : e.ID });
+                    });
+                }
+
+                if (Data.job != null) {
+                    $.each(Data.job, function (i, e) {
+                        jobArray.push({ id: e.JobID, title: e.Title });
+                        $('#JobID').append($('<option></option>').val(e.JobID).html(e.Title));
+                    });
+                }
+
+                refreshView();
+            },
+            error: function (ex) {
+            }
+        });
+    }
+</script>
+<div class="container-fluid find-job">
+    <div class="title">
+        <h1>Scheduling</h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOpenPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="alertAssignTime" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div>
+        <input type="hidden" id="hdnsolarCompanyid" />
+        @Html.Partial("_FindJob", Model)
+        @Html.Partial("_Calendar", Model)
+    </div>
+    @*<div class="row">
+            <div class="col-md-4 col-lg-3">
+                @Html.Partial("_FindJob", Model)
+            </div>
+            <div class="col-md-8 col-lg-9" style="position: inherit !important;">
+                @Html.Partial("_Calendar", Model)
+            </div>
+        </div>*@
+</div>
+@*<div class="pop-viewmore">
+        <span class="pop-close">&nbsp;</span>
+    </div>*@
+
+
+@section scripts{
+    <script src="~/Scripts/jquery.fileupload.js"></script>
+    <script src="~/Scripts/FormBot.js"></script>
+    <script type="text/javascript"></script>
+    <script src="~/Scripts/jquery.sumoselect.min.js"></script>
+    <script src="~/Scripts/jquery.nicescroll.min.js"></script>
+    <script>
+        var UnScheduled = 1;
+        var All = 0;
+
+        $(document).ready(function () {
+
+            if ('@ProjectSession.UserTypeId' == 4 || '@ProjectSession.UserTypeId' == 6 || '@ProjectSession.UserTypeId' == 8) {
+                $("#hdnsolarCompanyid").val('@ProjectSession.SolarCompanyId');
+            }
+                
+
+            $('.SumoSelect .SelectBox').show();
+           
+            $("#searchSolarCompany").change(function () {
+                BindSolarElectricians();
+            });
+
+            $("[name=optionsRadios]").click(function () {
+                var $this = $(this);
+                if (!$this.hasClass("checked")) {
+                    $("[name=optionsRadios]").removeClass("checked");
+                    $this.addClass("checked");
+                    if ($(this).val() == 1) {
+                        UnScheduled = 1;
+                        All = 0;
+                    }
+                    else {
+                        UnScheduled = 0;
+                        All = 1;
+                    }
+                }
+            });
+
+            SetParamsFromLocalStorage();
+            SearchJobsForScheduling(1, 6);
+
+           
+
+        });
+
+        var pageIndex = 0;
+        var pageSize = 6;
+        var IsLast = false;
+        var count = 0;
+        $('#txtSolarElectrician').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+         FillDropDown('JobStageID', '@Url.Action("GetJobStages", "JobScheduling")', null, true, null);
+            $("#ResellerId").change(function () {
+                if ($("#ResellerId").val() > 0 && ('@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3)) {
+                    BindSolarCompany(document.getElementById("ResellerId").value);
+                    BindSolarElectricians();
+                    localStorage.setItem('JobScheduling_ResellerId', document.getElementById("ResellerId").value);
+                }
+            });
+
+
+        $("#scrollId").on("scroll", function (e) {
+            if (pageIndex == 1 && count > 0) {
+                count = 0;
+                return false;
+            }
+            var $o = $(e.currentTarget);
+            if ($o[0].scrollHeight - $o.scrollTop() <= $("#scrollId").height()) {// && $o[0].scrollHeight > 0) {
+                if (isNaN(pageIndex)) {
+                    pageIndex = 1;
+                } else { pageIndex = pageIndex + 1; }
+                count = pageIndex;
+                SearchJobsForScheduling(pageIndex, pageSize);
+            }
+        });
+
+       
+        //$("#chkAll").change(function () {
+        //    if (this.checked) {
+        //        $('#chkUnscheduled').prop('checked', false);
+        //    }
+        //});
+
+        //$("#chkUnscheduled").change(function () {
+        //    if (this.checked) {
+        //        $('#chkAll').prop('checked', false);
+        //    }
+        //});
+
+        function SearchJobsForScheduling(pIndex, pSize) {
+            if (pIndex == 1) {
+                $("#jobSearchList").empty();
+                IsLast = false;
+            }
+
+            if (IsLast) {
+                return;
+            }
+            var optionsRadios = $("input[name='optionsRadios']:checked").val();
+
+            pageIndex = pIndex;
+
+            var fDate = GetDates($("#Fromdatepick").val());
+            var tDate = GetDates($("#Todatepick").val());
+            var sText = $("#txtSearxhText").val();
+            localStorage.setItem('JobScheduling_SearchText', sText);
+            var jStage = document.getElementById("JobStageID").value
+            localStorage.setItem('JobScheduling_JobStage', jStage);
+            var unscheduled = UnScheduled;
+
+            if (optionsRadios == 'Unscheduled') {
+                unscheduled = 1;
+            }
+            else {
+                unscheduled = 0;
+            }
+            var all = All;
+            var SCid = '';
+            if ('@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3 || '@FormBot.Helper.ProjectSession.UserTypeId' == 2 || '@FormBot.Helper.ProjectSession.UserTypeId' == 5) {
+                //SCid = document.getElementById("SolarCompanyId").value;
+                SCid = $('#hdnsolarCompanyid').val();
+                localStorage.setItem('JobScheduling_SolarCompanyId', SCid);
+            }
+
+            var solarElectricianId = $("#txtSolarElectrician").val();
+
+            solarElectricianId = $('.report-search-box').val() == null ? 'All' : $('.report-search-box').val().join();
+
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("SearchJobsForScheduler", "JobScheduling")',
+                dataType: 'json',
+                cache: false,
+                data: { PageIndex: pIndex, PageSize: pSize, fromDate: fDate, toDate: tDate, searchText: sText, jobStage: jStage, solarcompanyid: SCid, Unscheduled: unscheduled, All: all, solarElectricianId: solarElectricianId },
+                success: function (joblist) {
+                    
+                    if (joblist == '') {
+                        IsLast = true;
+                        if ($("#jobSearchList").html() == '') {
+                            $("#jobSearchList").html('No records found.');
+                        }
+                    }
+                    else {
+                        $("#jobSearchList").append(joblist);
+                    }
+
+                    if ('@FormBot.Helper.ProjectSession.UserTypeId' == 4 || '@FormBot.Helper.ProjectSession.UserTypeId' == 6 || '@FormBot.Helper.ProjectSession.UserTypeId' == 8 ||
+                        '@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3 || '@FormBot.Helper.ProjectSession.UserTypeId' == 2 || '@FormBot.Helper.ProjectSession.UserTypeId' == 5) {
+                        $('.findJobDraggable').draggable({
+                            revert: "invalid", // when not dropped, the item will revert back to its initial position
+                            //containment: "#divSchedular",
+                            helper: "clone",
+                            cursor: "move",
+                        });
+                    }
+                    if (pIndex == 1 && ('@FormBot.Helper.ProjectSession.UserTypeId' == 2 || '@FormBot.Helper.ProjectSession.UserTypeId' == 5 || '@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3)) {
+                        BindCalendarDataForAdmin(solarElectricianId);
+                    }
+                },
+                error: function (ex) {
+                    alert('No jobs are found.' + ex);
+                }
+
+            });
+
+        }
+
+        if ('@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3) {
+            var IsResellerExist = false;
+            $.ajax({
+                type: 'get',
+                url: '@Url.Action("GetReseller", "Reseller")',
+                dataType: 'json',
+                data: '',
+                async: false,
+                success: function (reseller) {
+                    $.each(reseller, function (i, res) {
+                        $("#ResellerId").append('<option value="' + res.Value + '">' + res.Text + '</option>');
+                        if (IsResellerExist == false && res.Value == localStorage.getItem('JobScheduling_ResellerId')) {
+                            IsResellerExist = true;
+                        }
+                    });
+
+                    if (IsResellerExist) {
+                        document.getElementById("ResellerId").value = localStorage.getItem('JobScheduling_ResellerId')
+                    }
+                    else {
+                    $("#ResellerId").val($("#ResellerId option:first").val());
+                        localStorage.setItem('JobScheduling_ResellerId', $("#ResellerId option:first").val());
+                    }
+
+                    if ($("#ResellerId").val() > 0 && ('@FormBot.Helper.ProjectSession.UserTypeId' == 1 || '@FormBot.Helper.ProjectSession.UserTypeId' == 3)) {
+                        BindSolarCompany(document.getElementById("ResellerId").value);
+                        BindSolarElectricians();
+                    }
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Resellers.' + ex);
+                }
+            });
+        }
+        if ('@FormBot.Helper.ProjectSession.UserTypeId' == 2 || ('@FormBot.Helper.ProjectSession.UserTypeId' == 5 && '@isAllScaJobView.ToString().ToLower()' == "true")) {
+            BindSolarCompany(@ProjectSession.ResellerId);
+            //BindSolarElectricians();
+        }
+
+        if ('@FormBot.Helper.ProjectSession.UserTypeId' == 5 && '@isAllScaJobView.ToString().ToLower()' == "false") {
+            var IsCompanyExist = false;
+
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetAssignedSolarCompanyToRAM", "RAMSolarCompany")',
+                dataType: 'json',
+                data: '',
+                async: false,
+                success: function (solarcompany) {
+
+                    solarCompanyList = [];
+
+                    $.each(solarcompany, function (i, company) {
+                        //$("#SolarCompanyId").append('<option value="' + company.Value + '">' + company.Text + '</option>');
+                        solarCompanyList.push({ value: company.Value, text: company.Text });
+                        if (IsCompanyExist == false && company.Value == localStorage.getItem('JobScheduling_SolarCompanyId')) {
+                            IsCompanyExist = true;
+                        }
+                    });
+
+                    //$.each(solarcompany, function (i, company) {
+                    //    $("#SolarCompanyId").append('<option value="' + company.Value + '">' + company.Text + '</option>');
+                    //    if (IsCompanyExist == false && company.Value == localStorage.getItem('JobScheduling_SolarCompanyId')) {
+                    //        IsCompanyExist = true;
+                    //    }
+                    //});   
+                    if (IsCompanyExist) {
+                        //document.getElementById("SolarCompanyId").value = localStorage.getItem('JobScheduling_SolarCompanyId');
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('JobScheduling_SolarCompanyId'));
+                    }
+                    else {
+                        //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                        //localStorage.setItem('JobScheduling_SolarCompanyId', $("#SolarCompanyId option:first").val());
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('JobScheduling_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                    }
+
+                    if (localStorage.getItem('JobScheduling_SolarCompanyId') == '') {
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('JobScheduling_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                    }
+
+                    $.each(solarCompanyList, function (key, value) {
+                        if (value.value == localStorage.getItem('JobScheduling_SolarCompanyId')) {
+                            $("#searchSolarCompany").val(value.text);
+                            $('#hdnsolarCompanyid').val(localStorage.getItem('JobScheduling_SolarCompanyId'));
+                        }
+                    });
+
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+
+        }
+       
+
+        function BindSolarElectricians() {
+            var solarCompanyId = document.getElementById("hdnsolarCompanyid").value;
+
+            if (solarCompanyId == null) {
+                solarCompanyId = localStorage.getItem('JobScheduling_SolarCompanyId');
+            }
+
+            for (var i = $('#txtSolarElectrician option').length; i >= 1; i--) {
+
+                $('#txtSolarElectrician')[0].sumo.remove(i - 1);
+            }
+            $.ajax({
+                url: '@Url.Action("GetSolarElectrician", "JobScheduling")',
+                type: "GET",
+                dataType: "json",
+                data: { solarCompanyID: solarCompanyId },
+                success: function (data) {
+                    if (data != null && data.length > 0) {
+                        for (var i = 0; i < data.length; i++) {
+                            $('#txtSolarElectrician')[0].sumo.add(data[i].Value, data[i].Text);
+                        }
+                    }
+                    $('.SumoSelect .SelectBox').show();
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+        }
+
+        function BindSolarCompany(resellerID) {
+            var IsCompanyExist = false;
+            $("#searchSolarCompany").val("");
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")',
+                dataType: 'json',
+                async: false,
+                data: { id: resellerID },
+                success: function (solarcompany) {
+                    solarCompanyList = [];
+                    $.each(solarcompany, function (i, company) {
+                        //$("#SolarCompanyId").append('<option value="' + company.Value + '">' + company.Text + '</option>');
+                        solarCompanyList.push({ value: company.Value, text: company.Text });
+                        if (IsCompanyExist == false && company.Value == localStorage.getItem('JobScheduling_SolarCompanyId')) {
+                            IsCompanyExist = true;
+                        }
+                    });
+
+                    if (IsCompanyExist) {
+                        //document.getElementById("SolarCompanyId").value = localStorage.getItem('JobScheduling_SolarCompanyId');
+                        $('#hdnsolarCompanyid').val(localStorage.getItem('JobScheduling_SolarCompanyId'));
+                    }
+                    else {
+                        //$("#SolarCompanyId").val($("#SolarCompanyId option:first").val());
+                        //localStorage.setItem('JobScheduling_SolarCompanyId', $("#SolarCompanyId option:first").val());
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('JobScheduling_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                    }
+
+                    if (localStorage.getItem('JobScheduling_SolarCompanyId') == '') {
+                        $('#hdnsolarCompanyid').val(solarCompanyList.length > 0 ? solarCompanyList[0].value : 0);
+                        localStorage.setItem('JobScheduling_SolarCompanyId', $('#hdnsolarCompanyid').val());
+                    }
+
+                    $.each(solarCompanyList, function (key, value) {
+                        if (value.value == localStorage.getItem('JobScheduling_SolarCompanyId')) {
+                            $("#searchSolarCompany").val(value.text);
+                            $('#hdnsolarCompanyid').val(localStorage.getItem('JobScheduling_SolarCompanyId'));
+                        }
+                    });
+
+                },
+                error: function (ex) {
+                    alert('Failed to retrieve Solar Companies.' + ex);
+                }
+            });
+            return false;
+        }
+
+        function GetDates(date) {
+            if (date != '') {
+                var tickStartDate = ConvertDateToTick(date, '@ProjectConfiguration.GetDateFormat');
+                return moment(tickStartDate).format("YYYY-MM-DD");
+            }
+            else {
+                return '';
+            }
+        }
+
+        function SetParamsFromLocalStorage() {
+            $("#txtSearxhText").val(localStorage.getItem('JobScheduling_SearchText'));
+            document.getElementById("JobStageID").value = localStorage.getItem('JobScheduling_JobStage');
+        }
+        
+    </script>
+}

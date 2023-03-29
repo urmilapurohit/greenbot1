@@ -1,0 +1,56 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+@using FormBot.Helper;
+
+    <div class="checklist-block job-com-box" style="padding:0px !important">
+        <br />
+        <span>Check all the Checklist points</span>
+        <div class="onoffswitch" style="position:relative!important;margin-top: 4px;top:15px">
+            <input type="checkbox" name="onoffswitchCheckAllPoints" class="onoffswitch-checkbox switch " id="onoffswitchCheckAllPoints" ison="1">
+            <label class="onoffswitch-label" for="onoffswitchCheckAllPoints">
+                <span class="onoffswitch-inner"></span>
+                <span class="onoffswitch-switch"></span>
+            </label>
+        </div>
+        <ul class="checklist">
+            @if (Model.lstCheckListItem != null && Model.lstCheckListItem.Count > 0)
+            {
+                for (int i = 0; i < Model.lstCheckListItem.Count; i++)
+                {
+                    <li data-id="@Model.lstCheckListItem[i].CheckListItemId" data-visitchecklistitemid="@Model.lstCheckListItem[i].VisitCheckListItemId">
+
+                        <span>
+                            @Model.lstCheckListItem[i].ItemName<span class="color-text">
+                                @if (Model.lstCheckListItem[i].VisitCheckListItemId > 0 && Model.lstCheckListItem[i].CheckListClassTypeId != 5)
+                                {
+                                    <span>(@Model.lstCheckListItem[i].VisitedCount/@Model.lstCheckListItem[i].TotalCount)</span>
+                                }
+                            </span>
+                        </span>
+
+                        @if (Model.lstCheckListItem[i].VisitCheckListItemId > 0)
+                        {
+                            <span class="accept">
+                                @if (Model.lstCheckListItem[i].IsCompleted == true)
+                                {
+                                    <a href="#" class="ChecklistPoint" onclick="MarkUnMarkItemForTrade(event,this,'@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].VisitCheckListItemId','@Model.lstCheckListItem[i].IsCompleted','@Model.lstCheckListItem[i].VisitedCount','@Model.lstCheckListItem[i].TotalCount','@Model.lstCheckListItem[i].JobSchedulingId','@Model.lstCheckListItem[i].CheckListClassTypeId',`@Model.lstCheckListItem[i].ItemName`)"><i class="border-btn active sprite-img"></i></a>
+                                }
+                                else
+                                {
+                                    <a href="#" class="ChecklistPoint" onclick="MarkUnMarkItemForTrade(event, this, '@Model.lstCheckListItem[i].TemplateId', '@Model.lstCheckListItem[i].VisitCheckListItemId', '@Model.lstCheckListItem[i].IsCompleted', '@Model.lstCheckListItem[i].VisitedCount', '@Model.lstCheckListItem[i].TotalCount', '@Model.lstCheckListItem[i].JobSchedulingId', '@Model.lstCheckListItem[i].CheckListClassTypeId', `@Model.lstCheckListItem[i].ItemName`)"><i class="border-btn sprite-img"></i></a>
+                                }
+                            </span>
+                        }
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+        var urlMarkUnMarkCheckListItem = '@Url.Action("MarkUnMarkCheckListItem", "CheckListItem")';
+        $(document).ready(function () {
+            callbackCheckList();
+            checkSwitchStatus();
+            checkListFirTradeOnLoad();
+        });
+    </script>

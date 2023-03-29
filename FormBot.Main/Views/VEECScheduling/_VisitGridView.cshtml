@@ -1,0 +1,338 @@
+﻿@model FormBot.Entity.VEEC.VEECScheduling
+@using FormBot.Helper;
+
+@{
+    ////Todo
+    bool isAddEditVeecScheduling = true;
+    bool isDeleteVeecScheduling = false;
+    bool isVeecSchedulingView = true;
+
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingAddEdit) { isAddEditVeecScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingDelete) { isDeleteVeecScheduling = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobSchedulingView) { isVeecSchedulingView = true; }
+        });
+    }
+}
+<div class="alert alert-success alert-dismissible" role="alert" id="alertAssignTime" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+<div class="job-com-box">
+    <div class="sub-title row">
+
+        <h4 class="col-sm-9" style="line-height:34px;">
+            Schedule an installer :<span id="VisitHeader"></span>
+        </h4>
+        @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotSuperAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.FormBotComplianceOfficer) == FormBot.Helper.ProjectSession.UserTypeId ||
+
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.ResellerAccountManager) == FormBot.Helper.ProjectSession.UserTypeId ||
+             
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+             Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+        {
+            if (isAddEditVeecScheduling)
+            {
+                <div class="title-btn col-sm-3">
+                    <button type="button" class="btn primary icon-btn pull-right" id="btnAddVisit" >
+                        <span class="sprite-img add_ic"></span>Add a Visit
+                    </button>
+                </div>
+            }
+        }
+
+    </div>
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionJobVisit" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionJobVisit" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="panel-group" role="tablist" aria-multiselectable="true" id="jobVisitDetail" visitcount="@Model.lstVeecSchedule.Count">
+
+        @if (Model.lstVeecSchedule != null && Model.lstVeecSchedule.Count > 0)
+        {
+            foreach (var lstJobSchedule in Model.lstVeecSchedule)
+            {
+                <div class="panel" name="JobSchedule" data-panelid="@lstJobSchedule.VeecSchedulingID">
+                    <div class="schedule-heading panel-heading visit-section-outer" id="headingAssets@(lstJobSchedule.VeecSchedulingID)">
+                        <div class="visit-id min-w-0 w-170">
+                            <label>Visit ID :</label>
+                            <span class="color-text">@lstJobSchedule.UniqueVisitID</span>
+                        </div>
+                        <div class="w-170 min-w-0">
+                            <label>Visit Status :</label>
+                            @if (lstJobSchedule.VisitStatus == 1)
+                            {<span class="color-text">Open</span>}
+                            else
+                            {
+                                <span class="color-text">Completed</span>
+                            }
+                        </div>
+                        <div>
+                            <label>Electrician :</label>
+                            <span class="color-text">@lstJobSchedule.UserName</span>
+                        </div>
+
+                        <div class="panel-title">
+                            <ul class="schedule-option">
+                                <li>
+                                    <a class="expand-btn" data-toggle="collapse" data-parent="#schedule" href="#collapseAssets@(lstJobSchedule.VeecSchedulingID)" aria-expanded="true" aria-controls="collapseAssets@(lstJobSchedule.VeecSchedulingID)">
+                                        <span class="icon expand-view sprite-img">
+                                            @*<img src='@Url.Content("~/images/expand-view.png")' alt="">*@
+                                        </span>Expand View
+                                    </a>
+                                </li>
+                                <li>
+                                    <span class="icon">
+
+                                        @if (lstJobSchedule.IsDefaultSubmission == true)
+                                        {
+                                            <input class="visit-list-check" type="checkbox" id="visitDefaultSubmission" veecid="@lstJobSchedule.VeecID" veecschedulingid="@lstJobSchedule.VeecSchedulingID" checked="checked">
+                                        }
+                                        else
+                                        {
+                                            <input class="visit-list-check" type="checkbox" id="visitDefaultSubmission" veecid="@lstJobSchedule.VeecID" veecschedulingid="@lstJobSchedule.VeecSchedulingID">
+                                        }
+                                    </span>Default Submission
+                                </li>
+                                <li>
+
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Actions <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-right" id="visitAction">
+                                            @if (isAddEditVeecScheduling)
+                                            {
+                                                <li>
+                                                    <a href="#" title="Edit" onclick="showJobSchedulingDetail(@lstJobSchedule.VeecSchedulingID,event)">Edit</a>
+                                                </li>
+                                            }
+                                            @if (isVeecSchedulingView && !isAddEditVeecScheduling)
+                                            {
+                                                <li>
+                                                    <a href="#" title="View" onclick="showJobSchedulingDetail(@lstJobSchedule.VeecSchedulingID,event)">View</a>
+                                                </li>
+                                            }
+                                            @if (Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarCompanyAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarSubContractorAdmin) == FormBot.Helper.ProjectSession.UserTypeId ||
+Convert.ToInt32(FormBot.Helper.SystemEnums.UserType.SolarConnectionsOfficer) == FormBot.Helper.ProjectSession.UserTypeId)
+                                            {
+                                                if (isDeleteVeecScheduling)
+                                                {
+                                                    <li>
+                                                        <a href="#" title="Delete" onclick="DeleteJobScheduling(@lstJobSchedule.VeecSchedulingID, @lstJobSchedule.UserId,event)">Delete</a>
+                                                    </li>
+                                                }
+                                            }
+                                            <li>
+                                                <a href="#" title="View Signatures" onclick="ViewVisitSignature(@lstJobSchedule.VeecSchedulingID,event)">View Signatures</a>
+                                            </li>
+
+                                            <li class="loose-credits">
+                                                <span class="enabled-box">
+                                                    <label class="switch">
+
+                                                        @if (lstJobSchedule.VisitStatus == 1)
+                                                        {
+                                                            <input type="checkbox" veecscedulingid="@lstJobSchedule.VeecSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus">
+                                                        }
+                                                        else
+                                                        {
+                                                            <input type="checkbox" veecscedulingid="@lstJobSchedule.VeecSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus" checked="">
+                                                        }
+
+                                                        <div class="slider-round">
+                                                            <span class="slider-text enabled">Open</span>
+                                                            <span class="slider-text disabled">Completed</span>
+                                                        </div>
+                                                        @*@if (lstJobSchedule.VisitStatus == 1)
+                                        {
+                                            <div class="slider-round">
+                                                <span class="slider-text enabled">Open</span>
+                                                <span class="slider-text disabled">Completed </span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="slider-round">
+                                                <span class="slider-text enabled">Completed</span>
+                                                <span class="slider-text disabled">Open</span>
+                                            </div>
+                                        }*@
+                                                        @*<input type="checkbox" jobscedulingid="@lstJobSchedule.JobSchedulingID" id="chkVisitStatus" visitstatus="@lstJobSchedule.VisitStatus">
+                                        <div class="slider-round">
+                                            @if (lstJobSchedule.VisitStatus == 1)
+                                            {
+                                                <span class="slider-text enabled">Open</span>
+                                                <span class="slider-text disabled">Completed </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="slider-text enabled">Completed</span>
+                                                <span class="slider-text disabled">Open </span>
+                                            }
+                                        </div>*@
+                                                    </label>
+                                                </span>
+                                            </li>
+
+                                            <li>
+                                                <a href="#" title="Populate Signatures" onclick="PopulateSignature(@lstJobSchedule.VeecID,@lstJobSchedule.VeecSchedulingID,event)">Populate Signatures</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="panel-collapse collapse" id="collapseAssets@(lstJobSchedule.VeecSchedulingID)" role="tabpanel" aria-labelledby="headingAssets@(lstJobSchedule.VeecSchedulingID)">
+
+                        <div class="row schedule-installer">
+                            <div class="col-md-6">
+                                <ul class="visiter-details">
+                                    <li>
+                                        <span class="icon sprite-img inverter-icon">
+                                            @*<img src='@Url.Content("~/images/inverter.png")' alt="">*@
+                                        </span>
+                                        <strong>@lstJobSchedule.Label </strong><br>
+                                        @lstJobSchedule.Detail
+                                    </li>
+                                    <li>
+                                        <span class="icon sprite-img date-icon">
+                                            @*<img src='@Url.Content("~/images/date-icon.png")' alt="">*@
+                                        </span>
+                                        <p><strong>Electrician : </strong>@lstJobSchedule.UserName</p>
+                                        <p><strong>Start Date : </strong>@lstJobSchedule.strVisitStartDate</p>
+                                    </li>
+
+                                    @if (lstJobSchedule.VEECCheckListTemplateId > 0)
+                                    {
+                                        <li>
+                                            <span class="icon sprite-img checklist">
+                                                @*<img src='@Url.Content("~/images/checklist.png")' alt="">*@
+                                            </span>
+                                            <strong>@lstJobSchedule.VEECCheckListTemplateName : </strong>(@lstJobSchedule.TotalCompletedItemCount/@lstJobSchedule.TotalItemCount Completed)
+                                        </li>
+                                    }
+
+                                </ul>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="visit-notes mCustomScrollbar">
+                                    <div class="nots-status">
+                                        <span class="icon sprite-img visit-notes-icon">
+                                            @*<img src='@Url.Content("~/images/visit-notes.png")' alt="">*@
+                                        </span>
+                                        <strong>Visit Notes:</strong> (@Model.NewNotesCount New  Notes Available)
+                                    </div>
+
+                                    <div class="nots-list">
+                                        <ul id="jobNotesUL">
+                                            @if (Model.lstVEECNotes != null && Model.lstVEECNotes.Count > 0)
+                                            {
+                                                int noteCount = 0;
+                                                for (int c = 0; c < Model.lstVEECNotes.Count; c++)
+                                                {
+                                                    if (Model.lstVEECNotes[c].VEECSchedulingId == lstJobSchedule.VeecSchedulingID)
+                                                    {
+                                                        <li number="@(++noteCount)">
+                                                            <p>@Model.lstVEECNotes[c].Notes</p>
+                                                            <p class="date">@Model.lstVEECNotes[c].Created   @Model.lstVEECNotes[c].strCreatedDate</p>
+                                                        </li>
+                                                    }
+                                                }
+                                            }
+                                        </ul>
+                                        @*@if (Model.lstJobNotes != null && Model.lstJobNotes.Count > 2)*@
+                                        @if (Model.lstVEECNotes != null && Model.lstVEECNotes.AsEnumerable().Where(a => a.VEECSchedulingId == lstJobSchedule.VeecSchedulingID).ToList().Count > 2)
+                                        {
+                                            <a href="#" title="View Now" id="viewMoreNotes" isshowmore="0" style="margin-left:10px;">Show More Notes</a>
+                                        }
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="visit-completed" status="@lstJobSchedule.VisitStatus" id="@lstJobSchedule.VeecSchedulingID">
+                            <p class="completed-status" id="displayStatus">
+                                <strong>Visit Status : </strong>
+                                @*<span id="openStatus">Open</span>
+        <span id="completedStatus">Completed</span>*@
+                                @{ 
+                                    string opencss = "hide",completedcss = "hide";
+                                    if (lstJobSchedule.VisitStatus == 1)
+                                    {
+                                        opencss = "block";
+                                    }
+                                    else
+                                    {
+                                        completedcss = "block";
+                                    }
+                                    }
+                                <span id="completedStatus" style="float:right;display:@completedcss">Completed</span>
+                                <span id="openStatus" style="float:right;display:@opencss">Open</span>
+                            </p>
+                            <p id="displayCompletedDate"><strong>Complete Date : </strong><span>@lstJobSchedule.strCompletedDate</span></p>
+                            @*@if (lstJobSchedule.VisitStatus == 2)
+                                {
+                                    <p id="displayCompletedDate"><strong>Complete Date : </strong>@lstJobSchedule.strCompletedDate</p>
+                                }*@
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#btnAddVisit").click(function (e) {
+            
+            addVisit();
+        });
+        $(".schedule-option li #visitDefaultSubmission").on('click',function () {
+           
+
+            MakeVisitAsDefaultSubmission($(this).attr('veecid'), $(this).attr('veecSchedulingId'), $(this).is(':checked'));
+        });
+        $("#visitAction li #chkVisitStatus").on('change.bootstrapSwitch', function (event, state) {
+           
+            event.preventDefault();
+            var visitStatus = $(this).attr('visitStatus');
+            if (visitStatus == 1)
+                visitStatus = 2;
+            else
+                visitStatus = 1;
+
+            ChangeVisitStatus($(this).attr('veecscedulingid'), visitStatus, $(this));
+        });
+        $("#btnClosepopupboxPopulateSignature").click(function () {
+            $('#popupboxPopulateSignature').modal('toggle');
+        });
+
+        $("#btnClosepopupboxViewSignature").click(function () {
+            $('#popupboxViewSignature').modal('toggle');
+        });
+    });
+    
+</script>

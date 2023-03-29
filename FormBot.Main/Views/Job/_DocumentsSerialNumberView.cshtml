@@ -1,0 +1,952 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@using System.Web.Script.Serialization;
+
+@{
+        
+    bool isSerialNumber = false;
+    bool isAddNotificationOfAnotherSCASerialNum = false;
+    bool isLockUnlockSerial = false;
+    var serializerData = new JavaScriptSerializer();
+    var serialNumWithPhotosJson = serializerData.Serialize(Model.SerialNumberwithPhotosAvaibilityList);
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.PanelSerialNubers.GetHashCode()) { isSerialNumber = true; }
+        });
+    }
+    else
+    {
+        //If TempData for RoleMenu is not Set, It Means this page is loading from Ajax Call. So Getting RoleMenu from Session Which is Set in GetFirstTabular(), jobController
+        List<FormBot.Main.Controllers.MenuIdList> RoleMenuList = null;
+        try
+        {
+            RoleMenuList = (List<FormBot.Main.Controllers.MenuIdList>)Session["TempDataForRoleMenu"];
+        }
+        catch (Exception) { }
+
+        if (RoleMenuList != null)
+        {
+            RoleMenuList.ForEach(d =>
+            {
+                if (d.MenuId == (int)SystemEnums.MenuId.PanelSerialNubers.GetHashCode()) { isSerialNumber = true; }
+            });
+        }
+    }
+
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompany = new SelectList(users, string.Empty, string.Empty);
+    
+}
+
+
+<style>
+    .visit-list .panel-body li a {
+        margin-left: 20px;
+        margin-right: 10px;
+    }
+
+    .tabular_view .visit-list .panel-body li {
+        width: auto !important;
+    }
+
+    .serial-number-tab {
+        position: relative
+    }
+
+        .serial-number-tab li {
+            display: inline-block;
+            padding: 0px;
+            border: 1px solid #e4e4e4;
+            border-radius: 3px;
+        }
+
+            .serial-number-tab li a {
+                color: #575757;
+                padding: 5px 10px;
+                border-radius: 3px;
+                display: block;
+                font-size: 14px
+            }
+
+            .serial-number-tab li.active a {
+                background-color: #40ab6b;
+                color: #fff
+            }
+
+            .serial-number-tab li ul li {
+                display: block
+            }
+
+                .serial-number-tab li ul li a:hover {
+                    background-color: #e8e8e8;
+                    color: #333
+                }
+
+            .serial-number-tab li.assign {
+                float: right;
+                position: absolute;
+                right: 0;
+                top: -8px;
+                width: 700px
+            }
+
+                .serial-number-tab li.assign label {
+                    float: left;
+                    padding-top: 10px;
+                    margin-right: 10px
+                }
+
+                .serial-number-tab li.assign select {
+                    padding: 5px;
+                    width: 164px;
+                    float: left
+                }
+
+    #loadCommonInverterSerialNumber {
+        margin-top: 15px;
+    }
+</style>
+
+@Html.HiddenFor(m => m.JobSystemDetails.JobID)
+@Html.HiddenFor(m => m.JobSystemDetails.SerialNumbers, new { id = "hdnJobSystemDetails_SerialNumbers" })
+
+@if (ProjectSession.UserTypeId != 8 || isSerialNumber)
+{
+    <!-- Serial number===================================== -->
+
+
+    <div class="col-md-12" id="PanelBlock">
+        <div class="ui-tabs">
+            <ul class="serial-number-tab" style="margin-bottom:10px">
+                @{ var SerialNumberType = "";
+                    if (Model.BasicDetails.JobType == 1)
+                    {
+                        SerialNumberType = "Panel Serial Numbers";
+                    }
+                    else
+                    {
+                        SerialNumberType = "Tank Serial Numbers";
+                    }
+                    var cntSerialNumber = "0";
+                    var cntNoofPanel = "0";
+                    var cntInverterSerialNumber = "0";
+                    var cntNoOfInverter = "0";
+
+                    cntSerialNumber = !string.IsNullOrEmpty(Model.JobSystemDetails.SerialNumbers) ? Model.JobSystemDetails.SerialNumbers.Split('\n').Count().ToString() : "0";
+                    cntNoofPanel = !string.IsNullOrEmpty(Model.JobSystemDetails.NoOfPanel.ToString()) ? Model.JobSystemDetails.NoOfPanel.ToString() : "0";
+                    if (Model.BasicDetails.JobType == 1)
+                    {
+                        cntInverterSerialNumber = !string.IsNullOrEmpty(Model.JobSystemDetails.InverterSerialNumbers) ? Model.JobSystemDetails.InverterSerialNumbers.Split('\n').Count().ToString() : "0";
+                        cntNoOfInverter = !string.IsNullOrEmpty(Model.JobSystemDetails.NoOfInverter.ToString()) ? Model.JobSystemDetails.NoOfInverter.ToString() : "0";
+                    }
+                }
+                <li class="active" style="display:inline-block"><a id="aPanelSerialNumbers" href="javascript:void(0)" title="Panel Serial Numbers" style="text-decoration:none;">@SerialNumberType <span id="cntPanelSerialNumber"> (@cntSerialNumber/@cntNoofPanel)</span></a></li>
+                @if (Model.BasicDetails.JobType == 1)
+                {
+                    <li style="display:inline-block"><a id="aInverterSerialNumbers" href="javascript:void(0)" title="Inverter Serial Numbers" style="text-decoration:none;">Inverter Serial Numbers <span id="cntInverterSerialNumber"> (@cntInverterSerialNumber/@cntNoOfInverter)</span></a></li>
+                }
+
+            </ul>
+
+        </div>
+
+        <div id="SerialNumberPanel">
+
+            <div class="alert alert-success alert-dismissible" role="alert" id="successSPVProductVerification" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorSPVProductVerification" style="display: none">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+            <p>
+                You can enter multiple serial numbers in this field. Each
+                serial number must appear on a new line and be less
+                than 101 characters.
+            </p>
+            <div class="addd-multiple-serial clearfix">
+
+                <a href="#" title="Unlock serial number field" class="icon-btn pull-right add-btn-icon" id="aLockedSerialnumber" style="display:none">
+                    <img src="~/Images/locked-03.svg" />
+                </a>
+
+                <a href="#" title="Lock serial number field" class="icon-btn pull-right add-btn-icon" id="aUnLockedSerialnumber" style="display:none">
+                    <img src="~/Images/unlocked-03.svg" />
+                </a>
+
+                <a href="#" class="pull-right add-btn-icon" id="btnPopupSerialNumber" style="text-align:right;margin-top:3px;">
+                    <img src="~/Images/invoicing.png" />
+                </a>
+            </div>
+            <div class="serial-list panel-list">
+                @if (Model.JobSerialNumbers.Count > 0)
+                {
+                    if (Model.JobSerialNumbers[0].IsSPVInstallationVerified && !(ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                    {
+                        @Html.TextAreaFor(m => m.JobSystemDetails.SerialNumbers, new { @class = "text-editor", @rows = "9", @spellcheck = "false", @disabled = "disabled" })
+                    }
+                    else
+                    {
+                        @Html.TextAreaFor(m => m.JobSystemDetails.SerialNumbers, new { @class = "text-editor", @rows = "9", @spellcheck = "false" })
+                    }
+                }
+                else
+                {
+                    @Html.TextAreaFor(m => m.JobSystemDetails.SerialNumbers, new { @class = "text-editor", @rows = "9", @spellcheck = "false" })
+                }
+                <span id="spanSerialNumbers" class="" style="color: #b94a48;display:none">Serial Numbers's maximum length  is of 100 characters.</span>
+                <div class="row">
+                    <div class="col-md-8" id="SPVLabel">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <img src="~/Images/Spv_new.png" class="img-responsive">
+                            </div>
+                            <div class="col-md-9 wordwrap p-l-0 bottom-2">
+                                Product Verified
+                            </div>
+                        </div>
+                        <div class="row m-t-5">
+                            <div class="col-md-2">
+                                <img src="~/Images/SPV_InstallationVerify.png" class="img-responsive">
+                            </div>
+                            <div class="col-md-9 wordwrap p-l-0 bottom-2">
+                                Installation Verified
+                            </div>
+                        </div>
+                        <div class="row m-t-5">
+                            <div class="col-md-2">
+                                <img src="~/Images/SPV_reject_new.png" class="img-responsive">
+                            </div>
+
+                            <div class="col-md-9 wordwrap p-l-0 bottom-2">
+                                Product Not Verified
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="primary payment-status--h-ic pull-right isSPVRequired" id="btnSPVProductVerification" style="line-height:100%;">
+                            <span class="sprite-img add_ic"></span> SPV Product Verify
+                        </button>
+                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+                        {
+                            <button type="button" class="primary payment-status--h-ic pull-right isSPVRequired" id="btnReSPVProductVerification" style="line-height: 100%; margin-top: 5px;">
+                                <span class="sprite-img add_ic"></span> Re-SPV Product Verify
+                            </button>
+                        }
+                        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 5 || ProjectSession.UserTypeId == 6)
+                        {
+                            <button type="button" class="primary payment-status--h-ic pull-right isSPVRequired" id="btnSPVProductVerificationErrorLog" style="margin-top: 5px; line-height: 100%;">
+                                <span class="sprite-img add_ic"></span>Get SPV Failure Reason
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="SerialNumberInverter">
+
+            <p>
+                You can enter multiple serial numbers in this field. Each
+                serial number must appear on a new line and be less
+                than 101 characters.
+            </p>
+            <div class="serial-list inverter" id="inverterserialnotab">
+
+                @Html.TextAreaFor(m => m.JobSystemDetails.InverterSerialNumbers, new { @class = "text-editor-inverter", @rows = "3", @spellcheck = "false" })
+                <span id="spanInverterSerialNumbers" class="" style="color: #b94a48;display:none">Serial Numbers's maximum length  is of 100 characters.</span>
+            </div>
+        </div>
+
+        <div>
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 4 || ProjectSession.UserTypeId == 5)
+            {
+                <div id="loadCommonSerialNumber">
+                    @if (Model.CommonSerialNumbers != null && Model.CommonSerialNumbers.Count > 0)
+                    {
+                        <div class="warning-notice" id="divWarning">
+                            <h5>Panel Warning Notice:</h5>
+                            @foreach (var lstCommonSeraial in Model.CommonSerialNumbers)
+                            {
+                                string companyName = string.Empty;
+                                string resellerName = string.Empty;
+                                if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                                {
+                                    companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonSeraial.CompanyName;
+                                }
+                                if (ProjectSession.UserTypeId == 1)
+                                {
+                                    resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonSeraial.ResellerName;
+                                }
+
+                                string url = "/Job/Index?id=" + lstCommonSeraial.Id;
+
+                                if (ProjectSession.UserTypeId == 1 || (ProjectSession.UserTypeId == 4 && lstCommonSeraial.SolarCompanyId == ProjectSession.SolarCompanyId) || (ProjectSession.UserTypeId == 2 && lstCommonSeraial.ResellerId == ProjectSession.ResellerId))
+                                {
+                                    <p style="overflow-wrap:break-word;">Serial @lstCommonSeraial.SerialNumber has been used in <a target="_blank" href='@url'> @lstCommonSeraial.RefNumber </a> (@lstCommonSeraial.JobId) @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName))</p>
+                                }
+                                else
+                                {
+                                    if (isAddNotificationOfAnotherSCASerialNum == false)
+                                    {
+                                        <p style="overflow-wrap:break-word;">Serial @lstCommonSeraial.SerialNumber has been used by another solar company</p>
+                                        isAddNotificationOfAnotherSCASerialNum = true;
+                                    }
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+                <div id="loadCommonInverterSerialNumber">
+                    @if (Model.CommonInverterSerialNumbers != null && Model.CommonInverterSerialNumbers.Count > 0)
+                    {
+                        <div class="warning-notice" id="divWarning">
+                            <h5>Inverter Warning Notice:</h5>
+                            @foreach (var lstCommonSeraial in Model.CommonInverterSerialNumbers)
+                            {
+                                string companyName = string.Empty;
+                                string resellerName = string.Empty;
+                                if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 5)
+                                {
+                                    companyName = "<b class=commonJobDetail>Company : </b>" + lstCommonSeraial.CompanyName;
+                                }
+                                if (ProjectSession.UserTypeId == 1)
+                                {
+                                    resellerName = " <b class=commonJobDetail>Reseller : </b>" + lstCommonSeraial.ResellerName;
+                                }
+
+                                string url = "/Job/Index?id=" + lstCommonSeraial.Id;
+
+                                if (ProjectSession.UserTypeId == 1 || (ProjectSession.UserTypeId == 4 && lstCommonSeraial.SolarCompanyId == ProjectSession.SolarCompanyId) || (ProjectSession.UserTypeId == 2 && lstCommonSeraial.ResellerId == ProjectSession.ResellerId))
+                                {
+                                    <p style="overflow-wrap:break-word;">Serial @lstCommonSeraial.SerialNumber has been used in <a target="_blank" href='@url'> @lstCommonSeraial.RefNumber </a> (@lstCommonSeraial.JobId) @Html.Raw(HttpUtility.HtmlDecode(companyName)) @Html.Raw(HttpUtility.HtmlDecode(resellerName))</p>
+                                }
+                                else
+                                {
+                                    if (isAddNotificationOfAnotherSCASerialNum == false)
+                                    {
+                                        <p style="overflow-wrap:break-word;">Serial @lstCommonSeraial.SerialNumber has been used by another solar company</p>
+                                        isAddNotificationOfAnotherSCASerialNum = true;
+                                    }
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+}
+
+<div class="modal fade popupSerialNumber" tabindex="-1" id="popupSerialNumber">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Serial Numbers</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-box">
+                        <div style="width: 12px; height: 12px; background-color: rgba(30, 121, 204, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in master file.</span><br />
+                        <div style="width: 12px; height: 12px; background-color: rgba(220, 82, 109, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in jobs.</span>
+                        <hr style="margin-left: -15px; margin-right: -15px; margin-bottom: 10px; margin-top: 10px; " />
+                        <ul id="serialNumberPopup"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var panelBrandList = [];
+    var panelModelList = [];
+    var PanelXml = [];
+    var OldPanelXml = [];
+    var OldInverterXml = [];
+    var InverterXml = [];
+    var inverterBrandList = [];
+    var inverterSeriesList = [];
+    var inverterModelList = [];
+    var systemBrandList = [];
+    var systemModelList = [];
+    var systemXml = [];
+    var batteryManufacturerList = [];
+    var batteryModelList = [];
+    var batteryXml = [];
+    var IsLockedSerialNumber = '@Model.BasicDetails.IsLockedSerialNumber.ToString().ToLower()';
+    var urlLoadAllPhotos = '@Url.Action("LoadAllPhotos", "Job")';
+
+    var urlSetSPVOnLockSerialNumber = '@Url.Action("SetSPVOnLockSerialNumber", "Job")';
+    var urlRemoveSPVOnUnlockSerialnumber = '@Url.Action("RemoveSPVOnUnlockSerialnumber", "Job")';
+    var BasicDetails_JobType = @Model.BasicDetails.JobType,
+        ProjectConfiguration_GetDateFormat = '@ProjectConfiguration.GetDateFormat',
+        urlCalculateSTC = '@Url.Action("CalculateSTC", "Job")',
+        urlCalculateSWHSTC = '@Url.Action("CalculateSWHSTC", "Job")',
+        urlCheckDuplicateSerialNumbers = '@Url.Action("CheckDuplicateSerialNumbers", "Job")',
+        urlGetPanelBrand = '@Url.Action("GetPanelBrand", "Job")?Mode=',
+        urlGetPanelModel = '@Url.Action("GetPanelModel", "Job")?Mode=',
+        urlGetInverterModel = '@Url.Action("GetInverterModel", "Job")?Mode=Series&Search=',
+        urlGetInverterSeries = '@Url.Action("GetInverterSeries", "Job")?Mode=Model&Search=',
+        urlGetInverterBrand = '@Url.Action("GetInverterBrand", "Job")?Mode=Manufacturer&Search=';
+    urlGetBatteryManufacturer = '@Url.Action("GetBatteryManufacturer", "Job")';
+    urlGetBatteryModel = '@Url.Action("GetBatteryModel", "Job")?manufacturer=';
+    urlgetStartEndDateForPanel = '@Url.Action("GetStartEndDateForPanel","Job")';
+     urlgetStartEndDateForInverter = '@Url.Action("GetStartEndDateForInverter", "Job")';
+    urlgetStartEndDateForSWHBrandModel = '@Url.Action("GetStartEndDateForSWHBrandModel", "Job")';
+    var modelBasicJobType = '@Model.BasicDetails.JobType';
+    var modelSTCVolumetricCapacity = '@Model.JobSTCDetails.VolumetricCapacity';
+    var modelBasicInstallerID = '@Model.BasicDetails.InstallerID';
+    var jobId = '@Model.BasicDetails.JobID';
+    var urlGetSupplierByManufacturer = '@Url.Action("GetSupplierByManufacturer", "Job")';
+    var urlGetserialnumberWithSpvStatus = '@Url.Action("GetSerialnumberWithSpvStatus","Job")';
+    var oldValSerialNumber = "";
+    var IsSPVRequired = '@Model.BasicDetails.IsSPVRequired';
+    var JOBType = '@Model.BasicDetails.JobType';
+    var USERType = '@Model.UserType';
+    var urloadCommonSerialNumber = '@Url.Action("LoadCommonSerialNumber", "Job")';
+    var urloadCommonInverterSerialNumber = '@Url.Action("LoadCommonInverterSerialNumber", "Job")';
+    var serialNumber = JSON.parse('@Html.Raw(Json.Encode(Model.JobSerialNumbers))');
+    var closeButton = '<button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">&times;</button>';
+    var urlCheckSerialNumberPhotoAvailability = '@Url.Action("CheckSerialNumberPhotoAvailability","Job")';
+    var IsLockUnlockSerial = '@isLockUnlockSerial';
+    var SerialNumberwithPhotosAvaibilityList = '@serialNumWithPhotosJson';
+    if (InstallationPostcodeFromjson == undefined ||InstallationPostcodeFromjson == '') {
+        InstallationPostcodeFromjson = '@Model.JobInstallationDetails.PostCode';
+    }
+
+    if ($("#JobSTCDetails_batterySystemPartOfAnAggregatedControl").val() != undefined && $("#JobSTCDetails_batterySystemPartOfAnAggregatedControl").val() != '') {
+        batterySystemPartOfAnAggregatedControl_Glbl = $("#JobSTCDetails_batterySystemPartOfAnAggregatedControl").val();
+    }
+    else {
+        batterySystemPartOfAnAggregatedControl_Glbl = '@Model.JobSTCDetails.batterySystemPartOfAnAggregatedControl';
+    }
+
+    if ($("#JobSTCDetails_changedSettingOfBatteryStorageSystem").val() != undefined && $("#JobSTCDetails_changedSettingOfBatteryStorageSystem").val() != '') {
+        changedSettingOfBatteryStorageSystem_Glbl = $("#JobSTCDetails_changedSettingOfBatteryStorageSystem").val();
+    }
+    else {
+        changedSettingOfBatteryStorageSystem_Glbl = '@Model.JobSTCDetails.changedSettingOfBatteryStorageSystem';
+    }
+
+</script>
+
+<script src="~/Scripts/View/Job/_JobSystemDetails.min.js"></script>
+<script>
+    var countNoOfPanel =@(!string.IsNullOrEmpty(Model.JobSystemDetails.NoOfPanel.ToString()) ? Model.JobSystemDetails.NoOfPanel.ToString() : "0");
+    $(document).ready(function () {        
+        $("#JobSystemDetails_NoOfPanel").text(parseInt(countNoOfPanel));
+        ShowHideSWHPVDField();
+
+        /* In original tab it was loaded after job save*/
+        LoadCommonSerialNumber();
+        LoadCommonInverterSerialNumber();
+        LoadSerialNumberWithPhotoExistOrNot();        
+        if (($(".line-no.unverified").length > 0
+            || $(".line-no.installationVerified").length > 0
+            || $(".line-no.verified").length > 0
+            || $(".line-no.notverified").length > 0)
+            && $("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True")
+            $("#SPVLabel").show();
+        else
+            $("#SPVLabel").hide();
+
+        $(".text-editor").setNumber({
+            activeLine: 1
+        });
+        $(".text-editor-inverter").setNumber({
+            activeLine: 1
+        });
+        if ($("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True")
+            $(".isSPVRequired").show();
+        else
+            $(".isSPVRequired").hide();
+        $(".text-editor").autosize({
+            callback: function (textarea) {
+                $(textarea).scroll();
+                if ($("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True")
+                    VerifyUnVerifySerialNumber();
+            }
+        });
+        $(".text-editor-inverter").autosize({
+            callback: function (textarea) {
+                $(textarea).scroll();
+            }
+        });
+        $(".text-editor").focus();
+        $(".text-editor-inverter").focus();
+        if ($("#JobSystemDetails_SerialNumbers").prop("disabled"))
+            $("div.line-no").removeClass("active");
+        $("#JobSystemDetails_SerialNumbers").on("change keyup paste", function () {
+            $("#hdnJobSystemDetails_SerialNumbers").val($("#JobSystemDetails_SerialNumbers").val());
+            var currentVal = $(this).val();
+            if (currentVal == oldValSerialNumber) {
+                return; //check to prevent multiple simultaneous triggers
+            }
+            oldValSerialNumber = currentVal;
+            //action to be performed on textarea changed
+            if ($("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True")
+                VerifyUnVerifySerialNumber();
+        });
+
+        $("#SerialNumberInverter").hide();
+
+        $("#aInverterSerialNumbers").click(function () {            
+            $("#SerialNumberPanel").hide();
+            $("#SerialNumberInverter").show();
+            $(this).closest('ul').find('.active').removeClass('active');
+            $(this).closest('li').addClass('active');
+        });
+
+        $("#aPanelSerialNumbers").click(function () {            
+            $("#SerialNumberInverter").hide();
+            $("#SerialNumberPanel").show();
+            $(this).closest('ul').find('.active').removeClass('active');
+            $(this).closest('li').addClass('active');
+        });
+
+        $("#aLockedSerialnumber").click(function (e) {
+            e.preventDefault();
+            var result = confirm("Are you sure you want to unlock serialnumbers? if so then job will be not affiliated by SPV.");
+            if (result) {
+                RemoveSPVOnUnlockSerialnumber();
+                if (USERType == 1 || USERType == 3 || IsLockUnlockSerial == "True") {
+                    $("#aUnLockedSerialnumber").show();
+                }
+                $("#aLockedSerialnumber").hide();
+                $('#JobSystemDetails_SerialNumbers').prop('disabled', false);
+                IsLockedSerialNumber = 'false';
+                // SearchHistory();
+            }
+        });
+
+        $("#aUnLockedSerialnumber").click(function (e) {
+            e.preventDefault();
+            if (USERType == 1 || USERType == 3 || IsLockUnlockSerial == "True") {
+                SetSPVOnLockSerialNumber();
+                $("#aUnLockedSerialnumber").hide();
+                $("#aLockedSerialnumber").show();
+                $('#JobSystemDetails_SerialNumbers').prop('disabled', true);
+                IsLockedSerialNumber = 'true';
+                //  SearchHistory();
+            }
+        });
+
+        if (JOBType == 1) {            
+            if (IsLockedSerialNumber == 'true') {                
+                $("#aLockedSerialnumber").show();
+                $("#aUnLockedSerialnumber").hide();
+                $("#JobSystemDetails_SerialNumbers").prop('disabled', true);
+            }
+            else {                
+                if (IsLockedSerialNumber == 'false' && (USERType == 1 || USERType == 3 || IsLockUnlockSerial == "True")) {
+                    $("#aUnLockedSerialnumber").show();
+                }
+                $("#aLockedSerialnumber").hide();
+                $('#JobSystemDetails_SerialNumbers').prop('disabled', false);
+            }
+        }
+        else {
+            $("#aLockedSerialnumber").hide();
+            $("#aUnLockedSerialnumber").hide();
+        }
+    });
+
+    function ShowHideSWHPVDField() {
+        //PVD job
+        if (modelBasicJobType == '1') {
+            $(".gridPVD").show();
+            $(".gridSWH").hide();
+            //FillDropDownOfPanelBrandModel();
+            //FillDropDownOfInverterBrandModel();
+            //FillDropDownOfBatteryManufacturerModel();
+            $("#TypeOfConnection,#JobSTCDetails_TypeOfConnection,#SystemMountingType,#JobSTCDetails_SystemMountingType").show();
+            $("#DeemingPeriod,#JobSTCDetails_DeemingPeriod,#InstallerID,#BasicDetails_InstallerID,#DesignerID,#BasicDetails_DesignerID").show();
+            $("#NMI,#JobInstallationDetails_NMI,#InstallingNewPanel,#InstallingNewPanel,#InstallingNewPanel,#JobInstallationDetails_InstallingNewPanel,#MeterNumber,#JobInstallationDetails_MeterNumber,#PhaseProperty,#JobInstallationDetails_PhaseProperty,#ElectricityProviderID,#JobInstallationDetails_ElectricityProviderID,#ExistingSystem1,#JobInstallationDetails_ExistingSystem").show();
+            $(".lblPVD").show();
+            $("#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").show();
+            $('.addInfo').removeClass('col-md-12');
+            $('.addInfo').addClass('col-md-6');
+            $("#MultipleSGUAddress").html("Is there more than one SGU at this address?:");
+            $("#CertificateCreated").html("Are you creating certificates for a system that has previously been failed by the Clean Energy Regulator?:");
+            $("#divVolumetricCapacity").hide();
+            $("#divStatutoryToStringoStringringtringclarations").hide();
+            $("#divSecondhandWaterHeater").hide();
+            var insatallerid = modelBasicInstallerID || 0;
+            var eleParam = [{ JobID: $("#BasicDetails_JobID").val(), solarCompanyId: $("#BasicDetails_SolarCompanyId").val() }];
+            var installerParam = [{ isInstaller: true, existUserId: insatallerid, solarCompanyId: $("#BasicDetails_SolarCompanyId").val(), jobId: jobId }];
+            dropDownData.push({ id: 'JobElectricians_InstallerID', key: "", value: insatallerid, hasSelect: true, callback: null, defaultText: null, proc: 'InstallerDesignerEle', param: installerParam, bText: 'Text', bValue: 'Value' });
+            $("#jobSSCID").show();
+        }
+        //SWH job
+        else if (modelBasicJobType == '2') {
+            $(".gridSWH").show();
+            $(".gridPVD").hide();
+            FillDropDownOfSystemBrandModel();
+            $("#TypeOfConnection,#JobSTCDetails_TypeOfConnection,#SystemMountingType,#JobSTCDetails_SystemMountingType").hide();
+            $("#DeemingPeriod,#JobSTCDetails_DeemingPeriod,#InstallerID,#BasicDetails_InstallerID,#DesignerID,#BasicDetails_DesignerID").hide();
+            $("#NMI,#JobInstallationDetails_NMI,#InstallingNewPanel,#InstallingNewPanel,#InstallingNewPanel,#JobInstallationDetails_InstallingNewPanel,#MeterNumber,#JobInstallationDetails_MeterNumber,#PhaseProperty,#JobInstallationDetails_PhaseProperty,#ElectricityProviderID,#JobInstallationDetails_ElectricityProviderID,#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").hide();
+            $(".lblPVD").hide();
+            $("#ExistingSystem1,#JobInstallationDetails_ExistingSystem,#ExistingSystem").hide();
+            $('.addInfo').removeClass('col-md-6');
+            $('.addInfo').addClass('col-md-12');
+            $("#MultipleSGUAddress").html("Is there more than one SWH/ASHP at this address:");
+            $("#CertificateCreated").html("Creating certificates for previously failed SWH:");
+            $("#divVolumetricCapacity").show();
+            if (modelSTCVolumetricCapacity == 'Yes') {
+                $("#divStatutoryDeclarations").show();
+            }
+            $("#divSecondhandWaterHeater").show();
+            $("#jobSSCID").hide();
+        }
+    }
+
+    function VerifyUnVerifySerialNumber() {
+        GetserialnumberWithSpvStatus();
+        if ($("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True") {
+            ShowSPV();
+        }
+        else {
+            HideSPV();
+        }
+    }
+
+    function ShowSPV() {
+        AttachSPVLabelWithSerialNumber();
+        $(".isSPVRequired").show();
+        $("#SPVLabel").show();
+        IsSPVRequired = "True";
+        $("#btnSPVProductVerification").show();
+        $("#btnSPVProductVerificationErrorLog").show();
+    }
+
+    function HideSPV() {
+        RemoveSPVRelatedClass();
+        $(".isSPVRequired").hide();
+        $("#SPVLabel").hide();
+        IsSPVRequired = "False";
+        $("#btnSPVProductVerification").hide();
+        $("#btnSPVProductVerificationErrorLog").hide();
+    }
+
+    function RemoveSPVRelatedClass() {
+        $("div.line-no").removeClass("verified")
+        $("div.line-no").removeClass("unverified")
+        $("div.line-no").removeClass("installationVerified")
+        $("div.line-no").removeClass("notverified")
+    }
+
+    function AttachSPVLabelWithSerialNumber() {        
+        var splitSN = $("#JobSystemDetails_SerialNumbers").val() == undefined ? "" : $("#JobSystemDetails_SerialNumbers").val().split(/\n/g);
+        for (var i = 0; i < splitSN.length; i++) {
+            var matchSN = serialNumber.find(serialNumber => serialNumber.SerialNumber == splitSN[i]);
+            if (matchSN != undefined) {
+                if (matchSN.IsSPVInstallationVerified)
+                    $(".panel-list div.line-no.l-" + (i + 1)).addClass("installationVerified");
+                else if (matchSN.IsVerified)
+                    $(".panel-list div.line-no.l-" + (i + 1)).addClass("verified");
+                else if (matchSN.IsVerified == null)
+                    $(".panel-list div.line-no.l-" + (i + 1)).addClass("unverified");
+                else
+                    $(".panel-list div.line-no.l-" + (i + 1)).addClass("notverified");
+            }
+            else
+                $(".panel-list div.line-no.l-" + (i + 1)).addClass("unverified");
+        }
+    }
+
+    $("#JobSTCDetails_batterySystemPartOfAnAggregatedControl").change(function (e) {
+        batterySystemPartOfAnAggregatedControl_Glbl = $("#JobSTCDetails_batterySystemPartOfAnAggregatedControl").val();
+    });
+
+    $("#JobSTCDetails_changedSettingOfBatteryStorageSystem").change(function (e) {
+        changedSettingOfBatteryStorageSystem_Glbl = $("#JobSTCDetails_changedSettingOfBatteryStorageSystem").val();
+    });
+
+    function SetSPVOnLockSerialNumber() {
+        $.ajax({
+            url: urlSetSPVOnLockSerialNumber,
+            type: "GET",
+            data: { jobId: Model_JobID },
+            contentType: 'application/json; charset=utf-8',
+            dataType: "json",
+            success: function (result) {
+                if (result.status) {
+                    if (result.isSPVRequired) {
+                        $("#GlobalisAllowedSPV").val(result.isSPVRequired);
+                        ShowSPV();
+                    }
+                    else {
+                        HideSPV();
+                    }
+                    showSuccessMessage("Serialnumber has been locked.");
+                }
+                else {
+                    showErrorMessage("Serialnumber has not been locked.");
+                }
+            }
+        });
+    }
+
+    function RemoveSPVOnUnlockSerialnumber() {
+        $.ajax({
+            url: urlRemoveSPVOnUnlockSerialnumber,
+            type: "GET",
+            data: { jobId: Model_JobID },
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                if (result.status) {
+                    HideSPV();
+                    showSuccessMessage("Serialnumber has been unlocked.");
+                }
+                else {
+                    showErrorMessage("Serialnumber has not been unlocked.");
+                }
+            }
+        });
+    }
+
+    $("#btnSPVProductVerification").click(function () {
+        SPVProductverification();
+    })
+    $("#btnSPVProductVerificationErrorLog").click(function () {
+        SPVProductionVerificationErrorLog();
+    })
+    $("#btnReSPVProductVerification").click(function () {
+        SPVProductverification(true);
+    })
+
+    function LoadCommonSerialNumber() {
+        $.ajax({
+            url: urloadCommonSerialNumber,
+            type: "GET",
+            data: { jobId: Model_JobID },
+            dataType: "json",
+            success: function (Data) {
+                if (Data.commonSerialNum) {
+                    if (Data.commonSerialNum.length > 0) {
+                        var div = '<div class="warning-notice" id="divWarning"><h5>Panel Warning Notice:</h5>';
+                        for (var i = 0; i < Data.commonSerialNum.length; i++) {
+                            var companyName = '';
+                            var resellerName = '';
+                            if (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 2 || ProjectSession_UserTypeId == 3 || ProjectSession_UserTypeId == 5) {
+                                companyName = "<b class=commonSerialNum>Company : </b>" + Data.commonSerialNum[i].CompanyName;
+                            }
+                            if (ProjectSession_UserTypeId == 1) {
+                                resellerName = " <b class=commonSerialNum>Reseller : </b>" + Data.commonSerialNum[i].ResellerName;
+                            }
+                            var p = '';
+                            if (ProjectSession_UserTypeId == 1 || (ProjectSession_UserTypeId == 4 && Data.commonSerialNum[i].SolarCompanyId == ProjectSession_SolarCompanyId) || (ProjectSession_UserTypeId == 2 && Data.commonSerialNum[i].ResellerId == ProjectSession_ResellerId)) {
+                                p = '<p>Serial ' + Data.commonSerialNum[i].SerialNumber + ' has been used in <a target="_blank" href="/Job/Index?id=' + Data.commonSerialNum[i].Id + '"> ' + Data.commonSerialNum[i].RefNumber + '</a> ' + ' (' + Data.commonSerialNum[i].JobId + ')' + companyName + resellerName + '</p>';
+                            } else {
+                                p = '<p>Serial ' + Data.commonSerialNum[i].SerialNumber + ' has been used by another company</p>';
+                            }
+
+                            div = div + p;
+                        }
+                        div = div + '</div>';
+
+                        $("#loadCommonSerialNumber").html(div);
+                    }
+                    else
+                        $("#loadCommonSerialNumber").html('');
+                }
+                // serialNumber = Data.serialnumbers;
+                $("div.line-no").removeClass("verified")
+                $("div.line-no").removeClass("unverified")
+                $("div.line-no").removeClass("installationVerified")
+                $("div.line-no").removeClass("notverified")
+                $("#GlobalisAllowedSPV").val(Data.GlobalisAllowedSPV)
+                if (Data.IsSPVRequired) {
+                    IsSPVRequired = "True";
+                    VerifyUnVerifySerialNumber();
+                    if ($("#GlobalisAllowedSPV").val().toLowerCase() == "true" && IsSPVRequired == "True")
+                        $(".isSPVRequired").show();
+                    else
+                        $(".isSPVRequired").hide();
+                } else {
+                    $(".isSPVRequired").hide();
+                    $("#SPVLabel").hide();
+                    IsSPVRequired = "False"
+                }
+            }
+        });
+    }
+
+    function LoadCommonInverterSerialNumber() {
+        $.ajax({
+            url: urloadCommonInverterSerialNumber,
+            type: "GET",
+            data: { jobId: Model_JobID },
+            dataType: "json",
+            success: function (Data) {
+                if (Data.commonSerialNum) {
+                    if (Data.commonSerialNum.length > 0) {
+                        var div = '<div class="warning-notice" id="divWarning"><h5>Inverter Warning Notice:</h5>';
+                        for (var i = 0; i < Data.commonSerialNum.length; i++) {
+                            var companyName = '';
+                            var resellerName = '';
+                            if (ProjectSession_UserTypeId == 1 || ProjectSession_UserTypeId == 2 || ProjectSession_UserTypeId == 3 || ProjectSession_UserTypeId == 5) {
+                                companyName = "<b class=commonSerialNum>Company : </b>" + Data.commonSerialNum[i].CompanyName;
+                            }
+                            if (ProjectSession_UserTypeId == 1) {
+                                resellerName = " <b class=commonSerialNum>Reseller : </b>" + Data.commonSerialNum[i].ResellerName;
+                            }
+                            var p = '';
+                            if (ProjectSession_UserTypeId == 1 || (ProjectSession_UserTypeId == 4 && Data.commonSerialNum[i].SolarCompanyId == ProjectSession_SolarCompanyId) || (ProjectSession_UserTypeId == 2 && Data.commonSerialNum[i].ResellerId == ProjectSession_ResellerId)) {
+                                p = '<p>Serial ' + Data.commonSerialNum[i].SerialNumber + ' has been used in <a target="_blank" href="/Job/Index?id=' + Data.commonSerialNum[i].Id + '"> ' + Data.commonSerialNum[i].RefNumber + '</a> ' + ' (' + Data.commonSerialNum[i].JobId + ')' + companyName + resellerName + '</p>';
+                            } else {
+                                p = '<p>Serial ' + Data.commonSerialNum[i].SerialNumber + ' has been used by another company</p>';
+                            }
+
+                            div = div + p;
+                        }
+                        div = div + '</div>';
+
+                        $("#loadCommonInverterSerialNumber").html(div);
+                    }
+                    else
+                        $("#loadCommonInverterSerialNumber").html('');
+                }
+
+            }
+        });
+    }
+
+    function GetserialnumberWithSpvStatus() {
+        $.ajax(
+            {
+                url: urlGetserialnumberWithSpvStatus,
+                data: {
+                    jobId: Model_JobID
+                },
+                dataType: "json",
+                success: function (data) {
+                    if (data.status) {
+                        serialNumber = data.serialNumber;
+                    }
+                }
+            });
+    }
+
+    function SPVProductverification(reProductVerification = false) {
+        if ($('#JobSystemDetails_SerialNumbers').val().trim() == '') {
+            alert("Please enter serial number for do Product Verification.");
+            return false;
+        }
+        else {
+            $('#JobSystemDetails_SerialNumbers').removeAttr('disabled');
+            var serialnumberArray = $('#JobSystemDetails_SerialNumbers').val($('#JobSystemDetails_SerialNumbers').val().trim()).serializeToJson();;
+            $('#JobSystemDetails_SerialNumbers').attr('disabled', 'disabled');
+            $.ajax({
+                url: urlSPVProductVerification,
+                type: "GET",
+                data: {
+                    jobId: Model_JobID, serialNumber: JSON.stringify(serialnumberArray), reProductVerification: reProductVerification//[0].data)
+                },
+                dataType: "json",
+                success: function (data) {
+                    if (data.status) {
+                        $(".alert").hide();
+                        $("#successSPVProductVerification").html(closeButton + "Verify serialnumber successfully");
+                        $("#successSPVProductVerification").show();
+                        serialNumber = data.serialNumber;
+                        VerifyUnVerifySerialNumber();
+                    } else {
+                        $(".alert").hide();
+                        if (data.IsInstallationVerification) {
+                            $("#errorSPVProductVerification").html(closeButton + "There are serial numbers listed which are already SPV Installation Verified.So, SPV verify cannot be done.");
+                        }
+                        else if (data.IsPhotoUnAvailable) {
+                            var failSerialNumber = '';
+                            if (data.lstNotExistPhoto != undefined && data.lstNotExistPhoto.length > 0) {
+                                failSerialNumber = data.lstNotExistPhoto.join();
+                            }
+                            $("#errorSPVProductVerification").html(closeButton + "There are serial numbers [" + failSerialNumber + "] listed that do not have matching photos associated. SPV verify cannot be completed.");
+                        }
+
+                        else {
+                            $("#errorSPVProductVerification").html(closeButton + "Something wrong happen in verifying serial number.");
+                        }
+
+                        $("#errorSPVProductVerification").show();
+                    }
+                    // SearchHistory();
+                }
+            });
+        }
+
+    }
+
+    function SPVProductionVerificationErrorLog() {
+
+        $("#spvproduct-failure-reason-div").load(urlGetSPVProductionVerificationErrorLog + '?jobId=' + $("#BasicDetails_JobID").val(), function () {
+            $("#spvproduct-verification-failure-reason").modal({ backdrop: 'static', keyboard: false });
+            $("#errorMsgRegionSPVProductFailure").hide();
+        })
+    }
+
+    function CommonSerialNumberWithPhotoExistOrNot(data) {
+        if (data.status) {
+            if (data.IsPhotoUnAvailable) {
+                var failSerialNumber = '';
+                if (data.lstNotExistPhoto != undefined && data.lstNotExistPhoto.length > 0) {
+                    failSerialNumber = data.lstNotExistPhoto.join();
+                }
+                $("#errorMsgRegion").html(closeButton + "There are serial numbers [" + failSerialNumber + "] listed that do not have matching photos associated.");
+                $("#successMsgRegion").hide();
+                $("#errorMsgRegion").show();
+            }
+        }
+    }
+
+    function checkSerialNumberWithPhotoExistOrNot() {
+        $.ajax({
+            url: urlCheckSerialNumberPhotoAvailability,
+            type: "post",
+            data: { jobId: Model_JobID },
+            dataType: "json",
+            success: function (data) {
+                CommonSerialNumberWithPhotoExistOrNot(data);
+            }
+        });
+    }
+
+    function LoadSerialNumberWithPhotoExistOrNot() {
+        var dataList = JSON.parse(htmlDecode(SerialNumberwithPhotosAvaibilityList).replaceAll("\\", "\\\\"));
+        var data = dataList ? dataList.Data : "";
+        CommonSerialNumberWithPhotoExistOrNot(data);
+    }
+
+    function htmlDecode(input) {
+        var doc = new DOMParser().parseFromString(input, "text/html");
+        return doc.documentElement.textContent;
+    }
+    $(document).on('mouseleave', '#JobSystemDetails_SerialNumbers', function () {
+        var cntSerialNumber = "0";
+        var cntNoofPanel = "0";
+        cntSerialNumber = ($("#JobSystemDetails_SerialNumbers").val() != '' && $("#JobSystemDetails_SerialNumbers").val() != undefined && $("#JobSystemDetails_SerialNumbers").val() != null) ? $("#JobSystemDetails_SerialNumbers").val().split('\n').length : "0";
+        cntNoofPanel = countNoOfPanel;
+        $("#cntPanelSerialNumber").html(" (" + cntSerialNumber + "/" + cntNoofPanel + ")");
+    });
+    $(document).on('mouseleave', '#JobSystemDetails_InverterSerialNumbers', function () {
+        var cntInverterSerialNumber = "0";
+        var cntNoOfInverter = "0";
+        if ($("#BasicDetails_JobType").val() == 1) {
+            cntInverterSerialNumber = ($("#JobSystemDetails_InverterSerialNumbers").val() != '' && $("#JobSystemDetails_InverterSerialNumbers").val() != undefined && $("#JobSystemDetails_InverterSerialNumbers").val() != null) ? $("#JobSystemDetails_InverterSerialNumbers").val().split('\n').length : "0";
+            cntNoOfInverter = ($("#JobSystemDetails_NoOfInverter").text() != '' && $("#JobSystemDetails_NoOfInverter").text() != undefined && $("#JobSystemDetails_NoOfInverter").text() != null) ? $("#JobSystemDetails_NoOfInverter").text() : "0";
+            $("#cntInverterSerialNumber").html(" (" + cntInverterSerialNumber + "/" + cntNoOfInverter + ")");
+        }
+    });
+</script>
+
+
+
+
+

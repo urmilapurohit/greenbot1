@@ -1,0 +1,200 @@
+﻿@model FormBot.Entity.CreateVEEC
+@using FormBot.Helper;
+
+
+
+<div class="panel-group" role="tablist" aria-multiselectable="true" id="BaselineEquipmentDetail">
+    <div class="alert alert-success alert-dismissible" role="alert" id="successmessageforbaselineequipment" style="display: none"></div>
+  
+    @if (Model.lstBaselineEquipment != null && Model.lstBaselineEquipment.Count > 0)
+    {
+        foreach (var lstBaseline in @Model.lstBaselineEquipment)
+        {
+            <div class="panel" name="BaselineEquipment" data-panelid="@lstBaseline.BaselineEquipmentId">
+                <div class="schedule-heading panel-heading" id="headingOne">
+                    <div class="visit-id">
+                        <label> Calc Zone:</label>
+                       <span class="color-text">@lstBaseline.CalcZone</span>
+                    </div>
+                    <div >
+                        <label>Space-Type:</label>
+                        <span class="color-text">@lstBaseline.SpaceTypeName</span>
+                    </div>
+                    <div>
+                        <label>Quantity :</label>
+                        <span class="color-text">@lstBaseline.Quantity</span>
+                    </div>
+                    <div>
+                        <label>Nominal Lamp Power :</label>
+                        <span class="color-text">@lstBaseline.NominalLampPower</span>
+                    </div>
+                    <div>
+                        <a class="expand-btn" data-toggle="collapse" data-parent="#schedule" href="#@lstBaseline.BaselineEquipmentId" aria-expanded="true" aria-controls="collapseOne">
+                            <span class="icon expand-view sprite-img">
+
+                            </span>Expand View
+                        </a>
+                    </div>
+                    <div>
+                        @{var serializer= new System.Web.Script.Serialization.JavaScriptSerializer();}
+                           
+                            <a href="#" title="Edit" onclick="showBaselineEquipmentDetail('@serializer.Serialize(lstBaseline)',event)">Edit</a>
+                            <a href="#" title="Delete" onclick="deleteBaselineEquipmentDetail(@lstBaseline.BaselineEquipmentId,event)">Delete</a>
+                       
+                    </div>
+                   
+
+                </div>
+                <div class="panel-collapse collapse" id="@lstBaseline.BaselineEquipmentId" role="tabpanel" aria-labelledby="headingOne">
+
+                    <div class="row schedule-installer">
+                        @*<div class="col-md-4">
+                            <div>                               
+                            Calc Zone:<span class="color-text">@lstBaseline.CalcZone</span>
+                            </div>
+                        </div>*@
+
+                        <div class="col-md-6">
+                            <div>
+                                <label>SpaceType:</label>
+                                <span class="color-text">@lstBaseline.SpaceTypeName</span>
+                            </div>
+                            <div>
+                                <label>BCAClassification:</label>
+                                <span class="color-text">@lstBaseline.BCAClassificationName</span>
+                            </div>
+                            <div>
+                                <label>Lamp Ballast Combination :</label>
+                                <span class="color-text">@lstBaseline.LampBallastCombinationName</span>
+                            </div>
+                            <div>
+                                <label>HVAC A/C :</label>
+                                <span class="color-text">@lstBaseline.HVACAC</span>
+                            </div>
+                            <div>
+                                <label>Quantity:</label>
+                                <span class="color-text">@lstBaseline.Quantity</span>
+                            </div>
+                            <div>
+                                <label>LampPower:</label>
+                                <span class="color-text">@lstBaseline.NominalLampPower</span>
+                            </div>
+
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <label>BaselineAssetLifetimeReference:</label>
+                                <span class="color-text">@lstBaseline.BaselineAssetLifetimeReferenceName</span>
+                            </div>
+                            <div>
+                                <label>Definition:</label>
+                                <span class="color-text">@lstBaseline.Definition</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+            </div>
+
+   
+        }
+    }
+</div>
+
+<script>
+    function deleteBaselineEquipmentDetail(BaselineEquipmentId)
+    {
+       
+        var result = confirm("Are you sure you want to delete this record ?");
+        if (result) {
+            if (parseFloat(BaselineEquipmentId) > 0) {
+                $.ajax({
+                    url: '@Url.Action("DeleteBaselineEquipment","VEEC")',
+                    dataType: 'json',
+                    method: "post",
+                    data: { id: BaselineEquipmentId },
+                    success: function (data) {
+                        if (data.success) {
+                            $("#BaselineEquipmentDetail").find('[data-panelid=' + BaselineEquipmentId + ']').remove();
+                            $(".alert").hide();
+                            $("#successmessageforbaselineequipment").removeClass("alert-danger");
+                            $("#successmessageforbaselineequipment").addClass("alert-success");
+                            $("#successmessageforbaselineequipment").html(closeButton + "BaselineEquipment Deleted Successfully.");
+                            $("#successmessageforbaselineequipment").show();
+
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    function showBaselineEquipmentDetail(jsonData)
+    {
+       
+        clearBaselineValues();
+        var obj = $.parseJSON(jsonData);
+        $('#spacetype').val(obj['Spacetype']);
+        $('#spacetypeunlisted').val(obj['SpaceTypeUnlisted']);
+        $('#bcaclassification').val(obj['BCAClassification']);
+        $('#baselineupgrade').val("Baseline");
+        $("#baselineupgrade").attr("disabled", "disbled");
+        $('#LampBallastCombination').val(obj['LampBallastCombination']);
+        $('#LampCategory').val(obj['Lampcategory']);
+        $('#Quantity').val(obj['Quantity']);
+        $('#BaselineAssetLifetimeReference').val(obj['BaselineAssetLifetimeReference']);
+        $('#UpgradeAssetLifetimeReference').val(obj['UpgradeAssetLifetimeReference']);
+        $('#ProductBrand').val(obj['ProductBrand']);
+        $('#ProductModel').val(obj['ProductModel']);
+        $('#RatedLifetimeHours').val(obj['RatedLifetimeHours']);
+        $('#NominalLampPower').val(obj['NominalLampPower']);
+        $('#FirstController').val(obj['TypeOfFirstController']);
+        $('#SecondController').val(obj['TypeOfSecondController']);
+        $('#VRUProductBrand').val(obj['VRUProductBrand']);
+        $('#VRUProductModel').val(obj['VRUProductModel']);
+        if (obj['HVACAC'] == true) {
+            $('#HVAC').val("Yes");
+        } else {
+            $('#HVAC').val("No");
+        }
+        $('#Definition').val(obj['Definition']);
+        $('#BaselineEquipmentId').val(obj['BaselineEquipmentId']);
+        $('#popupAddBaseLine').modal({ backdrop: 'static', keyboard: false });
+
+    }
+
+    function GetBaselineData()
+    {
+        var VEECId = VEECID;
+        var id = $('#AreaSelectIdBaseline').val();
+        $('#veecareaidforselectedarea').val(id);
+        var VEECAreaId = $('#veecareaidforselectedarea').val();
+        
+        $.ajax(
+              {
+                  url: '@Url.Action("ReloadBaselineEquipment", "VEEC")',
+                  dataType: 'json',
+                  data: { id: VEECId, areaId : VEECAreaId },
+                  contentType: 'application/json; charset=utf-8',
+                  type: 'get',
+                  async: false,
+                  success: function (response)
+                  {
+                      
+                      if (response != null) {                         
+                          $("#popupAddBaseLine").modal('hide');
+                          $("#divBaselineGridView").html(response.baselinePartialView);                           
+                      };
+                      $("#loading-image").hide();
+                  }                      
+              });
+    }
+   
+
+</script>

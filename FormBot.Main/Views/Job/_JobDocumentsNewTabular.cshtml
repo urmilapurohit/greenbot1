@@ -1,0 +1,376 @@
+﻿@model FormBot.Entity.Job.STCDetailsModel
+@using FormBot.Helper;
+@{ 
+    int currentJobStatus = 0;
+    if(Model.stcBasicDetails != null)
+    {
+        currentJobStatus = Model.stcBasicDetails.STCStatusId;
+    }
+}
+@{ 
+    bool isCECform = false;
+    bool isSTCform = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.CESForm.GetHashCode()) { isCECform = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.STCForm.GetHashCode()) { isSTCform = true; }
+        });
+    }
+}
+<style type="text/css">
+    .document-color {
+        color: black !important;
+    }
+    .deleteInfo {
+        color: #6b6b6b;
+        font-size: 12px;
+        padding-right: 20px;
+        background: url('../Images/ic-info.png') no-repeat 100% center;
+        position: absolute;
+        top: 14px;
+        right: 35px;
+        cursor: default !important;
+        z-index: 1;
+    }
+
+    #mdlSlideShow .modal {
+        text-align: center;
+    }
+
+    .disableNavigation {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+
+
+    #mdlSlideShow .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .arrow-next {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-nextSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prevSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prev {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .lb-dataContainer .lb-details {
+    }
+
+    .lb-dataContainer {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-dataContainer-selfie {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-closeContainer {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainer > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainer > a:hover {
+                opacity: 0.5;
+            }
+
+    .lb-closeContainerSelfie {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainerSelfie > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainerSelfie > a:hover {
+                opacity: 0.5;
+            }
+
+    /*.lb-container img {
+        width: auto !important;
+        height: auto !important;
+        border: 2px solid #fff;
+    }*/
+
+    .HideOverflow {
+        overflow: hidden;
+    }
+
+    #lightbox {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        /* bring your own prefixes */
+        transform: translate(-50%, -50%) !important;
+    }
+
+    #MapPopup {
+        z-index: 9999999 !important;
+    }
+
+    .with-IsUnderInstallationArea {
+        color: red !important;
+    }
+
+    #restorebtn {
+        background-image: url(../../image.png) !important;
+        background-repeat: no-repeat;
+        background-position: 2px 6px;
+        padding: 0px 14px 0 31px !important;
+        background-size: 25px;
+    }
+
+    #lnkRestore {
+        float: none;
+        text-align: center;
+        margin-left: 0px;
+        width: 100%;
+    }
+</style>
+@*<div class="visitId">
+    
+        <div class="panel-heading submission-add visitParent" role="photo-tab" id="headingAssets">
+            
+                <span class="submission">CES/COC<i class="sprite-img submission-icon"></i></span>
+            
+            <input type="checkbox" class="visit-list-check" data-UniqueVisistID="" data-jobscid="" data-isdeleted="" value="">
+            <a role="button" data-toggle="collapse" data-name="" data-parent="#accordion" href="#collapseAssets" aria-expanded="false" aria-controls="collapseAssets">
+                <i class="sprite-img folder-icon"></i>
+                <span>table</span>
+                <table class="table table-hover">
+                    <tbody id="tbodyCES"></tbody>
+                </table>
+                <i class="sprite-img arrow-icon"></i>
+            </a>
+        </div>
+    
+</div>*@
+<div class="col-md-12">
+    @if (ProjectSession.UserTypeId != 8||isCECform)
+    {
+        <div  id="divDocumentsCES">
+            <div>
+                @*<div class="title">
+                    <i class="sprite-img form-icon"></i>CES/COC FORM
+                </div>
+
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionCES" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionCES" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>*@
+                <div class="panel pdf-generated def" id="pnlDoc">
+                    <div class="visit-list">
+                        <div class="panel">
+                            <div class="panel-heading submission-add visitParent" style="background-color: #f0f0f0; color:black;" role="photo-tab" id="headingAssetsDefault">
+                                @*<input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos" id="ckCESDocuments">*@
+                                <a role="button" class="collapsed" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseCESdocu" aria-expanded="false" aria-controls="collapseAssetsInstallation">
+                                    <i class="sprite-img folder-icon" style="left:20px !important"></i>
+                                    <span style="background-color: #f0f0f0; color: black; padding-left:-10px !important;">CES/COC Document</span>
+                                    <i class="sprite-img arrow-icon"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+               
+                    <div id="collapseCESdocu" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+                        @*<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionCES" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>
+                        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionCES" style="display: none">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                        </div>*@
+                        <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+                            <div class="panel">
+
+                                <div class="panel-heading" role="photo-subtab" id="headingpanel-02-Install">
+                                    @*<input type="checkbox" class="visit-list-check parentInput defaultPanel" data-type="2">*@
+                                    @*<a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial-Installation" data-name="Installation Photos" aria-expanded="false" aria-controls="panel-serial-Installation">
+                        Installation Photos
+                    </a>*@
+                                </div>
+                                <div class="table-responsive">
+                                    <div>
+                                        <table class="table table-hover">
+                                            <tbody id="tbodyCES" style="color:black !important;"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="center-box noDocumentCES" style="display:none">
+                                    <p>There is no CES/COC form available, Create one now?</p>
+                                </div>
+                            </div>
+
+                        </div>
+                        @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5 || ProjectSession.UserTypeId == 4) ||
+                (currentJobStatus == FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode() ||
+                        currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                           || currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                           || currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()))
+                        {
+                            <div class="center-btn-group" id="CESDocbtns">
+                                <input class="btn border-btn" value="Convert CES PDF" id="btnCreateCESPdf" type="button" style="display:none">
+                                <input id="uploadCESBtnDocument" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.csv,.gif,.txt,.heic" multiple type="file" class="upload fileUpload" style="display:none;" />
+                                <input class="btn border-btn" value="Create" id="btnCreateCESDocument" type="button" style="display:none">
+                                <input class="btn border-btn" value="Upload" id="btnUploadCESDocument" type="button" style="display:none">
+                            </div>
+                        }
+                    </div>
+            </div>
+                
+
+                              
+            </div>
+        </div>
+    }
+    </div>
+<div class="col-md-12">
+    @if (ProjectSession.UserTypeId != 8 || isSTCform) {
+     <div  id="divDocumentsSTC">
+         
+         <div>
+             @*<div class="title"><i class="sprite-img form-icon"></i>STC FORM </div>
+
+             <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTC" style="display: none">
+                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+             </div>
+             <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSTC" style="display: none">
+                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+             </div>*@
+             <div class="panel pdf-generated def" id="pnlReference">
+                 <div class="visit-list">
+                     <div class="panel-heading submission-add visitParent" style="background-color: #f0f0f0; color:black;" role="photo-tab" id="headingReference">
+                         @*<input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos" id="ckSTCDocuments">*@
+                         <a role="button" class="collapsed" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseSTCdocu" aria-expanded="false" aria-controls="collapseReference">
+                             <i class="sprite-img folder-icon" style="left:20px !important"></i>
+                             <span style="background-color: #f0f0f0; color:black;">STC Document<i class="sprite-img submission-icon"></i></span>
+                             <i class="sprite-img arrow-icon"></i>
+                         </a>
+                     </div>
+                 </div>
+                 <div id="collapseSTCdocu" class="panel-collapse collapse" role="photo-subtab" aria-labelledby="headingReference">
+                     @*<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSTC" style="display: none">
+                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                     </div>
+                     <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSTC" style="display: none">
+                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                     </div>*@
+                     <div class="panel-group inner-panel" id="accordion02" role="tablist" aria-multiselectable="true">
+                         <div class="panel">
+
+                             <div class="panel-heading" role="photo-subtab" id="headingpanel-02-Install">
+                                 @*<input type="checkbox" class="visit-list-check parentInput defaultPanel" data-type="2">*@
+                                 @*<a role="button" data-toggle="collapse" data-parent="#inner-panel" href="#panel-serial-Installation" data-name="Installation Photos" aria-expanded="false" aria-controls="panel-serial-Installation">
+                        Installation Photos
+                    </a>*@
+                             </div>
+                             <div class="table-responsive">
+                                 <div>
+                                     <table class="table table-hover">
+                                         <tbody id="tbodySTC"></tbody>
+                                     </table>
+                                 </div>
+                             </div>
+                             <div class="center-box noDocument" style="display:none">
+                                 <p>There is no STC form available, Create one now?</p>
+                             </div>
+                         </div>
+
+                     </div>
+                     @if ((ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5 || ProjectSession.UserTypeId == 4) ||
+          (currentJobStatus == FormBot.Helper.SystemEnums.STCJobStatus.NotYetSubmitted.GetHashCode() ||
+                  currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.SubmittoTrade.GetHashCode()
+                     || currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.ComplianceIssues.GetHashCode()
+                     || currentJobStatus == @FormBot.Helper.SystemEnums.STCJobStatus.CERFailed.GetHashCode()))
+                     {
+                 <div class="center-btn-group" id="STCDocBtns">
+                     <input class="btn border-btn fileUpload1" value="Upload" id="btnUploadSTCDocument" type="file" style="display:none">
+                     <input class="btn border-btn" value="Create" id="btnCreateSTCDocument" type="button" style="display:none">
+                     <input class="btn border-btn" value="Upload" id="btnSTCDocument" type="button" style="display:none">
+                 </div>
+                     }
+
+                 </div>
+             </div>                                     
+         </div>
+    </div>
+    }
+
+</div>

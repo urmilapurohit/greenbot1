@@ -1,0 +1,250 @@
+﻿@model FormBot.Entity.CreateVEEC
+@using FormBot.Helper
+
+<div id="jobNewScreen" class="container-fluid create-job-details">
+    <div class="row">
+        <div class="title">
+            <span>
+                <h1 id="veecTitle">
+                    @Model.VEECDetail.RefNumber
+                    @if (ProjectSession.UserTypeId == 1)
+                    {
+                        <span style="font-size: 25px;border-left: none;margin-left: 0;">(@Model.VEECDetail.VEECId)</span>
+                    }
+                    <span id="jobHeader" class="jobHeader">Header</span><span class="jobHeader" style="margin-left:0px !important">PV SOLAR</span>
+                </h1>
+            </span>
+            @*<span><a class="back-btn pull-right" title="Back" id="btnBackNew" href="#"><img alt="" src='@Url.Content("~/images/back-icon.png")'>Back</a></span>*@
+            <span><a class="back-btn pull-right" title="Back" id="btnBackNew" href="#"><span class="sprite-img back-icon"></span>Back</a></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <ul class="create-job-menu clearfix">
+                <li id="ActiveJob" class="active"><a href="#" title="Job Details">Veec Details</a></li>
+                <li id="aDocuments">
+                    <a href="javascript:void(0);" title="Documents" style="text-decoration:none;">Documents & Photos</a>
+                </li>
+                <li id="aScheduling">
+                    <a href="javascript:void(0);" title="Scheduling" style="text-decoration:none;">Scheduling</a>
+                </li>
+                <li id="aCalculation">
+                    <a href="javascript:void(0);" title="Calculation" style="text-decoration:none;">Calculation</a>
+                </li>
+                <li class="assign" style="right:-70px;">
+                    <div class="row">
+
+                        @if (Model.UserType == 6 || Model.UserType == 4)
+                        {
+                            <div class="assign-job">
+                                <label class="control-label" id="SolarConnectionLabel">Assign to SCO:</label>
+                                @Html.DropDownList("ScoIDVEEC", new List<SelectListItem>(), new { id = "ScoIDVEEC", @class = "form-control" })
+                            </div>
+                        }
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group pull-right">
+                @if (Model.UserType == 4 || Model.UserType == 1)
+                {
+                    <button class="btn primary icon-btn" id="btnUploadVEEC"><span class="upload_ic"></span> Upload VEEC</button>
+                    @*<input type="button" value="Upload Veec" class="primary" id="btnUploadVEEC">*@
+                }
+                <button class="btn primary icon-btn" id="btnSaveVEEC" ><span class="sprite-img save_ic"></span> Save VEEC</button>
+                @*<input type="button" value="Save Veec" class="primary" id="btnSaveVEEC">*@
+                @*<input type="button" value="Cancel" class="default">*@
+                @*<a href="#" title="print" class="icon-btn" id="btnJobPrint"><img src='@Url.Content("~/images/print-b.png")' alt="print"></a>*@
+                @*<a href="#" id="aSwitch" title="Switch between Tabular and Modular View anytime. Try it now" class="icon-btn"><img src='@Url.Content("~/images/comparer-icon.png")' alt="Switch between Tabular and Modular View anytime. Try it now"></a>*@
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="createJobView">
+            @Html.Partial("_ViewAndEditVEEC")
+        </div>
+    </div>
+
+    <div id="veecSchdulingView" class="clearfix">
+        @Html.Partial("~/Views/VEECScheduling/_VeecVisit.cshtml", Model.VeecScheduling)
+    </div>
+    
+        <div id="loadNewVeecPhoto" class="row">
+            <div id="veecCheckListPhoto" class="col-md-6">
+                @Html.Partial("_VeecCheckListPhotos")
+            </div>
+            <div id="veecPhoto" class="col-md-6">
+                @Html.Partial("_VeecPhotosNew")
+            </div>
+        </div>
+    
+
+        <div id="VeecBaselineUpgradeView" class="job-com-box">
+            @Html.HiddenFor(m => m.VEECArea.VEECAreaId, new { id = "veecareaidforselectedarea" })
+            <div class="sub-title row">
+                <div class="alert alert-success alert-dismissible" role="alert" id="successmessageforbaselineequipment" style="display: none;margin-top:20px"></div>
+                <div class="alert alert-success alert-dismissible" role="alert" id="successmessageforaddbaseline" style="display: none;margin-top:20px"></div>
+                <h4 class="col-sm-6 col-md-6 col-lg-8" style="line-height:34px;">CALCULATIONS:</h4>
+                <div class="col-sm-6 col-md-6 col-lg-4">
+                        <button type="button" class="btn primary icon-btn pull-right sm-mt-5" id="btnAddArea">
+                            <span class="sprite-img add_ic"></span>Add/Edit Areas
+                        </button>
+                        <button type="button" class="btn primary icon-btn pull-right sm-mt-5" id="btnRearrangeCalcZone">
+                            <span class="sprite-img add_ic"></span>
+                            Rearrange
+                        </button>
+                    
+                </div>
+            </div>
+
+            <div class="form-inline">
+                <div class="form-group">
+                    <label class="calc-subheading">AREA NAME:</label>
+                    @Html.DropDownListFor(m => m.VEECArea.Name, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "AreaSelectIdBaseline", @class = "form-control" })
+                </div>
+            </div>
+
+            @*<div class="col-sm-4 text-left">
+                <h5 class="calc-subheading"></h5>
+            </div>
+            <div class="col-sm-2 areaDropdown">
+                @Html.DropDownListFor(m => m.VEECArea.Name, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" } }, new { id = "AreaSelectIdBaseline", @class = "form-control" })
+            </div>*@
+            @*<div class="alert alert-success alert-dismissible" role="alert" id="errormessageforselectarea" style="display: none"></div>*@
+            <div id="VeecBaselineUpgradeGridView" style="margin-top:10px;">
+                @Html.Partial("~/Views/VEEC/_BaselineUpgradeView.cshtml", Model)
+            </div>
+        </div>
+    </div>
+
+    @Html.Partial("CommonModelVEEC")
+
+
+    <script>
+
+    var dropDownData = [];
+    var GetDateFormat = '@ProjectConfiguration.GetDateFormat';
+    var VEECDetail_ScoIDVEEC = '@Model.VEECDetail.ScoIDVEEC',
+        urlGetSCOUser = '@Url.Action("GetSCOUser", "AssignSCOToVEEC")';
+    var urlIndex = '@Url.Action("Index", "VEEC")/';
+        var urlGetProductmodel = '@Url.Action("GetProductModel","VEEC")';
+        var showHideBCAClassificationOnSpaceTypeChange = '@Url.Action("showHideBCAClassificationOnSpaceTypeChange","VEEC")';
+        var CheckVEECUserExistURL = '@Url.Action("CheckVEECUserExist", "User")';
+
+        var AddVEECInstallerURL = '@Url.Action("AddVEECInstaller", "VEEC")';
+        var GetVEECInstallerUrl = '@Url.Action("GetVEECInstaller","VEEC")';
+        var GetVEECUpgradeManagerUrl = '@Url.Action("GetVEECUpgradeManager","VEEC")';
+        var urlUpdateVEECInstaller = '@Url.Action("UpdateVEECInstallerDetail","VEEC")';
+        var AddVEECUpgradeManagerUrl = '@Url.Action("AddVEECUpgradeManager","VEEC")';
+        var urlUpdateVEECUpgradeManager = '@Url.Action("UpdateVEECUpgradeManager","VEEC")';
+        var urlDeleteCustomVEECUpgradeManager = '@Url.Action("DeleteVEECCustomUpgradeManager","VEEC")';
+        var urlDeleteCustomVEECInstaler = '@Url.Action("DeleteVEECCustomInstaller","VEEC")';
+    $(document).ready(function () {
+        $("#veecSchdulingView").hide();
+        $('#loadNewVeecPhoto').hide();
+        $("#VeecBaselineUpgradeView").hide();
+
+    })
+    $("ul.create-job-menu").on("click", "li", function () {
+
+        $('ul.create-job-menu').each(function () {
+            $(this).find('li').each(function () {
+                $(this).removeClass("active");
+            });
+        });
+
+        //$("#invoiceDetail").css("display", "none");
+
+
+        if ($("#BasicDetails_JobID").val() == "0") {
+            $("#ActiveJob").addClass("active");
+        } else {
+            //$(this).addClass("active");
+            if ($("#hasJobID").val() == "0") {
+                $("#hasJobID").val($("#BasicDetails_JobID").val());
+            }
+            LoadTabContent($(this).index());
+        }
+
+        //$("#ActiveJob").get(prevSelectedTab).addClass("active");
+        prevSelectedTab = $(this).index();
+        return false;
+    });
+
+
+
+
+
+
+
+    // });
+
+    function LoadTabContent(index) {
+
+        $('ul.create-job-menu').each(function () {
+            $(this).find('li').each(function () {
+                $(this).removeClass("active");
+            });
+        });
+        if (index == 0) {
+            $("#ActiveJob").addClass("active");
+            $("#jobTitle").html("Job Details");
+            $("#VeecBaselineUpgradeView").hide();
+            $("#veecSchdulingView").hide();
+            $("#createJobView").show();
+            $('#loadNewVeecPhoto').hide();
+
+        } else if (index == 1) {
+            $("#aDocuments").addClass("active");
+            $('#loadNewVeecPhoto').show();
+            $("#veecSchdulingView").hide();
+            $("#createJobView").hide();
+            $("#VeecBaselineUpgradeView").hide();
+        } else if (index == 2) {
+
+            $("#aScheduling").addClass("active");
+            $("#jobTitle").html("Scheduling");
+            $("#createJobView").hide();
+            $("#veecSchdulingView").show();
+            $('#loadNewVeecPhoto').hide();
+            $("#VeecBaselineUpgradeView").hide();
+        } else if (index == 3) {
+            $("#aCalculation").addClass("active");
+            $("#VeecBaselineUpgradeView").show();
+            $("#createJobView").hide();
+            $("#veecSchdulingView").hide();
+            $('#loadNewVeecPhoto').hide();
+
+        }
+    }
+    </script>
+
+    <script src="~/Scripts/ddaccordion.js"></script>
+
+
+    <script src="~/Scripts/View/VEEC/VEECGeneral.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    <script src="~/Scripts/GeneralFunction.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    <script src="~/Scripts/View/VEEC/ViewAndEditVEEC.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    <script src="~/Scripts/View/VEEC/_VEECCalculation.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    @*@Scripts.Render("~/Scripts/FormBot.js")
+        <script src="~/Scripts/jquery.fileupload.js"></script>*@
+    <script src="~/Scripts/jquery.fileupload.js?v=@ProjectConfiguration.ScriptVersion"></script>
+    @*<script src="~/Scripts/View/VEEC/CreateVEEC.dev.js"></script>*@
+   
+    <script>
+    var arealist = JSON.stringify('@Html.Raw(Json.Encode(Model.lstArea))');
+        var lstArea = JSON.parse('@Html.Raw(Json.Encode(Model.lstArea))'.replace(/\\/g, "\\\\"));
+    var lstBaselineEquipment = JSON.parse('@Html.Raw(Json.Encode(Model.lstBaselineEquipment))');
+    var lstUpgradelineEquipment = JSON.parse('@Html.Raw(Json.Encode(Model.lstUpgradeEquipment))');
+    </script>

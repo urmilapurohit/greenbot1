@@ -1,0 +1,389 @@
+﻿@model FormBot.Entity.VEECCheckList.VEECCheckListTemplate
+@using FormBot.Helper;
+
+@Scripts.Render("~/bundles/jqueryval")
+
+
+
+<div class="checklist-block job-com-box" id="chkListOfScheduling">
+    @*<div class="sub-title">
+            <h4>CHECKLIST</h4>
+        </div>*@
+
+    @*<div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.CheckListTemplateName, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.CheckListTemplateName, new { @class = "form-control", @maxlength = "100" })
+                </div>
+            </div>
+        </div>*@
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                @Html.LabelFor(m=>m.VEECCheckListTemplateId, new { @class = "control-label" })
+                @Html.DropDownListFor(m => m.VEECCheckListTemplateId, new List<SelectListItem>(), new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="col-sm-6 newTemplate">
+            <div class="form-inline pull-right">
+                <a href="#" id="saveNewTemplate" title="Save as New Template" class="form-control save-as-input" onclick="OpenaAddTemplate($('#VEECCheckListTemplateId').val());">Save as New Template</a>
+            </div>
+        </div>
+    </div>
+
+    <ul class="checklist">
+
+        @if (Model.lstCheckListItem != null && Model.lstCheckListItem.Count > 0)
+        {
+            for (int i = 0; i < Model.lstCheckListItem.Count; i++)
+            {
+                <li data-id="@Model.lstCheckListItem[i].VEECCheckListItemId" data-visitchecklistitemid="@Model.lstCheckListItem[i].VEECVisitCheckListItemId">
+
+                    @if (Model.lstCheckListItem[i].VEECVisitCheckListItemId > 0 || Model.SolarCompanyId != null || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                    {
+                        <span class="draggable draggableCheckList sort-down sprite-img" itemid="@Model.lstCheckListItem[i].Id" order="@Model.lstCheckListItem[i].OrderNumber"></span>
+                    }
+
+                    <span>
+                        <a href="#" onclick="EditCheckListItem('@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].Id','@Model.SolarCompanyId','@Model.lstCheckListItem[i].VEECVisitCheckListItemId');">@Model.lstCheckListItem[i].ItemName</a><span class="color-text">
+                            @if (Model.isSetFromSetting == false && Model.lstCheckListItem[i].VEECVisitCheckListItemId > 0 && Model.lstCheckListItem[i].VEECCheckListClassTypeId != 5)
+                            {
+                                <span>(@Model.lstCheckListItem[i].VisitedCount/@Model.lstCheckListItem[i].TotalCount)</span>
+                            }
+                        </span>
+                    </span>
+
+                    @if (Model.lstCheckListItem[i].VEECVisitCheckListItemId > 0 || Model.SolarCompanyId != null || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+                    {
+                        <span class="action">
+                           
+                            <a class=" up-row sprite-img" href="#" title=""></a>
+                            <a class=" down-row sprite-img" href="#" title=""></a>
+                            <a class="delete edit sprite-img" href="#" title="Delete" onclick="DeleteCheckListItem('@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].Id','@Model.lstCheckListItem[i].VEECVisitCheckListItemId','@Model.lstCheckListItem[i].VEECCheckListItemId');"></a>
+                        </span>
+                    }
+
+                    @if (Model.lstCheckListItem[i].VEECVisitCheckListItemId > 0 || Model.SolarCompanyId != null)
+                    {
+                        if (Model.isSetFromSetting == false && Model.lstCheckListItem[i].VEECVisitCheckListItemId > 0)
+                        {
+                            <span class="accept">
+                                @if (Model.lstCheckListItem[i].IsCompleted == true)
+                                {
+                                    <a href="#" onclick="MarkUnMarkItem(this,'@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].VEECVisitCheckListItemId','@Model.lstCheckListItem[i].IsCompleted','@Model.lstCheckListItem[i].VisitedCount','@Model.lstCheckListItem[i]l.TotalCount')"><i class="border-btn active sprite-img"></i></a>
+                                }
+                                else
+                                {
+                                    <a href="#" onclick="MarkUnMarkItem(this,'@Model.lstCheckListItem[i].TemplateId','@Model.lstCheckListItem[i].VEECVisitCheckListItemId','@Model.lstCheckListItem[i].IsCompleted','@Model.lstCheckListItem[i].VisitedCount','@Model.lstCheckListItem[i].TotalCount')"><i class="border-btn sprite-img"></i></a>
+                                }
+                            </span>
+                        }
+                    }
+
+
+                </li>
+            }
+        }
+    </ul>
+    <ul>
+
+        @if (Model.isSetFromSetting == false ||  Model.SolarCompanyId != null || (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3))
+        {
+            <li class="liAddCheckListItem">
+                <span class="add">
+                    <i>
+                        <a href="#" onclick="AddCheckListItem()"><img src='@Url.Content("~/images/ic-plus_black.png")' alt=""></a>
+                    </i>
+                </span>
+                <span>
+                    <a href="#" onclick="AddCheckListItem()"><strong class="color-text">Add New item</strong></a>
+                </span>
+            </li>
+        }
+
+    </ul>
+</div>
+
+
+
+<script type="text/javascript">
+
+    var isSetFromSetting = '@Model.isSetFromSetting.ToString().ToLower()';
+    var jobType = 0;
+
+    $(document).ready(function () {
+        $('.templateName').html('@Model.VEECCheckListTemplateName');
+
+        var solarCompanyId = $("#hdnsolarCompanyid").val();
+
+        if (isSetFromSetting == 'true')
+            jobType = '@Model.JobType';
+        @*else if ($('#IsFromCalendarView').val().toLowerCase() == 'true') {            
+            jobType = '@Model.JobType';
+            if (jobType == '0' || jobType == null || jobType == '')
+                jobType = $("#JobType").val();
+        }*@
+        else
+            jobType = $('#BasicDetails_JobType').val();
+
+        var defaultText = '';
+        if (isSetFromSetting == 'true')
+            defaultText = 'Select';
+        else
+            defaultText = 'Custom';
+        
+        FillDropDown('VEECCheckListTemplateId', '@Url.Action("GetVEECCheckListTemplate", "VEECCheckListTemplate")?solarCompanyId=' + solarCompanyId , '@Model.Id', true, function () {
+            if ('@Model.VEECCheckListTemplateId' == null || '@Model.VEECCheckListTemplateId' == '' || '@Model.VEECCheckListTemplateId' == 0) {
+                $("#VEECCheckListTemplateId").val('');
+                //ShowHideCopyTemplate();
+            }
+        }, defaultText);
+
+        $("#VEECCheckListTemplateId").change(function () {            
+            //ShowHideCopyTemplate();
+            if (isSetFromSetting == "false") {
+                isVisitCheckListTemplateChange = true;
+                var isAddVisit = false;
+                var jobSchedulingId = $("#VeecSchedulingID").val() > 0 ? $("#VeecSchedulingID").val() : 0;
+                if (jobSchedulingId == 0)
+                {
+                    isAddVisit = true
+                }
+                if ($('#IsFromCalendarView').val().toLowerCase() == 'true')
+                    TempCheckListTemplateItemAdd($("#VEECCheckListTemplateId").val(), isAddVisit, $("#VeecID").val());
+                else
+                    TempCheckListTemplateItemAdd($("#VEECCheckListTemplateId").val(), isAddVisit, $("#VeecID").val());
+            }
+            else {
+                OpenCheckListItemPopup($("#VEECCheckListTemplateId").val(), true);
+            }
+
+            //if (isSetFromSetting == "false") {
+            //    $.each($(".checklist").find('li'), function () {
+            //        if ($(this).data('visitchecklistitemid') > 0) {
+            //            visitCheckListItemIds.push($(this).data('visitchecklistitemid'));
+            //        }
+            //        else if ($(this).data('id') > 0) {
+            //            checkListItemsIds.push($(this).data('id'));
+            //        }
+            //    });
+            //}
+
+        });
+
+        $(".checklist").sortable({
+            handle: '.draggableCheckList',
+            cancel: '.liAddCheckListItem',
+            stop: function (event, ui) {
+                // new Index because the ui.item is the node and the visual element has been reordered
+                updateIndex();
+            }
+        });
+        //ShowHideCopyTemplate();
+    });
+
+    $('.checklist').on('click', 'a.up-row', function () {
+        var li = $(this).closest('li');
+        li.prev().before(li);
+
+        updateIndex();
+    });
+
+    $('.checklist').on('click', 'a.down-row', function () {
+        var li = $(this).closest('li');
+        if (!li.next().hasClass('liAddCheckListItem'))
+            li.next().after(li);
+
+        updateIndex();
+    });
+
+
+
+    function ShowHideCopyTemplate() {
+        var templateId = $("#VEECCheckListTemplateId").val();
+        if (templateId != '')
+            $("#saveNewTemplate").show();
+        else
+            $("#saveNewTemplate").hide();
+    }
+
+    function updateIndex() {
+        var data = [];
+        $('.checklist li').each(function (a, li) {
+            data.push({
+                veeccheckListItemId: $(li).data('id'),
+                orderNo: a + 1,
+                veecvisitCheckListItemId: $(li).data('visitchecklistitemid')
+            });
+        });
+
+        $.ajax({
+            url: '@Url.Action("MoveUPAndDownOrderOfCheckListItemNew", "VEECCheckListItem")',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            type: 'get',
+            data: { strData: JSON.stringify(data) },
+            success: function (response) {
+
+            },
+            error: function () {
+
+            }
+        });
+    }
+
+    function AddCheckListItem() {
+        var url = '@Url.Action("CreateVEECCheckListItemPopup", "VEECCheckListItem")?isSetFromSetting=' + '@Model.isSetFromSetting' + '&templateId=' + '@Model.Id';
+        OpenItemPopup(url);
+    }
+
+    function EditCheckListItem(templateId, itemId, solarCompanyId, visitCheckListItemId) {
+
+        if (isSetFromSetting == "false") {
+            isDefault = false;
+        }
+        else {
+            if (solarCompanyId == null || solarCompanyId == '')
+                isDefault = true;
+            else
+                isDefault = false;
+        }
+
+        var url = '@Url.Action("CreateVEECCheckListItemPopup", "VEECCheckListItem")?isSetFromSetting=' + '@Model.isSetFromSetting' + '&templateId=' + templateId + '&itemId=' + itemId + '&isDefaultTemplate=' + isDefault + '&visitCheckListItemId=' + visitCheckListItemId;
+        OpenItemPopup(url);
+    }
+
+    function OpenItemPopup(url) {
+        
+        $.get(url, function (data) {
+            
+            $('#checkListItemForm').empty();
+            $('#checkListItemForm').append(data);
+            $('#popupCheckListItem').modal({ backdrop: 'static', keyboard: false });
+        });
+    }
+
+    function showSuccessMessageAddEditItem(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionItem").hide();
+        $("#successMsgRegionAddEditItem").html(closeButton + message);
+        $("#successMsgRegionAddEditItem").show();
+    }
+
+    function showErrorMessageItem(message) {
+        $(".alert").hide();
+        $("#successMsgRegionAddEditItem").hide();
+        $("#errorMsgRegionItem").html(closeButton + message);
+        $("#errorMsgRegionItem").show();
+    }
+
+    function showErrorMessageItemOnVisit(message) {
+        $(".alert").hide();
+        $("#successMsgRegionAddEditItem").hide();
+        $("#errorMsgRegionForPopUp").html(closeButton + message);
+        $("#errorMsgRegionForPopUp").show();
+    }
+
+    function DeleteCheckListItem(templateId, itemId, visitCheckListItemId, checkListItemId) {
+        if (confirm('Are you sure you want to delete this check list item?')) {
+            DeleteCheckListItemByItemId(templateId, itemId, visitCheckListItemId);
+        }
+    }
+
+    function DeleteCheckListItemByItemId(templateId, itemId, visitCheckListItemId) {
+        $.ajax(
+              {
+                  url: '@Url.Action("DeleteCheckListItem", "VEECCheckListItem")',
+                  dataType: 'json',
+                  contentType: 'application/json; charset=utf-8',
+                  type: 'get',
+                  data: { templateId: templateId, itemId: itemId, visitCheckListItemId: visitCheckListItemId },
+                  success: function (response) {
+
+                      if (response.status) {
+
+                          if (isSetFromSetting == "false") {
+
+                              $.grep(visitCheckListItemIds, function (a) {
+                                  return a != visitCheckListItemId;
+                              });
+
+                              var jobSchedulingId = $("#veecSchedulingID").val();
+                              var tempJobSchedulingId = $("#TempJobSchedulingId").val();
+                              
+                              CommonOpenCheckListItemPopup(response.templateId, "false", jobSchedulingId, false, tempJobSchedulingId, $("#VeecID").val());
+                              ReloadJobPhotoSection($("#VeecDetail_VeecId").val());
+                          }
+                          else {
+                              OpenCheckListItemPopup(response.templateId);
+                          }
+                          showSuccessMessageAddEditItem("CheckList item has been deleted successfully.");
+                      }
+                      else {
+                          if (response.error.toLowerCase() == 'sessiontimeout')
+                              window.location.href = '@Url.Action("Logout", "Account")';
+                          else
+                              showErrorMessageItem("CheckList item has not been deleted.");
+                      }
+                  },
+                  error: function () {
+                      showErrorMessageItem("CheckList item has not been deleted.");
+                  }
+              });
+    }
+
+    function MarkUnMarkItem(obj, templateId, itemId, isCompleted, visitedCount, totalCount) {
+        if (visitedCount >= totalCount) {
+            var isMark = $(obj).find("i").hasClass('active');
+            var jobSchedulingId = '@Model.JobSchedulingId';
+
+            if (jobSchedulingId > 0) {
+                $.ajax(
+               {
+                   url: '@Url.Action("MarkUnMarkCheckListItem", "VEECCheckListItem")',
+                   dataType: 'json',
+                   contentType: 'application/json; charset=utf-8',
+                   type: 'get',
+                   data: { templateId: templateId, itemId: itemId, isMark: !isMark, jobSchedulingId: jobSchedulingId },
+                   success: function (response) {
+
+                       if (response.id && response.id > 0) {
+                           if (!isMark)
+                           {
+                               $(obj).find("i").addClass('active');
+                           }
+                           else
+                           {
+                               $(obj).find("i").removeClass('active');
+                           }
+                           showSuccessMessageAddEditItem("CheckList item has been marked/un-marked as completed successfully.");
+                       }
+                       else {
+                           if (response.error.toLowerCase() == 'sessiontimeout')
+                               window.location.href = '@Url.Action("Logout", "Account")';
+                           else {
+                               if (response.error)
+                                   showErrorMessageItemOnVisit(response.error);
+                               else
+                                   showErrorMessageItemOnVisit("CheckList item has not been marked/un-marked as completed.");
+                           }
+
+                       }
+                   },
+                   error: function () {
+                       showErrorMessageItemOnVisit("CheckList item has not been marked/un-marked as completed.");
+                   }
+               });
+            }
+            else {
+                alert('First save job visit.');
+            }
+        }
+        else {
+            alert('Please complete checklist item of this visit.');
+        }
+    }
+
+</script>

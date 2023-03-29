@@ -1,0 +1,495 @@
+Return-path: <pankaj.baman@tatvasoft.com>
+Envelope-to: pankaj.baman@tatvasoft.com
+Delivery-date: Fri, 27 May 2016 07:54:29 +0300
+Received: from [122.179.129.155] (port=11918 helo=pct213)
+	by mail.tatvasoft.com with esmtpa (Exim 4.87)
+	(envelope-from <pankaj.baman@tatvasoft.com>)
+	id 1b69mq-00065W-RJ
+	for pankaj.baman@tatvasoft.com; Fri, 27 May 2016 07:54:29 +0300
+Message-ID: <3413DD2488A749D496C116E344F3CEEF@server7.com>
+From: "Pankaj Baman" <pankaj.baman@tatvasoft.com>
+To: <pankaj.baman@tatvasoft.com>
+Subject: mnnnnn
+Date: Fri, 27 May 2016 10:24:51 +0530
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0007_01D1B802.00E1ABD0"
+X-Priority: 3
+X-MSMail-Priority: Normal
+Importance: Normal
+X-Mailer: Microsoft Windows Live Mail 16.4.3505.912
+X-MimeOLE: Produced By Microsoft MimeOLE V16.4.3505.912
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0007_01D1B802.00E1ABD0
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_001_0008_01D1B802.00E1ABD0"
+
+
+------=_NextPart_001_0008_01D1B802.00E1ABD0
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+mnnnn
+------=_NextPart_001_0008_01D1B802.00E1ABD0
+Content-Type: text/html;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<HTML><HEAD></HEAD>
+<BODY dir=3Dltr>
+<DIV dir=3Dltr>
+<DIV style=3D"FONT-SIZE: 12pt; FONT-FAMILY: 'Calibri'; COLOR: #000000">
+<DIV>mnnnn</DIV></DIV></DIV></BODY></HTML>
+
+------=_NextPart_001_0008_01D1B802.00E1ABD0--
+
+------=_NextPart_000_0007_01D1B802.00E1ABD0
+Content-Type: application/octet-stream;
+	name="ssl_GammaNew.sDTS"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="ssl_GammaNew.sDTS"
+
+Shaftesbury DTS Save v2
+SpecVers20151023102715
+ssl_GammaNew
+,
+True
+42
+ANSI
+{CR}{LF}
+Double Quote {"}
+0=20
+
+
+Function Main()
+	DTSDestination("Operator") =3D "Gamma"
+	IF DTSSource("Col001") =3D "Call Type" Then
+		Main =3D DTSTransformStat_SkipRow=20
+	Else
+	=09
+		If DTSSource("Col001") =3D "N" OR DTSSource("Col001") =3D "MO" OR =
+DTSSource("Col001") =3D "F" Or DTSSource("Col001") =3D "P" Then
+'Non geo records
+			DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+'IF CLI contains xxxxx
+			IF DTSSource("Col001") =3D "F" OR DTSSource("Col001") =3D "N" Then
+				DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+			ELSE
+				DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col004"))
+			END IF
+			DTSDestination("Divert") =3D DestinationFLD(DTSSource("Col027"))
+			DTSDestination("CDRType") =3D "F"
+		=09
+'calls from mobile to 0800
+			IF DTSSource("Col001") =3D "MO" OR (Left(DTSSource("Col031"),2) =3D =
+"07" And DTSSource("Col001") =3D "N") Then
+'DTSDestination("ChargeType") =3D "CallFromMob"
+				DTSDestination("CallType") =3D "Pass"
+				DTSDestination("CallTypePassData") =3D "M"
+			End IF
+		=09
+'calls from payphone
+			IF DTSSource("Col001") =3D "P" Then
+				DTSDestination("CallType") =3D "Pass"
+				DTSDestination("CallTypePassData") =3D "P"
+			End IF
+		=09
+			AreaCallsCDRType =3D UCase("DTSOption(1)")
+			Select Case Left(DTSDestination("CustomerID"),2)
+			Case "07", "08", "09"
+			Case Else
+'Area calls
+				If Len(AreaCallsCDRType) =3D 1 Then
+					DTSDestination("CDRType") =3D AreaCallsCDRType
+					If DTSDestination("CDRType") =3D "L" Then
+						DTSDestination("CLI") =3D DTSDestination("CustomerID")
+					End If
+				Else
+					DTSDestination("CDRType") =3D "F"
+				End If
+			End Select
+		=09
+			InboundDescr =3D UCase("DTSOption(2)")
+			IF Len(InboundDescr) > 1 Then
+				If InboundDescr =3D UCase(DTSSource("Col010")) Then
+					DTSDestination("MobKey1") =3D "INBPLAT"
+				End If   =09
+			End IF
+		=09
+			NoRevenue =3D UCase("DTSOption(9)")
+			If NoRevenue =3D "YES" AND DTSSource("Col013") =3D 0 Then
+				DTSDestination("MobKey1") =3D "NOCharge"
+			End If =20
+		=09
+		=09
+		Else
+'outbound calls - options
+			DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+			DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+			DTSDestination("Divert") =3D DestinationFLD(DTSSource("Col004"))
+		=09
+			DDI_mode =3D UCase("DTSOption(3)")
+'use column 16 as the cli
+			If IsNumeric(DestinationFLD(DTSSource("Col016"))) And =
+Len(DTSSource("Col016")) > 8 Then
+				Select Case DDI_mode
+				Case "DDI"=20
+					If Len(DTSSource("Col016") & "") > 0 Then
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+						If UCase("DTSOption(21)") =3D "YES" Then
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))
+						Else
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+						End If
+					End If
+				Case "CONNECTED"
+					If Len(DTSSource("Col016") & "") > 0 and =
+(Left(DTSSource("Col003"),2) =3D "DC" or Left(DTSSource("Col003"),2) =3D =
+"HC") Then
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+					End If
+				=09
+				Case "EXT"
+					If Not(Isnull(DTSSource("Col016"))) Then
+						DTSDestination("Ext") =3D Right(Trim(DTSSource("Col016")),4)
+					End If
+				End Select
+			End If
+		=09
+			UseCol31CLI =3D UCase("DTSOption(4)")
+			If UseCol31CLI =3D "YES" Then
+				If Left(DTSSource("Col003"),2) =3D "DC" Then=20
+					If DTSSource("Col031") & "" <> "" Then=20
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col031"))
+					End if
+				End If     =20
+			End If
+		=09
+			UseCol31CLI =3D UCase("DTSOption(10)")
+			If UseCol31CLI =3D "YES" Then
+				If Left(DTSSource("Col003"),2) =3D "DC" OR =
+Left(DTSSource("Col003"),2) =3D "HC" Then=20
+					If DTSSource("Col031") & "" <> "" Then
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col031"))=20
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col031"))
+						If UCase("DTSOption(19)") =3D "YES" Then
+							DTSDestination("CDRType") =3D "L"
+						End IF
+					End if
+				End If     =20
+			End If
+
+
+  =20
+			Select Case UCase(DTSSource("Col001"))
+			Case "D"
+'ISDN Data
+				UseISDN =3D "DTSOption(5)"
+				IF USEISDN =3D "YES" Then
+					DTSDestination("CallType") =3D "Pass"
+					DTSDestination("CallTypePassData") =3D  "D"
+				End If
+			Case "Z"
+				DTSDestination("MobKey1") =3D "OnNet"
+			=09
+			Case "X"
+				DTSDestination("MobKey1") =3D "IDAXCallGM"
+			Case "R"
+				DTSDestination("MobKey1") =3D "GMReverse"
+			Case "T"
+				DTSDestination("MobKey1") =3D "IPDCTCallGM"
+			Case "G"
+				IF "DTSOption(6)" <> "YES" Then         =20
+					DTSDestination("MobKey1") =3D "IPDCGCallGM"=09
+				End IF
+				If left(DTSDestination("Divert"),5) =3D "00800" Then
+					DTSDestination("MobKey1") =3D "IPDCGUIF"
+				End If
+					'Option20 - Gamma Mobkey breakup for reports
+					Option20 =3D "DTSOption(20)"
+				If Option20 =3D "Yes" Then
+					DTSDestination("MobKey1") =3D DTSSource("Col018") &  =
+DTSSource("Col011")
+				End If
+			Case "S"
+				DTSDestination("MobKey1") =3D "SMS"
+				DTSDestination("Description") =3D Left(DTSSource("Col010") & " =
+SMS",50)
+				'Option 17 - Use M & S Type calls Group together
+				Option17 =3D "DTSOption(17)"
+				If Option17 =3D "Yes" Then
+					DTSDestination("MobKey1") =3D DTSSource("Col018") &  =
+DTSSource("Col011")
+				End If
+			=09
+			Case "M"
+			'mobile calls
+				DTSDestination("MobKey1") =3D DTSSource("Col018") &  =
+DTSSource("Col011")
+			=09
+				AddCountry =3D "DTSOption(8)"
+				IF AddCountry =3D "YES" Then         =20
+					DTSDestination("MobKey1") =3D DTSDestination("MobKey1") &  =
+DTSSource("Col022")
+				End IF
+			=09
+				NonVATIntCalls =3D "DTSOption(7)"
+				ListOfMobKeys =3D =
+"|MRT1|MRT4|MRT5|MRT7|MRV1|MRV4|MRV5|MRV7|MRSO|PSEE|"
+				If NonVATIntCalls =3D "YES" Then
+					If instr(ListOfMobKeys,"|" & left(DTSDestination("MobKey1"), 4) & =
+"|") > 0 Then
+						DTSDestination("MobKey2") =3D "I"
+						DTSDestination("VATCode") =3D "Z"
+					End If
+				End If
+			Case "MD"
+			'mobile data calls
+				DTSDestination("MobKey1") =3D DTSSource("Col018")
+				DTSDestination("GPRS_KBTotal") =3D DTSSource("Col035")/1024    =20
+			=09
+				AddCountry =3D "DTSOption(8)"
+				IF AddCountry =3D "YES" Then         =20
+					DTSDestination("MobKey1") =3D DTSDestination("MobKey1") &  =
+DTSSource("Col022")
+				End IF
+			=09
+			End Select       =20
+		End If
+	=09
+		IgnoreLeadingZero =3D UCase("DTSOption(11)")
+	=09
+		If IgnoreLeadingZero =3D "YES" Then
+			If Left(DTSDestination("CustomerID"),2) =3D "00" Then
+				DTSDestination("CustomerID") =3D =
+Mid(DTSDestination("CustomerID"),3,len(DTSDestination("CustomerID")))
+			ElseIf Left(DTSDestination("CustomerID"),1) =3D "0" Then
+				DTSDestination("CustomerID") =3D =
+Mid(DTSDestination("CustomerID"),2,len(DTSDestination("CustomerID")))
+			End If
+		End If
+	=09
+		CLI11Char =3D UCase("DTSOption(12)")
+		If CLI11Char =3D "YES" Then
+			If Len(DTSSource("Col003")) =3D 10 Then
+				DTSDestination("CustomerId") =3D "0" + =
+DestinationFLD(DTSSource("Col003"))
+			Else
+				DTSDestination("CustomerId") =3D "0" + =
+right(DestinationFLD(DTSSource("Col003")),10)
+			End If   =09
+		End If
+	=09
+		UseCol3IfNoNumb =3D UCase("DTSOption(13)")
+		If UseCol3IfNoNumb =3D "YES" Then
+			If Left(DTSSource("Col003"), 2) =3D "DC" AND =
+ISNUMERIC(DestinationFLD(DTSSource("Col031"))) =3D False then
+				DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+			END IF
+			If Left(DTSSource("Col003"), 2) =3D "HC" AND =
+ISNUMERIC(DestinationFLD(DTSSource("Col016"))) =3D False then
+				DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+			END IF
+					=09
+		End If=20
+		'Siebert Exclusive
+		UseCol3AsID =3D UCase("DTSOption(15)")
+		If UseCol3AsID =3D "YES" Then
+			If Left(DTSSource("Col003"), 2) =3D "DC" then
+					DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))
+					DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+					'DTSDestination("MobKey1") =3D ""
+			Else
+				If IsNumeric(DestinationFLD(DTSSource("Col016"))) And =
+Len(DTSSource("Col016")) > 8 Then
+					DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+					DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+				End If
+			End If
+			If DTSDestination("MobKey1") <> "INBPLAT" Or =
+DTSDestination("MobKey1") =3D "OnNet"  then
+				DTSDestination("MobKey1") =3D ""
+			End If
+		=09
+		END IF=09
+	=09
+	'Opus Exclusive
+		Option16 =3D UCase("DTSOption(16)")
+		If Option16 =3D "YES" Then
+			If Left(DTSSource("Col003"), 2) =3D "DC" then
+				DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+				DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+			End If
+  		 =20
+		   IF DTSSource("Col003") =3D "DCOPUS001" Or DTSSource("Col003") =3D =
+"DC2N09RCJ189" Or DTSSource("Col003") =3D "+441634276000" Or =
+DTSSource("Col003") =3D "DC2N15CHQ184471" Then
+                  		 DTSDestination("CustomerID") =3D   =
+DestinationFLD(DTSSource("Col031"))
+                   		DTSDestination("CLI") =3D =
+DTSDestination("CustomerID")
+   		   End If
+
+
+		=09
+		END IF=09
+		'option 18 - Use Col3 as ID and Col 16 CLI (dc calls)
+		Option18 =3D UCase("DTSOption(18)")
+		If Option18 =3D "YES" Then
+			If Left(DTSSource("Col003"), 2) =3D "DC" then
+				DTSDestination("CustomerID") =3D DestinationFLD(DTSSource("Col003"))
+				DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+			End If=09
+		END IF
+	=09
+	=09
+		If LCase(Trim(DTSDestination("Divert"))) =3D "unknown" Then		=09
+'This was previously based on actively selecting an option and only for =
+certain descriptions ("UK RingBack" Or "Call Return")
+'That is pointless - if there is nothing in the description we should =
+put the description in so destination rejects can be fixed
+'There could be a case put for not doing this where a MobKey already =
+exists
+			DTSDestination("Divert") =3D Left(DTSSource(10),20)
+		End If=20
+		 'Evolve - Usecol3 if cli is unknown
+		Option23 =3D UCase("DTSOption(23)")
+		If Option23 =3D "YES" Then
+			If LCase(Trim(DTSDestination("CLI"))) =3D "unknown" Then=09
+				DTSDestination("CLI") =3D DTSSource(3)
+			End If=20
+		END IF		=09
+	=09
+		If UseCol3IfNoNumb =3D "SPECIAL" Then
+			SELECT CASE Left(DTSSource("Col003"), 2)
+			cASE "DC"
+				If ISNUMERIC(DestinationFLD(DTSSource("Col031"))) =3D True then
+					SELECT CASE LEFT(DestinationFLD(DTSSource("Col031")),2)
+					cASE "01"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col031"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col031"))
+					CASE "02"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col031"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col031"))
+					CASE "03"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col031"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col031"))
+					cASE ELSE
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))	=09
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+					End Select	=09
+				ELSE
+					DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))
+					DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+				END IF
+			CASE "HC"
+				If Left(DTSSource("Col003"), 2) =3D "HC" AND =
+ISNUMERIC(DestinationFLD(DTSSource("Col016"))) =3D True then
+					SELECT CASE LEFT(DestinationFLD(DTSSource("Col016")),2)
+					cASE "01"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+					Case "02"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+					Case "03"
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col016"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col016"))
+					cASE ELSE
+						DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))
+						DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+					End Select
+				ELSE
+					DTSDestination("CustomerID") =3D =
+DestinationFLD(DTSSource("Col003"))
+					DTSDestination("CLI") =3D DestinationFLD(DTSSource("Col003"))
+				END IF
+			END SELECT
+		=09
+		END IF
+	=09
+		DTSDestination("StartTime") =3D Cdate(Right(DTSSource("Col005"),4) & =
+"-" & Mid(DTSSource("Col005"),4,2) & "-" & Left(DTSSource("Col005"),2)& =
+" " & DTSSource("Col006"))
+	=09
+		DTSDestination("Duration") =3D DTSSource("Col007")
+		DTSDestination("Revenue") =3D -1 * DTSSource("Col013")
+		DTSDestination("Description") =3D Left(DTSSource("Col010"),50)
+		DTSDestination("NGNAccessCharge_Revenue") =3D DTSSource("Col033")
+		DTSDestination("NGNServiceCharge_Revenue") =3D DTSSource("Col034")
+		Col18MobKeys =3D "|" & UCase("DTSOption(14)") & "|"
+		If InStr(Col18MobKeys,"|" & UCase(DTSSource(18)) & "|") <> 0 Then
+			DTSDestination("MobKey1") =3D DTSSource(18)
+		End If
+	=09
+		Main =3D DTSTransformStat_OK
+	End If
+End Function
+
+Function DestinationFLD(SourceFLD)
+=09
+	IF Left(SourceFLD,3) =3D "+44" or Left(SourceFLD,2) =3D "44" Then
+	=09
+		If Left(SourceFLD,2) =3D "44" Then
+			DestinationFLD =3D "0" + Mid(SourceFLD,3)
+		else
+			IF Mid(SourceFLD,4,1) =3D "0" Then
+'number is +4401858467467
+				DestinationFLD =3D Mid(SourceFLD,4)
+			Else  =20
+'number is +442084563478
+				DestinationFLD =3D "0" + Mid(SourceFLD,4)
+			End If
+		end if
+	Else=20
+		IF Left(SourceFLD,1) =3D "+" and Left(SourceFLD,3) <> "+44"  Then
+'number is international say +4781150086
+			DestinationFLD =3D "00" + Mid(SourceFLD,2)
+		Else
+			IF SourceFLD & "" =3D "" Then
+				DestinationFLD =3D "Unknown"
+			Else
+'everything else such as 118118, DCnumber
+				DestinationFLD =3D SourceFLD
+			End If
+		End If
+'no leading zeros then add zero=09
+		IF isnumeric(SourceFLD) and (Left(SourceFLD,1) <> "0" and =
+Left(SourceFLD,1) <> "+") and Len(SourceFLD) > 6 Then
+				DestinationFLD =3D "0" + SourceFLD
+		End If
+	End If
+=09
+End Function
+
+
+
+
+
+
+
+
+!=A3$%^ENDOFFILE
+
+------=_NextPart_000_0007_01D1B802.00E1ABD0--
+

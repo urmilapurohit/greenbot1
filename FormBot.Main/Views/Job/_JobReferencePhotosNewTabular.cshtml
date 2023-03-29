@@ -1,0 +1,277 @@
+﻿@model FormBot.Entity.CreateJob
+@using System.IO;
+
+@using FormBot.Helper;
+@{
+    string withlocationclass = "";
+    string IsUnderInstallationArea = "";
+    bool isAllowAccesstoUploadGPSPhoto = false;
+    bool isUploadPhotoAfterTrade = false;
+    bool isAllowVisibleInstallerSelfiePhoto = false;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+
+            if (d.MenuId == (int)SystemEnums.MenuId.IsAllowAccesstoUploadGPSPhoto.GetHashCode()) { isAllowAccesstoUploadGPSPhoto = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.UploadPhotoAfterTrade.GetHashCode()) { isUploadPhotoAfterTrade = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.IsAllowVisibleInstallerSelfiePhoto.GetHashCode()) { isAllowVisibleInstallerSelfiePhoto = true; }
+        });
+    }
+}
+
+
+
+
+<style type="text/css">
+    .deleteJobVisit {
+        background: #EDD6D6 !important;
+    }
+
+    .option-list li {
+        float: left;
+        /*position: relative;*/
+        padding-right: 10px;
+    }
+
+    .deleteInfo {
+        color: #6b6b6b;
+        font-size: 12px;
+        padding-right: 20px;
+        background: url('../Images/ic-info.png') no-repeat 100% center;
+        position: absolute;
+        top: 14px;
+        right: 35px;
+        cursor: default !important;
+        z-index: 1;
+    }
+
+    #mdlSlideShow .modal {
+        text-align: center;
+    }
+
+    .disableNavigation {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+
+
+    #mdlSlideShow .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .arrow-next {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-nextSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prevSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prev {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .lb-dataContainer .lb-details {
+    }
+
+    .lb-dataContainer {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-dataContainer-selfie {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-closeContainer {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainer > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainer > a:hover {
+                opacity: 0.5;
+            }
+
+    .lb-closeContainerSelfie {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainerSelfie > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainerSelfie > a:hover {
+                opacity: 0.5;
+            }
+
+    /*.lb-container img {
+        width: auto !important;
+        height: auto !important;
+        border: 2px solid #fff;
+    }*/
+
+    .HideOverflow {
+        overflow: hidden;
+    }
+
+    #lightbox {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        /* bring your own prefixes */
+        transform: translate(-50%, -50%) !important;
+    }
+
+    #MapPopup {
+        z-index: 9999999 !important;
+    }
+
+    .with-IsUnderInstallationArea {
+        color: red !important;
+    }
+
+    #restorebtn {
+        background-image: url(../../image.png) !important;
+        background-repeat: no-repeat;
+        background-position: 2px 6px;
+        padding: 0px 14px 0 31px !important;
+        background-size: 25px;
+    }
+
+    #lnkRestore {
+        float: none;
+        text-align: center;
+        margin-left: 0px;
+        width: 100%;
+    }
+</style>
+<script>
+    function resizeImage() {
+        $('body').addClass('HideOverflow');
+    }
+</script>
+
+
+<ul class="panel-body" style="display: grid;">
+    @if (Model.chkPhotosAll != null && Model.chkPhotosAll.ReferencePhotos != null)
+    {
+        for (int j = 0; j < Model.chkPhotosAll.ReferencePhotos.Count; j++)
+        {
+            <li id="checklistItemPhoto@(j)" role="button" data-path="@Model.chkPhotosAll.ReferencePhotos[j].Path" data-vclid="@Model.chkPhotosAll.ReferencePhotos[j].VisitCheckListPhotoId" data-vsid="@Model.chkPhotosAll.ReferencePhotos[j].VisitSignatureId">
+                <input type="checkbox" class="visit-list-check">
+                <a data-date="@Model.chkPhotosAll.ReferencePhotos[j].CreatedDate" data-IsUnderInstallationArea="@Model.chkPhotosAll.ReferencePhotos[j].IsUnderInstallationArea" data-lat="@Model.chkPhotosAll.ReferencePhotos[j].Latitude" data-lon="@Model.chkPhotosAll.ReferencePhotos[j].Longitude"
+                   onclick="viewimgonPage('@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath, Model.chkPhotosAll.ReferencePhotos[j].Path)','@Model.chkPhotosAll.ReferencePhotos[j].VisitCheckListPhotoId');" title=" ">@Model.chkPhotosAll.ReferencePhotos[j].Name</a>
+                @*<a data-lightbox="property" href="@Path.Combine(FormBot.Helper.ProjectSession.UploadedDocumentPath, Model.chkPhotosAll.ReferencePhotos[j].Path)" title="">@Model.chkPhotosAll.ReferencePhotos[j].Name</a>*@
+            </li>
+        }
+    }
+    else
+    {
+        <li id="liNoData">No Data Found.</li>
+    }
+</ul>
+    <!-- ====================== -->
+
+
+
+    
+    @*<script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>*@
+    <script>
+
+    var uploadPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+
+        BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/',
+        USERID = '@ProjectSession.LoggedInUserId',
+        ELECUSERID = '@ProjectSession.LoggedInUserId',
+        urlDownloadJobPhotos = '@Url.Action("DownloadJobPhotos", "Job")',
+        urlGetIsSPV = '@Url.Action("GetSPVRequired", "Job")',
+        urlDeleteCheckListPhotos = '@Url.Action("DeleteCheckListPhotos", "Job")',
+        urlSaveImage = '@Url.Action("SaveImage", "Job")',
+        urlGenerateAllImagesOfVisistInPdf = '@Url.Action("GenerateAllImagesOfVisistInPdf", "Job")',
+        urldeletedChecklist = '@Url.Action("DeletedCheckListItem", "Job")?jobId=',
+        urlreloadphoto = '@Url.Action("ReloadJobPhotoTabular", "Job")?jobId=',
+        urlrestoreDeletedVisit='@Url.Action("RestoreDeletedVisit", "Job")'
+        urlIgnore200mtrValidation = '@Url.Action("SPVIgnore200mtrValidation", "Job")',
+            isAllowAccesstoUploadGPSPhoto = '@isAllowAccesstoUploadGPSPhoto';
+    var urlRestoreDataforReferenceAndDefault = '@Url.Action("RestoreDataforReferenceAndDefault", "Job")?vcphotoId=';
+    var isUploadPhotoAfterTrade = '@isUploadPhotoAfterTrade';
+    var isAllowVisibleInstallerSelfie = '@isAllowVisibleInstallerSelfiePhoto';
+</script>
+@*<script src="~/Scripts/View/Job/_JobPhotosNewTabular.dev.js"></script>*@
+<script src="~/Scripts/View/Job/_JobPhotosNewTabular.min.js"></script>
+@*<script>
+        $(document).ready(function () {
+            $("#photolist").hide();
+            load
+        });
+    </script>*@
+

@@ -1,0 +1,187 @@
+﻿@model List<FormBot.Entity.PricingManagerSAAS>
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "Manage Price";
+}
+
+<style type="text/css">
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .form-border img {
+        max-width: none !important;
+    }
+
+    /*.input-group-addon {
+        top: 36px !important;
+        padding: 0px 24px !important;
+    }*/
+</style>
+
+<form id="PricingManagerDetails">
+    <div class="container-fluid">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <div class="option-box" style="margin-bottom:10px;">
+                            <label class="control-label required">@Model[i].SettlementTerms</label>
+                            <a id="@Model[i].SettlementTerms _Options" onclick="SetOptions(@Model[i].SettlementTermId, '@Model[i].SettlementTerms',@Model[i].BillingPeriod,@Model[i].SettlementPeriod,'@Model[i].IsGst.ToString()')" href="javascript:void(0);">options</a>
+                            <div class="onoffswitch">
+                                <input type="checkbox" checked="@Model[i].IsEnable" name="onoffswitch" class="onoffswitch-checkbox switch pricingSwitch" id="chk_@Model[i].SettlementTermId" onchange="ChangeOption(@Model[i].SettlementTermId)">
+                                <label class="onoffswitch-label" for="chk_@Model[i].SettlementTermId">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                            @Html.CheckBoxFor(m => m[i].IsEnable, new { @class = "form-control hidden", id = "IsEnable_" + Model[i].SettlementTermId })
+                            @Html.HiddenFor(m => m[i].IsGst, new { id = "IsGst_" + Model[i].SettlementTermId })
+                            @Html.HiddenFor(m => m[i].BillingPeriod, new { id="BillingPeriod_" + Model[i].SettlementTermId })
+                            @Html.HiddenFor(m => m[i].SettlementPeriod, new { id = "SettlementPeriod_" + Model[i].SettlementTermId })
+                            @Html.HiddenFor(m => m[i].SAASPricingId)
+                            @Html.HiddenFor(m => m[i].SAASUserId)
+                            @Html.HiddenFor(m => m[i].SettlementTermId)
+                        </div>
+                        @Html.TextBoxFor(m => m[i].Price, new { id = Model[i].SettlementTermId + "_" + Model[i].SettlementTerms, @class = "form-control decimal", @maxlength = 8, @tabindex = 4, onkeypress = "return isDecimal(event, 5, 2, this)" })
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="form-group defaultFormBot tab_bottomrow">
+            <div class="btn primary icon-btn ">
+                <span class="sprite-img save_ic"></span>
+                <input type="submit" name="SavePricingSAAS" value="Save" class="" id="btnSavePriceSAAS" tabindex="15">
+            </div>
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" data-dismiss="modal" tabindex="16">
+        </div>
+
+    </div>
+</form>
+<div class="modal fade" tabindex="-1" role="dialog" id="popupSAASOptions" style="height: 550px !important" aria-labelledby="ModalTitleSAASOptions">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="margin:20px;">
+            <div class="modal-header ">
+                <button type="button" class="close" aria-label="Close" id="btnSAASOption">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="ModalTitleSAASOptions"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border" id="dvSAASOptions">
+                    <form class="form-block">
+                        <div class="container-fluid">
+                            <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Billing Period (No. of Months):</label>
+                                        </div>
+                                        <input type="text" id="txtBillingPeriod" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Settlement Period (Weeks):</label>
+                                        </div>
+                                        <input type="text" id="txtSettlementPeriod" class="form-control" />
+                                    </div>
+
+                                    <div class="form-group addCustomGst">
+                                        <input type="hidden" id="hdSettlementId" />
+                                        <div class="option-box" style="margin-bottom: 10px;">
+                                            <label class="control-label">Add GST:</label>
+                                            <div class="onoffswitch">
+                                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="GstSwitch" onclick="gstSwitch($('#GstSwitch'))" checked="">
+                                                <label class="onoffswitch-label" for="GstSwitch">
+                                                    <span class="onoffswitch-inner"></span>
+                                                    <span class="onoffswitch-switch"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group defaultFormBot tab_bottomrow">
+                                <input type="button" name="SaveSAASOptions" value="Save" class="primary save_ic" id="btnSaveSAASOptions" tabindex="7" onclick="saveSAASOptions();">
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $("#btnSAASOption").click(function () {
+            $("#popupSAASOptions").modal("toggle");
+        });
+    });
+
+    function ChangeOption(settlemtId) {
+        $("#IsEnable_" + settlemtId).prop("checked", $("#chk_" + settlemtId).prop("checked"));
+        $("#IsEnable_" + settlemtId).val($("#chk_" + settlemtId).prop("checked"));
+        $("#chk_" + settlemtId).val($("#chk_" + settlemtId).prop("checked"));
+    }
+
+    $("form").on("submit", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var formURL = "/PricingManager/SavePricingSAAS";
+        $.ajax({
+            type: "POST",
+            url: formURL,
+            data: $(this).serialize(),
+            success: function (response) {
+                if (response !== null && response.success == true) {
+                    $('#popupProofSAAS').modal("toggle");
+                    GetGlobalPriceForSAAS($("#ddlSAASUserId").val());
+                }
+            }
+        });
+    });
+
+    function SetOptions(settlemtId, settlemtTerm, BillingPeriod, SettlementPeriod, IsGst) {
+        $("#popupSAASOptions").modal({ backdrop: 'static', keyboard: false });
+        $("#ModalTitleSAASOptions").html(settlemtTerm + " Options");
+        $("#hdSettlementId").val(settlemtId);
+        $("#txtBillingPeriod").val(BillingPeriod);
+        $("#txtSettlementPeriod").val(SettlementPeriod);
+        if (IsGst.toLowerCase() == "true")
+            $("#GstSwitch").prop("checked", "checked");
+        else
+            $("#GstSwitch").removeAttr("checked");
+    }
+
+    function gstSwitch(ele) {
+        $(ele).val($(ele).prop("checked"));
+    }
+
+    function saveSAASOptions() {
+        $("#BillingPeriod_" + $("#hdSettlementId").val()).val($("#txtBillingPeriod").val());
+        $("#SettlementPeriod_" + $("#hdSettlementId").val()).val($("#txtSettlementPeriod").val());
+        $("#IsGst_" + $("#hdSettlementId").val()).val($("#GstSwitch").prop("checked"));
+        $('#popupSAASOptions').modal("toggle");
+    }
+</script>

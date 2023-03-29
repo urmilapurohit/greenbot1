@@ -1,0 +1,554 @@
+﻿@model FormBot.Entity.Job.JobInvoiceDetail
+@using FormBot.Helper
+
+<style type="text/css">
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }
+
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .modal {
+        z-index: 9999 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+
+    .error {
+        color: #b94a48;
+        font-weight: normal;
+    }
+</style>
+
+
+<div class="modal-header">
+    @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+    <button type="button" class="close" aria-label="Close" data-dismiss="modal" id="AddTimeClose">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title">Add Time</h4>
+</div>
+<div class="modal-body">
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionInvoice" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionInvoice" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    @*<span class="field-validation-error" id="errorSpan"><span id="errorMsg"></span></span>*@
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgInvoiceForPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" aria-label="Close">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+    </div>
+    <div class="form-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Billable:</label>
+                    @Html.HiddenFor(m => m.JobInvoiceDetailID)
+                    @Html.HiddenFor(m => m.FileName)
+                    @Html.CheckBoxFor(m => m.IsBillable)
+                    @Html.HiddenFor(m => m.JobId)
+                    @Html.HiddenFor(m => m.OldFileName)
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Job Visit:</label>
+                    @Html.DropDownListFor(x => x.JobScheduleID, (ViewBag.JobVisit != null ? (IEnumerable<SelectListItem>)ViewBag.JobVisit : new List<SelectListItem>()), new { @class = "form-control" })
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Staff:</label>
+                    <label class="control-label">@ProjectSession.LoggedInName</label>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label required">Time Start:</label>
+                </div>
+            </div>
+            <div class="col-sm-6" style="margin-top:-10px;">
+                <div class="form-group">
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.InvoiceStartDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+                        <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+                        @Html.ValidationMessageFor(m => m.InvoiceStartDate)
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6" style="margin-top:-10px;">
+                <div class="form-group">
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.InvoiceStartTime, new { @class = "form-control", @readonly = "readonly" })
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                        @Html.ValidationMessageFor(m => m.InvoiceStartTime)
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label required">Time End:</label>
+                </div>
+            </div>
+
+            <div class="col-sm-6" style="margin-top:-10px;">
+                <div class="form-group">
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.InvoiceEndDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+                        <span class="input-group-addon"><img src='@Url.Content("~/images/ic-cal.png")' alt=""></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6" style="margin-top:-10px;">
+                <div class="form-group">
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.InvoiceEndTime, new { @class = "form-control", @readonly = "readonly" })
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Quantity:</label>
+                    @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @data_val = "false", @maxlength = 11, @onkeypress = "return isDecimal(event,8,2,this);"})
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Charge Rate:</label>
+                    @Html.TextBoxFor(m => m.Sale, new { @class = "form-control", @data_val = "false", @maxlength = 11, @onkeypress = "return isDecimal(event,8,2,this);" })
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Purchase Cost:</label>
+                    @Html.TextBoxFor(m => m.Purchase, new { @class = "form-control", @data_val = "false", @maxlength = 11, @onkeypress = "return isDecimal(event,8,2,this);" })
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label required">Description:</label>
+                    @Html.TextAreaFor(m => m.Description, new { @class = "form-control required", @maxlength = 500 })
+                    @Html.ValidationMessageFor(m => m.Description)
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="form-group">
+                    <div class="fileUpload btn primary upload_ic" id="divUpload" style="margin-left: 0px;">
+                        <span>Upload</span>
+                        <input id="uploadBtnInvoice" type="file" class="upload fileUpload" />
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-10">
+                <div class="form-group">
+                    <table class="table table-bordered" id="tblSelectedFile1">
+                        <tbody>
+                            @if (Model.JobInvoiceDetailID != 0)
+                            {
+                                if (Model.FileName != null && Model.FileName != "")
+                                {
+                                    <tr class='success' id='@Model.FileName'>
+                                        <td class="col-sm-8">@Model.FileName</td>
+
+                                        @if (Model.MimeType == "image")
+                                        {
+                                            <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Preview" onclick="OpenDocument(this)"></td>
+                                        }
+                                        else
+                                        {
+                                            <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Download" onclick="DownloadDocument(this)"></td>
+                                        }
+                                        @*<td class="col-sm-2"><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage();'>&times;</a></td>*@
+                                        <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" filename="@Model.FullFileName" oldfilename="@Model.FullFileName" style="cursor: pointer" onclick='deleteInvoiceImage(this);'></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn primary save_ic" id="oo1" onclick="SaveAddTime()" tabindex="50">Save</button>
+            <button type="button" class="btn default cancel_ic" data-dismiss="modal" tabindex="51">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .input-validation-error {
+        border: 1px solid #b94a48 !important;
+    }
+</style>
+@Scripts.Render("~/bundles/bootstrap")
+<script type="text/javascript">
+
+    $(function () {
+        FileUpload($('#uploadBtnInvoice'), '@ViewBag.Guid', $("#tblSelectedFile1"));
+    })
+
+    var dosync = 'yes';
+
+    $(document).ready(function () {
+
+        @*$('.date-pick').datepicker({
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('change', function () {
+            $(this).valid();
+            syncQuantityTime(dosync);
+        });*@
+
+
+
+        if ($("#JobInvoiceDetailID").val() != "" && $("#JobInvoiceDetailID").val() != "0") {
+            var InvoiceStartDate = $("#InvoiceStartDate").val() || new Date();
+            var InvoiceEndDate = $("#InvoiceEndDate").val() || new Date();
+
+            $("#InvoiceStartDate").val('').removeAttr('value');
+            $("#InvoiceEndDate").val('').removeAttr('value');
+
+            $('.date-pick, .date-pick1, .date-pick').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+                if ($("#JobInvoiceDetailID").val() != "0") {
+                    syncQuantityTime(dosync);
+                }
+            });
+
+            var InvoiceStartDateEdit = moment(InvoiceStartDate).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+            var InvoiceEndDateEdit = moment(InvoiceEndDate).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+
+            $("#InvoiceStartDate").val(InvoiceStartDateEdit);
+            $("#InvoiceEndDate").val(InvoiceEndDateEdit);
+        } else {
+
+            $('.date-pick, .date-pick1, .date-pick').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+                if ($("#JobInvoiceDetailID").val() != "0") {
+                    syncQuantityTime(dosync);
+                }
+            });
+
+            $("#InvoiceStartDate").datepicker().datepicker("setDate", new Date());
+            $("#InvoiceEndDate").datepicker().datepicker("setDate", new Date());
+        }
+
+
+
+
+        //$("#InvoiceStartTime, #InvoiceEndTime").keypress(function (e) {
+        //    alert(e.which);
+        //    if (e.which == 0) {
+        //        return false;
+        //    }
+        //    return true;
+        //});
+
+        $('#InvoiceStartTime, #InvoiceEndTime').datetimepicker({
+            format: "HH:mm",
+            ignoreReadonly: true
+        });
+
+        $("#InvoiceStartTime").on("dp.change", function (e) {
+            syncQuantityTime(dosync);
+        });
+
+        $("#InvoiceEndTime").on("dp.change", function (e) {
+            syncQuantityTime(dosync);
+        });
+        if ($("#JobInvoiceDetailID").val() == "" && $("#JobInvoiceDetailID").val() != "0") {
+            var objDate = new Date();
+
+            $('#InvoiceStartTime').val((objDate.getHours() < 10 ? '0' : '') + objDate.getHours() + ':' + (objDate.getMinutes() < 10 ? '0' : '') + +objDate.getMinutes());
+            $('#InvoiceEndTime').val(((objDate.getHours() + 1) < 10 ? '0' : '') + (objDate.getHours() + 1) + ':' + (objDate.getMinutes() < 10 ? '0' : '') + +objDate.getMinutes());
+
+            $('#Quantity').keyup(function () {
+                syncTimeQuantity(dosync);
+            });
+
+            syncQuantityTime('yes');
+        } else {
+            $('#Quantity').keyup(function () {
+                syncTimeQuantity(dosync);
+            });
+        }
+
+
+
+
+
+
+        $("#Description").keypress(function (e) {
+            $("#Description").css("border", "1px solid #d8dadd");
+        })
+    });
+
+    function SaveAddTime() {
+        if (!$("#frmAddTime").valid()) {
+            $("#Description").css("border", "1px solid #b94a48");
+            return false;
+        } else { $("#Description").css("border", "1px solid #d8dadd"); }
+
+        var isBillable = $("#IsBillable").prop('checked');
+        var jobScheduleID = $("#JobScheduleID").val();
+        var invoiceStartDate = $("#InvoiceStartDate").val();
+        var invoiceStartTime = $("#InvoiceStartTime").val();
+        var invoiceEndDate = $("#InvoiceEndDate").val();
+        var invoiceEndTime = $("#InvoiceEndTime").val();
+        var quantity = $("#Quantity").val();
+        var sale = $("#Sale").val();
+        var purchase = $("#Purchase").val();
+        var description = $("#Description").val();
+        var invoicenumber = $("#InvoiceNumber").val();
+        var jobid = $("#InvoiceNumber").val();
+        var tickStartDate = ConvertDateToTick(invoiceStartDate, '@ProjectConfiguration.GetDateFormat');
+        startDate = moment(tickStartDate).format("YYYY-MM-DD");
+
+        var tickEndDate = ConvertDateToTick(invoiceEndDate, '@ProjectConfiguration.GetDateFormat');
+        endDate = moment(tickEndDate).format("YYYY-MM-DD");
+
+        var isValid = CompareInvoiceDate(startDate, endDate, invoiceStartTime, invoiceEndTime);
+
+        if (!isValid) {
+            $(".alert").hide();
+            $("#errorMsgInvoiceForPopUp").html(message);
+            $("#errorMsgInvoiceForPopUp").show();
+            $("#errorMsgInvoiceForPopUp").fadeOut(5000);
+            return false;
+        }
+
+        var obj = {};
+        obj.IsBillable = isBillable;
+        obj.JobScheduleID = jobScheduleID;
+        obj.InvoiceStartDate = startDate;
+        obj.InvoiceStartTime = invoiceStartTime;
+        obj.InvoiceEndDate = endDate;
+        obj.InvoiceEndTime = invoiceEndTime;
+        obj.Quantity = quantity;
+        obj.Sale = sale;
+        obj.Purchase = purchase;
+        obj.Description = description;
+        obj.InvoiceNumber = invoicenumber;
+        obj.JobInvoiceID = $("#hdnJobInvoiceID").val();
+        obj.JobId = $("#hasJobID").val();
+        obj.JobInvoiceDetailID = $("#JobInvoiceDetailID").val();
+        obj.OwnerUsername = $("#drpInvoiceTo").val();
+        obj.OldFileName = $("#OldFileName").val();
+        var Sign = document.getElementsByName("Signature");
+        var hasJobID = $("#hasJobID").val();
+        if (Sign.length > 0 && $("#tblSelectedFile1").html().length > 90) {
+            //obj.Guid = document.getElementsByName("Signature")
+            obj.Guid = '@ViewBag.Guid';
+            obj.FileName = document.getElementsByName("Signature")[0].id.substr(document.getElementsByName("Signature")[0].id.indexOf('_') + 1);
+        }
+        var data = JSON.stringify(obj);
+        var getUrl = '@Url.Action("SaveInvoiceDetail", "Job")';
+        //var data = JSON.stringify({ IsBillable: isBillable, JobScheduleID: jobScheduleID, InvoiceStartDate: invoiceStartDate, InvoiceStartTime: invoiceStartTime, InvoiceEndDate: invoiceEndDate, InvoiceEndTime: invoiceEndTime, Quantity: quantity, Sale: sale, Purchase: purchase, Description: description });
+        $.ajax({
+            url: getUrl,
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+                $(".modal-backdrop.in").css("opacity", 0);
+                $(".modal-backdrop").css("z-index", 0);
+                $(".modal-backdrop.fade").css("z-index", -10);
+                //$("#popupAddEditPart").modal('hide');
+                $("#hdnJobInvoiceID").val(Data);
+                $("#AddTimeClose").click(); 
+                if ($('#invoiceDetailListTable')) {
+                    $("#successMsgRegion").html(closeButton + "Job invoice time has been saved successfully.");
+                    $("#successMsgRegion").show();
+                    $("#successMsgRegion").fadeOut(6000);
+                    var table = $('#invoiceDetailListTable').DataTable();
+                    table.destroy();
+                }
+                //jobInvoiceDetail.loadInvoiceDetailGrid(Data);
+                jobInvoiceDetail.loadData(Data,@Model.JobId);
+            }
+        });
+
+        $("#hasJobID").val(@Model.JobId);
+
+    }
+
+    function CompareInvoiceDate(startDate, endDate, startTime, endTime) {
+
+        var minutesOfDay = function (m) {
+            return moment(m).minutes() + moment(m).hours() * 60;
+        }
+
+        if (Date.parse(startDate) > Date.parse(endDate)) {
+            message = "Start date should not be greater than end date";
+            return false;
+        }
+        else {
+            if (startDate == endDate) {
+                if (minutesOfDay(startDate + ' ' + startTime) > minutesOfDay(endDate + ' ' + endTime)) {
+                    message = "Start time must be less than end Time";
+                    return false;
+                }
+                else if (minutesOfDay(startDate + ' ' + startTime) == minutesOfDay(endDate + ' ' + endTime)) {
+                    message = "Start time and end time should not be same time";
+                    return false;
+                }
+                else
+                    return true;
+            }
+            else
+                return true;
+        }
+    }
+
+    function syncQuantityTime(inc) {
+        if (inc !== 'yes') {
+            return;
+        }
+        var start_date = new Date($("#InvoiceStartDate").data('datepicker').getFormattedDate('mm/dd/yyyy'));
+        var start_hour_min = $('#InvoiceStartTime').val().split(":");
+        var start_hour = start_hour_min[0];
+        var start_min = start_hour_min[1];
+        var start_date_full = new Date(start_date.getTime() + (start_hour * 3600000) + (start_min * 60000));
+        var end_date = new Date($("#InvoiceEndDate").data('datepicker').getFormattedDate('mm/dd/yyyy'));
+        var end_hour_min = $('#InvoiceEndTime').val().split(":");
+        var end_hour = end_hour_min[0];
+        var end_min = end_hour_min[1];
+        var end_date_full = new Date(end_date.getTime() + (end_hour * 3600000) + (end_min * 60000));
+        var timeDiff = end_date_full.getTime() - start_date_full.getTime();
+        var final = round_number(timeDiff / 3600000, 2);
+        $('#Quantity').val(final);
+    }
+
+    function round_number(num, dec) {
+        return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
+    }
+
+    function syncTimeQuantity(inc) {
+        if (inc !== 'yes') {
+            return;
+        }
+        var currQuant = $('#Quantity').val();
+        var numberOfHours = currQuant * 3600000;
+        var start_date = new Date($("#InvoiceStartDate").data('datepicker').getFormattedDate('mm/dd/yyyy'));
+        var start_hour_min = $('#InvoiceStartTime').val().split(":");
+        var start_hour = start_hour_min[0];
+        var start_min = start_hour_min[1];
+        var end_date = new Date(start_date.getTime() + (start_hour * 3600000) + (start_min * 60000) + numberOfHours);
+        var end_date_mod = new Date(Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate(), 0, 0, 0));
+        $('#InvoiceEndDate').datepicker('setDate', end_date_mod);
+        $('#InvoiceEndTime').val((end_date.getHours() < 10 ? '0' : '') + end_date.getHours() + ':' + (end_date.getMinutes() < 10 ? '0' : '') + end_date.getMinutes());
+    }
+
+
+    function deleteInvoiceImageForTime(obj) {
+        console.log('delete');
+        var fileName = $(obj).attr('filename');
+        //var FolderName = $("#JobId").val();
+        var FolderName = $("#hasJobID").val();
+        console.log('filename:' + fileName + 'foldername:' + FolderName);
+        //if (confirm('Are you sure you want to delete this file ?')) {
+        $.ajax(
+                {
+                    url: '@Url.Action("DeleteFileFromInvoiceFolder", "Job")',
+                    data: { fileName: fileName, FolderName: FolderName },
+                    contentType: 'application/json',
+                    method: 'get',
+                    success: function () {
+                        console.log('remove');
+                        $("#tblSelectedFile1").html("");
+                        return false;
+                    }
+                });
+        //}
+        //else
+        //    return;
+    }
+
+    //var flag = false;
+    @*function syncQuantityTime(inc) {
+        //if (flag) {
+        //    flag = false;
+        //    return;
+        //}
+        if (inc !== 'yes') {
+            return;
+        }
+        var start_date = $('#InvoiceStartDate').datepicker('getDate');
+        var start_hour_min = $('#InvoiceStartTime').val().split(":");
+        var start_hour = start_hour_min[0];
+        var start_min = start_hour_min[1];
+        var start_date_full = new Date(start_date.getTime() + (start_hour * 3600000) + (start_min * 60000));
+        var end_date = $('#InvoiceEndDate').datepicker('getDate');
+        var end_hour_min = $('#InvoiceEndTime').val().split(":");
+        var end_hour = end_hour_min[0];
+        var end_min = end_hour_min[1];
+        var end_date_full = new Date(end_date.getTime() + (end_hour * 3600000) + (end_min * 60000));
+        var timeDiff = end_date_full.getTime() - start_date_full.getTime();
+        var final = round_number(timeDiff / 3600000, 2);
+        $('#Quantity').val(final);
+    }
+
+    function round_number(num, dec) {
+        return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
+    }
+
+    function syncTimeQuantity(inc) {
+
+        if (inc !== 'yes') {
+            return;
+        }
+        //flag = true;
+        var currQuant = $('#Quantity').val();
+        var numberOfHours = currQuant * 3600000;
+        var start_date = $('#InvoiceStartDate').datepicker('getDate');
+        var start_hour_min = $('#InvoiceStartTime').val().split(":");
+        var start_hour = start_hour_min[0];
+        var start_min = start_hour_min[1];
+        var end_date = new Date(start_date.getTime() + (start_hour * 3600000) + (start_min * 60000) + numberOfHours);
+        var end_date_mod = new Date(Date.UTC(end_date.getFullYear(), end_date.getMonth(), end_date.getDate(), 0, 0, 0));
+
+        //$('#InvoiceEndDate').datepicker('setDate', end_date_mod);
+        $('#InvoiceEndDate').val(moment(end_date_mod).format('@ProjectConfiguration.GetDateFormat'.toUpperCase()));   //datepicker('setDate', end_date_mod);
+        $('#InvoiceEndTime').val((end_date.getHours() < 10 ? '0' : '') + end_date.getHours() + ':' + (end_date.getMinutes() < 10 ? '0' : '') + end_date.getMinutes());
+    }*@
+</script>

@@ -1,0 +1,282 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+@{
+    Layout = null;
+}
+@*<script src="@Url.Content("~/Scripts/pdf/pdf.js")"></script>
+
+    <script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>*@
+@*<script src="~/Scripts/jquery.fileupload.js"></script>*@
+@{
+    ////Todo
+    bool isJobDocumentManagerUpload = false;
+    bool isJobDocumentManagerDelete = false;
+    bool isJobDocumentManagerGenerate = false;
+    bool isJobDocumentManagerView = false;
+    bool isJobDocumentManagerSave = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerGenerate.GetHashCode()) { isJobDocumentManagerGenerate = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerView.GetHashCode()) { isJobDocumentManagerView = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerSave.GetHashCode()) { isJobDocumentManagerSave = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerUpload.GetHashCode()) { isJobDocumentManagerUpload = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDocumentManagerDelete.GetHashCode()) { isJobDocumentManagerDelete = true; }
+        });
+    }
+}
+<div class="documents-block">
+    <div class="hed download-hed">
+        <h4>Documents</h4>
+        <div class="download-box">
+            <a class="download-btn downloadAll" href="javascript:void(0);" onclick="downloadAllAsZip();" title="Donwload All Documents">Download All</a>
+            <a class="download-btn downloadAllActive" href="javascript:void(0);" onclick="downloadAllActiveTabAsZip();" title="Donwload Active Tab Document(s)">Donwload Active Tab</a>
+        </div>
+    </div>
+    <div id="horizontalTab" class="documents-inner-block">
+        <!--Horizontal Tab-->
+        <ul class="resp-tabs-list" id="ulJobStage">
+            <li val="@FormBot.Helper.SystemEnums.JobStage.STC.ToString()" class="resp-tab-active">STC Form</li>
+            <li val="@FormBot.Helper.SystemEnums.JobStage.PreApprovals.ToString()">Preapprovals</li>
+            <li val="@FormBot.Helper.SystemEnums.JobStage.Connections.ToString()">Connections</li>
+            @*<li val="@FormBot.Helper.SystemEnums.JobStage.STC.ToString()">STC Form</li>*@
+            <li val="@FormBot.Helper.SystemEnums.JobStage.Other.ToString()">Other</li>
+            <div class="installation-title" id="Other" style="display:none;float:right;padding-right:0px;border-bottom:0px;">
+                <div class="upload-link">
+                    @if (isJobDocumentManagerUpload && !isJobDocumentManagerDelete)
+                    {
+                        <input id="uploadBtnDocument" multiple type="file" class="upload fileUpload" style="display:none;" />
+                        <a href="javascript:void(0)" title="Upload" data-id="" style="text-decoration:none;" onclick="document.getElementById('uploadBtnDocument').click(); return false">Upload</a>
+                    }
+                    @if (isJobDocumentManagerUpload && isJobDocumentManagerDelete)
+                    {
+                        <input id="uploadBtnDocument" multiple type="file" class="upload fileUpload" style="display:none;" />
+                        <a href="javascript:void(0)" title="Upload" style="text-decoration:none;" onclick="document.getElementById('uploadBtnDocument').click(); return false">Upload |</a>
+                        <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeleteOtherDocument();">Delete Selected</a>
+                    }
+                    @if (isJobDocumentManagerDelete && !isJobDocumentManagerUpload)
+                    {
+                        <a href="javascript:void(0)" title="Delete Selected" style="text-decoration:none;" onclick="DeleteOtherDocument();">Delete Selected</a>
+                    }
+                </div>
+            </div>
+        </ul>
+        <div class="resp-tabs-container">
+            <div class="tab1">
+                <div class="row">
+                    <div id="grid" class="col-sm-6">
+                        <div class="table-responsive">
+                            <table class="table table-hover t1">
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <div id="grid" class="col-sm-6">
+                        <div class="table-responsive">
+                            <table class="table table-hover t2">
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @if (Model.JobID > 0)
+                    {
+                        <div id="otherTable" class="col-sm-12" style="display:none;">
+                            <ul class="installation-list" id="otherTblDoc">
+                                @if (Model.lstJobOtherDocument.Count > 0)
+                                {
+                                    foreach (var Document in @Model.lstJobOtherDocument)
+                                    {
+                                        <li class='checkbox'>
+                                            <label>
+                                                <input type='checkbox' name='chkBtnDocument' value="@Document.DocumentPath" />
+                                                @if (Document.MimeType == "image")
+                                                {
+                                                    if (isJobDocumentManagerView)
+                                                    {
+                                                        <a href="javascript:void(0)" style="text-decoration:none;" class="@Document.DocumentPath" title="@Document.DocumentPath" id="@Document.DocumentPath" onclick="OpenOtherDocument(this);">@Document.strDocumentPath</a>
+                                                    }
+                                                    if (!isJobDocumentManagerView)
+                                                    {
+                                                        <a href="javascript:void(0)" style="text-decoration:none;" class="@Document.DocumentPath" title="@Document.DocumentPath" id="@Document.DocumentPath">@Document.strDocumentPath</a>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (isJobDocumentManagerView)
+                                                    {
+                                                        <a href="javascript:void(0)" style="text-decoration:none;" class="@Document.DocumentPath" title="@Document.DocumentPath" id="@Document.DocumentPath" onclick="OpenOtherDocumentDownload(this);">@Document.strDocumentPath</a>
+                                                    }
+                                                    if (!isJobDocumentManagerView)
+                                                    {
+                                                        <a href="javascript:void(0)" style="text-decoration:none;" class="@Document.DocumentPath" title="@Document.DocumentPath" id="@Document.DocumentPath">@Document.strDocumentPath</a>
+                                                    }
+                                                }
+                                            </label>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade popupInstaller" tabindex="-1" role="dialog" id="popupViewer">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Document Viewer</h4>
+
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="save pull-right " style="padding-bottom:10px;">*@
+                    @*<input type="submit" name="Submit" value="Save" id="btnSave" autofocus class="primary save_ic pull-right " style="padding-bottom:10px;">*@
+
+                    <a class="pull-right" style=" margin: 4px 10px 0 0;" title="Save" id="btnSave" href="javascript:void(0);">
+                        <img src="~/images/savepdf.png" alt="">
+                    </a>
+
+
+                </div>
+                <div class="modal-body">
+                    <div id="divViewer"></div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+@*Popup View*@
+<div class="modal fade" id="popupDocumentBox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpDocumentBox">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Other</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    @*<div style="height:480px;">
+                            <img src="" id="imgDocument" class="" style="display:inline;width:100%;height:100%;" />
+                        </div>*@
+                    <div>
+                        <img src="" id="imgDocument" class="" style="display:inline" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    var doneCallBack;
+    @*var nmi = '@Model.JobInstallationDetails.NMI';//'4102000000'; //'6305000000';
+    var distributorID = '@Model.JobInstallationDetails.DistributorID'*@
+
+    var nmi = $('#JobInstallationDetails_NMI').val();
+    var distributorID = $('#JobInstallationDetails_DistributorID').val();
+    var jobId = '@Model.Id'; //'k2mej3hjuyQ=';//'kkPJ0hBtYsA=';
+    var jobTypeId = '@Model.BasicDetails.JobType';
+    var documentSizeLimit = '@FormBot.Helper.ProjectSession.MaxImageSize' / 1024000;
+    var maxsize = Math.round(documentSizeLimit);
+
+    var logoWidth = 0, logoHeight = 0, SRC;
+    var totalActiveTabDocumentCount = 0, totalDocumentCount = 0,
+        JobStage_STC = '@FormBot.Helper.SystemEnums.JobStage.STC.ToString()',
+        Model_JobID = @Model.JobID,
+        JobInstallationDetails_DistributorID = '@Model.JobInstallationDetails.DistributorID',
+        urlGetDocumentsList = '@Url.Action("GetDocumentsList", "Job")',
+        urlGenerateDocument = '@Url.Action("GenerateDocument", "Job")',
+        urlDownloadSTCDocument = '@Url.Action("DownloadSTCDocument", "Job")',
+        urlDeleteDocument = '@Url.Action("DeleteDocument", "Job")',
+        urlGetSTCStatusDescription = '@Url.Action("GetSTCStatusDescription", "Job")',
+        ProjectImagePath = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath',
+        MaxImageSize = '@FormBot.Helper.ProjectSession.MaxImageSize',
+        UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+        JobDocumentsToSavePath = '@FormBot.Helper.ProjectConfiguration.JobDocumentsToSavePath',
+        Model_JobID = '@Model.JobID',
+        urlCheckBusinessRules = '@Url.Action("CheckBusinessRules", "Job")',
+        urlDownloadAllAndActiveTabDocument = '@Url.Action("DownloadAllAndActiveTabDocument", "Job")';
+
+
+    function viewDocument(stage, state, provName, name, id,obj) {
+        if (jobId) {
+            if($('tr#'+obj).find('.hdnIsExists') && $('tr#'+obj).find('.hdnIsExists').attr('val') && $('tr#'+obj).find('.hdnIsExists').attr('val') == '1')
+            {
+                $("#loading-image").show();
+                $.ajaxSetup({ async: false,cache:false });
+                $('#divViewer').load('@Url.Action("_Viewer","Job")' + "?jobid=" + jobId + "&docId=" + id);
+                $.ajaxSetup({ async: true });
+                $('#popupViewer').modal({ backdrop: 'static', keyboard: false });
+                @if (!isJobDocumentManagerSave)
+                {
+                    <text>
+                $('#divViewer').find('form').find('#btnSave').hide();
+                </text>
+                }
+            }
+        }
+    }
+
+    function prepareDocs(stage) {
+        distributorID = $('#JobInstallationDetails_DistributorID').val();
+        if(distributorID == null || distributorID == ""){
+            distributorID = JobInstallationDetails_DistributorID;
+            //distributorID = 0;
+        }
+        $.get(urlGetDocumentsList + "?id="+ jobId+ "&distributorID=" + distributorID + "&stage=" + stage+ "&jobTypeId=" + jobTypeId, "", function (response) {
+            $('.t1,.t2').html('');
+            if (response.doc && response.doc.length > 0) {
+                $.each(response.doc, function (i, data) {
+
+                    var name = data.Name;
+                    if(data.Name.toLowerCase() == 'ces')
+                        name = 'ces' + ('@FormBot.Helper.SystemEnums.JobType.PVD.GetHashCode()' == jobTypeId ? 'pvd.pdf' : 'sw.pdf');
+                    var params = "'" + data.Stage + "','" + data.StateName + "','" + data.ServiceProviderName + "','" + escape(name) + "','" + data.Id + "','" + ('trDoc_'+(i+1)) + "'";
+                    var exParams = "'" + data.Stage + "','" + data.StateName + "','" + data.ServiceProviderName + "','" + escape(name) + "','" + data.Id + "','" + "uploadBtnPhoto_" + data.DocumentId + "'";
+                    var td = $('<td>').attr('class', 'action');
+                    td.append('<input type="hidden" class="hdnIsExists" val="'+(data.IsExist == true ? 1 : 0)+'" />')
+                        .append('<input type="hidden" class="hdnIsUpload" val="'+(data.IsUpload == true ? 1 : 0)+'" />')
+                        @if(isJobDocumentManagerGenerate)
+                        {<text>
+                    .append((data.IsGenerate && data.IsGenerate.toString().toLowerCase() == 'true') ? '<a class="ganret sprite-img" href="' + "javascript:void(0);" + '"onclick="' + "generateDocument(" + params + ");" + '" title="Generate">' : "")
+                    </text>}
+                        @if(isJobDocumentManagerUpload)
+                        {<text>
+                    .append('<input id="uploadBtnPhoto' + data.id + '" multiple type="file" class="upload fileUpload fileUpload1" style="display:none;" /><a id="uploadBtnPhoto_' + data.DocumentId + '" class="browse" href="' + "javascript:void(0);" + '"onclick="' + "uploadDocument(" + exParams + ");" + '" title="Browse">')
+                    </text>}
+                        @if(isJobDocumentManagerView)
+                        {<text>
+                        .append('<a class="view sprite-img'+((data.IsExist && data.IsExist == true) ? '' : 'disView sprite-img' )+'" href="' + "javascript:void(0);" + '"onclick="' + "viewDocument(" + params + ");" + '" title="View">')
+                    </text>}
+                         @if(isJobDocumentManagerView)
+                         {<text>
+                         .append('<a class="sprite-img download '+((data.IsExist && data.IsExist == true) ? '' : 'notdownload sprite-img' )+'" href="' + "javascript:void(0);" + '"onclick="' + "downloadDocument(" + params + ");" + '" title="Donwload">')
+                  </text>}
+                        @if(isJobDocumentManagerDelete)
+                        {<text>
+                        .append('<a class="delete sprite-img '+((data.IsExist && data.IsExist == true) ? '' : 'disDelete sprite-img' )+'" href="' + "javascript:void(0);" + '"onclick="' + "deleteDocument(" + params + ");" + '" title="Delete">');
+                    </text>}
+                    var tr = $('<tr id="trDoc_'+(i+1)+'">').append($('<td class="tdDoc '+((data.IsExist && data.IsExist == true) ? 'semiBold' : '' )+'">').attr('style', 'text-align:left!important;word-break: break-all;').html(data.Name)).append(td);
+                    $((i % 2 == 0 ? '.t1' : '.t2')).append(tr);
+                });
+            }
+            totalActiveTabDocumentCount = 0;
+            totalDocumentCount = 0;
+            ShowHideDownloadAllActiveButton(response.totalActiveTabDocumentCount);
+            ShowHideDownloadAllButton(response.totalDocumentCount);
+            assignEvent();
+        });
+    }
+</script>
+
+<script src="~/Scripts/View/Job/_Documents.min.js?v=@ProjectConfiguration.ScriptVersion"></script>

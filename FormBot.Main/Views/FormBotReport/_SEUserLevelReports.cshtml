@@ -1,0 +1,332 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">Start Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.StartDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "Start", @id = "txtFromDate", @tabindex = "7" })
+                    <span class="input-group-addon"><img src="@Url.Content("~/images/ic-cal.png")" alt=""></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label class="control-label">End Date:</label>
+                <div class="input-group">
+                    @Html.TextBoxFor(m => m.EndDate, new { @class = "form-control", @readonly = "readonly", @placeholder = "End", @id = "txtToDate", @tabindex = "8" })
+                    <span class="input-group-addon"><img src="@Url.Content("~/images/ic-cal.png")" alt=""></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="rep_spacer"></div>
+    <div class="form-group">
+        <label>Date Grouping:</label>
+        @Html.DropDownListFor(m => m.TimePeriod, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Daily", Value = "1" },
+                                        new SelectListItem{ Text="Weekly", Value = "2" },
+                                        new SelectListItem{ Text="Monthly", Value = "3" },
+                                         new SelectListItem{ Text="All Time", Value = "4" },
+                                     }, new { @id = "drpTimePeriod", @class = "form-control" }
+                            )
+    </div>
+</div>
+<div class="rep-btn">
+    <input type="button" onclick="RunReport();" tabindex="18" id="btnJobStatusBarReport" class="primary report_ic" autofocus="" value="Run Report" name="Submit" style="pointer-events: auto; opacity: 1;">
+    <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" id="btnReset" value="Reset Filters" class="">
+    </div>
+    </div>
+
+<script type="text/javascript">
+    var dateFormat = '@FormBot.Helper.ProjectConfiguration.GetDateFormat';
+    var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+    $(document).ready(function () {
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+        $('#txtFromDate').datepicker({
+            format: dateFormat,
+            autoclose: true
+        }).on('changeDate', function () {
+            if ($("#txtToDate").val() != '') {
+                var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), dateFormat));
+                var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), dateFormat));
+                if (fromDate > toDate) {
+                    $("#txtToDate").val('');
+                    document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+                    $('#btnJobStatusBarReport').css('opacity', '0.5');
+                }
+            }
+
+            var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), dateFormat);
+            tDate = moment(tickStartDate).format("MM/DD/YYYY");
+            if ($('#txtToDate').data('datepicker')) {
+                $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+            }
+        });
+        $("#txtToDate").datepicker({
+            format: dateFormat,
+            autoclose: true
+        });
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+    });
+
+    $("#txtToDate").change(function () {
+        if ($("#txtToDate").val() != '') {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+        }
+    });
+
+    function RunReport() {
+        var data = JSON.stringify($('#FormBotReportDetails').serializeToJson());
+        $.ajax({
+            url: '@Url.Action("GetSEUserLevelReportsList", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                $('#divGrid').show();
+                BindGrid(result);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    $.fn.serializeToJson = function () {
+        var $form = $(this[0]);
+
+        var items = $form.serializeArray();
+        var returnObj = {};
+        var nestedObjectNames = [];
+
+        $.each(items, function (i, item) {
+            //Split nested objects and assign properties
+            //You may want to make this recursive - currently only works one step deep, but that's all I need
+            if (item.name.indexOf('.') != -1) {
+                var nameArray = item.name.split('.');
+                if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                    nestedObjectNames.push(nameArray[0]);
+                }
+                var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                if (!tempObj[nameArray[1]]) {
+                    tempObj[nameArray[1]] = item.value;
+                }
+                returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+            } else if (!returnObj[item.name]) {
+                returnObj[item.name] = item.value;
+            }
+        });
+
+        return returnObj;
+    };
+
+    function BindGrid(result) {
+        $('#chartbox').hide();
+        if ($('#datatable')) {
+            var table = $('#datatable').DataTable();
+            table.destroy();
+        }
+        var tableHeaders = '';
+        var tableFooters = '';
+        var tableColumns = [];
+
+        tableColumns.push("Start Date");
+        tableColumns.push("Name");
+        tableColumns.push("Total Job");
+        tableColumns.push("Completed Job");
+        tableColumns.push("OutStanding Job");
+        tableFooters = '<th></th><th style="text-align:right;"></th><th></th><th></th><th></th>';
+
+        $.each(tableColumns, function (i, val) {
+            tableHeaders += "<th><span>" + val + "</span></th>";
+        });
+        $("#displayTable").empty();
+        $("#displayTable").append('<table id="datatable" class="table table-hover"><thead><tr>' + tableHeaders + '</tr></thead><tfoot><tr>' + tableFooters + '</tr></tfoot></table>');
+
+        getColumn($('#ReportID').val());
+
+        $('#datatable').DataTable({
+            data: result,
+            paging: false,
+            searching: false,
+            retrieve: true,
+            columns: columnsArray,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    footer: true
+                }
+            ],
+            order: [[0, "asc"]],
+            footerCallback: function (row, data, start, end, display) {
+                if (data.toString() != "") {
+                    var api = this.api(), data;
+                    var intVal = function (i) {
+                        return typeof i === 'string' ?
+                            i * 1 :
+                            typeof i === 'number' ?
+                            i : 0;
+                    };
+                    NewTotal = api
+                        .column(2)
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+                    PreApprovalTotal = api
+                        .column(3)
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+                    NewInstallationTotal = api
+                        .column(4)
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        }, 0);
+                    // Update footer
+                    $(api.column(2).footer()).html(
+                        NewTotal
+                    );
+                    $(api.column(3).footer()).html(
+                        PreApprovalTotal
+                    );
+                    $(api.column(4).footer()).html(
+                        NewInstallationTotal
+                    );
+                    $(api.column(1).footer()).html(
+                       'Total:'
+                    );
+                } else {
+                    $('#datatable tfoot').remove();
+                }
+            }
+        });
+        $('#datatable_length').hide();
+        $('#datatable_info').hide();
+        //$('#datatable tr th').attr('class', 'sorting_disabled table-header');
+        $('#datatable tbody tr td:nth-child(3)').attr('style', 'text-align:right;');
+        $('#datatable tbody tr td:nth-child(4)').attr('style', 'text-align:right;');
+        $('#datatable tbody tr td:nth-child(5)').attr('style', 'text-align:right;');
+
+        $('#datatable thead tr th:nth-child(3)').attr('style', 'text-align:right;');
+        $('#datatable thead tr th:nth-child(4)').attr('style', 'text-align:right;');
+        $('#datatable thead tr th:nth-child(5)').attr('style', 'text-align:right;');
+
+        $('#datatable tfoot tr th:nth-child(3)').attr('style', 'text-align:right;');
+        $('#datatable tfoot tr th:nth-child(4)').attr('style', 'text-align:right;');
+        $('#datatable tfoot tr th:nth-child(5)').attr('style', 'text-align:right;');
+
+        $('#datatable th:first').attr('style', 'width:12% !important;');
+        $('.buttons-excel').addClass('primary pull-right');
+        $('.buttons-excel').html('<span>Export to Excel</span>');
+    }
+
+    function getColumn(id) {
+        columnsArray = [
+           {
+               'data': 'StartDate',
+               "render": function (result, type, full, meta) {
+                   return ConvertToDate(result);
+               },
+               "orderable": true
+           },
+           {
+               'data': 'FullName',
+               "orderable": true
+           },
+           {
+               'data': 'TotalJobs',
+               "orderable": true
+           },
+           {
+               'data': 'CompletedJobs',
+               "orderable": true
+           },
+           {
+               'data': 'OutStandingJobs',
+               "orderable": true
+           },
+        ];
+    }
+    function ConvertToDate(data) {
+        if (data != null) {
+            var date = new Date(parseInt(data.replace('/Date(', '')));
+            return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+        }
+        else {
+            return '';
+        }
+    }
+    function ResetSearchFilters() {
+        $('#txtFromDate').val('');
+        $('#txtToDate').val('');
+        $('#drpTimePeriod').val('1');
+        document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+        $('#btnJobStatusBarReport').css('opacity', '0.5');
+    }
+    function ConvertToDate(data) {
+        if (data != null) {
+            var date = new Date(parseInt(data.replace('/Date(', '')));
+            return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+        }
+        else {
+            return '';
+        }
+    }
+</script>
+<style>
+    .table-header {
+        border-bottom: 2px solid #ddd !important;
+        color: #808080 !important;
+        background-color: #f5f5f5;
+    }
+
+    #datatable {
+        border: 3px solid #e4e4e4 !important;
+    }
+
+        #datatable thead tr {
+            border: 3px solid #e4e4e4;
+        }
+
+        #datatable th {
+            color: #383838 !important;
+            font-family: "OpenSansSemibold" !important;
+            font-size: 13px !important;
+            background: #f8f8f8 none repeat scroll 0 0 !important;
+            padding: 10px 9px !important;
+        }
+
+    .dt-button {
+        margin-bottom: 5px;
+    }
+
+    /*.find_job_leftpanel.active {
+        margin-left: -379px !important;
+    }
+
+    .jtoggle.active {
+        right: -60px !important;
+    }*/
+</style>

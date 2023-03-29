@@ -1,0 +1,282 @@
+﻿@model FormBot.Entity.SolarSubContractor
+@using FormBot.Helper;
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+
+<div class="container-fluid">
+    <div class="title">
+        <h1>SSC Removal Request</h1>
+
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <form class="form-block" style="margin-top:10px;">
+        <div class="col-sm-3">
+            <div class="form-group">
+                <label class="control-label">Job Details:</label>
+                <input type="text" id="txtJobDetails" class="form-control" maxlength="150" tabindex="1" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+
+        <div class="col-sm-3">
+            <div class="form-group">
+                <label class="control-label">Solar Company:</label>
+                <input type="text" id="txtCompany" class="form-control" maxlength="150" tabindex="2" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="row">
+                <div class="form-group col-sm-6">
+                    <label class="control-label">Date:</label>
+                    <div class="input-group">
+                        <input type="text" id="txtFromDate" readonly="readonly" placeholder="From" class="form-control date-pick" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+                <div class="col-sm-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="input-group">
+                        <input type="text" id="txtToDate" readonly="readonly" placeholder="To" class="form-control date-pick" />
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="form-group" style="margin-top:27px;">
+                <input type="button" id="btnSearch" value="Search" class="primary search_ic" tabindex="3" onclick="SearchUsers();">
+                <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                    <span class="sprite-img reset_ic"></span>
+                    <input type="button" id="btnReset" value="Reset" class="" tabindex="4">
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="grid_topbar">
+        <p class="job_result" id="numRecords"></p>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="68%"><span>@Html.DisplayName("Job Details  ")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Solar Company ")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Solar-Sub Contractor Name")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Requested Date")</span></th>
+                            <th width="2%" class="action">@Html.DisplayName("Action")</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+        var chkCount=0;
+        var selectedRows = [];
+
+        $(document).ready(function () {
+            $("#txtJobDetails").focus();
+
+            $('#txtFromDate').datepicker({
+                format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('changeDate', function () {
+                if ($("#txtToDate").val() != '') {
+                    var fromDate = new Date(ConvertDateToTick($("#txtFromDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                    var toDate = new Date(ConvertDateToTick($("#txtToDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat'));
+                    if (fromDate > toDate) {
+                        $("#txtToDate").val('');
+                    }
+                }
+                var tickStartDate = ConvertDateToTick($("#txtFromDate").val(), '@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                tDate = moment(tickStartDate).format("MM/DD/YYYY");
+                if ($('#txtToDate').data('datepicker')) {
+                    $('#txtToDate').data('datepicker').setStartDate(new Date(tDate));
+                }
+            });
+            $("#txtToDate").datepicker({
+                format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            });
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'JobDetails' },
+                        { 'data': 'CompanyName' },
+                        { 'data': 'Name' },
+                        { 'data': 'SSCRemoveDate',
+                            "render": function (data, type, full, meta) {
+                                return ConvertToDate(data);}
+                        },
+                        {
+                            'data': 'Id',
+                            "render": function (data, type, full, meta) {
+
+                                imgdelete = 'background:url(../Images/delete-icon.png) no-repeat center; text-decoration:none;margin-left:15px;';
+                                var title='Remove Request';
+                                var deleteHref = "javascript:DeleteRemoveSSCRequest('" + full.Id + "')";
+                                var returnHTML = '';
+                                returnHTML +=  '<a href="' + deleteHref + '" class="action edit" style="' + imgdelete + '" title="'+title+'">' + '&nbsp; &nbsp; &nbsp; &nbsp;' + '</a>' + '&nbsp;&nbsp;';
+                                return returnHTML;
+                            },
+                            "orderable": false
+                        },
+                ],
+
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                initComplete: function (settings, json) {
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                },
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetSolarSubContractorRequestList", "SolarSubContractorRequest")',
+
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b> Request(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b> Request(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                },
+
+                "fnServerParams": function (aoData) {  //These are the extra parameters for our custom filters
+                    aoData.push({ "name": "refNumber", "value": $("#txtJobDetails").val() });
+                    aoData.push({ "name": "companyName", "value": $("#txtCompany").val() });
+                    aoData.push({ "name": "requestedDate", "value": $("#txtCompany").val() });
+                    aoData.push({ "name": "fromdate", "value": $("#txtFromDate").val() });
+                    aoData.push({ "name": "todate", "value": $("#txtToDate").val() });
+                }
+            });
+
+            var table = $('#datatable').DataTable();
+
+            $('#chkAll').on('click', function () {
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                chkCount = this.checked ? $('#datatable >tbody >tr').length : 0;
+            });
+
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function () {
+                if (this.checked) {
+                    chkCount++;
+                    if (chkCount == $('#datatable >tbody >tr').length) {
+                        $('#chkAll').prop('checked', this.checked)
+                    }
+                }
+                else {
+                    chkCount--;
+                    $('#chkAll').prop('checked', this.checked)
+                }
+            });
+
+        });
+
+        function ResetSearchFilters() {
+            $("#txtJobDetails").val('');
+            $("#txtCompany").val('');
+            $("#txtToDate").val('');
+            $("#txtFromDate").val('');
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        @*$("#txtFromDate1").datepicker({
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('changeDate', function(){
+            if($('#txtToDate1').data('datepicker'))
+            {
+                $('#txtToDate1').data('datepicker').setStartDate(new Date($("#txtFromDate1").val()));
+            }
+            else
+            {
+                $("#txtToDate1").datepicker({
+                    format: '@ProjectConfiguration.GetDateFormat',
+                    autoclose: true,
+                    startDate : new Date($("#txtFromDate1").val())
+                });
+            }
+        });*@
+        function SearchUsers() {
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function DeleteRemoveSSCRequest(jobID){
+            var result = confirm("Are you sure you want to remove solar-sub contractor from this job?");
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("DeleteRemoveSSCRequest", "SolarSubContractorRequest")',
+                    type: "POST",
+                    async: false,
+                    data: JSON.stringify({ jobId: jobID }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data.success) {
+                            $(".alert").hide();
+                            $("#errorMsgRegion").html(closeButton + "Solar-sub contractor has been removed successfully from the job.");
+                            $("#errorMsgRegion").show();
+
+                            $("#datatable").dataTable().fnDraw();
+                        }
+                    },
+                });
+            }
+        }
+
+        function ConvertToDate(data){
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+    </script>
+}

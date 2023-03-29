@@ -1,0 +1,366 @@
+﻿@model FormBot.Entity.Job.JobScheduling
+@using FormBot.Helper
+@{
+    ViewBag.Title = "SCA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@*<link type="text/css" href="~/Content/jquery.mCustomScrollbar.css" rel="stylesheet" media="all" />
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>*@
+<script src="~/Scripts/Calendar/TimeShifts.js?v=@ProjectConfiguration.ScriptVersion"></script>
+<link href="~/Content/Calendar/custom.css" rel="stylesheet" />
+<script src="~/Scripts/jquery.fileupload.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+
+<style>
+    .job_calendar {
+        margin: 15px !important;
+    }
+
+    .reports-summary {
+        padding-bottom: 0px !important;
+    }
+    .chart-block {
+        padding: 15px;
+    }
+    .Chart-header {
+        font-size: 16px;
+        text-transform: uppercase;
+        line-height: 20px;
+        padding: 10px 15px;
+        font-family: 'OpenSansBold';
+    }
+</style>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid sca_dashboard">
+
+    <div class="title">
+        <h1>Dashboard</h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionOpenPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="alertAssignTime" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 col-lg-3">
+            <!-- ===Reports Summary======================================= -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">Reports Summary</h3>
+                <div class="chart-block">
+                    <center><h3 class="Chart-header">Job Stage Report</h3></center>
+                    <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                        <div id="dvJobchart" style="height: 400px; width: 100%;"></div>
+                    </div>
+                    <center><h3 class="Chart-header">Invoice Chart</h3></center>
+                    <div style="border: 1px solid #e3e3e3; padding: 5px;">
+                        <div id="dvInvoiceChart" style="height: 400px; width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Installation :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NewInstallation" })" title="New installation">New installation<span>@ViewBag.NewInstallation</span></a></li>
+                        @*<li><a href="#" title="New installation">New installation<span></span></a></li>*@
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "InProgress" })" title="In progress">In progress<span>@ViewBag.InProgress</span></a></li>
+                        @*<li><a href="#" title="In progress">In progress<span>@ViewBag.InProgress</span></a></li>*@
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "InstallationCompleted" })" title="Installation Complete">Installation Complete<span>@ViewBag.InstallationCompleted</span></a></li>
+                        @*<li><a href="#" title="Installation Complete">Installation Complete<span>@ViewBag.InstallationCompleted</span></a></li>*@
+                    </ul>
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Invoices :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "NotYetInvoiced" })" title="Not Yet Invoiced">Not Yet Invoiced<span>@ViewBag.NotYetInvoiced</span></a></li>
+                        @*<li><a href="#" title="Not Yet Invoiced">Not Yet Invoiced<span>@ViewBag.NotYetInvoiced</span></a></li>*@
+                    </ul>
+                </div>
+                <div class="submission-filters">
+                    <span class="filters_title">Cancellations :</span>
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToJob", "Dashboard", new { status = "Cancellations" })" title="Cancelled">Cancellations<span>@ViewBag.Cancelled</span></a></li>
+                        @*<li><a href="#" title="Cancelled">Cancelled<span>@ViewBag.Cancelled</span></a></li>*@
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ===quick-links======================== -->
+
+            <div class="quick-links">
+                <h3 class="sca-heding">Quick Links</h3>
+                <ul>
+                    <li><a href="@Url.Action("Profile", "User", new {area="" })" title="Profile"><span class="icon"><img src="~/images/User-List.png" alt=""></span>My Profile</a></li>
+                    <li id="dJobList"><a href="@Url.Action("Index", "Job", new { area = "" })" title="Jobs List"><span class="icon"><img src="~/images/ic-newmail.png" alt=""></span>Jobs List</a></li>
+                    <li id="dInvoiceSetting"><a href="@Url.Action("Settings", "Settings", new { area = "" })" title="Invoice Setting"><span class="icon"><img src="~/images/ic-invoice-setting.png" alt=""></span>Invoice Setting</a></li>
+                    <li id="dJobScheduling"><a href="@Url.Action("JobSchedulingDetail", "JobScheduling", new { area = "" })" title="Job Scheduling"><span class="icon"><img src="~/images/ic-cal.png" alt=""></span>Job Scheduling</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+
+        <div class="col-md-8 col-lg-9">
+
+            <!-- ======Requesting SCA and SSC=============================== -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">CURRENT SOLAR COMPANY REQUESTS</h3>
+                <div id="divCurrentRequests">
+                    @Html.Partial("_CurrentRequests", new FormBot.Entity.User())
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-9">
+
+            <!-- ======Current jobs=============================== -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">CURRENT JOBS</h3>
+                <div id="divCurrentJobs">
+                    @Html.Partial("_Currentjobs", new List<FormBot.Entity.Dashboard.Dashboard>())
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-9">
+
+            <!-- ======Current jobs=============================== -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">RECENTLY COMPLETED JOBS</h3>
+                <div id="divCompletedJobs">
+                    @Html.Partial("_Completedjobs", new List<FormBot.Entity.Dashboard.Dashboard>())
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-9" style="position: inherit !important;">
+            <!-- ======Calendar=============================== -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">SCHEDULING</h3>
+                <div id="divCurrentJobs">
+                    @Html.Partial("~/Views/JobScheduling/_Calendar.cshtml", Model)
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        //job list
+        if ($('#SolarJobs').length > 0)
+            $('#dJobList').show();
+        else
+            $('#dJobList').hide();
+
+        //Invoice Setting
+        if ($('#InvoiceSetting').length > 0)
+            $('#dInvoiceSetting').show();
+        else
+            $('#dInvoiceSetting').hide();
+
+        //Job Scheduling
+        if ($('#JobScheduling').length > 0)
+            $('#dJobScheduling').show();
+        else
+            $('#dJobScheduling').hide();
+
+        ShowJobStageReport();
+        ShowInvoiceChart();
+    });
+    function ShowJobStageReport() {
+        var data = '{DeletedFilter:2}';
+        $.ajax({
+            url: '@Url.Action("GetJobStagesReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: data,
+            async: true,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (resultData) {
+                
+                if (resultData.lstRecord.length > 0) {
+                    var chartType = 'bar';
+                    var groupedData = {};
+                    var xAxis = ['xAxis'];
+                    var data1 = ['New'];
+                    var data2 = ['PreApproval'];
+                    var data3 = ['NewInstallation'];
+                    var data4 = ['InProgress'];
+                    var data5 = ['Complete'];
+                    var data6 = ['STCTrade'];
+                    var data7 = ['Aftersales'];
+                    var data8 = ['Cancellations'];
+                    var data9 = ['InstallationCompleted'];
+                    var result = [];
+                    //var dataGroup = ['New','PreApproval', 'NewInstallation', 'InProgress', 'Complete','STCTrade','Aftersales','Cancellations','InstallationCompleted'];
+
+                    if ($('#LstUsersAssignedUser option').length == 0) {
+                        for (var i = 0; i < resultData.lstRecord.length; i++) {
+                            var item = resultData.lstRecord[i];
+                            var xax = (@ProjectSession.UserTypeId==7 ||@ProjectSession.UserTypeId==9)?item.UserName:item.ResellerName;
+                            //xAxis.push(item.ResellerName);
+                            xAxis.push(xax);
+                            data1.push(item.New);
+                            data2.push(item.PreApproval);
+                            data3.push(item.NewInstallation);
+                            data4.push(item.InProgress);
+                            data5.push(item.Complete);
+                            data6.push(item.STCTrade);
+                            data7.push(item.Aftersales);
+                            data8.push(item.Cancellations);
+                            data9.push(item.InstallationCompleted);
+                        }
+                    } else {
+                        for (var i = 0; i < resultData.lstRecord.length; i++) {
+                            var item = resultData.lstRecord[i];
+                            var xax = (@ProjectSession.UserTypeId==7 ||@ProjectSession.UserTypeId==9)?item.UserName:item.CompanyName;
+                            //xAxis.push(item.CompanyName);
+                            xAxis.push(xax);
+                            data1.push(item.New);
+                            data2.push(item.PreApproval);
+                            data3.push(item.NewInstallation);
+                            data4.push(item.InProgress);
+                            data5.push(item.Complete);
+                            data6.push(item.STCTrade);
+                            data7.push(item.Aftersales);
+                            data8.push(item.Cancellations);
+                            data9.push(item.InstallationCompleted);
+                        }
+                    }
+                    result.push(xAxis);
+                    result.push(data1);
+                    result.push(data2);
+                    result.push(data3);
+                    result.push(data4);
+                    result.push(data5);
+                    result.push(data6);
+                    result.push(data7);
+                    result.push(data8);
+                    result.push(data9);
+
+                    BindChart('dvJobchart', resultData.lstRecord, xAxis, chartType,[]);
+                }
+                else {
+                    $('#dvJobchart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+    function ShowInvoiceChart() {
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+
+        var data = {
+            StartDate: fDate,
+            EndDate: tDate,
+            InvoiceType: "1",
+            InvoiceMode: "3",
+            hdnFormBotStatusAssignedUser: "1,2,3,4"
+        };
+
+        $.ajax({
+            url: '@Url.Action("GetInvoiceReport", "FormBotReport")',
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(data),
+            async: false,
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (result) {
+                if (result != "") {
+                    result = $.parseJSON(result);
+                    var chartType = 'bar';
+                    var groupedData = {};
+                    var xAxis = ['xAxis', 'Invoice Status'];
+                    var data1 = ['Paid', result[0].PaidInFull];
+                    var data2 = ['Partial', result[0].TotalPartialPayment];
+                    var data3 = ['PartialPaid', result[0].PartialPaidPayment];
+                    var data4 = ['Outstanding', result[0].Outstanding];
+                    var dataGroup = ['Partial', 'PartialPaid'];
+                    var resultData = [];
+                    resultData.push(xAxis);
+                    resultData.push(data1);
+                    resultData.push(data2);
+                    resultData.push(data3);
+                    resultData.push(data4);
+                    BindChart('dvInvoiceChart', resultData, xAxis, chartType, dataGroup);
+                }
+                else {
+                    $('#dvInvoiceChart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                }
+            },
+            error: function (e) {
+
+            }
+        });
+        return false;
+    }
+    //charts
+    function BindChart(element, result, xAxis, chartType, dataGroup) {
+        var chartdiv = c3.generate({
+            bindto: '#' + element,
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis'
+                , groups: [dataGroup]
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if (chartType == 'pie') {
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+
+
+
+

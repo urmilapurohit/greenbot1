@@ -1,0 +1,111 @@
+﻿@model FormBot.Entity.Documents.DocumentTemplate
+<style>
+
+    .pdfpage {
+        position: relative;
+        top: 0;
+        left: 0;
+        /*border: solid 1px black;*/
+        /*margin: 10px;*/
+    }
+    div.inputHint > [id*="jSignature"], .jSignature {
+        text-align: center;
+        height: 100% !important;
+        background-color: rgb(221,228,255);
+    }
+    
+    #noSigntext {
+        width: 100%;
+        height: 100%;
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .pdfpage > canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .pdfpage > div {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .pdfpage > .inputControl {
+        background-color: rgb(221,228,255) !important;
+    }
+
+    .inputControl {
+        background: transparent;
+        border: 0px none;
+        position: absolute;
+        margin: auto;
+        font-size: 13px;
+        color: black;
+    }
+
+        .inputControl[type='checkbox'] {
+            margin: 0px;
+            width: 18px;
+            height: 18px;
+        }
+
+    .inputHint {
+        border: 1px solid #d8dadd;
+        /*opacity: 1;*/
+        background: #ffffff;
+        /*opacity: 1;
+        background: #ccc;*/
+        position: absolute;
+    }
+
+    .pdfpage [type="checkbox"] {
+        display: none;
+    }
+
+        .pdfpage [type="checkbox"] + label {
+            display: inline-block;
+            border: 1px solid gray;
+            background-color: rgb(221, 228, 255);
+            max-width: 100px !important;
+        }
+
+        .pdfpage [type="checkbox"]:checked + label:before {
+            content: "\2713";
+            text-align: center;
+        }
+
+    #viewer .image {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        object-fit: fill;
+    }
+
+
+</style>
+<script src="@Url.Content("~/Scripts/pdf/pdf.min.js")"></script>
+<script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>
+<div id="viewer"></div>
+<script>
+    var urlSaveDocument = '@Url.Action("_Viewer", "Job")';
+    var pdfItemsStr = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Data))';
+    var pdfWorkerJsPath = '@Url.Content("~/Scripts/pdf/pdf.worker.min.js")';
+    var texthashCode = '@FormBot.Helper.SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()';
+    var buttonhashCode = '@FormBot.Helper.SystemEnums.InputTypes.BUTTON.GetHashCode()';
+    var radiohashCode = '@FormBot.Helper.SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()';
+    var checkhashCode = '@FormBot.Helper.SystemEnums.InputTypes.CHECK_BOX.GetHashCode()';
+    var getCaptureSignDetail = '@Url.Action("GetCaptureUserSignDetail", "Job")';
+    var signDetail = [];
+</script>
+<script src="~/Scripts/View/Job/DocumentPreview.js"></script>
+<script>
+    if ('@Html.Raw(Model.PDFURL)' != '') {
+            init('@Html.Raw(Model.PDFURL)?h=@DateTime.Now.Ticks');
+        }
+        else {
+            alert('File is not available.');
+        }
+</script>

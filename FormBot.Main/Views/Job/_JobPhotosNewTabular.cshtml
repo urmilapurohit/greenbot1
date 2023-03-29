@@ -1,0 +1,601 @@
+﻿@model FormBot.Entity.CreateJob
+@using System.IO;
+
+@using FormBot.Helper;
+@{
+    string withlocationclass = "";
+    string IsUnderInstallationArea = "";
+    bool isAllowAccesstoUploadGPSPhoto = false;
+    bool isUploadPhotoAfterTrade = false;
+    bool isAllowVisibleInstallerSelfiePhoto = false;
+    bool isPhotoclicked = false;
+    int checklistCount = 0;
+
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+
+            if (d.MenuId == (int)SystemEnums.MenuId.IsAllowAccesstoUploadGPSPhoto.GetHashCode()) { isAllowAccesstoUploadGPSPhoto = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.UploadPhotoAfterTrade.GetHashCode()) { isUploadPhotoAfterTrade = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.IsAllowVisibleInstallerSelfiePhoto.GetHashCode()) { isAllowVisibleInstallerSelfiePhoto = true; }
+        });
+    }
+}
+
+
+
+
+<style type="text/css">
+    .deleteJobVisit {
+        background: #EDD6D6 !important;
+    }
+
+    .option-list li {
+        float: left;
+        /*position: relative;*/
+        padding-right: 10px;
+    }
+
+    .deleteInfo {
+        color: #6b6b6b;
+        font-size: 12px;
+        padding-right: 20px;
+        background: url('../Images/ic-info.png') no-repeat 100% center;
+        position: absolute;
+        top: 14px;
+        right: 35px;
+        cursor: default !important;
+        z-index: 1;
+    }
+
+    #mdlSlideShow .modal {
+        text-align: center;
+    }
+
+    .disableNavigation {
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+
+
+    #mdlSlideShow .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .arrow-next {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-nextSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -180px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prevSelfie {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .arrow-prev {
+        display: block;
+        float: right;
+        width: 32px;
+        height: 32px;
+        text-align: right;
+        outline: none;
+        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);
+        opacity: 0.7;
+        background-position: -135px -236px;
+        cursor: pointer;
+    }
+
+    .lb-dataContainer .lb-details {
+    }
+
+    .lb-dataContainer {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-dataContainer-selfie {
+        z-index: 9999;
+        /*position: fixed;*/
+        /*padding: 10px;*/
+        bottom: 10px;
+        left: 0px;
+        right: 0px;
+    }
+
+    .lb-closeContainer {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainer > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainer > a:hover {
+                opacity: 0.5;
+            }
+
+    .lb-closeContainerSelfie {
+        background-color: rgb(0, 0, 0) !important;
+        border-radius: 50px;
+        width: auto;
+        margin: auto;
+        display: inline-block;
+        padding: 15px;
+    }
+
+        .lb-closeContainerSelfie > a {
+            margin: 0 15px;
+            opacity: 1;
+        }
+
+            .lb-closeContainerSelfie > a:hover {
+                opacity: 0.5;
+            }
+
+    /*.lb-container img {
+        width: auto !important;
+        height: auto !important;
+        border: 2px solid #fff;
+    }*/
+
+    .HideOverflow {
+        overflow: hidden;
+    }
+
+    #lightbox {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        /* bring your own prefixes */
+        transform: translate(-50%, -50%) !important;
+    }
+
+    #MapPopup {
+        z-index: 9999999 !important;
+    }
+
+    .with-IsUnderInstallationArea {
+        color: red !important;
+    }
+
+    #restorebtn {
+        background-image: url(../../image.png) !important;
+        background-repeat: no-repeat;
+        background-position: 2px 6px;
+        padding: 0px 14px 0 31px !important;
+        background-size: 25px;
+    }
+
+    #lnkRestore {
+        float: none;
+        text-align: center;
+        margin-left: 0px;
+        width: 100%;
+    }
+    .upload_Photo {
+        background-position: 6px -288px;
+        padding: 0 10px 0 28px !important;
+    }
+    .arrow_doc_down {
+        background-position: -212px -34px !important;
+    }
+
+    .arrow_doc_up {
+        background-position: -212px -88px !important;
+    }
+</style>
+<script>
+
+    function resizeImage() {
+        $('body').addClass('HideOverflow');
+    }
+    $(document).ready(function () {
+        $('.arrow_doc_up').show();
+        $('.arrow_doc_down').hide();
+    });
+    $('#btnGroupDrop2').click(function (e) {
+        if (!uploadbtndoc) {
+            $('.arrow_doc_up').hide();
+            $('.arrow_doc_down').show();
+            uploadbtndoc = true;
+        }
+        else {
+            $('.arrow_doc_up').show();
+            $('.arrow_doc_down').hide();
+            uploadbtndoc = false;
+        }
+    });
+</script>
+
+<div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionJobPhoto" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+<div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionJobPhoto" style="display: none">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+</div>
+
+@*<h4>Photos</h4>*@
+<div>
+    <div class="title-btn btn-group" style="display: block; margin: 2%;" role="group">
+        <input id="uploadBtnPhoto" multiple type="file" class="upload fileUpload" style="display:none;" />
+        <button type="button" data-type="other" onclick="uploadBtnPhoto_click()" title="Upload Photos" style="text-decoration: none; float: left; margin-left: 1%;" id="btnUpload" class="btn primary icon-btn">
+            <span class="sprite-img upload_Photo"></span> Upload
+        </button>
+    </div>
+    <div class="title-btn btn-group" style="display:block" role="group">
+        <button type="button" data-type="other" onclick="lnkDwnld_click()" title="Download" id="lnkDwnld" style="float: left; margin-left: 1%;" class="btn primary icon-btn">
+            <span class="sprite-img download_ic"></span> Download
+        </button>
+    </div>
+    <div class="title-btn btn-group" style="display:block" role="group">
+        <button type="button" data-type="other" onclick="expandAll_click()" title="Expand All" id="clpsAll" style="text-decoration: none; float: left; margin-left: 1%;" class="btn primary icon-btn">
+            <span class="sprite-img preview_ic"></span> Expand All
+        </button>
+    </div>
+</div>
+<div>
+  
+    <ul class="option-list">
+        <li  style="padding-left: 7px;">
+            <div class="title-btn">
+                <div class="btn-group" style="display: block;" role="group">                  
+                    <button id="btnGroupDrop2" type="button" class="btn primary icon-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style="float: left !important; padding: 0 11px 0 10px !important; margin-bottom: 2%; margin-left: -2%;">
+                        Options<span class="caret"></span>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="btnGroupDrop2" style="margin: 40px 0 0 0; width: min-content;">
+                        <ul class="option-list">
+                            <li>
+                                <a class="btn" href="javascript:void(0)" title="Collapse" onclick="clpsAll_click()" id="clpsAll_click">Collapse All</a>
+                            </li>
+                            <li>
+                                <a class="btn" href="javascript:void(0)" onclick="lnkDwnldAll_click()" title="Download All" id="lnkDwnldAll">Download All </a>
+                            </li>
+                            <li class="IsSPVinstallationVerified isdelete">
+                                <a class="btn" href="javascript:void(0)" title="Delete" onclick="lnkDelete_click()" id="lnkDelete">Delete </a>
+                            </li>
+                            <li class="AccessOnlyForFSAFCO">
+                                <a class="btn" href="javascript:void(0)" onclick="lnkIgnore200mtrRule_click()" title="Ignore 200Mtr Validation" id="lnkRemove200mValidation">Remove 200mValidation </a>
+                            </li>
+                            <li>
+                                <a class="btn" href="javascript:void(0)" title="Delete" onclick="lnkDeletedCheckListitem_click()" id="lnkDeletedChecklistitem">Deleted checklist items</a>
+                            </li>
+                            <li id="restoreDeletedVisit" style="display:none">
+                                <a class="btn" href="" onclick="restoreDeletedVisit()">Restore visit</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>   
+</div>
+<!-- ====================== -->
+<div class="col-sm-10 visit-list" style="padding-top:10px;" id="divVisitList">
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+        @if (Model.chkPhotosAll != null && Model.chkPhotosAll.chkJobPhotos != null)
+        {
+            for (int i = 0; i < Model.chkPhotosAll.chkJobPhotos.Count; i++)
+            {
+                <div class="panel" id="pnlMain@(i)" data-isdeleted="@Model.chkPhotosAll.chkJobPhotos[i].IsDeleted" data-jobschedulingid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+                    <div class="visitId">
+                        @if (Model.chkPhotosAll.chkJobPhotos[i].IsDeleted)
+                        {
+                            <div class="panel-heading submission-add deleteJobVisit visitParent" role="photo-tab" id="headingAssets@(i)">
+                                <span class="deleteInfo" title="Visit item has been deleted">&nbsp;</span>
+                                <input type="checkbox" class="visit-list-check" data-UniqueVisistID="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-jobscid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId" data-isdeleted="@Model.chkPhotosAll.chkJobPhotos[i].IsDeleted" value="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+                                <a class="collapsed" role="button" id="checklistPhotoforschedulid@(i)" data-id="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId" data-toggle="collapse" data-name="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-parent="#accordion" href="#collapseAssets@(i)" aria-expanded="false" aria-controls="collapseAssets@(i)" onclick="fnLoadVisitChecklistItems(@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId,@(i))">
+                                    <i class="sprite-img folder-icon"></i>
+                                    <span>@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID</span>
+                                    <i class="sprite-img arrow-icon"></i>
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="panel-heading submission-add visitParent" role="photo-tab" id="headingAssets@(i)">
+                                @if (Model.chkPhotosAll.chkJobPhotos[i].IsDefaultSubmission)
+                                {
+                                    <span class="submission">STC Submission<i class="sprite-img submission-icon"></i></span>
+                                }
+                                <input type="checkbox" class="visit-list-check" data-UniqueVisistID="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-jobscid="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId" data-isdeleted="@Model.chkPhotosAll.chkJobPhotos[i].IsDeleted" value="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId">
+                                <a class="collapsed" role="button" id="checklistPhotoforschedulid@(i)" data-id="@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId" data-toggle="collapse" data-name="@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID" data-parent="#accordion" href="#collapseAssets@(i)" aria-expanded="false" aria-controls="collapseAssets@(i)" onclick="fnLoadVisitChecklistItems(@Model.chkPhotosAll.chkJobPhotos[i].jobSchedulingId,@(i))">
+                                    <i class="sprite-img folder-icon"></i>
+                                    <span>@Model.chkPhotosAll.chkJobPhotos[i].UniqueVisitID</span>
+                                    <i class="sprite-img arrow-icon"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                    <div id="collapseAssets@(i)" class="panel-collapse collapse photo-Collapse" role="photo-subtab" aria-labelledby="headingAssets@(i)">
+                        <div class="panel-group inner-panel isSubPhotos" id="ChecklistItmes@(i)"  role="tablist" aria-multiselectable="true">
+
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <div class="panel pdf-generated ref" id="pnlReference">
+            <div class="panel-heading submission-add" role="photo-tab" id="headingReference">
+                <input type="checkbox" class="visit-list-check pdf-generated-get-details ref headingReference" data-UniqueVisistID="Reference Photos" data-jobscid="0">
+                <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseReference" aria-expanded="false" aria-controls="collapseReference" onclick="fnLoadReferencePhotos()">
+                    @*<span>VISIT  170304005</span>*@
+                    <i class="sprite-img folder-icon"></i>
+                    <span>Reference Photos</span>
+                    <i class="sprite-img arrow-icon"></i>
+                </a>
+            </div>
+            <div id="collapseReference" class="panel-collapse collapse photo-Collapse" role="photo-subtab" aria-labelledby="headingReference">
+                <ul class="panel-body refPhotos" id="ulPreference">
+                </ul>
+            </div>
+        </div>
+
+        <div class="panel pdf-generated def" id="pnlMainDefault">
+            <div class="panel-heading submission-add visitParent" role="photo-tab" id="headingAssetsDefault">
+                @if (Model.chkPhotosAll == null || Model.chkPhotosAll.chkJobPhotos == null || (Model.chkPhotosAll.chkJobPhotos.Where(a => a.IsDeleted == false).Count() == 0))
+                {
+                    <span class="submission">STC Submission<i class="sprite-img submission-icon"></i></span>
+                }
+                <input type="checkbox" class="visit-list-check pdf-generated-get-details def" data-UniqueVisistID="Default Photos" data-jobscid="@Model.chkPhotosAll.jobId">
+                <a class="collapsed" role="button" data-toggle="collapse" data-name="Default Photos" data-parent="#accordion" href="#collapseAssetsInstallation" aria-expanded="false" aria-controls="collapseAssetsInstallation" onclick="fnLoadDefaultPhotos()">
+                    <i class="sprite-img folder-icon"></i>
+                    <span>Default Photos</span>
+                    <i class="sprite-img arrow-icon"></i>
+                </a>
+            </div>
+            <div id="collapseAssetsInstallation" class="panel-collapse collapse photo-Collapse" role="photo-subtab" aria-labelledby="headingAssetsDefault">
+                <div class="panel-group inner-panel defPhotos" role="tablist" aria-multiselectable="true">
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bd-example-modal-lg" id="mdlSlideShow">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-body" id="slideBody">
+                <div class="form-border" style="position:relative;">
+                    <div id="signMyProfile">
+                        <div style="max-width:1200px;max-height:800px;" class="text-center">
+                            <img id="imgSlide" style="display:inline;" />
+                        </div>
+                    </div>
+                    <div class="arrow-block" style="position:absolute; left:0px; right:0px; top:50%;">
+                        <button type="button" class="btn btn-primary" id="btnPrev"><</button>
+                        <button type="button" class="btn btn-primary" style="float:right;" id="btnNext">></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--<div class="modal fade" id="popuponuploadphoto" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <input type="hidden" id="hdnUploadPhoto" value="true" />-->
+                    @*<button type="button" class="close sprite-img" aria-label="Close" id="btnClosepopupboxUploadPhoto"></button>*@
+                    <!--<h4 class="modal-title" id="myModalLabel">WARNING</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <p>This solar job is considered a part of CER's Solar Panel Validation.</p>
+                        <br />
+                        <p>By adding photos that are not captured using the Greenbot Installers APP you are forfeiting your right to be considered as part of this validation.</p>
+                        <br />
+                        <p>Do you wish to continue?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn primary btnYes" id="btnYes"><span></span>YES</button>
+                    <button type="button" class="btn default" id="btnClosepopupboxUploadPhoto"><span></span>CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="restoreChecklistItmes">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <h4 class="modal-title"> Restore Checklist items </h4>
+            </div>
+            <div class="modal-body" id="restoreChecklistItmesdata">
+
+
+            </div>
+            <div class="modal-footer" style="padding:15px;margin-top:0px">
+                <input class="btn primary icon-btn" type="button" id="restorebtn" value="Restore" style="float:none;padding-left:15px">
+
+                <input type="button" class="btn default cancel_ic" id="cancelbtn" value="Cancel">
+
+            </div>
+        </div>
+    </div>
+</div>-->
+
+
+
+
+@*<script src="https://requirejs.org/docs/release/2.3.5/minified/require.js"></script>*@
+<script>
+
+    var uploadPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+        UserDocs = '@Model.UserDocuments',
+        jobId = '@Model.JobID',
+        BaseURL = '@FormBot.Helper.ProjectConfiguration.ProjectImagePath' + 'Job/',
+        USERID = '@ProjectSession.LoggedInUserId',
+        ELECUSERID = '@ProjectSession.LoggedInUserId',
+        urlDownloadJobPhotos = '@Url.Action("DownloadJobPhotos", "Job")',
+        urlDownloadJobPhotosAllTabular = '@Url.Action("DownloadALLJobPhotosForTabular", "Job")',
+        urlGetIsSPV = '@Url.Action("GetSPVRequired", "Job")',
+        urlDeleteCheckListPhotos = '@Url.Action("DeleteCheckListPhotos", "Job")',
+        urlSaveImage = '@Url.Action("SaveImage", "Job")',
+        urlGenerateAllImagesOfVisistInPdf = '@Url.Action("GenerateAllImagesOfVisistInPdf", "Job")',
+        urldeletedChecklist = '@Url.Action("DeletedCheckListItem", "Job")?jobId=',
+        urlreloadphoto = '@Url.Action("ReloadJobPhotoTabular", "Job")?jobId=',
+        urlrestoreDeletedVisit='@Url.Action("RestoreDeletedVisit", "Job")'
+        urlIgnore200mtrValidation = '@Url.Action("SPVIgnore200mtrValidation", "Job")',
+            isAllowAccesstoUploadGPSPhoto = '@isAllowAccesstoUploadGPSPhoto';
+    var urlRestoreDataforReferenceAndDefault = '@Url.Action("RestoreDataforReferenceAndDefault", "Job")?vcphotoId=';
+    var IsSPVInstallationVerified = '@Convert.ToString(Model.JobSerialNumbers != null && Model.JobSerialNumbers.Any() ? Model.JobSerialNumbers[0].IsSPVInstallationVerified.ToString() : "False")';
+    var isUploadPhotoAfterTrade = '@isUploadPhotoAfterTrade';
+    var isAllowVisibleInstallerSelfie = '@isAllowVisibleInstallerSelfiePhoto';
+    var JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)';
+    var uploadbtndoc = false;
+    var isPhotoListLoaded = false;
+    var visitchecklistcountonAccLoad=@Model.chkPhotosAll.chkJobPhotos.Count
+    $('#lblOpenDocumentName').text('');
+</script>
+@*<script src="~/Scripts/View/Job/_JobPhotosNewTabular.dev.js"></script>*@
+<script src="~/Scripts/View/Job/_DocumentsAndPhotosTabular.js"></script>
+<script src="~/Scripts/View/Job/_JobPhotosNewTabular.min.js"></script>
+<script>
+    let isvisitchecklistLoaded = new Array(visitchecklistcountonAccLoad).fill(false);
+    function expandAll_click() {
+        
+        var mainPnl = visitchecklistcountonAccLoad;
+        for (var i = 0; i < mainPnl; i++) {
+            var targetElement = document.getElementById('collapseAssets' + i);
+            var collapsedelement = document.getElementById('checklistPhotoforschedulid' + i);
+            $(targetElement).collapse('show');
+            $('.photo-Collapse').attr("aria-expanded", "true");
+            $(collapsedelement).attr("aria-expanded", "true");
+            $('.photo-Collapse').removeAttr('style');
+            $('.photo-Collapse').addClass('in');
+            $(collapsedelement).removeClass('collapsed');
+            var addchecklistid = document.getElementById('pnlMain' + i);
+            var jobSchedulingIdForExpand = $(addchecklistid).attr('data-jobschedulingid');
+            fnLoadVisitChecklistItemsOnExpand(jobSchedulingIdForExpand, i);
+
+        }
+
+        $('#collapseAssetsInstallation').collapse('show');
+        $('#collapseReference').collapse('show');
+        fnLoadReferencePhotos();
+        fnLoadDefaultPhotos();
+    }
+
+
+    function fnLoadVisitChecklistItemsOnExpand(jobSchedulingId, Index) {
+
+        var addchecklistid = document.getElementById('ChecklistItmes' + Index);
+        isvisitchecklistLoaded[Index] = true;
+        $.ajax({
+            type: 'GET',
+            url: '/Job/LoadVisitChecklistItems',
+            data: { JobID: JobId, JobSchedulingId: jobSchedulingId },
+            dataType: "json",
+            contenttype: 'application/json; charset=utf-8',
+            async: true,
+            success: function (data) {
+                $(addchecklistid).empty();
+                $('.isSubPhotos').addClass('loadSubPhotos');
+                $(addchecklistid).append(data.subphotoView);
+                
+            },
+            error: function (xhr) {
+                //alert('error');
+            }
+        });
+        fnLoadddlListPhotos();
+    }
+
+
+    function fnLoadVisitChecklistItems(jobSchedulingId, Index) {
+        if (!isvisitchecklistLoaded[Index]) {
+
+            $('.isSubPhotos').removeClass('loadSubPhotos');
+
+            var addchecklistid = document.getElementById('ChecklistItmes' + Index);
+            $.ajax({
+                type: 'GET',
+                url: '/Job/LoadVisitChecklistItems',
+                data: { JobID: JobId, JobSchedulingId: jobSchedulingId },
+                dataType: "json",
+                contenttype: 'application/json; charset=utf-8',
+                async: true,
+                success: function (data) {
+
+                    $(addchecklistid).empty();
+                    $('.isSubPhotos').addClass('loadSubPhotos');
+                    $(addchecklistid).append(data.subphotoView);
+
+                },
+                error: function (xhr) {
+                    alert('error');
+                }
+            });
+            fnLoadddlListPhotos();
+            isvisitchecklistLoaded[Index] = true;
+        }
+
+
+    }
+    function clpsAll_click() {
+        var mainPnl = visitchecklistcountonAccLoad;
+        for (var i = 0; i < mainPnl; i++) {
+            var collapsedelement = document.getElementById('checklistPhotoforschedulid' + i);
+            $('.photo-Collapse').attr("aria-expanded", "false");
+            $(collapsedelement).attr("aria-expanded", "false");
+            $(collapsedelement).addClass('collapsed');
+            $(collapsedelement).attr('data-toggle','collapse');
+
+        }
+        $('.photo-Collapse').collapse('hide');
+        
+    }
+</script>
+

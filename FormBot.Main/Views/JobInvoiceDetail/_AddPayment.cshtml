@@ -1,0 +1,422 @@
+﻿@model FormBot.Entity.Job.JobInvoiceDetail
+@using FormBot.Helper
+
+@section Scripts {
+    @*<script src="~/Scripts/jquery.validate-vsdoc.js"></script>
+        <script src="~/Scripts/jquery-1.11.0.min.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/jquery-1.10.2.js"></script>
+        <script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <link href="~/Content/jquery-ui.css" rel="stylesheet" />
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/easyResponsiveTabs.js" type="text/javascript"></script>*@
+    @*@Scripts.Render("~/Scripts/FormBot.js")
+        @Scripts.Render("~/bundles/jqueryval")
+        @Scripts.Render("~/datatableJs")
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+
+        @*<script src="~/Scripts/bootstrap-datepicker.js"></script>*@
+    @*<link href="~/Content/datepicker.css" rel="stylesheet" />*@
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<style type="text/css">
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .modal-content {
+        width: inherit;
+        height: inherit;
+        margin: 0 auto;
+    }
+
+    .ui-datepicker {
+        z-index: 10000 !important;
+    }
+
+    .modal {
+        z-index: 9999 !important;
+    }
+
+    .bootstrap-datetimepicker-widget {
+        text-align: center !important;
+        margin: 0px !important;
+        padding-left: 22px !important;
+    }
+</style>
+
+
+<div class="modal-header">
+    @*<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>*@
+    <button type="button" class="close" aria-label="Close" data-dismiss="modal" id="AddTimeClose">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title">Add/Edit Payment</h4>
+</div>
+<div class="modal-body">
+
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForPayment" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionForPayment" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+    @*<span class="field-validation-error" id="errorSpan"><span id="errorMsg"></span></span>*@
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgPaymentForPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" aria-label="Close">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+    </div>
+    <form id="FromjobPayment">
+
+        <div class="form-box">
+            @Html.HiddenFor(m => m.JobInvoiceDetailID)
+            @Html.HiddenFor(m => m.JobPartID)
+            @Html.HiddenFor(m => m.Guid)
+            @Html.HiddenFor(m => m.FileName)
+            @Html.HiddenFor(m => m.JobInvoiceID)
+
+            @Html.HiddenFor(m => m.InvoiceNumber)
+            @Html.HiddenFor(m => m.JobId)
+            @Html.HiddenFor(m => m.OldFileName)
+
+
+            <div class="row">
+
+
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label">Staff:</label>
+                        <label class="control-label">@ProjectSession.LoggedInName</label>
+                    </div>
+                </div>
+
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label required">Payment Type:</label>
+                        @Html.DropDownListFor(m => m.PaymentType, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 1 })
+                        @Html.ValidationMessageFor(m => m.PaymentType)
+                    </div>
+                </div>
+
+
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.TimeStart, new { @class = "control-label required" })
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.DateAdded, new { @class = "form-control  required date-pick", @tabindex = 2, @readonly = "readonly" })
+                            <span class="input-group-addon sprite-img date-picker"></span>
+                            @Html.ValidationMessageFor(m => m.DateAdded)
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label inv">&nbsp;</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.TimeAdded, new { @class = "form-control required", @tabindex = 3 })
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-time"></span>
+                            </span>
+                            @Html.ValidationMessageFor(m => m.TimeAdded)
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label required">Amount:</label>
+                        @Html.TextBoxFor(m => m.PaymentAmount, new { @class = "form-control decimal", @maxlength = 8, @tabindex = 4 })
+                        @Html.ValidationMessageFor(m => m.PaymentAmount)
+
+
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="control-label required">Description:</label>
+                        @Html.TextAreaFor(m => m.Description, new { @class = "form-control required", @maxlength = 500, @tabindex = 5 })
+                        @Html.ValidationMessageFor(m => m.Description)
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.FileName, new { @class = "control-label" })
+
+                        <div class="fileUpload btn primary upload_ic" id="divUpload" style="margin-left: 0px;">
+                            <span>Upload</span>
+                            <input id="uploadBtnPayment" type="file" class="upload fileUpload" tabindex="6" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-10">
+                    <div class="form-group">
+                        <label class="control-label inv">&nbsp;</label>
+                        <table class="table" id="tblSelectedFile3">
+                            <tbody>
+                                @if (Model.JobInvoiceDetailID != 0)
+                                {
+                                    if (Model.FileName != null && Model.FileName != "")
+                                    {
+                                        <tr class='success' id='@Model.FileName'>
+                                            <td class="col-sm-8">@Model.FileName</td>
+
+                                            @if (Model.MimeType == "image")
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Preview" onclick="OpenDocument(this)"></td>
+                                            }
+                                            else
+                                            {
+                                                <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" filename="@Model.FullFileName" title="Download" onclick="DownloadDocument(this)"></td>
+                                            }
+                                            @*<td class="col-sm-2"><a href='#' class='close attachmentclose' data-dismiss='alert' aria-label='close' onclick='deleteInvoiceImage();'>&times;</a></td>*@
+                                            <td class="col-sm-2"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" filename="@Model.FullFileName" oldfilename="@Model.FullFileName" style="cursor: pointer" onclick='deleteInvoiceImage(this);'></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn primary icon-btn" onclick="SavePayment()" tabindex="6"> <span class="sprite-img save_ic"></span> Save</button>
+                <button type="button" class="btn default cancel_ic" data-dismiss="modal" tabindex="7">Cancel</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .input-validation-error {
+        border: 1px solid #b94a48 !important;
+    }
+</style>
+
+
+
+
+<script type="text/javascript">
+
+    var PaymentType;
+    var message = '';
+
+
+
+
+
+
+    $(document).ready(function () {
+
+        @*var JobId = $("#JobId").val();
+        var UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+        var fileName = '@Model.FullFileName';
+        var imagePath = UploadedDocumentPath + "/" + "JobDocuments" + "/" + JobId + "/" + "Invoice" + "/" + fileName;
+        $('#imgViewImage').attr("src", imagePath).load(function () { logoWidth = this.width; logoHeight = this.height });*@
+
+
+        FileUpload($('#uploadBtnPayment'), '@Model.Guid', $("#tblSelectedFile3"), '@Model.FullFileName');
+        $('.decimal').keypress(function (event) {
+            OnlyDecimalAllow($(this), event);
+        });
+
+        if ('@Model.PaymentType' == '')
+        { PaymentType = 0; } else { PaymentType = '@Model.PaymentType'; }
+
+        FillDropDown('PaymentType', '@Url.Action("GetPaymentMethods", "JobInvoiceDetail")', PaymentType, true, null);
+
+        //Common code.
+
+
+
+
+
+        var date = $("#DateAdded").val() || new Date();
+
+        $("#DateAdded").val('').removeAttr('value');
+
+        $('.date-pick').datepicker({
+            format: '@ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('change', function () {
+            $(this).valid();
+        });
+
+        var startDate = moment(date).format('@ProjectConfiguration.GetDateFormat'.toUpperCase());
+        //alert(startDate);
+        $("#DateAdded").val(startDate);
+
+        $('#TimeAdded').datetimepicker({
+            format: "HH:mm"
+        });
+
+        $(".date-pick").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+        $("#TimeAdded").keydown(function (e) {
+            if (e.which == 9) {
+                return true;
+            }
+            return false;
+        });
+
+        //var time = $("#TimeAdded").val() || new Date();
+        //var startTime = moment(time).format("HH:mm");
+        //$('#TimeAdded').val(startTime);
+        //if ($("#JobInvoiceDetailID").val() == 0)
+        //{
+        //    $("#PaymentAmount").val('');
+        //}
+
+        $("#PaymentAmount").blur(function () {
+
+            if ($("#PaymentAmount").val() != "" && $("#PaymentAmount").val() != 0) {
+                $("#PaymentAmount").attr('class', 'form-control valid');
+            }
+        });
+    });
+
+
+    function showErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForPayment").html(closeButton + message);
+        $("#errorMsgRegionForPayment").show();
+
+    }
+
+    function showSuccessMessage(message) {
+        $(".alert").hide();
+        $("#successMsgRegionForPayment").html(closeButton + message);
+        $("#successMsgRegionForPayment").show();
+
+    }
+
+    function SavePayment() {
+        $.validator.unobtrusive.parse("#FromjobPayment");
+        if ($("#PaymentAmount").val() == "" && $("#PaymentAmount").val() == 0) {
+            $("#PaymentAmount").attr('class', 'form-control required input-validation-error');
+
+        }
+        if ($("#FromjobPayment").valid()) {
+            //var formData = new FormData();
+            //var file = document.getElementById("uploadPartFile").files[0];
+            //formData.append("uploadPartFile", file);
+
+            var startDateTime = $("#FromjobPayment").find("#DateAdded").val();
+            var startDate = '';
+            var startTime = $("#FromjobPayment").find("#TimeAdded").val();
+
+            var tickStartDate = ConvertDateToTick(startDateTime, '@ProjectConfiguration.GetDateFormat');
+            startDate = moment(tickStartDate).format("YYYY-MM-DD");
+
+
+            var obj = {};
+
+            //obj.JobInvoiceDetailID = $("#JobInvoiceDetailID").val();
+            obj.JobInvoiceDetailID = $("#FromjobPayment").find('#JobInvoiceDetailID').val();
+            obj.JobInvoiceID = $("#FromjobPayment").find("#JobInvoiceID").val();
+
+            var Sign = document.getElementsByName("Signature");
+            if (Sign.length > 0) {
+                obj.Guid = '@Model.Guid';
+                //obj.FileName = document.getElementsByName("Signature")[0].id.split('_')[1];
+
+                obj.FileName = document.getElementsByName("Signature")[0].id.substr(document.getElementsByName("Signature")[0].id.indexOf('_') + 1);
+            }
+
+
+
+            obj.PaymentType = $("#FromjobPayment").find("#PaymentType").val();;
+            obj.Description = $("#FromjobPayment").find("#Description").val();
+            obj.PaymentAmount = $("#FromjobPayment").find("#PaymentAmount").val();
+            obj.DateAdded = startDate;
+            obj.TimeAdded = startTime;
+            obj.JobInvoiceType = 3;
+            obj.isPart = false;
+            obj.JobId = $("#FromjobPayment").find("#JobId").val();
+            obj.OldFileName = $("#FromjobPayment").find("#OldFileName").val();
+
+            obj.InvoiceNumber = $("#InvoiceNumber").val();
+
+            if ('@ProjectSession.UserTypeId' == 4)
+                obj.OwnerUsername = $("#drpInvoiceTo").val();
+            else
+                obj.SentTo = $("#drpInvoiceTo").val();
+
+            var data = JSON.stringify(obj);
+
+            $.ajax(
+            {
+                url: '@Url.Action("InsertJobInvoicePayment", "JobInvoiceDetail")',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                type: 'post',
+                data: data,
+                //async: false,
+                success: function (response) {
+                    if (response) {
+                        var responseMsg = response.status.split("#")[0];
+                        if (responseMsg == "successs") {
+                            var responseJobInvoiceDetailID = response.status.split('#')[1];
+
+                            var responseJobInvoiceID = response.status.split('#')[2];
+
+                            if (responseJobInvoiceDetailID > 0 && responseJobInvoiceID > 0) {
+                                $("#popupAddPayment").modal('hide');
+                                message = "Job Payment has been saved successfully."
+                                $(".modal-backdrop.in").css("opacity", 0);
+                                $(".modal-backdrop").css("z-index", 0);
+                                $(".modal-backdrop.fade").css("z-index", -10);
+
+                                $("#hdnJobInvoiceID").val(responseJobInvoiceID);
+
+                                if ($('#invoiceDetailListTable')) {
+                                    //var table = $('#invoiceDetailListTable').DataTable();
+                                    //table.destroy();
+                                }
+
+                                //jobInvoiceDetail.loadInvoiceDetailGrid(responseJobInvoiceID);
+                                jobInvoiceDetail.loadData(responseJobInvoiceID);
+                                $("#OldFileName").val(response.fileName);
+
+                                $(".alert").hide();
+                                $("#successMsgRegion").html(closeButton + message);
+                                $("#successMsgRegion").show();
+
+                            }
+                            else {
+                                message = "Job Payment has not been saved."
+                                showErrorMessage(message);
+                            }
+                        }
+                        else {
+                            message = response.status.split('#')[1];
+                            showErrorMessage(message);
+                        }
+                    }
+                },
+                error: function () {
+                    message = "Job Payment has not been saved."
+                    showErrorMessage(message);
+                }
+            });
+        }
+    }
+
+
+</script>

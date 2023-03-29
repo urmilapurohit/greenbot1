@@ -1,0 +1,2335 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper;
+
+@{
+    ////Todo
+    bool isAddJob = false;
+    bool isDeleteJob = false;
+    bool isEditjob = false;
+    bool isAssignSSC = false;
+    bool isAssignSCO = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RoleMenu.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RoleMenu.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAdd) { isAddJob = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobDelete) { isDeleteJob = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobEdit) { isEditjob = true; }
+
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSSC.GetHashCode()) { isAssignSSC = true; }
+            if (d.MenuId == (int)SystemEnums.MenuId.JobAssignToSCO.GetHashCode()) { isAssignSCO = true; }
+        });
+    }
+}
+@*<script src="~/Scripts/jquery-ui_bak.js"></script>*@
+<style>
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    .vertical-align-center {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 50%;
+    }
+
+    .vertical-align-center-serial {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 40%;
+    }
+
+    .modal-content {
+        /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+        width: inherit;
+        height: inherit;
+        /* To center horizontally */
+        margin: 0 auto;
+    }
+
+    .ui-autocomplete {
+        z-index: 2147483647;
+    }
+
+    .pac-container {
+        background-color: #FFF;
+        z-index: 10000;
+    }
+
+    #grid .table-responsive td:first-child {
+        text-align: left;
+    }
+
+    .modelBodyMessage > li {
+        position: relative;
+        /*border-bottom: 1px solid #d9d9d9;*/
+        padding: 14px 0px 0px 30px;
+    }
+
+        .modelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .modelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .STCmodelBodyMessage > li {
+        position: relative;
+        padding: 14px 0px 0px 30px;
+    }
+
+        .STCmodelBodyMessage > li:after {
+            content: '';
+            border-radius: 50%;
+            position: absolute;
+            left: 10px;
+            top: 18px;
+            background-color: red;
+            width: 12px;
+            height: 12px;
+            display: block;
+        }
+
+    .STCmodelBodyMessage {
+        font-size: 16px;
+        color: black;
+        font-weight: normal;
+        font-family: 'OpenSansSemibold';
+    }
+
+    .uploadJobALlSign .fileUpload {
+    height: 22px!important;
+    width: 32px!important;
+}
+</style>
+@using (Html.BeginForm("_CreateJob", "Job", FormMethod.Post, new { id = "frmCreateJob", enctype = "multipart/form-data" }))
+{
+    <div id="myscrl" class="sidebar-menu">
+        <div class="mCustomScrollbar">
+            <h3 class="menuheader expandable active">Basic Details</h3>
+            <div class="sidebar-list">
+                @Html.HiddenFor(m => m.BasicDetails.JobID)
+                @Html.HiddenFor(m => m.panelXml)
+                @Html.HiddenFor(m => m.inverterXml)
+
+                @Html.HiddenFor(m => m.UserType)
+                @Html.HiddenFor(m => m.BasicDetails.SSCID)
+                @Html.HiddenFor(m => m.BasicDetails.ScoID)
+                @Html.Hidden("hdnNMI", (@Model != null && @Model.JobInstallationDetails != null) ? @Model.JobInstallationDetails.NMI : "")
+                @Html.HiddenFor(m => m.JobInstallationDetails.AddressDisplay)
+                @Html.HiddenFor(m => m.BasicDetails.PreviousJobStage)
+                @Html.HiddenFor(m => m.BasicDetails.CurrentJobStage)
+                @Html.HiddenFor(m => m.BasicDetails.PreviousPriority)
+                @Html.HiddenFor(m => m.BasicDetails.CurrentPriority)
+                @Html.HiddenFor(m => m.BasicDetails.PreviousSSCID)
+                @Html.HiddenFor(m => m.BasicDetails.SSCName)
+                @Html.HiddenFor(m => m.BasicDetails.GSTDocument, new { @OldFileName = Model.BasicDetails.GSTDocument })
+                @Html.HiddenFor(m => m.Guid)
+                @Html.HiddenFor(m => m.BasicDetails.IsRegisteredWithGST)
+                @Html.HiddenFor(m => m.BasicDetails.IsGSTSetByAdminUser)
+                @Html.HiddenFor(m => m.BasicDetails.IsClassic)
+                @Html.HiddenFor(m => m.BasicDetails.SolarCompanyId)
+                @Html.HiddenFor(m => m.BasicDetails.strInstallationDateTemp)
+                @Html.HiddenFor(m => m.BasicDetails.IsAllowTrade)
+
+                <input type="hidden" id="hdnsolarCompanyid" />
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.JobType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.BasicDetails.JobType, new List<SelectListItem> { new SelectListItem() { Text = "PVD", Value = "1" }, new SelectListItem() { Text = "SWH", Value = "2" } }, new { @class = "form-control", @tabindex = 1, @autofocus = "autofocus" })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.JobType)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.RefNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.BasicDetails.RefNumber, new { @class = "form-control", @maxlength = "255", @tabindex = 2 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.RefNumber)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.Title, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.BasicDetails.Title, new { @class = "form-control", @maxlength = "100", @tabindex = 3 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.Title)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.Description, new { @class = "control-label required" })
+                    @Html.TextAreaFor(m => m.BasicDetails.Description, new { @class = "form-control", @maxlength = "4000", @tabindex = 4 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.Description)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.JobNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.BasicDetails.JobNumber, new { @class = "form-control", @maxlength = "20", @readonly = "readonly", @tabindex = 5 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.JobNumber)
+                </div>
+                <div class="form-group">
+                    <div id="Priority">
+                        @Html.LabelFor(m => m.BasicDetails.Priority, new { @class = "control-label required" })
+                        @Html.DropDownListFor(m => m.BasicDetails.Priority, new List<SelectListItem>(), new { @class = "form-control", @id = "BasicDetails_Priority", @tabindex = 6 })
+                        @Html.ValidationMessageFor(m => m.BasicDetails.Priority)
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.JobStage, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.BasicDetails.JobStage, new List<SelectListItem>(), new { @class = "form-control", @id = "BasicDetails_JobStage", @tabindex = 7 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.JobStage)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.strInstallationDate, new { @class = "control-label" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.BasicDetails.strInstallationDate, new { @class = "form-control date-pick", @tabindex = 9 })
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.BasicDetails.strInstallationDate)
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Sold By:</label>
+                    <div class="input-group">
+                        @*<input type="text" class="form-control" id="txtSoldBy" readonly="readonly" tabindex="10">*@
+                        @Html.TextBoxFor(m => m.BasicDetails.SoldBy, new { @class = "form-control", @readonly = "readonly", @maxlength = "200", @tabindex = 10 })
+
+                        <span class="input-group-btn input-group-icon-btn">
+                            <button class="btn" type="button" id="btnSoldBy" tabindex="17"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+
+                        </span>
+                    </div>
+                </div>
+                @*Divya*@
+
+            </div>
+            <h3 class="menuheader expandable">Owner Details</h3>
+            <div class="sidebar-list">
+                <div class="form-group">
+                    <label class="control-label required">Client Name:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="txtClientName" readonly="readonly" tabindex="11">
+                        <span id="spantxtClientNames" class="" style="color: #b94a48;display:none">Owner details are required.</span>
+                        <span class="input-group-btn input-group-icon-btn">
+                            <button class="btn" type="button" id="btnOwnerDetails" tabindex="12"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                        </span>
+                    </div>
+                </div>
+                @if (Model.BasicDetails.JobID != 0 && (Model.UserType == 4 || Model.UserType == 1 || Model.UserType == 3 || (Model.UserType == 8 && Convert.ToInt32(FormBot.Helper.ProjectSession.IsSubContractor) == 0)))
+                {
+                    <div class="form-group">
+                        <div class="form-group">
+                            <label class="control-label">Send Mail To:</label>
+                            <div class="form-group">
+                                <select class="form-control" id="drpSendMail">
+                                    <option value="1">Owner</option>
+                                    <option value="2">Installer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:inline-block">
+                            <input type="button" class="btn primary upload_ic" value="Get Signature" id="btnCollectSignature" tabindex="33" />
+                            <span id="spantxtCollectDignature" class="" style="color: #b94a48;display:none"></span>
+                        </div>
+                        <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                            <a id="imgOwnerSignatureView" href="javascript:void(0)" style="display: none; margin-top: 7px; display: none; text-decoration: none; " tabindex="34">&nbsp; &nbsp; View Image</a>
+                            <span class="browse fileUpload btn default upload_sign" title="Upload Owner Signature" signtype="1">
+                                <input id="uploadJobOwnerSign" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Owner Signature" typeofsignature="1">
+                            </span>
+                            <a class="delete" href="javascript:void(0);" onclick="clearSignature(1);" title="Clear Signature"></a>
+                        </div>
+                    </div>
+                }
+            </div>
+            <h3 class="menuheader expandable">Installation Details</h3>
+            <div class="sidebar-list">
+                <div class="form-group">
+                    <label class="control-label">Same as Owner Address:</label>
+                    @*<input type="checkbox" id="chkSameAddress" tabindex="15" />*@
+                    @Html.CheckBoxFor(m => m.JobInstallationDetails.IsSameAsOwnerAddress, new { @tabindex = 15 })
+                </div>
+                <div class="form-group">
+                    <label class="control-label required ">Address:</label>
+                    <div class="input-group">
+                        <textarea class="form-control" rows="3" id="txtAddress" readonly="readonly" tabindex="16"></textarea>
+                        <span id="spantxtAddress" class="" style="color: #b94a48;display:none">Installation Address details are required.</span>
+                        <span class="input-group-btn input-group-icon-btn">
+                            <button class="btn" type="button" id="btnAddressDetail" tabindex="17"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                            <br />
+                            <button class="btn" id="btnMap" type="button" tabindex="18"><img src='@Url.Content("~/images/map-icon.png")' alt="" title="Map"></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.DistributorID, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.DistributorID, new List<SelectListItem>(), new { @class = "form-control", @data_val = "false", @tabindex = 18 })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.DistributorID)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.NMI, new { @class = "control-label", @id = "NMI" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.NMI, new { @class = "form-control", @maxlength = 11, @*@onpaste = "return false;",*@ @tabindex = 19 })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.NMI)
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.PropertyName, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.PropertyName, new { @class = "form-control", @maxlength = 25, @tabindex = 20 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.MeterNumber, new { @class = "control-label", @id = "MeterNumber" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.MeterNumber, new { @class = "form-control", @maxlength = 25, @tabindex = 21 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.PhaseProperty, new { @class = "control-label", @id = "PhaseProperty" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.PhaseProperty, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "1", Value = "1" }, new SelectListItem() { Text = "2", Value = "2" }, new SelectListItem() { Text = "3", Value = "3" }, new SelectListItem() { Text = "4", Value = "4" }, new SelectListItem() { Text = "5", Value = "5" } }, new { @class = "form-control", @tabindex = 22 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.ElectricityProviderID, new { @class = "control-label", @id = "ElectricityProviderID" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.ElectricityProviderID, new List<SelectListItem>(), new { @class = "form-control", @data_val = "false", @tabindex = 23 })
+                </div>
+                @*As per client suggestion*@
+                @*<div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.AdditionalNotes, new { @class = "control-label", @id = "AdditionalNotes" })
+                        @Html.TextAreaFor(m => m.JobInstallationDetails.AdditionalNotes, new { @class = "form-control", @maxlength = 4000, @tabindex = 78 })
+                    </div>*@
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.ExistingSystem, new { @class = "control-label", @id = "ExistingSystem1", @style = "display:inline;" })
+                    @Html.CheckBoxFor(m => m.JobInstallationDetails.ExistingSystem, new { @tabindex = 24 })
+                </div>
+                <div id="ExistingSystem" style="display:none;">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.ExistingSystemSize, new { @class = "control-label" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.ExistingSystemSize, new { @class = "form-control", @maxlength = 13, @data_val = "false", @tabindex = 25, @onkeypress = "return isDecimal(event,10,2,this);" })
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.NoOfPanels, new { @class = "control-label" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.NoOfPanels, new { @class = "form-control", @maxlength = 9, @data_val = "false", @onkeypress = "return isNumber(event);", @tabindex = 26 })
+                        <span id="spanJobInstallationDetailsNoOfPanelValue" class="" style="color: #b94a48;display:none">Number of panel should be between 1 to 10000</span>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.SystemLocation, new { @class = "control-label" })
+                        @Html.TextAreaFor(m => m.JobInstallationDetails.SystemLocation, new { @class = "form-control", @maxlength = 250, @tabindex = 27 })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "form-control", @maxlength = 4000, @tabindex = 61 })
+                </div>
+
+            </div>
+            <h3 class="menuheader expandable" id="InstallerDetailsHeader">Installer Details</h3>
+            <div class="sidebar-list" id="InstallerDetailsContent">
+                <div id="installContent" style="display:none;">
+                    <label class="control-label">Installer Name :</label>
+                    <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                        <a id="imgInstallerSignatureViewSWH" href="javascript:void(0)" style="margin-top: 7px;display:none;text-decoration: none; " tabindex="34">&nbsp; &nbsp; View Image</a>
+                        <span class="browse fileUpload btn default upload_sign" title="Upload Installer Signature" signtype="2">
+                            <input id="uploadJobInstallerSignSWH" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Installer Signature" typeofsignature="2">
+                        </span>
+                        <a class="delete" href="javascript:void(0);" onclick="clearSignature(2);" title="Clear Signature"></a>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="txtInstallerName" readonly="readonly" tabindex="29">
+                        <span id="spantxtInstallerNames" class="" style="color: #b94a48;display:none">Installer details are required.</span>
+                        <span class="input-group-btn input-group-icon-btn">
+                            <button class="btn" type="button" id="btnInstallerDetails" tabindex="30"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                        </span>
+                        <span class="input-group-btn input-group-icon-btn" tabindex="43">
+                            <button class="btn" type="button" id="btnClearInsatallerDetail"><img src='@Url.Content("~/images/delete.png")' alt="" title="Clear" style="width:30px;height:30px;"></button>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="electricianDetail">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BasicDetails.InstallerID, new { @class = "control-label", @id = "InstallerID" })
+                        <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                            <a id="imgInstallerSignatureView" href="javascript:void(0)" style="margin-top: 7px;display:none;text-decoration: none; " tabindex="34">&nbsp; &nbsp; View Image</a>
+                            <span class="browse fileUpload btn default upload_sign" title="Upload Installer Signature" signtype="2">
+                                <input id="uploadJobInstallerSign" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Installer Signature" typeofsignature="2">
+                            </span>
+                            <a class="delete" href="javascript:void(0);" onclick="clearSignature(2);" title="Clear Signature"></a>
+                        </div>
+                        @Html.DropDownListFor(m => m.BasicDetails.InstallerID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 31 })
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BasicDetails.DesignerID, new { @class = "control-label", @id = "DesignerID" })
+                        <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                            <a id="imgDesignerSignatureView" href="javascript:void(0)" style="margin-top: 7px;display:none;text-decoration: none; " tabindex="34">&nbsp; &nbsp; View Image</a>
+                            <span class="browse fileUpload btn default upload_sign" title="Upload Designer Signature" signtype="4">
+                                <input id="uploadJobDesignerSign" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Designer Signature" typeofsignature="4">
+                            </span>
+                            <a class="delete" href="javascript:void(0);" onclick="clearSignature(4);" title="Clear Signature"></a>
+                        </div>
+                        @Html.DropDownListFor(m => m.BasicDetails.DesignerID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 32 })
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Electrician:</label>
+                        <div class="bxcont uploadJobALlSign" style="margin-top: 7px; display:inline-block">
+                            <a id="imgElectricianSignatureView" href="javascript:void(0)" style="margin-top: 7px;display:none;text-decoration: none; " tabindex="34">&nbsp; &nbsp; View Image</a>
+                            <span class="browse fileUpload btn default upload_sign" title="Upload Electrician Signature" signtype="3">
+                                <input id="uploadJobElectricianSign" type="file" accept="image/*" class="upload fileUpload browse" title="Upload Electrician Signature" typeofsignature="3">
+                            </span>
+                            <a class="delete" href="javascript:void(0);" onclick="clearSignature(3);" title="Clear Signature"></a>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" rows="3" id="txtBasicAddress" readonly="readonly" tabindex="42" />
+                            <span id="spantxtBasicAddress" class="" style="color: #b94a48;display:none">Electricians Address details are required.</span>
+                            <span class="input-group-btn input-group-icon-btn" tabindex="43">
+                                <button class="btn" type="button" id="btnBasicAddressDetail"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                            </span>
+                            <span class="input-group-btn input-group-icon-btn" tabindex="43">
+                                <button class="btn" type="button" id="btnClearBasicAddressDetail"><img src='@Url.Content("~/images/delete.png")' alt="" title="Clear" style="width:30px;height:30px;"></button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="menuheader expandable">STC Details</h3>
+            <div class="sidebar-list">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.PropertyType, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.PropertyType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Residential", Value = "Residential" }, new SelectListItem() { Text = "School", Value = "School" }, new SelectListItem() { Text = "Commercial", Value = "Commercial" } }, new { @class = "form-control", @tabindex = 46 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.SingleMultipleStory, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.SingleMultipleStory, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Single story", Value = "Single story" }, new SelectListItem() { Text = "Multi story", Value = "Multi story" } }, new { @class = "form-control", @tabindex = 47 })
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.InstallingNewPanel, new { @class = "control-label", @id = "InstallingNewPanel" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.InstallingNewPanel, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New system [the first system installed at the address]", Value = "New" }, new SelectListItem() { Text = "Replacement system [all previous system components removed/decommissioned]", Value = "Replacing" }, new SelectListItem() { Text = "Additional system [new separate system at the same address]", Value = "Adding" }, new SelectListItem() { Text = "Extension system [components added to existing system]", Value = "Extension" } }, new { @class = "form-control", @tabindex = 48 })
+                </div>
+
+                <div class="form-group" id="installationLocation" style="display:none;">
+                    @Html.LabelFor(m => m.JobInstallationDetails.Location, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 49 })
+                    <span id="spanInstallationLocation" style="display: none; color:#b94a48">This Field is Required.</span>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.TypeOfConnection, new { @class = "control-label", id = "TypeOfConnection" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.TypeOfConnection, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Connected to an electricity grid without battery storage", Value = "Connected to an electricity grid without battery storage" }, new SelectListItem() { Text = "Connected to an electricity grid with battery storage", Value = "Connected to an electricity grid with battery storage" }, new SelectListItem() { Text = "Stand-alone (not connected to an electricity grid)", Value = "Stand-alone (not connected to an electricity grid)" } }, new { @class = "form-control", @tabindex = 50 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.SystemMountingType, new { @class = "control-label", id = "SystemMountingType" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.SystemMountingType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Building or structure", Value = "Building or structure" }, new SelectListItem() { Text = "Ground mounted or free standing", Value = "Ground mounted or free standing" } }, new { @class = "form-control", @tabindex = 51 })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.DeemingPeriod, new { @class = "control-label", id = "DeemingPeriod" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.DeemingPeriod, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 52 })
+                </div>
+                @if (Model.UserType == 1 || Model.UserType == 3)
+                {
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSTCDetails.CertificateCreated, new { @class = "control-label", id = "CertificateCreated" })
+                        @Html.DropDownListFor(m => m.JobSTCDetails.CertificateCreated, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 53 })
+                    </div>
+                }
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "control-label", id = "FailedAccreditationCode", @style = "display:none;" })
+                    @Html.TextBoxFor(m => m.JobSTCDetails.FailedAccreditationCode, new { @class = "form-control", @maxlength = 255, @style = "display:none;", @tabindex = 54 })
+                    <span id="spanFailedAccreditationCode" style="display: none; color:#b94a48">Failed accreditation code is required.</span>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.FailedReason, new { @class = "control-label", id = "FailedReason", @style = "display:none;" })
+                    @Html.TextAreaFor(m => m.JobSTCDetails.FailedReason, new { @class = "form-control", @style = "display:none;" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobSTCDetails.MultipleSGUAddress, new { @class = "control-label", id = "MultipleSGUAddress" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.MultipleSGUAddress, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 55 })
+                </div>
+                <div class="form-group" id="STCLocation" style="display:none;">
+                    @Html.LabelFor(m => m.JobSTCDetails.Location, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.Location, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "North", Value = "North" }, new SelectListItem() { Text = "North-East", Value = "North-East" }, new SelectListItem() { Text = "East", Value = "East" }, new SelectListItem() { Text = "South-East", Value = "South-East" }, new SelectListItem() { Text = "South", Value = "South" }, new SelectListItem() { Text = "South-West", Value = "South-West" }, new SelectListItem() { Text = "West", Value = "West" }, new SelectListItem() { Text = "North-West", Value = "North-West" } }, new { @class = "form-control", @tabindex = 56 })
+                    <span id="spanSTCLocation" style="display: none; color:#b94a48">This Field is required.</span>
+                </div>
+                <div class="form-group" id="divVolumetricCapacity" style="display:none">
+                    @Html.LabelFor(m => m.JobSTCDetails.VolumetricCapacity, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.VolumetricCapacity, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 58 })
+                </div>
+                <div class="form-group" id="divStatutoryDeclarations" style="display:none">
+                    @Html.LabelFor(m => m.JobSTCDetails.StatutoryDeclarations, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.StatutoryDeclarations, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 59 })
+                    <span id="spanStatutoryDeclarations" class="" style="color: #b94a48;display:none">This Field is Required</span>
+                </div>
+                <div class="form-group" id="divSecondhandWaterHeater" style="display:none">
+                    @Html.LabelFor(m => m.JobSTCDetails.SecondhandWaterHeater, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.JobSTCDetails.SecondhandWaterHeater, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 60 })
+                </div>
+                @if (Model.BasicDetails.JobType == 2)
+                {
+                    <div class="form-group">
+                        <label class="control-label">Installation type:</label>
+                        @Html.DropDownListFor(m => m.JobSystemDetails.InstallationType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New building", Value = "New building" }, new SelectListItem() { Text = "Replaced electric heater", Value = "Replaced electric heater" }, new SelectListItem() { Text = "Replaced solar water heater", Value = "Replaced solar water heater" }, new SelectListItem() { Text = "First solar water heater at existing building", Value = "First solar water heater at existing building" }, new SelectListItem() { Text = "Replaced gas water heater", Value = "Replaced gas water heater" }, new SelectListItem() { Text = "Other", Value = "Other" } }, new { @class = "form-control", @tabindex = 61 })
+                    </div>
+                }
+
+
+            </div>
+            <h3 class="menuheader expandable" id="SystemDetailsHeader">System Details</h3>
+            <div class="sidebar-list" id="SystemDetailsContent">
+                <div class="SWSystemDetails" style="display:none">
+                    <div class="form-group">
+                        <label class="control-label">System Brand:</label>
+                        @Html.DropDownListFor(m => m.JobSystemDetails.SystemBrand, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 62 })
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">System Model:</label>
+                        @Html.DropDownListFor(m => m.JobSystemDetails.SystemModel, new List<SelectListItem>(), new { @class = "form-control", @disabled = "true", @tabindex = 63 })
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Calculated STC:</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.JobSystemDetails.CalculatedSTCForSWH, new { @class = "form-control", @readonly = "readonly", @data_val = "false", @tabindex = 64 })
+                            <span id="spanJobSystemDetails_CalculatedSTCForSWH" class="" style="color: #b94a48;display:none"></span>
+                            <span class="input-group-btn input-group-icon-btn">
+                                <button class="btn" type="button" id="btnCalculatedSTCSWH" tabindex="65"><img src='@Url.Content("~/images/ic-calculator.png")' alt="" title="Calculate STC"></button>
+                            </span>
+                        </div>
+                    </div>
+                    @*<div class="form-group">
+                            <label class="control-label">Installation type:</label>
+                            @Html.DropDownListFor(m => m.JobSystemDetails.InstallationType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "New building", Value = "New building" }, new SelectListItem() { Text = "Replaced electric heater", Value = "Replaced electric heater" }, new SelectListItem() { Text = "Replaced solar water heater", Value = "Replaced solar water heater" }, new SelectListItem() { Text = "First solar water heater at existing building", Value = "First solar water heater at existing building" }, new SelectListItem() { Text = "Replaced gas water heater", Value = "Replaced gas water heater" }, new SelectListItem() { Text = "Other", Value = "Other" } }, new { @class = "form-control", @tabindex = 66 })
+                        </div>*@
+                </div>
+                <div class="PVDSystemDetail">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobSystemDetails.SystemSize, new { @class = "control-label", @id = "JobSystemDetailsSystemSize" })
+                        @Html.TextBoxFor(m => m.JobSystemDetails.SystemSize, new { @class = "form-control", @maxlength = 7, @data_val = "false", @tabindex = 67, @onkeypress = "return isDecimal(event,3,3,this);" })
+                        <span id="spanJobSystemDetails_SystemSize" class="" style="color: #b94a48;display:none">Sytem size must be greater than 0</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" id="JobSystemDetailsCalculatedSTC">Calculated STC:</label>
+                        <div class="input-group">
+                            @Html.TextBoxFor(m => m.JobSystemDetails.CalculatedSTC, new { @class = "form-control", @readonly = "readonly", @data_val = "false", @tabindex = 68 })
+                            <span id="spanJobSystemDetails_CalculatedSTC" class="" style="color: #b94a48;display:none"></span>
+                            <span class="input-group-btn input-group-icon-btn">
+                                <button class="btn" type="button" id="btnCalculatedSTC" tabindex="69"><img src='@Url.Content("~/images/ic-calculator.png")' alt="" title="Calculate STC"></button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" id="JobSystemDetailsPanelBrand">Panel Brand:</label>
+                        @Html.DropDownListFor(m => m.JobPanelDetails.Brand, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 70 })
+                        <span id="spanJobPanelDetails_Brand" class="" style="color: #b94a48;display:none">Panel Brand  is required.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" id="JobSystemDetailsPanelModel">Panel Model:</label>
+                        @Html.DropDownListFor(m => m.JobPanelDetails.Model, new List<SelectListItem>(), new { @class = "form-control", @disabled = "true", @tabindex = 71 })
+                        <span id="spanJobPanelDetails_Model" class="" style="color: #b94a48;display:none">Panel Model  is required.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label" id="JobSystemDetailsNumberOfPanel">Number Of Panel:</label>
+                        @Html.TextBoxFor(m => m.JobPanelDetails.NoOfPanel, new { @class = "form-control", @data_val = "false", @maxlength = 5, @onkeypress = "return isNumber(event);", @tabindex = 72 })
+                        <span id="spanJobPanelDetails_NoOfPanel" class="" style="color: #b94a48;display:none">Number Of Panel is required.</span>
+                        <span id="spanNoOfPanelValue" class="" style="color: #b94a48;display:none">Number Of Panel is  between 1 to 10000</span>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn primary icon-btn" id="btnAddPanel" tabindex="73"><span class="sprite-img add_ic"></span>Add</button>
+                        <button type="button" class="btn primary edit_ic" id="btnEditPanel" onclick="PanelEditAction(this)" style="display:none" tabindex="74">@*<span class="sprite-img edit_ic"></span>*@Edit</button>
+                    </div>
+                    <div class="row" style="display:none" id="gridPanel">
+                        <div id="grid" class="col-xs-12">
+                            <!-- Grid start -->
+                            <div class="table-responsive">
+                                <table id="Paneldatatable" class="table table-hover">
+                                    <thead>
+                                        @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                            <tr>
+                                                <th width="40%">@Html.DisplayName("Brand ")</th>
+                                                <th width="35%">@Html.DisplayName("Model")</th>
+                                                <th width="10%">#</th>
+                                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                {
+                                                    <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                                                }
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <th width="40%">@Html.DisplayName("Brand ")</th>
+                                                <th width="35%">@Html.DisplayName("Model")</th>
+                                                <th width="10%">#</th>
+                                                <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                                            </tr>
+                                        }
+                                    </thead>
+                                    <tbody id="tblPanel">
+                                        @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                            if (Model.lstJobPanelDetails != null)
+                                            {
+                                                foreach (var lstUserDocument in @Model.lstJobPanelDetails)
+                                                {
+                                                    <tr id=@lstUserDocument.JobPanelID>
+                                                        <td class="@lstUserDocument.Brand" width="40%" style="text-align:left">@lstUserDocument.Brand</td>
+                                                        <td class="@lstUserDocument.Model" width="35%">@lstUserDocument.Model</td>
+                                                        <td class="@lstUserDocument.NoOfPanel" width="10%">@lstUserDocument.NoOfPanel</td>
+                                                        @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                        {
+                                                            <td class="action @lstUserDocument.JobPanelID" id="tdAction" data-supplier="@lstUserDocument.Supplier" width="15%"><a class="edit sprite-img" title="Edit" id="signEdit" href="javascript:void(0)" style="cursor: pointer" onclick="editPanel(@lstUserDocument.JobPanelID)"></a>&nbsp;&nbsp;<a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeletePanelFromGrid(@lstUserDocument.JobPanelID)"></a></td>
+                                                        }
+                                                    </tr>
+                                                }
+                                            }
+                                        }
+                                    </tbody>
+
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label class="control-label">Inverter Brand:</label>
+                        @Html.DropDownListFor(m => m.JobInverterDetails.Brand, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 75 })
+                        @Html.ValidationMessageFor(m => m.JobInverterDetails.Brand)
+                        <span id="spanJobInverterDetails_Brand" class="" style="color: #b94a48;display:none">Inverter Brand  is required.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Inverter Series:</label>
+                        @Html.DropDownListFor(m => m.JobInverterDetails.Series, new List<SelectListItem>(), new { @class = "form-control", @disabled = "true", @tabindex = 76 })
+                        @Html.ValidationMessageFor(m => m.JobInverterDetails.Series)
+                        <span id="spanJobInverterDetails_Series" class="" style="color: #b94a48;display:none"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Inverter Model:</label>
+                        @Html.DropDownListFor(m => m.JobInverterDetails.Model, new List<SelectListItem>(), new { @class = "form-control", @disabled = "true", @tabindex = 77 })
+                        @Html.ValidationMessageFor(m => m.JobInverterDetails.Model)
+                        <span id="spanJobInverterDetails_Model" class="" style="color: #b94a48;display:none"> Inverter Modelis required.</span>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn primary icon-btn" id="btnAddInverter" tabindex="78"><span class="sprite-img add_ic"></span>Add</button>
+                        <button type="button" class="btn primary edit_ic" id="btnEditInverter" onclick="InverterEditAction(this)" style="display:none">@*<span class="sprite-img edit_ic"></span>*@Edit</button>
+                    </div>
+                    <div class="row" style="display:none" id="gridInverter">
+                        <div id="grid" class="col-xs-12">
+                            <!-- Grid start -->
+                            <div class="table-responsive">
+                                <table id="Inverterdatatable" class="table table-hover">
+                                    <thead>
+                                        @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                        <tr>
+                                            <th width="35%">@Html.DisplayName("Brand ")</th>
+                                            <th width="25%">@Html.DisplayName("Series")</th>
+                                            <th width="25%">@Html.DisplayName("Model")</th>
+                                            @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                {
+                                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                                                }
+                                        </tr>
+                                        }
+                                        else
+                                        {
+                                        <tr>
+                                            <th width="35%">@Html.DisplayName("Brand ")</th>
+                                            <th width="25%">@Html.DisplayName("Series")</th>
+                                            <th width="25%">@Html.DisplayName("Model")</th>
+                                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                                        </tr>
+                                        }
+                                    </thead>
+                                    <tbody id="tblInverter">
+                                        @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                            if (Model.lstJobInverterDetails != null)
+                                            {
+                                                foreach (var lstJobInverterDetails in @Model.lstJobInverterDetails)
+                                                {
+                                        <tr id=@lstJobInverterDetails.JobInverterID>
+                                            <td class="@lstJobInverterDetails.Brand" width="35%" style="text-align:left">@lstJobInverterDetails.Brand</td>
+                                            <td class="@lstJobInverterDetails.Series" width="25%">@lstJobInverterDetails.Series</td>
+                                            <td class="@lstJobInverterDetails.Model" width="25%">@lstJobInverterDetails.Model</td>
+                                            @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                        {
+
+                                            @*<td class="@lstJobInverterDetails.JobInverterID" id="tdAction" width="15%"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/edit-icon.png" id="signEdit" title="Edit" style="cursor: pointer" onclick="editInverter(@lstJobInverterDetails.JobInverterID)">&nbsp;&nbsp;<img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="signDelete" title="Delete" style="cursor: pointer" onclick="DeleteInverterFromGrid(@lstJobInverterDetails.JobInverterID)"></td>*@
+                                            <td class="action @lstJobInverterDetails.JobInverterID" id="tdAction" width="15%"><a class="edit sprite-img" title="Edit" id="signEdit" style="cursor: pointer" href="javascript:void(0)" onclick="editInverter(@lstJobInverterDetails.JobInverterID)"></a>&nbsp;&nbsp;<a class="delete sprite-img" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeleteInverterFromGrid(@lstJobInverterDetails.JobInverterID)"></a></td>
+                                                        }
+                                        </tr>
+                                                }
+                                            }
+                                        }
+                                    </tbody>
+
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <br />
+
+                    @if (Model.BasicDetails.JobType == 1)
+                    {
+
+                        <div class="form-group">
+                            <label class="control-label">Manufacturer:</label>
+                            @Html.DropDownListFor(m => m.JobBatteryManufacturer.Manufacturer, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 75 })
+                            @Html.ValidationMessageFor(m => m.JobBatteryManufacturer.Manufacturer)
+                            <span id="spanJobBatteryManufacturer" style="color: #b94a48;display:none">Manufacturer is required.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Model Number:</label>
+                            @Html.DropDownListFor(m => m.JobBatteryManufacturer.ModelNumber, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 75 })
+                            @Html.ValidationMessageFor(m => m.JobBatteryManufacturer.ModelNumber)
+                            <span id="spanJobBatteryModelNumber" style="color: #b94a48;display:none">Model Number is required.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="button" class="btn primary icon-btn" id="btnAddBatteryManfacturer"><span class="sprite-img add_ic"></span>Add</button>
+                            <button type="button" class="btn primary edit_ic" id="btnEditBatteryManfacturer" onclick="BatteryEditAction(this)" style="display:none">@*<span class="sprite-img edit_ic"></span>*@Edit</button>
+
+                        </div>
+
+                        <div class="row" style="display:none" id="gridBattery">
+                            <div id="grid" class="col-xs-12">
+                                <!-- Grid start -->
+                                <div class="table-responsive">
+                                    <table id="BatteryManufacturerdatatable" class="table table-hover">
+                                        <thead>
+                                            @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                            <tr>
+                                                <th width="35%">@Html.DisplayName("Manufacturer")</th>
+                                                <th width="25%">@Html.DisplayName("Model Number")</th>
+                                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                {
+                                            <th class="action" id="tdAction" width="15%">@Html.DisplayName("Action")</th>
+                                                }
+                                            </tr>
+                                        }
+
+                                        </thead>
+                                        <tbody id="tblBatteryManufacturer">
+                                            @if (Model.BasicDetails.JobID != 0)
+                                        {
+                                            if (Model.lstJobBatteryManufacturer != null)
+                                            {
+                                                foreach (var lstJobBattery in Model.lstJobBatteryManufacturer)
+                                                {
+                                            <tr id=@lstJobBattery.JobBatteryManufacturerId>
+                                                <td class="@lstJobBattery.Manufacturer" width="35%" style="text-align:left">@lstJobBattery.Manufacturer</td>
+                                                <td class="@lstJobBattery.ModelNumber" width="25%">@lstJobBattery.ModelNumber</td>
+                                                @if (Model.UserType == 4 || Model.UserType == 8 || Model.UserType == 3 || Model.UserType == 1)
+                                                        {
+                                            <td class="@lstJobBattery.JobBatteryManufacturerId" id="tdAction" width="15%"><a class="edit" title="Edit" id="signEdit" style="cursor: pointer" href="javascript:void(0)" onclick="editBatteryManufacturer(@lstJobBattery.JobBatteryManufacturerId)"></a>&nbsp;&nbsp;<a class="delete" title="Delete" id="signDelete" style="cursor: pointer" onclick="DeleteBatteryManufacturerFromGrid(@lstJobBattery.JobBatteryManufacturerId)"></a></td>
+                                                        }
+                                            </tr>
+                                                }
+                                            }
+                                        }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br />
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.JobSTCDetails.batterySystemPartOfAnAggregatedControl, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 66 })
+
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.JobSTCDetails.changedSettingOfBatteryStorageSystem, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Yes", Value = "Yes" }, new SelectListItem() { Text = "No", Value = "No" } }, new { @class = "form-control", @tabindex = 67 })
+                        </div>
+                    }
+
+                </div>
+
+                <div class="form-group" style="margin-top:5px;">
+                    <label class="control-label">Total Number of Panels:</label>
+                    @Html.TextBoxFor(m => m.JobSystemDetails.NoOfPanel, new { @class = "form-control", @maxlength = 5, @onkeypress = "return isNumber(event);", @tabindex = 79, @readonly = "readonly" })
+                    <span id="spanNoOfPanelSystemValue" class="" style="color: #b94a48;display:none">Number Of Panel must be  between 0 to 10000</span>
+                </div>
+                <div class="form-group">
+                    <label class="control-label" id="serialNumberLable">Tank serial number(s):</label>
+                    <label class="control-label" style="font-family:Open Sans Semibold">
+                        You can enter multiple serial numbers in this field. Each serial number
+                        must appear on a new line and be less than 101 characters.
+                    </label>
+                    <div class="input-group">
+                        @Html.TextAreaFor(m => m.JobSystemDetails.SerialNumbers, new { @class = "form-control", @tabindex = 80 })
+                        <span id="spanSerialNumbers" class="" style="color: #b94a48;display:none">Serial Numbers's maximum length  is of 100 characters.</span>
+                        <span class="input-group-btn input-group-icon-btn" tabindex="80">
+                            <button class="btn" type="button" id="btnPopupSerialNumber"><img src='@Url.Content("~/images/add-btn.png")' alt="" title="Add"></button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="menuheader expandable isGSTRegistered" style="display:none">Payment Details</h3>
+            <div class="sidebar-list isGSTRegistered" style="display:none">
+                <div class="form-group">
+                    <label class="control-label" style="font-family:Open Sans Semibold">
+                        GST can only be claimed on Commercial jobs. If you are claiming GST on a commercial job please provide an invoice below.
+                    </label>
+                    @Html.LabelFor(m => m.BasicDetails.IsGst, new { @class = "control-label", @style = "display:inline;" })
+                    @Html.CheckBoxFor(m => m.BasicDetails.IsGst, new { @tabindex = 62 })
+                </div>
+                <div id="jobGST" style="display:none;">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.BasicDetails.GSTDocument, new { @class = "control-label" })
+                        <table class="uf" style="margin-left:-10px;">
+                            <tr>
+                                <td width="70" style="vertical-align:top;">
+                                    <div class="fileUpload primary upload_ic">
+                                        <span>Upload GST Invoice</span>
+                                        <input id="uploadGSTFile" type="file" class="upload fileUpload" multiple tabindex="51" accept=".pdf,.doc,.docx,.tif,.tiff,.png,.jpg,.jpeg,.gif" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="bxcont col-sm-12" id="divDocuments">
+                                        <table id="tblDocuments1" class="table table-striped">
+                                            <tbody id="tblDocuments">
+                                                @if (Model.BasicDetails.GSTDocument != null && Model.BasicDetails.GSTDocument != "")
+                                                {
+                                                    if (System.IO.File.Exists(Path.Combine(ProjectSession.ProofDocumentsURL + "\\" + "JobDocuments" + "\\" + Model.BasicDetails.JobID + "\\" + "GST", Model.BasicDetails.GSTDocument)))
+                                                    {
+                                                        <tr style='margin-top:30px'>
+                                                            <td class="col-sm-8" style="color:#494949;border-bottom:0px !important">@Model.BasicDetails.GSTDocument</td>
+                                                            @if (Model.BasicDetails.MimeType == "image")
+                                                            {
+                                                                <td class="col-sm-2" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument" title="Preview" onclick="OpenGSTDocument(this)"></td>
+                                                            }
+                                                            else
+                                                            {
+                                                                <td class="col-sm-2" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/view-icon.png" style="cursor:pointer" id="@Model.BasicDetails.GSTDocument" class="@Model.BasicDetails.GSTDocument" title="Download" onclick="DownloadGSTDocument(this)"></td>
+                                                            }
+                                                            <td class="col-sm-2" style="color:blue;border-bottom:0px !important"><img src="@FormBot.Helper.ProjectConfiguration.ProjectImagePath/images/delete-icon.png" id="GSTDocumentDelete" title="Delete" style="cursor: pointer" onclick="DeleteGSTDocument(this)"></td>
+                                                        </tr>
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="btn-block">
+            @if (isEditjob && Model.BasicDetails.JobID > 0)
+            {
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn primary dropdown-toggle save_ic" id="btnDropMainSave" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" tabindex="81">
+                        Save Job <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="SaveJob" style="min-width:96%;text-align:center;">
+                        <li><a href="javascript:void(0)">Save Job</a></li>
+                        @if (isAddJob)
+                        {
+                            <li><a href="javascript:void(0)">Save & Add Job</a></li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (isAddJob && Model.BasicDetails.JobID == 0)
+            {
+                <div class="btn-group" role="group">
+
+                    <button type="button" class="btn primary dropdown-toggle save_ic" id="btnDropMainSave" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Save Job <span class="caret"></span>
+                    </button>
+
+                    <ul class="dropdown-menu" id="SaveJob" tabindex="81" style="min-width: 96%; text-align: center;">
+                        <li><a href="javascript:void(0)" tabindex="82">Save Job</a></li>
+                        <li><a href="javascript:void(0)" tabindex="83">Save & Add Job</a></li>
+                    </ul>
+                </div>
+            }
+            <input type="button" class="btn default cancel_ic" id="btnMainCancel" value="Cancel" onclick="DeleteDocumentFolderOnCancel()" tabindex="84">
+        </div>
+
+    </div>
+
+
+    <table align="right">
+        <tr>
+            @if (isEditjob && Model.BasicDetails.JobID > 0)
+            {
+                if (isDeleteJob && Model.BasicDetails.JobID > 0)
+                {
+                    <td style="padding-right:20px;">
+                        <p class="deletejob"> <input id="edit" type="button" class="btn icon-delete-btn" style="background-image: url(../../images/edit-icon.png) !important;" value="Edit Job Details" tabindex="85"></p>
+                    </td>
+                }
+                else
+                {
+                    <td style="padding-right:20px;">
+                        <p class="deletejob"> <input id="edit" type="button" class="btn icon-delete-btn" style="background-image: url(../../images/edit-icon.png) !important;" value="Edit Job Details" tabindex="85"></p>
+                    </td>
+                }
+            }
+
+            @if (isDeleteJob && Model.BasicDetails.JobID > 0)
+            {
+                <td>
+
+                    <p class="deletejob"> <input id="deletejob" type="button" class="btn icon-delete-btn" value="Delete Job" tabindex="85"></p>
+
+                </td>
+            }
+        </tr>
+    </table>
+
+}
+
+<div class="modal fade popupSerialNumber" tabindex="-1" id="popupSerialNumber">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Serial Numbers</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-box">
+                        <div style="width: 12px; height: 12px; background-color: rgba(30, 121, 204, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in master file.</span><br />
+                        <div style="width: 12px; height: 12px; background-color: rgba(220, 82, 109, 0.21); display: inline-block; border-radius: 6px;"></div> <span>Serial numbers exist in jobs.</span>
+                        <hr style="margin-left: -15px; margin-right: -15px; margin-bottom: 10px; margin-top: 10px; " />
+                        <ul id="serialNumberPopup"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*add-installationDetail*@
+<div class="modal fade popupAddress " tabindex="-1" role="dialog" id="popupAddress">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Address Detail</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="JobInstallationAddress">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobInstallationDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control InstallationAddress", @tabindex = 701 })
+                                    </div>
+                                </div>
+                                <div class="InstallationPDA" style="display:none">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalAddressID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 702 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalAddressID)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 703 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalDeliveryNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallationUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobInstallationDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 704 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallationDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallationUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 705 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitNumber)
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="InstallationDPA">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallationStreetNumber" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 706 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetNumber)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallationDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 708 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallationDetails.StreetTypeID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallationDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 709 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetTypeID)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 710, })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 711, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallationDetails.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallationDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 712 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostCode)
+                                    </div>
+                                </div>
+                                <div class="row">
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateInstallation()" tabindex="713"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupInstallation()" tabindex="714"><span class="sprite-img reset_ic"></span>Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+@*popup owner*@
+<div class="modal fade popupOwner" tabindex="-1" role="dialog" id="popupOwner">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Owner Detail</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="JobOwner">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.OwnerType, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(m => m.JobOwnerDetails.OwnerType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Individual", Value = "Individual" }, new SelectListItem() { Text = "Government body", Value = "Government body" }, new SelectListItem() { Text = "Corporate body", Value = "Corporate body" }, new SelectListItem() { Text = "Trustee", Value = "Trustee" } }, new { @class = "form-control", @tabindex = 100 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.OwnerType)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.CompanyName, new { @class = "control-label", @id = "OwnerCompanyName" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 101, @autofocus = "autofocus" })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.CompanyName, "", new { id = "OwnerCompanyNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.FirstName, new { @class = "control-label required", @id = "OwnerFirstName" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 102 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.FirstName, "", new { id = "OwnerFirstNameValidate" })
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.LastName, new { @class = "control-label required", @id = "OwnerLastName" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 103 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.LastName, "", new { id = "OwnerLastNameValidate" })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 104 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.Email)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 105, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.Phone)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.Mobile, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 106, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.Mobile)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobOwnerDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control OwnerAddress", @tabindex = 107 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerPDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.PostalAddressID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.JobOwnerDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 108 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalAddressID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerPDA" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 109 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalDeliveryNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.UnitTypeID, new { @class = "control-label", @id = "lblOwnerUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobOwnerDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 110 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "control-label", @id = "lblOwnerUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 111 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4 OwnerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "control-label required", @id = "lblOwnerStreetNumber" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 112 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.StreetName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 113 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 OwnerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.JobOwnerDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 114 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 115 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 116, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobOwnerDetails.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobOwnerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 117 })
+                                        @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostCode)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateOwner()" tabindex="118"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupOwner()" tabindex="119"><span class="sprite-img reset_ic"></span>Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+@*Popup Electrician Detail*@
+<div class="modal fade popupBasicAddress " tabindex="-1" role="dialog" id="popupBasicAddress">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    @*<h4 class="modal-title">Address Detail</h4>*@
+                    <h4 class="modal-title">Electricians Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="JobElectricians">
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.InstallerID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.JobElectricians.InstallerID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 33 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.ElectricianID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.JobElectricians.ElectricianID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 34 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.CompanyName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.CompanyName, new { @class = "form-control", @maxlength = 50, @autofocus = "autofocus", @tabindex = 35 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.CompanyName)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.FirstName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 36 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.FirstName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.LastName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 37 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.LastName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Email, new { @class = "control-label " })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 38 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Email)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Phone, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @tabindex = 39 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Phone)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Mobile, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Mobile, new { @class = "form-control", @maxlength = 16, onkeypress = "return isValidPhone(event,this);", @tabindex = 40 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Mobile)
+                                    </div>
+                                </div><div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.LicenseNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.LicenseNumber, new { @class = "form-control", @maxlength = 100, @tabindex = 41 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.LicenseNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobElectricians.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control ElectriciansAddress", @tabindex = 201 })
+                                    </div>
+                                </div>
+                                <div class="ElectriciansPDA" style="display:none">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobElectricians.PostalAddressID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobElectricians.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 202 })
+                                            @Html.ValidationMessageFor(m => m.JobElectricians.PostalAddressID)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobElectricians.PostalDeliveryNumber, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobElectricians.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 203 })
+                                            @Html.ValidationMessageFor(m => m.JobElectricians.PostalDeliveryNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 ElectriciansDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.UnitTypeID, new { @class = "control-label", @id = "lblElectriciansUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobElectricians.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 204 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 ElectriciansDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.UnitNumber, new { @class = "control-label", @id = "lblElectriciansUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 205 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.UnitNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ElectriciansDPA">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobElectricians.StreetNumber, new { @class = "control-label required", @id = "lblElectriciansStreetNumber" })
+                                            @Html.TextBoxFor(m => m.JobElectricians.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 206 })
+                                            @Html.ValidationMessageFor(m => m.JobElectricians.StreetNumber)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobElectricians.StreetName, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobElectricians.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 207 })
+                                            @Html.ValidationMessageFor(m => m.JobElectricians.StreetName)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobElectricians.StreetTypeID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobElectricians.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 208 })
+                                            @Html.ValidationMessageFor(m => m.JobElectricians.StreetTypeID)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 209, })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.State, new { @class = "form-control", @maxlength = 3, @tabindex = 210, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobElectricians.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobElectricians.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 211 })
+                                        @Html.ValidationMessageFor(m => m.JobElectricians.PostCode)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group"></div>
+                                    <div>
+                                        @Html.LabelFor(m => m.JobElectricians.Signature, new { @class = "control-label" })
+                                    </div>
+                                    <div class="fileUpload btn primary upload_ic" id="divUpload" style="margin-left: 0px;" tabindex="44">
+                                        <span>Upload</span>
+                                        <input id="uploadBtnJobSignature" type="file" class="upload fileUpload" />
+                                    </div>
+                                    <a id="imgSignature" href="javascript:void(0)" style="display:none;" tabindex="45">&nbsp; &nbsp; View Image</a>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn primary icon-btn" onclick="validateBasicAddress()" tabindex="212"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupBasicAddress()" tabindex="213"><span class="sprite-img reset_ic"></span>Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+@*popupmap*@
+<div class="modal fade" tabindex="-1" role="dialog" id="popupMap">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                    <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                </button>
+                <h4 class="modal-title">Map</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionMap" style="display: none">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                </div>
+                <div class="form-box">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Source</label>
+                                <input type="text" id="txtSource" class="form-control" placeholder="Source" tabindex="301" />
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="control-label">Destination</label>
+                                <input type="text" id="txtDestination" class="form-control" placeholder="Destination" tabindex="302" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button type="button" class="btn default pull-right" onclick="GetLocation()" tabindex="303">Get Location</button>
+                            <button type="button" class="btn default pull-right" onclick="GetRoute()" tabindex="304">Get Route</button>
+                            <div id="dvDistance" style="font-weight: bold;color:black">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div id="dvMap" style="height:400px;margin-top:10px">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="popupbox" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" style="margin-top:100px">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnClosePopUpBox">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Signature</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            @*<img src="" id="imgViewImage" class="" style="display:block;margin:0 auto;" />*@
+
+                            @*<img src="" id="imgSign" style="height:500px;" class="img-responsive" />*@
+                            <img src="" id="imgSign" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer"><p class="remove_ic" onclick="deleteImageJob('imgSign');" style="margin-right:10px"><img src="~/images/delete-icon.png" id="signDelete">Remove</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="popupProof" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header ">
+                    <button type="button" class="close" aria-label="Close" id="btnClosepopupProof">
+                        <img src="~/images/close-btn.png" alt="">
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">View File</h4>
+                </div>
+                <div class="modal-body fixheight">
+                    <div class="form-border">
+                        <div>
+                            <img src="" id="imgViewImage" class="img-responsive" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*popup installer*@
+<div class="modal fade popupInstaller" tabindex="-1" role="dialog" id="popupInstaller">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Installer Detail</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionSWHInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+                    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegionSWHInstallerPopup" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    </div>
+
+                    <form id="Installer">
+                        @Html.HiddenFor(m => m.JobInstallerDetails.SWHInstallerDesignerId)
+                        @Html.HiddenFor(m => m.JobInstallerDetails.SESignature)
+                        <div class="form-box">
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.ElectricianID, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.JobInstallerDetails.ElectricianID, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 34 })
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.LicenseNumber, new { @class = "form-control", @maxlength = 20, @tabindex = 35, @onblur = "checkExistSWHInstaller(this,'InstallerDesigner LicenseNumber')" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.LicenseNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.FirstName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 401 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.FirstName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.Surname, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.Surname, new { @class = "form-control", @maxlength = 100, @tabindex = 402 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.Surname)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 403 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.Email)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.Phone, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 404, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.Phone)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.Mobile, new { @class = "control-label " })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 405, onkeypress = "return isValidPhone(event,this);" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.Mobile)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Postal Address Type :</label>
+                                        @Html.DropDownListFor(m => m.JobInstallerDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control InstallerAddress", @tabindex = 406 })
+                                    </div>
+                                </div>
+                                <div class="InstallerPDA" style="display:none">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.PostalAddressID, new { @class = "control-label required" })
+                                            @Html.DropDownListFor(model => model.JobInstallerDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 407 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostalAddressID)
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.JobInstallerDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                                            @Html.TextBoxFor(m => m.JobInstallerDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 50, @tabindex = 408 })
+                                            @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostalDeliveryNumber)
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallerUnitTypeID" })
+                                        @Html.DropDownListFor(model => model.JobInstallerDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 409 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.UnitTypeID)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 InstallerDPA">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallerUnitNumber" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 410 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.UnitNumber)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row InstallerDPA">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallerStreetNumber" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 411 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetNumber)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.StreetName, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 412 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetName)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.StreetTypeID, new { @class = "control-label required" })
+                                        @Html.DropDownListFor(model => model.JobInstallerDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 413 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.StreetTypeID)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.Town, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 414, })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.Town)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.State, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 415, @readonly = "readonly" })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.State)
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.PostCode, new { @class = "control-label required" })
+                                        @Html.TextBoxFor(m => m.JobInstallerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 416 })
+                                        @Html.ValidationMessageFor(m => m.JobInstallerDetails.PostCode)
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.JobInstallerDetails.SESignature, new { @class = "control-label" })
+                                        <table class="uf" style="margin-left:-10px;">
+                                            <tr>
+                                                <td width="70" style="vertical-align:top;">
+                                                    <div class="fileUpload primary upload_ic">
+                                                        <span>Upload</span>
+                                                        <input id="uploadBtnSignatureSWHInstaller" type="file" class="upload fileUpload" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="bxcont" style="margin-top:7px;">
+                                                        <a id="imgSWHSignatureInstaller" href="javascript:void(0)" style="display:none;text-decoration:none;">&nbsp; &nbsp; View Image</a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                
+                                <button type="button" class="btn primary icon-btn" onclick="validateInstaller()" tabindex="100"><span class="sprite-img save_ic"></span>Save</button>
+                                <button type="button" class="btn default icon-btn" onclick="clearPopupInstaller()" tabindex="101"><span class="sprite-img reset_ic"></span>Reset</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*Popup SWH Installer view image*@
+<div class="modal fade" id="popupboxSWHInsaller" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopUpBoxSWHInsaller">
+                    <img src="~/images/close-btn.png" alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-border">
+                    <div id="signMyProfile">
+                        <img src="@Model.JobInstallerDetails.SESignature" id="imgSignSWHInstall" class="" style="display:inline;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p class="remove_ic" onclick="deleteSignature(2);"><img src="~/images/delete-icon.png" id="signDelete">Remove</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup job Owner Signature*@
+<div class="modal fade" id="popupOwnerSign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosepopupOwnerSign">
+                    <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div>
+                        <img id="imgOwnerSign" class="" style="display:inline;width:100%;height:100%;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*popup job installer/designer/electrician Signature*@
+<div class="modal fade" id="popupSign" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" aria-label="Close" id="btnClosePopupSign">
+                    <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Signature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-border">
+                    <div>
+                        <img id="imgAllSign" class="" style="display:inline;width:100%;height:100%;" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="warning">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                        </button>
+                        <h4 class="modal-title">Warning</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <ul class="modelBodyMessage"></ul>
+                            <br />
+                            <h5>Are you sure you want to continue ?</h5>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="yesWarning">Yes</button>
+                        <button type="button" class="btn default" data-dismiss="modal" id="noWarning">No</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+<div class="modal fade add-visits" tabindex="-1" id="STCwarning">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <form>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                        </button>
+                        <h4 class="modal-title">Warning</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:block !important;margin-bottom:0px">
+                            <ul class="STCmodelBodyMessage"></ul>
+                            <br />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn primary" id="CloseWarning">Ok</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+
+@*  *@
+<div class="modal fade popupSoldBy" tabindex="-1" role="dialog" id="popupSoldBy">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" aria-label="Close" data-dismiss="modal">
+                        <img src='@Url.Content("~/images/close-btn.png")' alt="">
+                    </button>
+                    <h4 class="modal-title">Sold By Details</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="SoldBy">
+                        <div class="form-box">
+
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label">Sold By :</label>
+                                        @Html.DropDownListFor(m => m.BasicDetails.JobSoldBy, new List<SelectListItem>(), new { @data_val = "false", @class = "form-control", @tabindex = 34 })
+
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label class="control-label required">Sold By Name :</label>
+                                        @Html.TextBoxFor(m => m.BasicDetails.JobSoldByText, new { @class = "form-control ", @maxlength = 100, })
+                                        <span id="spanSoldBy" style="display: none; color:#b94a48">This Field is Required.</span>
+
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.BasicDetails.strSoldByDate, new { @class = "control-label" })
+                                        <div class="input-group">
+                                            @Html.TextBoxFor(m => m.BasicDetails.strSoldByDate, new { @class = "form-control", @tabindex = 35 })
+                                            <span class="input-group-addon sprite-img date-picker"></span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="modal-footer">                                
+                                <button type="button" class="btn primary icon-btn" onclick="validateSoldBy()" tabindex="100"><span class="sprite-img save_ic"></span>Save</button>  
+                                <button type="button" class="btn default cancel_ic" onclick="clearSoldBy()" tabindex="101">Cancel</button>    
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+
+@*<div class="modal fade add-visits" id="settlements" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Modal title</h4>
+                </div>
+                <div class="modal-body" style="min-height:500px;">
+                    <div class="settlements-block">
+                        <div class="panel-group message-collapse load-email" id="accordion02" role="tablist02" aria-multiselectable="false">
+
+                            <!-- panel-1======================= -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" role="tab" id="headingOne">
+                                    <a data-toggle="collapse" data-parent="#accordion02" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        <h4>3 Day settlements</h4>
+                                        <div class="message-date-and-time">
+                                            <span>Cut of time<em>before 12:00 PM</em><em>after 12:00 PM</em></span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div id="collapseOne" class="panel-collapse collapse in" role="tablist02" aria-labelledby="headingOne">
+                                    <div class="panel-body settlements-block">
+                                        <div class="mCustomScrollbar" style="max-height:350px">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <tbody>
+                                                        <tr class="bg-color">
+                                                            <td>Monday before cut of time </td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Monday after cut of time</td>
+                                                            <td>Thursday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Tuesday before cut of time</td>
+                                                            <td>Thursday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tuesday after cut of time</td>
+                                                            <td>Friday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday before cut of time</td>
+                                                            <td>Friday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday after cut of time</td>
+                                                            <td>Monday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Thursday before cut of time</td>
+                                                            <td>Monday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Thursday after cut of time</td>
+                                                            <td>Tuesday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Friday before cut of time</td>
+                                                            <td>Tuesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Friday after cut of time</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Saturday ALL DAY</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Sunday ALL DAY</td>
+                                                            <td>Wednesday payment</td>
+                                                            <td>+2 business days (+3 Days)</td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- panel-2======================= -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" role="tab" id="headingtow">
+                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion02" href="#collapsetow" aria-expanded="false" aria-controls="collapsetow">
+                                        <h4>7 Day settlements</h4>
+                                        <div class="message-date-and-time">
+                                            <span>Cut of time<em>before 12:00 PM</em><em>after 12:00 PM</em></span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div id="collapsetow" class="panel-collapse collapse" role="tablist02" aria-labelledby="headingtow">
+                                    <div class="panel-body settlements-block">
+                                        <div class="mCustomScrollbar" style="max-height:350px">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <tbody>
+                                                        <tr class="bg-color">
+                                                            <td>Monday before cut of time </td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Monday after cut of time</td>
+                                                            <td>Thursday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Tuesday before cut of time</td>
+                                                            <td>Thursday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tuesday after cut of time</td>
+                                                            <td>Friday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday before cut of time</td>
+                                                            <td>Friday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday after cut of time</td>
+                                                            <td>Monday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Thursday before cut of time</td>
+                                                            <td>Monday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Thursday after cut of time</td>
+                                                            <td>Tuesday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Friday before cut of time</td>
+                                                            <td>Tuesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Friday after cut of time</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Saturday ALL DAY</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Sunday ALL DAY</td>
+                                                            <td>Wednesday payment</td>
+                                                            <td>+2 business days (+3 Days)</td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- panel-3======================= -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading" role="tab" id="headingthree">
+                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion02" href="#collapsethree" aria-expanded="false" aria-controls="collapsethree">
+                                        <h4>24 Hour settlements</h4>
+                                        <div class="message-date-and-time">
+                                            <span>Cut of time<em>before 12:00 PM</em><em>after 12:00 PM</em></span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div id="collapsethree" class="panel-collapse collapse" role="tablist02" aria-labelledby="headingthreew">
+                                    <div class="panel-body settlements-block">
+                                        <div class="mCustomScrollbar" style="max-height:350px">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <tbody>
+                                                        <tr class="bg-color">
+                                                            <td>Monday before cut of time </td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Monday after cut of time</td>
+                                                            <td>Thursday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Tuesday before cut of time</td>
+                                                            <td>Thursday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tuesday after cut of time</td>
+                                                            <td>Friday payment</td>
+                                                            <td>+3 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday before cut of time</td>
+                                                            <td>Friday Payment</td>
+                                                            <td>+2 business days</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Wednesday after cut of time</td>
+                                                            <td>Monday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Thursday before cut of time</td>
+                                                            <td>Monday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Thursday after cut of time</td>
+                                                            <td>Tuesday payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr class="bg-color">
+                                                            <td>Friday before cut of time</td>
+                                                            <td>Tuesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr class="bg-color">
+                                                            <td>Friday after cut of time</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+3 business days (+5 Days)</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Saturday ALL DAY</td>
+                                                            <td>Wednesday Payment</td>
+                                                            <td>+2 business days (+4 Days)</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Sunday ALL DAY</td>
+                                                            <td>Wednesday payment</td>
+                                                            <td>+2 business days (+3 Days)</td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>*@
+
+<script src="~/Scripts/jquery.mCustomScrollbar.concat.min.js"></script>
+<script type="text/javascript" src="~/Scripts/modernizr.js"></script>
+<script src="~/Scripts/ddaccordion.js"></script>
+
+
+<script type="text/javascript">
+    var $ = $.noConflict();
+    var JOBType = '@Model.BasicDetails.JobType';
+    var  IsUnderSSC = '@ProjectSession.IsSubContractor';
+    var  USERType = '@Model.UserType';
+    var MasterSerialArray =[];
+    var JobSerialArray =[];
+    var logoWidth = 0, logoHeight = 0, logoWidth1 = 0, logoHeight1 = 0,SRCSign,SRCOwnerSign,SRCSignAll;
+    var logoWidthGST = 0, logoHeightGST = 0, logoWidthAllSignature,logoHeightAllSignature;
+    var signatureURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath';
+    var installerSignSRC = '@Model.InstallerSignature';
+    var designerSignSRC = '@Model.DesignerSignature';
+    var electricianSignSRC = '@Model.ElectricianSignature',
+    JobInstallerDetailsSWH_SESignature = '@Model.JobInstallerDetails.SESignature';
+    var SRCOwnerSign = '@Model.OwnerSignature';
+    var isInstallerSignUpload = '@Model.IsInstallerSignUpload', isDesignerSignUpload = '@Model.IsDesigerSignUpload', isElectricianSignUpload = '@Model.IsElectricianSignUpload', isOwnerSignUpload = '@Model.IsOwnerSignUpload';
+    var SRCSignSWHInstall, logoHeightSignSWHInstall = 0, logoWidthSignSWHInstall = 0;
+
+    var jobIDForScheduling = '@Model.Id',
+        JobElectricians_UnitTypeID = '@Model.JobElectricians.UnitTypeID',
+        JobElectricians_PostalAddressID = '@Model.JobElectricians.PostalAddressID',
+        BasicDetails_JobID = @Model.BasicDetails.JobID,
+        isAssignSSC = '@isAssignSSC.ToString().ToLower()',
+        isAssignSCO = '@isAssignSCO.ToString().ToLower()',
+        BasicDetails_SSCID = '@Model.BasicDetails.SSCID',
+        BasicDetails_ScoID = '@Model.BasicDetails.ScoID',
+        isAddJob = '@isAddJob',
+        urlCreate =  '@Url.Action("Create", "Job")',
+        isEditjob = '@isEditjob',
+        urlEdit = '@Url.Action("Edit", "Job")',
+        urlIndex = '@Url.Action("Index", "Job")'+'/',
+        url_Documents = '@Url.Action("_Documents", "Job")'+'/',
+        IsGSTSetByAdminUser = '@Model.BasicDetails.IsGSTSetByAdminUser',
+        IsRegisteredWithGST = '@Model.BasicDetails.IsRegisteredWithGST',
+        STCInvoiceCount = '@Model.BasicDetails.STCInvoiceCount',
+        GetDateFormat = '@ProjectConfiguration.GetDateFormat',
+        urlCheckDuplicateSerialNumbers = '@Url.Action("CheckDuplicateSerialNumbers", "Job")',
+        RouteId = '@Url.RequestContext.RouteData.Values["id"]',
+        urlGetSSCUserInEdit = '@Url.Action("GetSSCUserInEdit", "AssignJobToSCO")?jobID=',
+        urlGetSSCUserInDropdown = '@Url.Action("GetSSCUserInDropdown", "AssignJobToSCO")?jobID=',
+        urlGetSCOUser = '@Url.Action("GetSCOUser", "AssignJobToSCO")',
+        JobInstallationDetails_PostalAddressID = '@Model.JobInstallationDetails.PostalAddressID',
+        JobInstallationDetails_UnitTypeID = '@Model.JobInstallationDetails.UnitTypeID',
+        StreetTypeID = '@Model.JobInstallationDetails.StreetTypeID',
+        urlGetUnitType = '@Url.Action("GetUnitType", "UnitType")',
+        urlGetStreetType = '@Url.Action("GetStreetType", "StreetType")',
+        urlGetPostalAddress = '@Url.Action("GetPostalAddress", "User")',
+        JobOwnerDetails_PostalAddressID = '@Model.JobOwnerDetails.PostalAddressID',
+        JobOwnerDetails_UnitTypeID = '@Model.JobOwnerDetails.UnitTypeID',
+        JobOwnerDetails_StreetTypeID = '@Model.JobOwnerDetails.StreetTypeID',
+        JobInstallerDetails_PostalAddressID = '@Model.JobInstallerDetails.PostalAddressID',
+        JobInstallerDetails_UnitTypeID = '@Model.JobInstallerDetails.UnitTypeID',
+        JobInstallerDetails_StreetTypeID = '@Model.JobInstallerDetails.StreetTypeID',
+        InstallerID = '@Model.BasicDetails.InstallerID',
+        DesignerID = '@Model.BasicDetails.DesignerID',
+        JobInstallationDetails_DistributorID = '@Model.JobInstallationDetails.DistributorID',
+        urlGetInstallerDesignerWithStatus =  '@Url.Action("GetInstallerDesignerWithStatus", "Job")',
+        urlGetElectrician = '@Url.Action("GetElectrician", "Job")?JobID=',
+        JobElectricians_ElectricianID = '@Model.JobElectricians.ElectricianID',
+        JobInstallerDetails_ElectricianID = '@Model.JobInstallerDetails.SWHInstallerDesignerId',
+        urlGetSoldBy = '@Url.Action("GetSoldBy", "Job")',
+        urlGetDestributors = '@Url.Action("GetDestributors", "Job")',
+        BasicDetails_JobStage = '@Model.BasicDetails.JobStage',
+        BasicDetails_Priority = '@Model.BasicDetails.Priority',
+        JobSTCDetails_DeemingPeriod = '@Model.JobSTCDetails.DeemingPeriod',
+        urlGetJobStage = '@Url.Action("GetJobStage", "Job")',
+        urlGetPriority = '@Url.Action("GetPriority", "Job")',
+        JobInstallationDetails_ElectricityProviderID = '@Model.JobInstallationDetails.ElectricityProviderID',
+        urlGetElectricityProvider = '@Url.Action("GetElectricityProvider", "Job")',
+        urlGetDeemingPeriod = '@Url.Action("GetDeemingPeriod", "Job")?year=',
+        JobElectricians_StreetTypeID = '@Model.JobElectricians.StreetTypeID',
+        JobElectricians_InstallerID = '@Model.JobElectricians.InstallerID',
+        JobPanelDetails = '@Model.JobPanelDetails',
+        JobPanelDetails_Brand = '@Model.JobPanelDetails.Brand',
+        urlGetPanelBrand = '@Url.Action("GetPanelBrand", "Job")?Mode=Brand&CertificateHolder=null&JobType=1',
+        urlGetPanelBrand2 ='@Url.Action("GetPanelBrand", "Job")?Mode=Brand&CertificateHolder=null&JobType=2',
+        urlGetPanelModel = '@Url.Action("GetPanelModel", "Job")?Mode=cer&CertificateHolder=',
+        JobInverterDetails_Brand = '@Model.JobInverterDetails.Brand',
+        urlGetInverterBrand = '@Url.Action("GetInverterBrand", "Job")?Mode=Manufacturer',
+        urlGetInverterModel = '@Url.Action("GetInverterModel", "Job")?Mode=Series&Search=',
+        urlGetInverterSeries = '@Url.Action("GetInverterSeries", "Job")?Mode=Model&Search=',
+        JobSystemDetails_SystemBrand = '@Model.JobSystemDetails.SystemBrand',
+        JobSTCDetails_MultipleSGUAddress = '@Model.JobSTCDetails.MultipleSGUAddress',
+        JobInstallationDetails_InstallingNewPanel = '@Model.JobInstallationDetails.InstallingNewPanel',
+        JobElectricians_Signature =  encodeURIComponent('@Model.JobElectricians.Signature'),        
+        JobInstallerDetails_AddressID = '@Model.JobInstallerDetails.AddressID',
+        JobOwnerDetails_AddressID = '@Model.JobOwnerDetails.AddressID',
+        JobInstallationDetails_AddressID = '@Model.JobInstallationDetails.AddressID',
+        JobElectricians_AddressID = '@Model.JobElectricians.AddressID',
+        JobSTCDetails_VolumetricCapacity = '@Model.JobSTCDetails.VolumetricCapacity',
+        JobInstallationDetails_ExistingSystem = '@Model.JobInstallationDetails.ExistingSystem',
+        BasicDetails_IsGst = '@Model.BasicDetails.IsGst',
+        JobSTCDetails_CertificateCreated = "@Model.JobSTCDetails.CertificateCreated",
+        JobSystemDetails_SystemModel = '@Model.JobSystemDetails.SystemModel',
+        urlGetJobNumber = '@Url.Action("GetJobNumber", "Job")'+'?jobType=',
+        urlProcessRequest = '@Url.Action("ProcessRequest","User")',
+        urlGetElectricianDetailbyInstaller = '@Url.Action("GetElectricianDetailbyInstaller", "Job")',
+        urlGetElectricianDetailbySolarcompany = '@Url.Action("GetElectricianDetailbySolarcompany", "Job")',
+        urlMailForCollectSignature = '@Url.Action("MailForCollectSignature", "Job")',
+        urlDeleteFileFromFolderAndElectrician = '@Url.Action("DeleteFileFromFolderAndElectrician", "Job")',
+        urlDeleteSelectedJobs = '@Url.Action("DeleteSelectedJobs", "Job")',
+        urlCalculateSTC = '@Url.Action("CalculateSTC", "Job")',
+        urlCalculateSWHST = '@Url.Action("CalculateSWHSTC", "Job")',
+        urlCheckStatusAndInstallationDate = '@Url.Action("CheckStatusAndInstallationDate", "Job")',
+        urlCheckBusinessRules = '@Url.Action("CheckBusinessRules", "Job")',
+        urlGetPanelBrand0 = '@Url.Action("GetPanelBrand", "Job")?Mode=Brand&CertificateHolder=null&JobType=',
+        urlUploadInvoice = '@Url.Action("UploadInvoice", "Job")',
+        urlDeleteGSTFile = '@Url.Action("DeleteGSTFile", "Job")',
+        urlDownloadGSTDocument = '@Url.Action("DownloadGSTDocument", "Job")?FileName=',
+        urlGetInstallerDesignerElectricianSignature = '@Url.Action("GetInstallerDesignerElectricianSignature", "Job")',
+        urlUploadJobSignature = '@Url.Action("UploadJobSignature", "Job")',
+        urlClearJobSignture = '@Url.Action("ClearJobSignture", "Job")',
+        Model_Guid = '@Model.Guid',
+        JobMapKeyUrl = '@System.Web.HttpUtility.HtmlDecode(FormBot.Helper.ProjectSession.JobMapKeyUrl)'+'&callback=mapsCallback',
+        MaxImageSize_Job = '@FormBot.Helper.ProjectSession.MaxImageSize' ,
+        proofDocumentURL = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+       jobId = "@Model.Id",
+       maillink = "@FormBot.Helper.ProjectSession.LoginLink" + "Job/_OwnerVerification/" + jobId,
+       mailUrl = "@FormBot.Helper.ProjectSession.LoginLink" + "Job/_OwnerSignature/" + jobId,
+       ProjectSession_UserTypeId = '@ProjectSession.UserTypeId',
+       urlSendMailForDuplicateAddress = '@Url.Action("SendMailForDuplicateAddress", "Job")',
+       UploadedDocumentPath = '@FormBot.Helper.ProjectSession.UploadedDocumentPath',
+    dateFormat = '@ProjectConfiguration.GetDateFormat',
+    modelIsGSTSetByAdminUser = '@Model.BasicDetails.IsGSTSetByAdminUser',
+     JobDocumentsToSavePath = '@FormBot.Helper.ProjectConfiguration.JobDocumentsToSavePath',
+    BasicDetails_InstallerSignature = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature)',
+    BasicDetails_InstallerSignature_Replace = '',
+    @*BasicDetails_InstallerSignature_Replace = '@HttpUtility.JavaScriptStringEncode(Model.BasicDetails.InstallerSignature.Replace("\\", "/"))',*@
+    Upload_User = '@Url.Action("Upload", "User")',
+    company_Id = $("#BasicDetails_SolarCompanyId").val(),
+    CheckSWHUserExistURL = '@Url.Action("CheckSWHUserExist", "User")',
+
+    urlGetBatteryManufacturer = '@Url.Action("GetBatteryManufacturer", "Job")',
+    urlGetBatteryModel = '@Url.Action("GetBatteryModel", "Job")?manufacturer=';
+</script>
+
+
+
+<script>
+
+    $(document).ready(function(){
+        $("#BasicDetails_strInstallationDate").val($("#BasicDetails_strInstallationDateTemp").val());
+
+        $("#hdnsolarCompanyid").val($("#BasicDetails_SolarCompanyId").val());
+
+        DisplayInstallationDate();
+    });
+
+    function DisplayInstallationDate() {
+        var installationDate = $("#BasicDetails_strInstallationDate").val();
+        if (installationDate != null && installationDate != undefined && installationDate != '') {
+            $("#BasicDetails_strInstallationDate").val('').removeAttr('value');
+
+            var installationDateEdit = moment(installationDate).format(dateFormat.toUpperCase());
+            $("#BasicDetails_strInstallationDate").val(installationDateEdit);
+            // display default date
+            //$("#BasicDetails_strInstallationDate").attr('data-date-format', 'dd/mm/yyyy');
+            $('#BasicDetails_strInstallationDate').datepicker('setDate', new Date(moment(installationDate).format('yyyy'.toUpperCase()), moment(installationDate).format('mm'.toUpperCase()) - 1 ,moment(installationDate).format('dd'.toUpperCase())));
+            $('#BasicDetails_strInstallationDate').datepicker('update');
+
+            $('.date-pick, .date-pick1, .date-pick').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+
+        } else {
+            $('.date-pick, .date-pick1, .date-pick').datepicker({
+                format: dateFormat,
+                autoclose: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+        }
+    }
+
+</script>
+

@@ -1,0 +1,820 @@
+﻿@using FormBot.Entity.Dashboard;
+@using FormBot.Helper;
+@{
+    ViewBag.Title = "SSC";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    bool isAllScaJobView = false;
+    if (TempData.ContainsKey(SystemEnums.TempDataKey.RAMViewAllJob.ToString()))
+    {
+        ((List<FormBot.Main.Controllers.MenuIdList>)TempData[SystemEnums.TempDataKey.RAMViewAllJob.ToString()]).ForEach(d =>
+        {
+            if (d.MenuId == (int)SystemEnums.MenuId.AllScaJobView.GetHashCode()) { isAllScaJobView = true; }
+        });
+    }
+}
+<link href="~/Content/kendo/styles/kendo.common-material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.min.css" rel="stylesheet" />
+<link href="~/Content/kendo/styles/kendo.material.mobile.min.css" rel="stylesheet" />
+<script src="~/Scripts/kendo/js/kendo.all.min.js"></script>
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid sca_dashboard">
+    <div class="title">
+        <h1>Dashboard</h1>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-lg-3">
+            <div style="border: 1px solid #e6e6e6;">
+                <h3 class="sca-heding">Your Compliance Team</h3>
+                <div class="jobsearch_list">
+                    <div id="scrollId" class="compliance-div">
+                        <ul class="searchresult_listing" id="ComplianceTeam"></ul>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <!-- ===Reports Summary======================================= -->
+            <div class="reports-summary">
+                <h3 class="sca-heding">New Request & Sign Ups</h3>
+                <div class="submission-filters">
+                    <ul>
+                        <li><a href="@Url.Action("RedirectToSCAPending", "Dashboard", new { status = "Pending" })" title="Pending Solar Company">Pending Solar Company<span>@ViewBag.PendingSolarCompany</span></a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- ===quick-links======================== -->
+            <div class="quick-links">
+                <h3 class="sca-heding">Quick Links</h3>
+                <ul>
+                    @if (FormBot.Helper.ProjectSession.UserTypeId == 2)
+                    {
+                        <li id="dCreateUser"><a href="@Url.Action("Create", "User")" title="Create User"><span class="icon"><img src="~/images/User-List.png" alt=""></span>Create User</a></li>
+                    }
+                    <li id="dSCList"><a href="@Url.Action("SCA", "User")" title="Solar Company List"><span class="icon"><img src="~/images/payment-status.png" alt=""></span>Solar Company List</a></li>
+                    <li id="dJobList"><a href="@Url.Action("Index", "Job")" title="Job List"><span class="icon"><img src="~/images/ic-newmail.png" alt=""></span>Job Listing</a></li>
+                    <li id="dSTCSubmission"><a href="@Url.Action("STCSubmission", "Job")" title="STC Submission"><span class="icon"><img src="~/images/Reports.png" alt=""></span>STC Submission</a></li>
+                    <li id="dSTCInvoice"><a href="@Url.Action("Index", "STCInvoice")" title="STC Invoice"><span class="icon"><img src="~/images/invoicing.png" alt=""></span>STC Invoice</a></li>
+                    <li id="dPricingManager"><a href="@Url.Action("Index", "PricingManager")" title="Pricing Manager"><span class="icon"><img src="~/images/ic-calculator.png" alt=""></span>Pricing Manager</a></li>
+                    @*<li><a href="@Url.Action("Index", "FormBotReport")" title="Reports"><span class="icon"><img src="~/images/Reports.png" alt=""></span>Reports</a></li>*@
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-9">
+            
+            <div id="dvSettleMentBlock" class="sca-dashboard-settlement-block live-stc-price">
+            </div>
+            <div class="news-feed">
+                <h3 class="sca-heding">Reports<p class="pull-right">Last 30 Days Data</p></h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        @if (FormBot.Helper.ProjectSession.UserTypeId != 5)
+                        {
+                            <div class="history-filter-div" id="RAMFilter">
+                                <span style="font-weight: bold; padding: 5px;" class="vertical-middle">Displaying Account Managers</span>
+                                <select class="report-search-box" id="report-ra-filter" multiple="multiple" placeholder="All Account Managers"></select>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-6">
+                        <div class="history-filter-div" id="SCFilter">
+                            <span style="font-weight: bold; padding: 5px;" class="vertical-middle">Displaying Solar Companies</span>
+                            <select class="sc-search-box" id="report-sc-filter" multiple="multiple" placeholder="All Solar Companies"></select>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="row">
+                    <div class="col-md-6">
+                        <b style="color:black;margin-left:40%;">STC General Report</b>
+                        <div id="dvSTCGeneralChart" style="height: 400px; width: 100%;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <b style="color:black;margin-left:40%;">REC Failure Report</b>
+                        <div id="dvRECFailureChart" style="height: 400px; width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stc-amount-block">
+                <ul>
+                    <li>
+                        <span class="time">Total Paid</span>
+                        <a href="@Url.Action("Index", "STCInvoice")" title="Total Paid"><span class="price">@ViewBag.TotalPaid</span></a>
+                    </li>
+                    <li>
+                        <span class="time">Pay on Approvals</span>
+                        <span class="price">@ViewBag.PayOnApproval</span>
+                    </li>
+                    <li>
+                        <span class="time">Partial Payments Owing</span>
+                        <span class="price">@ViewBag.PartialPayment</span>
+                    </li>
+                    <li>
+                        <span class="time">Currently Outstanding</span>
+                        <span class="price outstanding">@ViewBag.Outstanding</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="news-feed">
+                <h3 class="sca-heding">Solar Company STC Statuses</h3>
+                <div class="clearfix">
+                    <div class="form-inline">
+                        @if (ProjectSession.UserTypeId == 2)
+                        {
+                            <div class="form-group">
+                                <div class="job-status-filter-div">
+                                    <span class="control-label vertical-middle">Account Managers</span>
+                                    @*<select class="FCO-search-box" id="job-FCO-filter" multiple="multiple" placeholder="All Compliance Officer"></select>*@
+                                    @if (ViewBag.RAM != null)
+                                    {
+                                        @Html.DropDownList("RAM", ViewBag.RAM as IEnumerable<SelectListItem>, "Select All", new { @class = "form-control" })
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <div class="form-group">
+                            <div class=" job-status-filter-div" id="SolarCompanyDiv">
+                                @if (ProjectSession.UserTypeId == 2)
+                                {
+                                    <span class="control-label vertical-middle">BY</span>
+                                }
+                                else if (ProjectSession.UserTypeId == 5)
+                                {
+                                    <span class="control-label vertical-middle">Displaying Solar Company</span>
+                                }
+
+                                <select class="se-search-box form-control" id="job-reseller-filter" multiple="multiple" placeholder="All Solar Company"></select>
+                            </div>
+                        </div>
+                        <div class="form-group pull-right fds-status">
+                            <div class="job-status-filter-div " style="padding-right:5px;">
+                                <span class="control-label vertical-middle">Arrange By</span>
+                                <select id="arrangeBy" class="form-control">
+                                    <option value="NewSubmission">New Submission</option>
+                                    <option value="ReSubmission">Re Submission</option>
+                                    <option value="UnderReview">Under Review</option>
+                                    <option value="ComplianceIssues">Compliance Issues</option>
+                                    <option value="AwaitingAuthorization">Request Authorization</option>
+                                    <option value="CERFailed">CER Failure</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @*@if (FormBot.Helper.ProjectSession.UserTypeId != 5)
+                    {
+                        <div class="job-status-filter-div">
+                            <span style="font-weight: bold; padding: 5px;" class="vertical-middle">Displaying Account Managers</span>
+                            <select class="job-search-box" id="job-reseller-filter" multiple="multiple" placeholder="All Account Managers"></select>
+                        </div>
+                    }*@
+                <div class="row">
+                    <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div class="form-group" id="STCJobStaus">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<style>
+
+    hr {
+        margin: 10px 30px 10px 30px;
+    }
+
+    .status-block {
+        background-color: #fff;
+        padding: 0px;
+        /*display: table;*/
+        margin: 10px;
+    }
+
+    .blue-title {
+        color: #1b94da;
+    }
+
+    .stc-amount-block {
+        padding: 20px;
+    }
+
+        .stc-amount-block ul li.active, .stc-amount-block ul li:hover, .stc-amount-block ul li:focus {
+            background-color: green;
+        }
+
+    .history-filter-div, .job-status-filter-div {
+        padding: 17px 0px 0px 10px;
+    }
+
+    .vertical-middle, .SumoSelect {
+        vertical-align: middle;
+    }
+
+    #reseller-filter {
+        border: 0;
+        color: green;
+        font-weight: bold;
+    }
+
+    .compliance-div {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+        .compliance-div .findJobDraggable > span {
+            font-family: 'OpenSansRegular';
+            color: #000;
+            font-size: 14px;
+        }
+
+            .compliance-div .findJobDraggable > span b {
+                font-family: 'OpenSansBold';
+                color: #000;
+            }
+
+        .compliance-div .mtitle {
+            font-family: 'OpenSansRegular';
+            color: #0e7ec8;
+            font-size: 14px;
+        }
+
+            .compliance-div .mtitle > b {
+                font-family: 'OpenSansSemibold';
+                margin-left: 10px;
+            }
+
+                .compliance-div .mtitle > b:first-child {
+                    margin-left: 0px;
+                }
+
+        .compliance-div .findJobDraggable .job_status {
+            font-size: 12px;
+        }
+
+
+    .form-inline .control-label {
+        margin-right: 5px;
+    }
+
+    .stc-amount-block {
+        padding: 0px;
+    }
+
+        .stc-amount-block ul li.active, .stc-amount-block ul li:hover, .stc-amount-block ul li:focus {
+            background-color: #f8f8f8 !important;
+        }
+
+            .stc-amount-block ul li:hover .time, #green .stc-amount-block ul li:focus .time {
+                color: #383838 !important;
+            }
+
+            .stc-amount-block ul li:hover .price, #green .stc-amount-block ul li:focus .price {
+                color: #1ca04d !important;
+            }
+
+    .outstanding {
+        color: #cd0000 !important;
+    }
+
+    .stc-amount-block ul li:hover .outstanding, #green .stc-amount-block ul li:focus .outstanding {
+        color: #cd0000 !important;
+    }
+</style>
+<link href="~/Content/Charts/c3.css" rel="stylesheet" />
+@*<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="~/Scripts/Charts/c3.js"></script>*@
+@System.Web.Optimization.Scripts.Render("~/ChartJs")
+<script src="~/Scripts/jquery.sumoselect.min.js"></script>
+<link href="~/Content/sumoselect.css" rel="stylesheet" />
+<script>
+    var reportResellerManager, jobReseller, reportSolarCompany, solarCompany;
+    var isRA = false;
+    var seCount = 0;
+    $(document).ready(function () {
+        GetSTCForTrade();
+        //solar company
+        if ($('#SolarCompanies').length > 0)
+            $('#dSCList').show();
+        else
+            $('#dSCList').hide();
+
+        //job list
+        if ($('#SolarJobs').length > 0)
+            $('#dJobList').show();
+        else
+            $('#dJobList').hide();
+
+        //STC submission
+        if ($('#STCSubmission').length > 0)
+            $('#dSTCSubmission').show();
+        else
+            $('#dSTCSubmission').hide();
+
+        //STC Invoice
+        if ($('#STCInvoice').length > 0)
+            $('#dSTCInvoice').show();
+        else
+            $('#dSTCInvoice').hide();
+
+        //Pricing manager
+        if ($('#PricingManager').length > 0)
+            $('#dPricingManager').show();
+        else
+            $('#dPricingManager').hide();
+
+        //Create new user
+        if ($('#CreateNewUser').length > 0)
+            $('#dCreateUser').show();
+        else
+            $('#dCreateUser').hide();
+
+        if ($('#SolarCompanies').length == 0 && $('#SolarJobs').length == 0 && $('#STCSubmission').length == 0 && $('#STCInvoice').length == 0 && $('#PricingManager').length == 0 && $('#CreateNewUser').length == 0)
+            $(".quick-links").hide();
+        else
+            $(".quick-links").show();
+
+        $("#loading-image").show();
+
+        solarCompany = $('.se-search-box').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+
+        if (document.getElementById("report-ra-filter")) {
+            isRA = true;
+        }
+        if (isRA) {
+            reportResellerManager = $('.report-search-box').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+            //jobReseller = $('.job-search-box').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+
+            getResellerManager();
+        } else {
+            loadSTCGeneralReport();
+        }
+        reportSolarCompany = $('.sc-search-box').SumoSelect({ csvDispCount: 3, search: true, searchText: 'Search..', selectAll: true, okCancelInMulti: true });
+        getSolarCompany();
+        getComplianceTeam();
+
+        $("#loading-image").hide();
+
+        $('div#RAMFilter p.btnOk').click(function () {
+            loadSTCGeneralReport();
+            //loadRECFailureReport();
+        });
+        $('div#SCFilter p.btnOk').click(function () {
+            loadRECFailureReport();
+        });
+
+        $("div#SolarCompanyDiv p.btnOk").click(function () {
+            GetSTCJobStatus();
+        });
+
+        $("#RAM").change(function () {
+            var i = 0;
+            while (i < seCount) {
+                $(".se-search-box")[0].sumo.remove(0);
+                i++;
+            }
+            getSolarCompanyByRAM();
+        });
+
+        $("#arrangeBy").change(function () {
+            GetSTCJobStatus();
+        });
+
+        getSolarCompanyByRAM();
+        $('#pricing-stc-title').hide();
+        $('#paymentscheduleinfo').hide();
+    });
+    
+
+    function getComplianceTeam() {
+        $.ajax({
+            url: '@Url.Action("GetComplianceTeam", "Dashboard")',
+            type: "GET",
+            dataType: "json",
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: bindComplianceTeam,
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+     function GetSTCForTrade() {
+            var IsShowInDashboard = true;
+            $.ajax({
+                url: '@Url.Action("GetDashboardJobSTCPriceForRA", "Dashboard")',
+                method: 'GET',
+                data: { IsShowInDashboard: IsShowInDashboard, IsGridView: false },
+                cache: false,
+                async: false,
+                success: function (Data) {
+                    if (Data == '') {
+                        alert("Select Custom Price");
+                    } else {
+                        $("#dvSettleMentBlock").html(Data);
+                        $("#dvSettleMentBlock").find(".sca-heding").hide();
+                        //$("#dvSettleMentBlock").find(".stc-amount-block").removeClass("stc-amount-block")
+                        $("#dvSettleMentBlock").find(".settlement-term").addClass("settlement-term-sca")
+                        $("#dvSettleMentBlock").find('li').removeClass("active");
+                        $('#PricingBlock li:eq(0)').before("<li class='livestc-titleblock'><h2>Live STC Price</h2><p>Last Updated: " + priceLastUpdatedDate.split(' ')[0] + "</p></li>");
+                        $("#dvSettleMentBlock").find('.table-responsive').addClass("niceScroll")
+                        //$("#dvSettleMentBlock").find(".time").css("padding", "0px")
+                        fnNiceScroll();
+                        if('@ProjectSession.IsAllowTrade.ToString().ToLower()' == "false"){
+                            $('.term').remove();
+                        }
+                    }
+                }
+            });
+        }
+    function getSolarCompanyByRAM() {
+        var ramId;
+        var ram = [];
+        if ('@ProjectSession.UserTypeId' == 2) {
+
+            if ($("#RAM").val() == '') {
+                $("#RAM option").each(function () {
+                    if ($(this).val() != '')
+                        ram.push($(this).val());
+                });
+                ramId = ram.join();
+            }
+            else {
+                ramId = $("#RAM").val();
+            }
+        }
+        else if ('@ProjectSession.UserTypeId' == 5) {
+            ramId = '@ProjectSession.LoggedInUserId';
+        }
+
+        $.ajax({
+            url: '@Url.Action("GetSolarCompanyByRAM", "Dashboard")',
+            type: "GET",
+            dataType: "json",
+            //processData: false,
+            data: { ramIds: ramId, isAllScaJobView : '@isAllScaJobView.ToString().ToLower()' },
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: bindSolarCompanyByRAM,
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    function bindSolarCompanyByRAM(result) {
+        if (result != null && result.length > 0) {
+            seCount = result.length;
+            for (var i = 0; i < result.length; i++) {
+                $('.se-search-box')[0].sumo.add(result[i].SolarCompanyId, result[i].CompanyName);
+            }
+            $('.se-search-box')[0].sumo.selectAll();
+        }
+        else
+            seCount = 0;
+
+        GetSTCJobStatus();
+    }
+
+    function bindComplianceTeam(result) {
+        var htmlString = '';
+        if (result && result.length > 0) {
+            for (var i = 0; i < result.length; i++) {
+                var item = result[i];
+                htmlString += "<li class=\"findJobDraggable\">" +
+                                "<div class=\"co-name\">Compliance Officer - <b>" + item.Name + "</b></div>" +
+                                "<div class=\"last-lin\">last logged in: " + item.LastLogin + "</div>" +
+                                "<div>" +
+                                "<a class=\"co-email\" href=\"mailto:" + item.Email + "\"><b>Email: </b>" + item.Email + "</a>" +
+                                "<span class=\"co-phone\"> <b>Phone: </b>" + item.Phone + "</span>" +
+                                "</div>" +
+                          "</li>"
+            }
+            $("#ComplianceTeam").html($.parseHTML(htmlString));
+        }
+        else {
+            $("#ComplianceTeam").html('<p style="text-align: center;line-height: 400px;">No Records Found</p>');
+        }
+        //console.log(result)
+    }
+    function getResellerManager() {
+        $.ajax({
+            url: '@Url.Action("RAM", "Dashboard")',
+            type: "GET",
+            dataType: "json",
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: bindResellerManager,
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+    function getSolarCompany() {
+        $.ajax({
+            url: '@Url.Action("SolarCompany", "Dashboard")' +"?isAllScaJobView="+@isAllScaJobView.ToString().ToLower(),
+            type: "GET",
+            dataType: "json",
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: bindSolarCompany,
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    function bindResellerManager(result) {
+        if (result != null && result.length > 0) {
+            for (var i = 0; i < result.length; i++) {
+                $('.report-search-box')[0].sumo.add(result[i].Value, result[i].Text);
+                //$('.job-search-box')[0].sumo.add(result[i].Value, result[i].Text);
+            }
+            var length = (result.length > 5) ? 5 : result.length;
+            for (var i = 0; i < length; i++) {
+                $('.report-search-box')[0].sumo.selectItem(i);
+                //$('.job-search-box')[0].sumo.selectItem(i);
+            }
+        }
+        loadSTCGeneralReport();
+    }
+    function bindSolarCompany(result) {
+        if (result != null && result.length > 0) {
+            for (var i = 0; i < result.length; i++) {
+                $('.sc-search-box')[0].sumo.add(result[i].Value, result[i].Text);
+            }
+            var length = (result.length > 5) ? 5 : result.length;
+            for (var i = 0; i < length; i++) {
+                $('.sc-search-box')[0].sumo.selectItem(i);
+            }
+        }
+        loadRECFailureReport();
+    }
+
+    function loadSTCGeneralReport() {
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+        var resellersId, selectedResellers;
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+
+        if (isRA) {
+            resellersId = $('.report-search-box').val();
+            if (resellersId) {
+                selectedResellers = resellersId.join();
+            }
+        } else {
+            selectedResellers = '@FormBot.Helper.ProjectSession.LoggedInUserId'
+        }
+
+        var data = {
+            StartDate: fDate,
+            EndDate: tDate,
+            //hdnFormBotResellerAssignedUser: selectedResellers,
+            hdnFormBotRAMAssignedUser: selectedResellers,
+            hdnSTCSubmissionStatusAssigned: '10,11,12,13,14,15,16,17,18,19,20,21,22',
+        };
+
+        $.ajax({
+            url: '@Url.Action("STCGeneralReport", "Dashboard")',
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(data),
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (Data) {
+
+                if (Data != null && Data.dsSTCGeneralDashboardChart.length != 0) {
+                    var resultData = Data.dsSTCGeneralDashboardChart;
+                    var groupedData = {};
+                    var xAxis = ['xAxis'];
+                    var dataGroup = ["Not Yet Submitted", "Re-submission", "Ready to Trade", "Awaiting Authorization", "CER Failed", "Cannot re-create", "Under Review", "Compliance Issues", "Requires Call Back", "Ready To Create", "Pending Approval", "New Submission", "CER Approved"];
+                    var data1 = ["Not Yet Submitted"];
+                    var data2 = ["Re-submission"];
+                    var data3 = ["Ready to Trade"];
+                    var data4 = ["Awaiting Authorization"];
+                    var data5 = ["CER Failed"];
+                    var data6 = ["Cannot re-create"];
+                    var data7 = ["Under Review"];
+                    var data8 = ["Compliance Issues"];
+                    var data9 = ["Requires Call Back"];
+                    var data10 = ["Ready To Create"];
+                    var data11 = ["Pending Approval"];
+                    var data12 = ["New Submission"];
+                    var data13 = ["CER Approved"];
+
+                    for (var i = 0; i < resultData.length; i++) {
+                        var item = resultData[i];
+                        xAxis.push(item.ResellerName);
+                        data1.push(item.NotYetSubmitted);
+                        data2.push(item.ReSubmission);
+                        data3.push(item.ReadyToTrade);
+                        data4.push(item.AwaitingAuthorization);
+                        data5.push(item.CERFailed);
+                        data6.push(item.CannotReCreate);
+                        data7.push(item.UnderReview);
+                        data8.push(item.ComplianceIssues);
+                        data9.push(item.RequiresCallBack);
+                        data10.push(item.ReadyToCreate);
+                        data11.push(item.PendingApproval);
+                        data12.push(item.NewSubmission);
+                        data13.push(item.CERApproved);
+                    }
+
+                    var result = [];
+                    result.push(xAxis);
+                    result.push(data1);
+                    result.push(data2);
+                    result.push(data3);
+                    result.push(data4);
+                    result.push(data5);
+                    result.push(data6);
+                    result.push(data7);
+                    result.push(data8);
+                    result.push(data9);
+                    result.push(data10);
+                    result.push(data11);
+                    result.push(data12);
+                    result.push(data13);
+
+                    BindChart('dvSTCGeneralChart', result, xAxis, 'bar', dataGroup);
+                }
+                else {
+                    $('#dvSTCGeneralChart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>');
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    function loadRECFailureReport() {
+        var dateFormatMoment = '@FormBot.Helper.ProjectConfiguration.GetDateFormat.ToUpper()';
+        var startDate = new Date();
+        var endDate = new Date();
+        var SCId, selectedSolarCompany;
+
+        startDate.setDate(startDate.getDate() - 30);
+
+        var tickStartDate = Date.parse(startDate);
+        fDate = moment(tickStartDate).format(dateFormatMoment);
+        var tickEndDate = Date.parse(endDate);
+        tDate = moment(tickEndDate).format(dateFormatMoment);
+
+        SCId = $('.sc-search-box').val();
+        if (SCId) {
+            selectedSolarCompany = SCId.join();
+        }
+
+        var data = {
+            StartDate: fDate,
+            EndDate: tDate,
+            //hdnFormBotResellerAssignedUser: '60'
+            hdnFormBotSolarCompanyAssignedUser: selectedSolarCompany
+        };
+
+        $.ajax({
+            url: '@Url.Action("GetRECFailureReasonsReportsList", "Dashboard")',
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify(data),
+            processData: false,
+            cache: false,
+            contentType: 'application/json; charset=utf-8',
+            success: function (resultData) {
+                if (resultData && resultData.length > 0) {
+                    var xAxis = ['xAxis'];
+                    var groupedData = {};
+                    var result = [];
+
+                    for (var i = 0; i < resultData.length; i++) {
+                        var item = resultData[i];
+                        if (!groupedData[item.CompanyName]) {
+                            groupedData[item.CompanyName] = [];
+                        }
+
+                        groupedData[item.CompanyName].push({
+
+                            Status: item.Status.substring(0, 20) + '...' + item.Status.substr(item.Status.length - 10),
+                            FailureCount: item.AmountOfFailure
+                        });
+
+                        if ($.inArray(item.CompanyName, xAxis) == -1) {
+                            xAxis.push(item.CompanyName);
+                        }
+                    }
+                    var dataGroup = [];
+                    result.push(xAxis);
+                    for (var x in groupedData) {
+                        if (Object.prototype.hasOwnProperty.call(groupedData, x)) {
+                            var item = groupedData[x];
+                            for (var j = 0; j < item.length; j++) {
+                                var temp = [item[j].Status];
+                                temp.push(item[j].FailureCount);
+                                dataGroup.push(item[j].Status);
+                                result.push(temp);
+                            }
+                        }
+                    }
+                    BindChart('dvRECFailureChart', result, xAxis, 'bar', dataGroup);
+                }
+                else {
+                    $('#dvRECFailureChart').html('<p style="text-align: center;line-height: 400px;">No Records Found</p>')
+                }
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+        return false;
+    }
+
+    //charts
+    function BindChart(element, result, xAxis, chartType, dataGroup) {
+        var chartdiv = c3.generate({
+            bindto: '#' + element,
+            data: {
+                columns: result,
+                type: chartType,
+                x: 'xAxis',
+                groups: [dataGroup]
+            },
+            axis: {
+                x: {
+                    type: 'category',
+                    categories: xAxis
+                }
+            },
+            bar: {
+                width: {
+                    ratio: 0.3,
+                    max: 30
+                },
+            },
+            tooltip: {
+                format: {
+                    value: function (value, ratio, id, index) {
+                        if (chartType == 'pie') {
+                            return value + ' (' + (ratio * 100).toFixed(2) + '%)';
+                        }
+                        else
+                            return value;
+                    }
+                }
+            }
+        });
+    }
+
+    function GetSTCJobStatus() {
+        var companyIds = '';
+
+        var SE = $('.se-search-box').val();
+        if (SE) {
+            companyIds = SE.join();
+        }
+
+        var sortCol = $("#arrangeBy").val();
+
+        isAllReseller = 0;
+
+        $.ajax({
+            url: '@Url.Action("GetRARAMSTCJobParts", "Dashboard")',
+            type: "GET",
+            dataType: "html",
+            data: { solarCompanyIds: companyIds, sortCol: sortCol },
+            //processData: false,
+            cache: false,
+            success: function (result) {
+                if (result)
+                    $("#STCJobStaus").html(result);
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        });
+    }
+</script>

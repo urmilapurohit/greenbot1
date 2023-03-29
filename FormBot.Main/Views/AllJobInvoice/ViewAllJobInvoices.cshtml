@@ -1,0 +1,661 @@
+﻿@model FormBot.Entity.Job.JobInvoice
+@using FormBot.Helper;
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<div class="container-fluid create-job message-page">
+    <div class="title">
+        <h1>Job Invoice</h1>
+        <a href="@Url.Action("ViewAllJobInvoices", "AllJobInvoice")" title="Back" class="back-btn pull-right" id="invoiceBack" style="display: none"><img src="~/Images/back-icon.png" alt="">Back</a>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <input type="hidden" id="BasicDetails_JobID" value="0" />
+    <form class="form-block" style="margin-top:10px;" id="searchInvoice">
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Invoice Number:</label>
+                <input type="text" id="txtInvoiceNumber" class="form-control" maxlength="100" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Invoiced Date:</label>
+                <div class="input-group">
+                    <input type="text" id="txtInvoiceDate" readonly="readonly" placeholder="Invoice Date" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" />
+                    <span class="input-group-addon sprite-img date-picker"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label class="control-label">Reference Number/Owner Name:</label>
+                <input type="text" id="txtRefJobId" class="form-control" onkeyup="if (event.keyCode == 13)document.getElementById('btnSearch').click()" maxlength="255">
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <div class="form-group">
+                <label for="exampleInputName2">Status:</label>
+                @Html.DropDownListFor(m => m.Status, new List<SelectListItem>
+                                     {
+                                        new SelectListItem{ Text="Select", Value = "0" },
+                                        new SelectListItem{ Text="Outstanding", Value = "4" },
+                                        new SelectListItem{ Text="Partial Payment", Value = "3" },
+                                        new SelectListItem{ Text="Paid", Value = "1" },
+                                        new SelectListItem{ Text="Cancelled", Value = "2" }
+                                     }, new { @id = "drdInvoiceStatusSearch", @class = "form-control" }
+                            )
+            </div>
+        </div>
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSearch" value="Search" class="primary search_ic" onclick="SearchInvoices();">
+            <div class="btn default icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset">
+            </div>
+        </div>
+    </form>
+
+    <div class="container-fluid" style="padding:0;">
+        <div id="invoice" style="display: block;">
+            <div class="row">
+                <div class="col-sm-10">
+                    <div class="grid_topbar">
+                        <p class="job_result" id="invoiceNumRecords"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div id="grid" class="col-xs-12">
+                    <!-- Grid start -->
+                    <div class="table-responsive">
+                        <table id="datatable" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width:5% !important;"><span>@Html.DisplayName("Incoming/Outgoing") </span></th>
+                                    <th width="10%"><span>@Html.DisplayName("REF No - Owner Name") </span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Invoice Number") </span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Invoiced Date") </span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Created By")</span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Invoiced To")</span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Status")</span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Total")</span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Amount Due")</span></th>
+                                    <th width="10%"><span>@Html.DisplayName("Invoice | Sent | Actions")</span></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="invoiceDetail" style="display: none; margin-top: 25px;">
+            <link href="~/Content/InvoiceDetail.css" rel="stylesheet" />
+            <div id="invoiceDetailList" style="display: block;">
+            </div>
+        </div>
+    </div>
+    <style>
+        #grid .table-responsive td:first-child {
+            text-align: center;
+        }
+    </style>
+</div>
+
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        <script src="~/Scripts/bootstrap-datetimepicker.js"></script>
+        @System.Web.Optimization.Scripts.Render("~/datatableJs")
+        @System.Web.Optimization.Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+
+        $(document).ready(function () {
+            $("#txtInvoiceNumber").focus();
+
+            $("#txtInvoiceDate").datepicker({
+                format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            });
+            loadInvoice();
+        });
+
+        function SearchInvoices(){
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function ResetSearchFilters()
+        {
+            $("#txtInvoiceNumber").val('');
+            $("#txtInvoiceDate").val('');
+            $('#drdInvoiceStatusSearch').val(0);
+            $('#txtRefJobId').val('');
+            $("#datatable").dataTable().fnDraw();
+        }
+
+        function loadInvoice(){
+            //var LogInID = '@ProjectSession.LoggedInUserId';
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                order: [[2, "asc"]],
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                         { 'data': 'JobInvoiceID',
+                             "render": function (data, type, full, meta) {
+                                 if('@ProjectSession.LoggedInUserId'==full.CreatedBy)
+                                 {
+                                     return '<a href="javascript:void(0)" class="action view" style="background:url(../../Images/ic-outgoing.png) no-repeat center;cursor:default; text-decoration:none;margin-left:-22px;"></a>';
+                                 } else { return '<a href="javascript:void(0)" class="action view" style="background:url(../../Images/ic-incoming.png) no-repeat center;cursor:default; text-decoration:none;margin-left:-22px;"></a>'; }
+                             },
+                             "orderable": false
+                         },
+                          { 'data': 'OwnerName' },
+                        { 'data': 'InvoiceNumber', "orderable": true },
+
+                        { 'data': 'CreatedDate',
+                            "render": function (data) {
+                                return ConvertToDate(data);
+                            }
+                        },
+                        { 'data': 'Created' },
+                        { 'data': 'InvoicedTo' },
+                        { 'data': 'FileName' ,
+                            "render": function (data, type, full, meta) {
+                                if (full.Status == 1) {
+                                    return "<p style='color:green;'>"+full.FileName+'</p>';
+                                }else if (full.Status == 2) {
+                                    return "<p style='color:gray;'>"+full.FileName+'</p>';
+                                }else if (full.Status == 3) {
+                                    return "<p style='color:orange;'>"+full.FileName+'</p>';
+                                }else if (full.Status == 4) {
+                                    return "<p style='color:red;'>"+full.FileName+'</p>';
+                                } else { return "<p style='color:red;'></p>"; }
+
+                            },"orderable": false
+                        },
+                        { 'data': 'InvoiceTotal',"sClass": "dt-right",
+                            'render': function (data, type, full, meta) {
+                                return PrintDecimal(full.InvoiceTotal);
+                            }, },
+                        { 'data': 'InvoiceAmountDue',"sClass": "dt-right",
+                            'render': function (data, type, full, meta) {
+                                return PrintDecimal(full.InvoiceAmountDue);
+                            },},
+                        { 'data': 'JobInvoiceID',
+                            "render": function (data, type, full, meta) {
+                                var pdf ='';
+                                if(full.FileExist == '1')
+                                {
+                                    pdf ='<a class="action view" href="javascript:void(0)" style="background:url(../../Images/pdf.png) no-repeat center; text-decoration:none;margin-left:18px;" onclick="DownloadReport(this)" jobid ="'+full.JobId+'" filename="'+full.InvoiceNumber+'.pdf"></a>';
+                                }
+                                else if (full.FileExist == '0'){
+                                    pdf= '<a class="action view" style="background:none;text-decoration:none;margin-left:18px;"></a>'
+                                }
+                                var sent = '' ;
+                                if (full.Sent == 1) {
+                                    sent = '<a href="javascript:void(0)" class="action view" style="background:url(../../Images/ic-right.png) no-repeat center;cursor:default; text-decoration:none;margin-left:18px;"></a>';
+                                } else { sent = '<a href="javascript:void(0)" class="action view" style="background:url(../../Images/ic-wrong.png) no-repeat center; cursor:default;text-decoration:none;margin-left:18px;"></a>'; }
+
+                                var edit ='&nbsp;&nbsp;&nbsp;<a href="javascript:void(0);" class="action view" style="background:url(../../Images/edit-icon.png) no-repeat center; text-decoration:none;margin-left:18px;" onclick="jobInvoiceDetail.loadData('+full.JobInvoiceID+','+full.JobId+')"></a>';
+                                var space = '&nbsp;&nbsp;&nbsp;';
+                                return pdf + space + sent + edit +'<a href="javascript:void(0)" onclick="deleteInvoice('+full.JobInvoiceID+')" class="action view" style="background:url(../../Images/delete-icon.png) no-repeat center; text-decoration:none;margin-left:18px;"></a>';
+                            },"orderable": false
+                        },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetAllJobInvoiceList", "AllJobInvoice")',
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("invoiceNumRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Invoice(s) found';
+                    }
+                    else{
+                        document.getElementById("invoiceNumRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Invoice(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                },
+                "fnServerParams": function (aoData) {  //These are the extra parameters for our custom filters
+                    aoData.push({ "name": "InvoiceNumber", "value": $("#txtInvoiceNumber").val()});
+                    aoData.push({ "name": "InvoiceDate", "value": GetDates($("#txtInvoiceDate").val()) });
+                    aoData.push({ "name": "Status", "value": $("#drdInvoiceStatusSearch option:selected").val() });   txtRefJobId
+                    aoData.push({ "name": "OwnerName", "value": $("#txtRefJobId").val() });
+                }
+            });
+
+            $(".dataTables_empty").css("text-align","left");
+        }
+
+        function GetDates(date){
+            if(date!=''){
+                var tickStartDate = ConvertDateToTick(date, '@ProjectConfiguration.GetDateFormat');
+                return moment(tickStartDate).format("YYYY-MM-DD");
+            }
+            else{
+                return '';
+            }
+        }
+
+        //function PrintDecimal(value){
+        //    if(typeof(value) == 'number'){
+        //        if (value === parseInt(value, 10)){
+        //            return value+'.00';
+        //        } else { return value;  }
+        //    } else { return '0.00'; }
+        //}
+
+        function ConvertToDate(data) {
+            if (data != null) {
+                var date = new Date(parseInt(data.replace('/Date(', '')));
+                return ("0" + date.getDate()).slice(-2) + '/' + ("0" + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear();
+            }
+            else {
+                return '';
+            }
+        }
+
+        function deleteInvoice(invoiceID){
+            var result = confirm("Are you sure you want to delete this invoice ?");
+            if (result) {
+                $.ajax({
+                    url: '@Url.Action("DeleteInvoice", "Job")',
+                    type: "POST",
+                    async: false,
+                    data: JSON.stringify({ InvoiceID: invoiceID }),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        if (data.status=="Failed") {
+                            $(".alert").hide();
+                            $("#errorMsgRegion").removeClass("alert-success");
+                            $("#errorMsgRegion").addClass("alert-danger");
+                            $("#errorMsgRegion").html(closeButton + data.strErrors);
+                            $("#errorMsgRegion").show();
+
+                            //$("#errorMsgRegion").fadeOut(3000);
+                        }
+                        else
+                        {
+                            $(".alert").hide();
+                            $("#errorMsgRegion").removeClass("alert-danger");
+                            $("#errorMsgRegion").addClass("alert-success");
+                            $("#errorMsgRegion").html(closeButton + data.strErrors);
+                            $("#errorMsgRegion").show();
+                            //$("#datatable").dataTable().fnDraw();
+                        }
+                        $("#datatable").dataTable().fnDraw();
+                    },
+                });
+            }
+        }
+
+
+        var jobInvoiceDetail = jobInvoiceDetail || [];
+
+        jobInvoiceDetail = (function () {
+            var pub = {};
+
+            pub.loadInvoiceDetailData =  function (invoiceID,JobId) {
+                //console.log("invoiceID == " + invoiceID);
+                //invoiceID = "2";
+                //if ($("#invoice"))
+                //    $("#invoice").css("display", "none");
+                $("#invoice").hide();
+                $("#invoiceDetail").show();
+                $("#invoiceBack").show();
+                $("#searchInvoice").hide();
+                if ($("#invoiceDetailList")) {
+                    $('#invoiceDetailList').html('');
+                    //var jobID = 0;
+                    //if($("#BasicDetails_JobID"))
+                    if(JobId==undefined || JobId ==0)
+                        JobId = $("#BasicDetails_JobID").val();
+                    $.ajax({
+                        url: '@Url.Action("GetJobInvoiceDetail", "AllJobInvoice")',
+                        type: "GET",
+                        dataType: "html",
+                        data: { invoiceID: invoiceID, jobId: JobId},
+                        async:false,
+                        cache:false,
+                        //contentType: 'application/json',
+                        success: function (data) {
+                            $('#invoiceDetailList').html(data);
+                            $("#BasicDetails_JobID").val(JobId);
+
+                        },
+                        complete: function (data) {
+                            //alert(data)
+
+                            $("#invoiceDetail").css("display", "block");
+                            if ($('#invoiceDetailListTable')) {
+                                var table = $('#invoiceDetailListTable').DataTable();
+                                table.destroy();
+                            }
+                            pub.loadtable(invoiceID);
+                            if($("#hdnJobInvoiceID"))
+                            {
+                                $("#hdnJobInvoiceID").val(invoiceID);
+                            }
+                            $('body').attr('style','overflow:scroll;padding-right:0px;');
+                        },
+                        error: function(data) {
+                            alert(data)
+                        }
+                    });
+                    if( $("#btnBack"))
+                    {
+                        $("#btnBack").attr("href", "javascript:void(0)");
+                        $('#btnBack ').click(function() {
+                            $("ul.create-job-menu li:eq(1)").trigger( "click" )
+                        });
+                    }
+                }
+            }
+
+            pub.loadtable = function (invoiceID){
+
+
+                var isInvoiced = '' , invoiceType = '' , queryString = '';
+
+                if($('#drdInvoiced'))
+                {
+                    isInvoiced = $('#drdInvoiced').val();
+                }
+                if($('#drdInvoiceType'))
+                {
+                    invoiceType = $('#drdInvoiceType').val();
+                }
+
+                if(invoiceID != '')
+                    queryString += 'invoiceID=' + invoiceID + '&';
+
+                if(isInvoiced != '')
+                    queryString += 'isInvoiced=' + isInvoiced + '&';
+
+                if(invoiceType != '')
+                    queryString += 'jobInvoiceType=' + invoiceType;
+
+                if(queryString != '')
+                    queryString = '?' + queryString;
+
+                var chkCount=0;
+
+                var jobID ='';
+                if($("#BasicDetails_JobID"))
+                    jobID = $("#BasicDetails_JobID").val();
+                //alert(jobID);
+
+                $('#invoiceDetailListTable').DataTable({
+
+                    paging: false,
+                    //scrollY: 200,
+                    //scrollCollapse: true,
+                    language: {
+                        sLengthMenu: "Page Size: _MENU_"
+                    },
+                    columns: [
+
+                            {
+
+                                'data': 'JobInvoiceDetailID',
+                                "render": function (data, type, full, meta) {
+                                    console.log("JobInvoiceDetailID = "+full.JobInvoiceDetailID);
+                                    if($('#chkAll').prop('checked')==true){
+                                        return '<input type="checkbox" id="chk_'+ full.JobInvoiceDetailID+'" checked>';
+                                    }
+                                    else{
+                                        return '<input type="checkbox" id="chk_'+ full.JobInvoiceDetailID+'">';
+                                    }
+                                },
+                                "orderable": false
+                            },
+                            { 'data': 'TimeStart',
+                                "render": function (data) {
+                                    //return this.ConvertToDate(data);
+                                    return ConvertToDateWithFormat(data, '@ProjectConfiguration.GetDateFormat')
+                                }
+                            },
+                            { 'data': 'JobInvoiceType',
+                                "render": function (data, type, full, meta) {
+                                    if(full.JobInvoiceType ==1){
+                                        return '<img src="/images/invoice-type-part.png" alt="Part" />'
+                                    }
+                                    else if(full.JobInvoiceType==2){
+                                        return '<img src="/images/invoice-type-time.png" alt="Time" />'
+                                    }
+                                    else if(full.JobInvoiceType==3){
+                                        return '<img src="/images/invoice-type-payment.png" alt="Payment" />'
+                                    }
+                                    else{
+                                        return '';
+                                    }
+                                },"orderable": false
+                            },
+                            { 'data': 'Description' },
+                            { 'data': 'StaffName',"orderable": false },
+                            //{ 'data': 'JobScheduleLabel' },
+                            { 'data': 'Quantity',"orderable": false,"sClass": "dt-right",
+                                "render": function (data, type, full, meta) {
+                                    return PrintDecimal(full.Quantity);
+                                },
+                            },
+                        { 'data': 'Sale',"orderable": false ,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Sale);
+                            },
+                        },
+                        { 'data': 'SubTotal',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.SubTotal);
+                            },
+                        },
+                        { 'data': 'cost',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.cost);
+                            },
+                        },
+                        { 'data': 'Profit',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Profit);
+                            },
+                        },
+                        { 'data': 'Margin',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                if (typeof (full.Margin) == 'number') {
+                                    if (full.Margin=== parseInt(full.Margin, 10)) {
+                                        return full.Margin;
+                                    } else { return full.Margin.toFixed(0); }
+                                }
+                                else {
+                                    return '0';
+                                }
+                            },
+                        },
+                        { 'data': 'Tax',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Tax);
+                            },
+                        },
+                        { 'data': 'Total',"orderable": false,"sClass": "dt-right",
+                            "render": function (data, type, full, meta) {
+                                return PrintDecimal(full.Total);
+                            },
+                        },
+                            { 'data': 'IsBillable' ,
+                                "render": function (data, type, full, meta) {
+
+                                    return '<img src="/images/'+full.IsBillableImage+'" alt="" />'
+
+                                },"orderable": false
+                            },
+                            { 'data': 'IsInvoiced',
+                                "render": function (data, type, full, meta) {
+                                    if(full.IsInvoiced == true){
+                                        return 'Yes'
+                                    }
+                                    else if(full.IsInvoiced== false){
+                                        return 'No'
+                                    }
+                                    else{
+                                        return '';
+                                    }
+                                },"orderable": false
+                            },
+                            {
+                                'data': 'JobInvoiceDetailID',
+                                className:'hide_column',
+                            },
+                            {
+                                'data': 'JobInvoiceType',
+                                className:'hide_column',
+                            },
+                            {
+                                'data': 'Payments',
+                                className:'hide_column',
+                            },
+                            {
+                                'data': 'Remaning',
+                                className:'hide_column',
+                            },
+                            {
+                                'data': 'TaxAmountConsider',
+                                className:'hide_column',
+                            }
+                    ],
+                    dom: "<<'table-responsive tbfix't><'bottom'l><'clear'>>",
+                    bServerSide: true,
+                    sAjaxSource: '@Url.Action("GetInvoiceDetailListing", "JobInvoiceDetail")' + queryString,
+
+                    "fnDrawCallback": function ( row, data, start, end, display) {
+
+                        chkCount = 0;
+                        var api = this.api(), data;
+                        var intVal = function ( i ) {
+                            return typeof i === 'string' ?
+                                i.replace(/[\$,]/g, '')*1 :
+                                typeof i === 'number' ?
+                                i : 0;
+                        };
+
+
+                        //$("#generateInvoice").attr("href", '@Url.Action("CreateReport", "JobInvoiceDetail")?Filename=Formbot_Invoice&ExportType=Pdf&jobInvoiceID='+ invoiceID + '&jobID=' + jobID)
+                        $("#generateInvoice").attr("data-id", '@Url.Action("CreateReport", "JobInvoiceDetail")?Filename=Formbot_Invoice&ExportType=Pdf&jobInvoiceID='+ invoiceID + '&jobID=' + jobID)
+                        $("#generateInvoice").attr("style", "cursor:pointer;");
+                        $("#exportCSV").attr("href", '@Url.Action("CreateCSV", "JobInvoiceDetail")?jobInvoiceID=' + invoiceID )
+
+
+                        $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                        $(".paging a.previous").html("&nbsp");
+                        $(".paging a.next").html("&nbsp");
+                        $('.grid-bottom span:first').attr('id', 'spanMain');
+                        $("#spanMain span").html("");
+                        $(".ellipsis").html("...");
+
+                        if ($(".paging").find("span").length > 1) {
+                            $("#invoiceDetailListTable_length").show();
+                        } else if ($("#invoiceDetailListTable").find("tr").length >11) { $("#invoiceDetailListTable_length").show();  } else { $("#invoiceDetailListTable_length").hide(); }
+
+                        //--------To show display records from total records-------------------
+                        var table = $('#invoiceDetailListTable').DataTable();
+                        var info = table.page.info();
+
+                        $('#invoiceDetailListTable th:first').removeClass('sorting_asc');
+
+                        $('#invoiceDetailListTable tbody').on('click', 'tr td:not(:first-child)', function (e) {
+                            var jobInvoiceDetailID = $(e.currentTarget).closest('tr').find('td:eq(15)').html();
+                            var jobInvoiceDetailType = $(e.currentTarget).closest('tr').find('td:eq(16)').html();
+
+                            var jobID ='';
+                            if($("#BasicDetails_JobID"))
+                                jobID = $("#BasicDetails_JobID").val();
+
+                            var xeroApprovedDate ='';
+                            if($("#hdnXeroApprovedDate"))
+                                xeroApprovedDate = $("#hdnXeroApprovedDate").val();
+
+
+                            if(jobInvoiceDetailType == '1' && jobInvoiceDetailID != '' && jobID != ''
+                                && xeroApprovedDate == '')
+                            {
+                                GetJobInvoiceDetailById(jobInvoiceDetailID, jobID);
+                            }
+                            else if(jobInvoiceDetailType == '2' && jobInvoiceDetailID != '' && xeroApprovedDate == '')
+                            {
+                                loadAddTime(jobInvoiceDetailID)
+                            }
+                            else if(jobInvoiceDetailType == '3' && jobInvoiceDetailID != '')
+                            {
+                                PaymentPopup(jobInvoiceDetailID)
+                            }
+
+                        });
+                    },
+                    "fnServerParams": function (aoData) {
+                        var table = $('#invoiceDetailListTable').DataTable();
+
+                        $('#chkAll').on('click', function () {
+                            var rows = table.rows({ 'search': 'applied' }).nodes();
+                            $('input[type="checkbox"]', rows).prop('checked', this.checked);
+                            chkCount = this.checked ? $('#invoiceDetailListTable >tbody >tr').length : 0;
+                        });
+
+                        $('#invoiceDetailListTable tbody').on('change', 'input[type="checkbox"]', function () {
+
+                            if (this.checked) {
+                                chkCount++;
+                                if (chkCount == $('#invoiceDetailListTable >tbody >tr').length) {
+                                    $('#chkAll').prop('checked', this.checked)
+                                }
+                            }
+                            else {
+                                chkCount--;
+                                $('#chkAll').prop('checked', this.checked)
+                            }
+                        });
+
+                        //setTimeout(function(){ console.log("123"); $("btnInvoiceAction").attr("aria-expanded","true");},4000);
+                    }
+                });
+
+
+            }
+            //return pub;
+            return {
+                loadData: function(invoiceID,JobId) { pub.loadInvoiceDetailData(invoiceID,JobId) },
+                loadInvoiceDetailGrid: function(invoiceID) { pub.loadtable(invoiceID) }
+            };
+
+        })();
+        function DownloadReport(obj) {
+            var JobId =$(obj).attr('jobid');
+            var fileName = $(obj).attr('filename');
+            window.location.href = '@Url.Action("ViewDownloadInvoiceReportFile", "JobInvoiceDetail")?FileName=' + fileName + '&JobID=' + JobId;
+        }
+    </script>
+}

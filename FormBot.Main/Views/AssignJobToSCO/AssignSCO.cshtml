@@ -1,0 +1,171 @@
+﻿@model FormBot.Entity.AssignSCO
+@{
+    ViewBag.Title = "Assign Job to SCO";
+    Layout = null;
+}
+
+<div id="msgSection">
+    @Html.RenderMessages()
+</div>
+<form style="background-color:#f8f8f8;clear:both;display:inline;width:100%;" id="UserDetail">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegionSCO" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+
+
+    <div class="form-group">
+        <label class="control-label required">Solar Connections Officer:</label>
+        @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "ScoID", @class = "form-control", @tabindex = 1 })
+        @Html.ValidationMessageFor(m => m.UserTypeID)
+    </div>
+
+
+    <div class="malti-list">
+        <div class="form-group">
+            <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">All Job:</label>
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstJobSCOUser, new MultiSelectList(Model.LstJobSCOUser, "Value", "Text"), new { id = "lstAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 2 })
+            </div>
+        </div>
+        @*<div class=" col-sm-2 tra-btn">
+                <div class="form-group">
+                    <a id="btnLtoR" href="javascript:void(0);" class="linkbutton">
+                        <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+                    </a>
+                    <a id="btnRtoL" href="javascript:void(0);" class="linkbutton">
+                        <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+                    </a>
+                </div>
+            </div>*@
+        @*<div class="col-sm-5">
+                <div class="form-group">
+                    <label class="col-md-7 col-sm-7 control-label" for="md" style="padding-top: 8px;margin-left:-13px;">Assigned Job:</label>
+                    <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                        @Html.ListBoxFor(m => m.JobSCOAssignedUser, new MultiSelectList(Model.LstJobSCOAssignedUser, "Value", "Text"), new { id = "lstAssignedAttendee", @class = "form-control", style = "padding:0px;height: 150px;", @tabindex = 5 })
+                    </div>
+                </div>
+            </div>*@
+    </div>
+    <div class="clearfix"></div>
+    <div class="modal-footer">
+        <div class="primary btn icon-btn">
+            <span class="sprite-img save_ic"></span>
+            <input type="button" name="SaveMapping" value="Save" autofocus class="" id="btnJobSCOMapping" tabindex="6">
+        </div>
+        <input type="button" value="Cancel" id="btnCancelSCO" class="default cancel_ic" data-dismiss="modal" tabindex="7">
+    </div>
+
+
+    @*<div class="form-group defaultFormBot tab_bottomrow">
+       
+    </div>*@
+
+
+</form>
+<script type="text/javascript">
+    $(document).ready(function () {
+        FillDropDown('ScoID', '@Url.Action("GetSCOUser", "AssignJobToSCO")?solarcompanyId=' + scaId, '@Model.UserTypeID' ? '@Model.UserTypeID' : 0, true, null);
+    });
+
+    //$("#btnCancelSCO").click(function () {
+    //    location.reload();
+
+    //});
+    $("#btnAssignSCOClose").click(function () {
+        $("#ScoID").next("span").attr('class', 'field-validation-valid');
+    });
+
+    //$("#btnLtoR").click(function () {
+    //    $('#lstAttendee option:selected').each(function () {
+    //        $(this).remove().appendTo("#lstAssignedAttendee");
+    //    });
+    //});
+
+    //$("#btnRtoL").click(function () {
+    //    $('#lstAssignedAttendee option:selected').each(function () {
+    //        $(this).remove().appendTo("#lstAttendee");
+    //    });
+    //});
+
+    @*$("#ScoID").change(function () {
+        var scoID = $("#ScoID").val();
+        $.ajax({
+            url: '@Url.Action("GetJobToSCOChanageDropDown", "AssignJobToSCO")',
+            type: "GET",
+            data: { scoID: scoID },
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                $('#lstAttendee').empty();
+                $('#lstAssignedAttendee').empty();
+                $.each(data.nodeList, function (key, value) {
+                    $("#lstAttendee").append($("<option></option>").val(value.Value).html(value.Text));
+                });
+                $.each(data.nodeListAssigned, function (key, value) {
+
+                    $("#lstAssignedAttendee").append($("<option></option>").val(value.Value).html(value.Text));
+                });
+            },
+        });
+    });*@
+
+    $('#btnJobSCOMapping').click(function (e) {
+
+        if ($("#ScoID").val() == "") {
+            showSCOErrorMessage("Please select solar connection officer.");
+            return false;
+        }
+
+        $("#lstAttendee option").attr('selected', true);
+
+        if ($("#lstAttendee").val() == null) {
+            showSCOErrorMessage("There is no job which can be assigned to solar connections officer.");
+            return false;
+        }
+
+        $.ajax({
+            url: '@Url.Action("SaveJobToSCO", "AssignJobToSCO")',
+            type: "GET",
+            data: { scoId: $("#ScoID").val(), jobIds: $("#lstAttendee").val().join(','), solarcompanyId: @Model.SolarCompanyId },
+            dataType: "json",
+            async: false,
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                if (data.success) {
+                    showSCOSuccessMessage("Job assigned to SCO successfully.");
+                    if (isKendoView) {
+                        var kendo = $('#datatable').data('kendoGrid').dataSource.filter();
+                        $('#datatable').kendoGrid('destroy').empty();
+                        datatableInfo();
+                        drawJobIndex(kendo);
+                    }
+                    else {
+                        datatableInfo();
+                        $('#datatable').DataTable().destroy();
+                        drawJobIndex();
+                    }
+                }
+            }
+        });
+
+        e.preventDefault();
+        return false;
+
+    });
+
+    function showSCOErrorMessage(message) {
+        $(".alert").hide();
+        $("#popuperrorMsgRegionSCO").removeClass("alert-success");
+        $("#popuperrorMsgRegionSCO").addClass("alert-danger");
+        $("#popuperrorMsgRegionSCO").html(closeButton + message);
+        $("#popuperrorMsgRegionSCO").show();
+    }
+    function showSCOSuccessMessage(message) {
+        $(".alert").hide();
+        $("#popuperrorMsgRegionSCO").removeClass("alert-danger");
+        $("#popuperrorMsgRegionSCO").addClass("alert-success");
+        $("#popuperrorMsgRegionSCO").html(closeButton + message);
+        $("#popuperrorMsgRegionSCO").show();
+    }
+
+</script>

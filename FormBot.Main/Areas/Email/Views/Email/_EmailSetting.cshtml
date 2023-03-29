@@ -1,0 +1,289 @@
+﻿@model FormBot.Entity.Email.EmailSignup
+@{
+    List<SelectListItem> lstTimeZone = new List<SelectListItem>(){new SelectListItem {Text = "Default", Value = "0" },
+        new SelectListItem { Value = "1", Text = "(GMT -12:00) Eniwetok, Kwajalein, Dateline Time" },
+        new SelectListItem { Value = "2", Text = "(GMT -11:00) Midway Island, Samoa" },
+        new SelectListItem { Value = "3", Text = "(GMT -10:00) Hawaii" },
+        new SelectListItem { Value = "4", Text = "(GMT -09:00) Alaska" },
+        new SelectListItem { Value = "5", Text = "(GMT -08:00) Pacific Time (US &amp; Canada); Tijuana" },
+        new SelectListItem { Value = "6", Text = "(GMT -07:00) Arizona" },
+        new SelectListItem { Value = "7", Text = "(GMT -07:00) Mountain Time (US &amp; Canada)" },
+        new SelectListItem { Value = "8", Text = "(GMT -06:00) Central America" },
+        new SelectListItem { Value = "9", Text = "(GMT -06:00) Central Time (US &amp; Canada)" },
+        new SelectListItem { Value = "10", Text = "(GMT -06:00) Mexico City, Tegucigalpa" },
+        new SelectListItem { Value = "11", Text = "(GMT -06:00) Saskatchewan" },
+        new SelectListItem { Value = "12", Text = "(GMT -05:00) Indiana (East)" },
+        new SelectListItem { Value = "13", Text = "(GMT -05:00) Eastern Time (US &amp; Canada)" },
+        new SelectListItem { Value = "14", Text = "(GMT -05:00) Bogota, Lima, Quito" },
+        new SelectListItem { Value = "15", Text = "(GMT -04:00) Santiago" },
+        new SelectListItem { Value = "16", Text = "(GMT -04:00) Caracas, La Paz" },
+        new SelectListItem { Value = "17", Text = "(GMT -04:00) Atlantic Time (Canada)" },
+        new SelectListItem { Value = "18", Text = "(GMT -03:30) Newfoundland" },
+        new SelectListItem { Value = "19", Text = "(GMT -03:00) Greenland" },
+        new SelectListItem { Value = "20", Text = "(GMT -03:00) Buenos Aires, Georgetown" },
+        new SelectListItem { Value = "21", Text = "(GMT -03:00) Brasilia" },
+        new SelectListItem { Value = "22", Text = "(GMT -02:00) Mid-Atlantic" },
+        new SelectListItem { Value = "23", Text = "(GMT -01:00) Cape Verde Is." },
+        new SelectListItem { Value = "24", Text = "(GMT -01:00) Azores" },
+        new SelectListItem { Value = "25", Text = "(GMT) Casablanca, Monrovia" },
+        new SelectListItem { Value = "26", Text = "(GMT) Dublin, Edinburgh, Lisbon, London" },
+        new SelectListItem { Value = "27", Text = "(GMT +01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna" },
+        new SelectListItem { Value = "28", Text = "(GMT +01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague" },
+        new SelectListItem { Value = "29", Text = "(GMT +01:00) Brussels, Copenhagen, Madrid, Paris" },
+        new SelectListItem { Value = "30", Text = "(GMT +01:00) Sarajevo, Skopje, Sofija, Vilnius, Warsaw, Zagreb" },
+        new SelectListItem { Value = "31", Text = "(GMT +01:00) West Central Africa" },
+        new SelectListItem { Value = "32", Text = "(GMT +02:00) Athens, Istanbul, Minsk" },
+        new SelectListItem { Value = "33", Text = "(GMT +02:00) Bucharest" },
+        new SelectListItem { Value = "34", Text = "(GMT +02:00) Cairo" },
+        new SelectListItem { Value = "35", Text = "(GMT +02:00) Harare, Pretoria" },
+        new SelectListItem { Value = "36", Text = "(GMT +02:00) Helsinki, Riga, Tallinn" },
+        new SelectListItem { Value = "37", Text = "(GMT +02:00) Israel, Jerusalem Standard Time" },
+        new SelectListItem { Value = "38", Text = "(GMT +03:00) Baghdad" },
+        new SelectListItem { Value = "39", Text = "(GMT +03:00) Arab, Kuwait, Riyadh" },
+        new SelectListItem { Value = "40", Text = "(GMT +03:00) Moscow, St. Petersburg, Volgograd" },
+        new SelectListItem { Value = "41", Text = "(GMT +03:00) East Africa, Nairobi" },
+        new SelectListItem { Value = "42", Text = "(GMT +03:30) Tehran" },
+        new SelectListItem { Value = "43", Text = "(GMT +04:00) Abu Dhabi, Muscat" },
+        new SelectListItem { Value = "44", Text = "(GMT +04:00) Baku, Tbilisi, Yerevan" },
+        new SelectListItem { Value = "45", Text = "(GMT +04:30) Kabul" },
+        new SelectListItem { Value = "46", Text = "(GMT +05:00) Ekaterinburg" },
+        new SelectListItem { Value = "47", Text = "(GMT +05:00) Islamabad, Karachi, Sverdlovsk, Tashkent" },
+        new SelectListItem { Value = "48", Text = "(GMT +05:30) Calcutta, Chennai, Mumbai, New Delhi, India Standard Time" },
+        new SelectListItem { Value = "49", Text = "(GMT +05:45) Kathmandu, Nepal" },
+        new SelectListItem { Value = "50", Text = "(GMT +06:00) Almaty, Novosibirsk, North Central Asia" },
+        new SelectListItem { Value = "51", Text = "(GMT +06:00) Astana, Dhaka" },
+        new SelectListItem { Value = "52", Text = "(GMT +06:00) Sri Jayewardenepura, Sri Lanka" },
+        new SelectListItem { Value = "53", Text = "(GMT +06:30) Rangoon" },
+        new SelectListItem { Value = "54", Text = "(GMT +07:00) Bangkok, Hanoi, Jakarta" },
+        new SelectListItem { Value = "55", Text = "(GMT +07:00) Krasnoyarsk" },
+        new SelectListItem { Value = "56", Text = "(GMT +08:00) Beijing, Chongqing, Hong Kong SAR, Urumqi" },
+        new SelectListItem { Value = "57", Text = "(GMT +08:00) Irkutsk, Ulaan Bataar" },
+        new SelectListItem { Value = "58", Text = "(GMT +08:00) Kuala Lumpur, Singapore" },
+        new SelectListItem { Value = "59", Text = "(GMT +08:00) Perth, Western Australia" },
+        new SelectListItem { Value = "60", Text = "(GMT +08:00) Taipei" },
+        new SelectListItem { Value = "61", Text = "(GMT +09:00) Osaka, Sapporo, Tokyo" },
+        new SelectListItem { Value = "62", Text = "(GMT +09:00) Seoul, Korea Standard time" },
+        new SelectListItem { Value = "63", Text = "(GMT +09:00) Yakutsk" },
+        new SelectListItem { Value = "64", Text = "(GMT +09:30) Adelaide, Central Australia" },
+        new SelectListItem { Value = "65", Text = "(GMT +09:30) Darwin" },
+        new SelectListItem { Value = "66", Text = "(GMT +10:00) Brisbane, East Australia" },
+        new SelectListItem { Value = "67", Text = "(GMT +10:00) Canberra, Melbourne, Sydney, Hobart" },
+        new SelectListItem { Value = "68", Text = "(GMT +10:00) Guam, Port Moresby" },
+        new SelectListItem { Value = "69", Text = "(GMT +10:00) Hobart, Tasmania" },
+        new SelectListItem { Value = "70", Text = "(GMT +10:00) Vladivostok" },
+        new SelectListItem { Value = "71", Text = "(GMT +11:00) Magadan, Solomon Is., New Caledonia" },
+        new SelectListItem { Value = "72", Text = "(GMT +12:00) Auckland, Wellington" },
+        new SelectListItem { Value = "73", Text = "(GMT +12:00) Fiji Islands, Kamchatka, Marshall Is." },
+        new SelectListItem { Value = "74", Text = "(GMT +13:00) Nuku'alofa, Tonga" }
+    };
+    
+}
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion">
+                @ViewBag.ErrorMessage
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-sm-2">
+        <div class="form-group">
+            @Html.LabelFor(m => m.Def_TimeZone, new { @class = "control-label" })
+            @Html.DropDownListFor(m => m.Def_TimeZone, lstTimeZone, new { @class="form-control" })
+            @*<select id="Def_TimeZone" name="Def_TimeZone" class="form-control">
+                <option value="0">Default</option>
+                <option value="1">(GMT -12:00) Eniwetok, Kwajalein, Dateline Time</option>
+                <option value="2">(GMT -11:00) Midway Island, Samoa</option>
+                <option value="3">(GMT -10:00) Hawaii</option>
+                <option value="4">(GMT -09:00) Alaska</option>
+                <option value="5">(GMT -08:00) Pacific Time (US &amp; Canada); Tijuana</option>
+                <option value="6">(GMT -07:00) Arizona</option>
+                <option value="7">(GMT -07:00) Mountain Time (US &amp; Canada)</option>
+                <option value="8">(GMT -06:00) Central America</option>
+                <option value="9">(GMT -06:00) Central Time (US &amp; Canada)</option>
+                <option value="10">(GMT -06:00) Mexico City, Tegucigalpa</option>
+                <option value="11">(GMT -06:00) Saskatchewan</option>
+                <option value="12">(GMT -05:00) Indiana (East)</option>
+                <option value="13">(GMT -05:00) Eastern Time (US &amp; Canada)</option>
+                <option value="14">(GMT -05:00) Bogota, Lima, Quito</option>
+                <option value="15">(GMT -04:00) Santiago</option>
+                <option value="16">(GMT -04:00) Caracas, La Paz</option>
+                <option value="17">(GMT -04:00) Atlantic Time (Canada)</option>
+                <option value="18">(GMT -03:30) Newfoundland</option>
+                <option value="19">(GMT -03:00) Greenland</option>
+                <option value="20">(GMT -03:00) Buenos Aires, Georgetown</option>
+                <option value="21">(GMT -03:00) Brasilia</option>
+                <option value="22">(GMT -02:00) Mid-Atlantic</option>
+                <option value="23">(GMT -01:00) Cape Verde Is.</option>
+                <option value="24">(GMT -01:00) Azores</option>
+                <option value="25">(GMT) Casablanca, Monrovia</option>
+                <option value="26">(GMT) Dublin, Edinburgh, Lisbon, London</option>
+                <option value="27">(GMT +01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna</option>
+                <option value="28">(GMT +01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague</option>
+                <option value="29">(GMT +01:00) Brussels, Copenhagen, Madrid, Paris</option>
+                <option value="30">(GMT +01:00) Sarajevo, Skopje, Sofija, Vilnius, Warsaw, Zagreb</option>
+                <option value="31">(GMT +01:00) West Central Africa</option>
+                <option value="32">(GMT +02:00) Athens, Istanbul, Minsk</option>
+                <option value="33">(GMT +02:00) Bucharest</option>
+                <option value="34">(GMT +02:00) Cairo</option>
+                <option value="35">(GMT +02:00) Harare, Pretoria</option>
+                <option value="36">(GMT +02:00) Helsinki, Riga, Tallinn</option>
+                <option value="37">(GMT +02:00) Israel, Jerusalem Standard Time</option>
+                <option value="38">(GMT +03:00) Baghdad</option>
+                <option value="39">(GMT +03:00) Arab, Kuwait, Riyadh</option>
+                <option value="40">(GMT +03:00) Moscow, St. Petersburg, Volgograd</option>
+                <option value="41">(GMT +03:00) East Africa, Nairobi</option>
+                <option value="42">(GMT +03:30) Tehran</option>
+                <option value="43">(GMT +04:00) Abu Dhabi, Muscat</option>
+                <option value="44">(GMT +04:00) Baku, Tbilisi, Yerevan</option>
+                <option value="45">(GMT +04:30) Kabul</option>
+                <option value="46">(GMT +05:00) Ekaterinburg</option>
+                <option value="47">(GMT +05:00) Islamabad, Karachi, Sverdlovsk, Tashkent</option>
+                <option value="48">
+                    (GMT +05:30) Calcutta, Chennai, Mumbai, New Delhi, India
+                    Standard Time
+                </option>
+                <option value="49">(GMT +05:45) Kathmandu, Nepal</option>
+                <option value="50">(GMT +06:00) Almaty, Novosibirsk, North Central Asia</option>
+                <option value="51">(GMT +06:00) Astana, Dhaka</option>
+                <option value="52">(GMT +06:00) Sri Jayewardenepura, Sri Lanka</option>
+                <option value="53">(GMT +06:30) Rangoon</option>
+                <option value="54">(GMT +07:00) Bangkok, Hanoi, Jakarta</option>
+                <option value="55">(GMT +07:00) Krasnoyarsk</option>
+                <option value="56">(GMT +08:00) Beijing, Chongqing, Hong Kong SAR, Urumqi</option>
+                <option value="57">(GMT +08:00) Irkutsk, Ulaan Bataar</option>
+                <option value="58">(GMT +08:00) Kuala Lumpur, Singapore</option>
+                <option value="59">(GMT +08:00) Perth, Western Australia</option>
+                <option value="60">(GMT +08:00) Taipei</option>
+                <option value="61">(GMT +09:00) Osaka, Sapporo, Tokyo</option>
+                <option value="62">(GMT +09:00) Seoul, Korea Standard time</option>
+                <option value="63">(GMT +09:00) Yakutsk</option>
+                <option value="64">(GMT +09:30) Adelaide, Central Australia</option>
+                <option value="65">(GMT +09:30) Darwin</option>
+                <option value="66">(GMT +10:00) Brisbane, East Australia</option>
+                <option value="67">(GMT +10:00) Canberra, Melbourne, Sydney, Hobart</option>
+                <option value="68">(GMT +10:00) Guam, Port Moresby</option>
+                <option value="69">(GMT +10:00) Hobart, Tasmania</option>
+                <option value="70">(GMT +10:00) Vladivostok</option>
+                <option value="71">(GMT +11:00) Magadan, Solomon Is., New Caledonia</option>
+                <option value="72">(GMT +12:00) Auckland, Wellington</option>
+                <option value="73">(GMT +12:00) Fiji Islands, Kamchatka, Marshall Is.</option>
+                <option value="74">(GMT +13:00) Nuku'alofa, Tonga</option>
+            </select>*@
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-2">
+        <div class="form-group">
+            @Html.HiddenFor(m => m.IsRequired)
+            @if (Model.IsRequired)
+            {
+                @Html.LabelFor(m => m.ConfigurationEmail, new { @class = "control-label required" });
+            }
+            else {
+                @Html.LabelFor(m => m.ConfigurationEmail, new { @class = "control-label" });
+            }            
+            @Html.TextBoxFor(m => m.ConfigurationEmail, new { @class = "form-control", @maxlength = 250, @tabindex = 1, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.ConfigurationEmail)
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <div class="form-group">
+                @if (Model.IsRequired)
+                {
+                    @Html.LabelFor(m => m.ConfigurationPassword, new { @class = "control-label required" });
+                }
+                else
+                {
+                    @Html.LabelFor(m => m.ConfigurationPassword, new { @class = "control-label" });
+                }
+                            
+                @Html.TextBoxFor(m => m.ConfigurationPassword, new { @class = "form-control", @maxlength = 50, @tabindex = 2, @autofocus = "autofocus", id = "ConfigurationPassword",@type="password" })
+                @Html.ValidationMessageFor(m => m.ConfigurationPassword)
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <div class="form-group">
+            @Html.LabelFor(m => m.ProtocolType, new { @class = "control-label" })
+            @Html.DropDownListFor(m => m.ProtocolType, new List<SelectListItem>()
+{
+    new SelectListItem(){ Text= "POP3", Value = "0"},
+    //new SelectListItem(){ Text= "IMAP4", Value = "1"},
+}, null, new { @class = "form-control", @autofocus = "autofocus", @tabindex = 3 })
+        </div>
+    </div>
+    <div class="col-sm-2">
+        <div class="form-group">
+            @if (Model.IsRequired)
+            {
+                @Html.LabelFor(m => m.IncomingMail, new { @class = "control-label required" });
+            }
+            else
+            {
+                @Html.LabelFor(m => m.IncomingMail, new { @class = "control-label" });
+            }            
+            @Html.TextBoxFor(m => m.IncomingMail, new { @class = "form-control", @maxlength = 100, @tabindex = 4, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.IncomingMail)
+        </div>
+    </div>
+    <div class="col-sm-1">
+        <div class="form-group">
+            @if (Model.IsRequired)
+            {
+                @Html.LabelFor(m => m.IncomingMailPort, new { @class = "control-label required" });
+            }
+            else
+            {
+                @Html.LabelFor(m => m.IncomingMailPort, new { @class = "control-label" });
+            }            
+            @Html.TextBoxFor(m => m.IncomingMailPort, new { @class = "form-control", @maxlength = 10, @tabindex = 5, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.IncomingMailPort)
+        </div>
+    </div>
+
+    <div class="col-sm-2">
+        <div class="form-group">
+            @if (Model.IsRequired)
+            {
+                @Html.LabelFor(m => m.OutgoingMail, new { @class = "control-label required" });
+            }
+            else
+            {
+                @Html.LabelFor(m => m.OutgoingMail, new { @class = "control-label" });
+            }                        
+            @Html.TextBoxFor(m => m.OutgoingMail, new { @class = "form-control", @maxlength = 100, @tabindex = 6, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.OutgoingMail)
+        </div>
+    </div>
+    <div class="col-sm-1">
+        <div class="form-group">
+            @if (Model.IsRequired)
+            {
+                @Html.LabelFor(m => m.OutgoingMailPort, new { @class = "control-label required" });
+            }
+            else
+            {
+                @Html.LabelFor(m => m.OutgoingMailPort, new { @class = "control-label" });
+            }
+            @Html.TextBoxFor(m => m.OutgoingMailPort, new { @class = "form-control", @maxlength = 10, @tabindex = 7, @autofocus = "autofocus" })
+            @Html.ValidationMessageFor(m => m.OutgoingMailPort)
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="form-group">
+            @Html.LabelFor(m => m.EmailSignature, new { @class = "control-label" })
+            <div id="editor" tabindex="8">
+            </div>
+        </div>
+    </div>
+</div>
+

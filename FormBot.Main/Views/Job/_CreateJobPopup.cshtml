@@ -1,0 +1,1501 @@
+﻿@model FormBot.Entity.CreateJob
+@using FormBot.Helper
+@{
+    IEnumerable<FormBot.Entity.CreateJob> users = new List<FormBot.Entity.CreateJob>();
+    ViewBag.OwnerCompanyPopup = new SelectList(users, string.Empty, string.Empty);
+}
+
+@Scripts.Render("~/bundles/jqueryval")
+
+@Html.ValidationSummary(true)
+@Html.AntiForgeryToken()
+
+<script src="~/Scripts/jquery.fileupload.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+<script src="~/Scripts/GeneralFunction.js"></script>
+<script src="~/Scripts/jquery.sumoselect.min.js"></script>
+<link href="~/Content/sumoselect.css" rel="stylesheet" />
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyC9JGh32nUUr3-ArB0sn_BeP7r3g5pVacw&sensor=false&libraries=places"></script>
+<script type="text/javascript">
+    var urlAddOtherDocuments = '@Url.Action("AddOtherDocuments", "Job")';
+    var typeOfFile = "Other";
+    var USERID = '@ProjectSession.LoggedInUserId';
+    $(document).ready(function () {
+
+        validateOrganisation_Popup();
+
+        $("#cancelCreatePopup").click(function () {
+            $('#popupboxCreateJobPopup').modal('toggle');
+            $('body').css('overflow', 'auto');
+            $('#createJobNewPopup').empty();
+        });
+
+        $("#btnClosepopupboxCreateJobPopup").click(function () {
+            $('#popupboxCreateJobPopup').modal('toggle');
+            $('body').css('overflow', 'auto');
+            $('#createJobNewPopup').empty();
+        });
+
+        $('#BasicDetails_JobType_Popup').change(function () {
+            $('#BasicDetails_JobType_Popup').val() == 1 ? $('.JobInstallationDetails_NMI').show() : $('.JobInstallationDetails_NMI').hide();
+        })
+
+        if (@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3) {
+            FillDropDown('ResellerID', '@Url.Action("GetReseller", "Reseller")', 0, true, null);
+            FillDropDown('SolarCompanyId', '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")?id=' + $('#ResellerID').val(), 0, true, null);
+        }
+
+        if (@ProjectSession.UserTypeId == 2 || @ProjectSession.UserTypeId == 5) {
+            FillDropDown('SolarCompanyId', '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")?id=' + @ProjectSession.ResellerId, 0, true, null);
+        }
+
+        $("#ResellerID").change(function () {
+
+            FillDropDown('SolarCompanyId', '@Url.Action("GetSolarCompanyByResellerId", "SolarCompany")?id=' + $('#ResellerID').val(), 0, true, null);
+        })
+
+        $("#SolarCompanyId").change(function () {
+            GetDocument();
+        });
+        if (@ProjectSession.UserTypeId== 4 || @ProjectSession.UserTypeId== 8) {
+            GetDocument();
+        }
+        if (@ProjectSession.UserTypeId== 1 || @ProjectSession.UserTypeId== 2 || @ProjectSession.UserTypeId== 3 || @ProjectSession.UserTypeId== 5) {
+            $("#docOnCreateJob").hide();
+        }
+
+        $('#BasicDetails_strInstallationDate_Popup').datepicker({
+            format: '@FormBot.Helper.ProjectConfiguration.GetDateFormat',
+            autoclose: true
+        }).on('change', function () {
+            $(this).valid();
+        });
+
+        $('#JobOwnerDetails_AddressID_Popup').change(function () {
+            if ($('#JobOwnerDetails_AddressID_Popup').val() == 1) {
+                $('.OwnerDPA_Popup').show();
+                $('.OwnerPDA_Popup').hide();
+                $("#JobInstallationDetails_IsSameAsOwnerAddress_Popup").prop("disabled", false);
+            }
+            else {
+                $('.OwnerPDA_Popup').show();
+                $('.OwnerDPA_Popup').hide();
+                $("#JobInstallationDetails_IsSameAsOwnerAddress_Popup").prop("disabled", true);
+            }
+        });
+
+        $('#JobInstallationDetails_AddressID_Popup').change(function () {
+            if ($('#JobInstallationDetails_AddressID_Popup').val() == 1) {
+                $('.InstallationDPA_Popup').show();
+                $('.InstallationPDA_Popup').hide();
+            }
+            else {
+                $('.InstallationPDA_Popup').show();
+                $('.InstallationDPA_Popup').hide();
+            }
+        });
+
+        $('#JobInstallationDetails_IsSameAsOwnerAddress_Popup').change(function () {
+            if ($(this).is(":checked")) {
+
+                $("#JobInstallationDetails_AddressID_Popup").val($("#JobOwnerDetails_AddressID_Popup").val());
+                $('#JobInstallationDetails_UnitNumber_Popup').val($("#JobOwnerDetails_UnitNumber_Popup").val());
+                $('#JobInstallationDetails_UnitTypeID_Popup').val($("#JobOwnerDetails_UnitTypeID_Popup").val());
+                $('#JobInstallationDetails_StreetNumber_Popup').val($("#JobOwnerDetails_StreetNumber_Popup").val());
+                $('#JobInstallationDetails_StreetName_Popup').val($("#JobOwnerDetails_StreetName_Popup").val());
+                $('#JobInstallationDetails_StreetTypeID_Popup').val($("#JobOwnerDetails_StreetTypeID_Popup").val());
+                $('#JobInstallationDetails_Town_Popup').val($("#JobOwnerDetails_Town_Popup").val());
+                $('#JobInstallationDetails_State_Popup').val($("#JobOwnerDetails_State_Popup").val());
+                $('#JobInstallationDetails_PostCode_Popup').val($("#JobOwnerDetails_PostCode_Popup").val());
+                $("#JobInstallationDetails_PostalDeliveryNumber_Popup").val($("#JobOwnerDetails_PostalDeliveryNumber_Popup").val());
+                $('#JobInstallationDetails_PostalAddressID_Popup').val($("#JobOwnerDetails_PostalAddressID_Popup").val());
+
+                if ($("#JobOwnerDetails_AddressID_Popup").val() == 1) {
+                    $(".InstallationAddress_Popup").val(1);
+                    $('.InstallationDPA_Popup').show();
+                    $('.InstallationPDA_Popup').hide();
+                }
+                else {
+                    $(".InstallationAddress_Popup").val(2);
+                    $('.InstallationPDA_Popup').show();
+                    $('.InstallationDPA_Popup').hide();
+                }
+
+                //validation
+
+                addressInstallationValidationRules_Popup();
+                $("#JobInstallationDetails_AddressID_Popup").valid();
+                $('#JobInstallationDetails_UnitNumber_Popup').valid();
+                $('#JobInstallationDetails_UnitTypeID_Popup').valid();
+                $('#JobInstallationDetails_StreetNumber_Popup').valid();
+                $('#JobInstallationDetails_StreetName_Popup').valid();
+                $('#JobInstallationDetails_StreetTypeID_Popup').valid();
+                $('#JobInstallationDetails_Town_Popup').valid();
+                $('#JobInstallationDetails_State_Popup').valid();
+                $('#JobInstallationDetails_PostCode_Popup').valid();
+                $("#JobInstallationDetails_PostalDeliveryNumber_Popup").valid();
+                $('#JobInstallationDetails_PostalAddressID_Popup').valid();
+            }
+        });
+
+        $("#JobOwnerDetails_CompanyABN_Popup").change(function () {
+
+            var id = $('#JobOwnerDetails_CompanyABN_Popup').val();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCompanyABN", "User")',
+                data: { id: id },
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (data) {
+
+                    if (data == 0) {
+                        $('#JobOwnerDetails_CompanyName_Popup').empty();
+                        $("#JobOwnerDetails_CompanyName_Popup").append($("<option></option>").val("").html("Select"));
+                        $(".alert").hide();
+                        $("#errorMsgRegion").html(closeButton + "Invalide Company ABN.");
+                        $("#errorMsgRegion").show();
+
+                        return false;
+                    }
+                    else {
+                        if ($('#JobOwnerDetails_CompanyName_Popup option').length > 1) {
+                            $('#JobOwnerDetails_CompanyName_Popup').empty();
+                            $("#JobOwnerDetails_CompanyName_Popup").append($("<option></option>").val("").html("Select"));
+                            $.each(data, function (key, value) {
+                                $("#JobOwnerDetails_CompanyName_Popup").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        else {
+                            $.each(data, function (key, value) {
+                                $("#JobOwnerDetails_CompanyName_Popup").append($("<option></option>").val(value.CompanyName).html(value.CompanyName));
+                            });
+                        }
+                        initializeOwnerDetails(data);
+                        return data;
+                    }
+                }
+            });
+        });
+
+        function initializeOwnerDetails(data) {
+
+            $("#JobOwnerDetails_CompanyName_Popup").change(function () {
+                $.each(data, function (key, value) {
+                    var Cname = value.CompanyName;
+                    var drpVal = $('select#JobOwnerDetails_CompanyName_Popup option:selected').val();
+                });
+            });
+        }
+
+        $("#JobOwnerDetails_Town_Popup").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest","User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobOwnerDetails_State_Popup').val(ui.item.state);
+                $('#JobOwnerDetails_PostCode_Popup').val(ui.item.postcode);
+
+                $('#JobOwnerDetails_State_Popup').valid();
+                $('#JobOwnerDetails_PostCode_Popup').valid();
+            }
+        });
+
+        $("#JobOwnerDetails_PostCode_Popup").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest","User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobOwnerDetails_State_Popup').val(ui.item.state);
+                $('#JobOwnerDetails_Town_Popup').val(ui.item.location);
+                $('#JobOwnerDetails_State_Popup').valid();
+                $('#JobOwnerDetails_Town_Popup').valid();
+            }
+        });
+        $("#JobInstallationDetails_Town_Popup").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest","User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.location,
+                                    state: item.state,
+                                    postcode: item.postcode
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobInstallationDetails_State_Popup').val(ui.item.state);
+                $('#JobInstallationDetails_PostCode_Popup').val(ui.item.postcode);
+                $('#JobInstallationDetails_State_Popup').valid();
+                $('#JobInstallationDetails_PostCode_Popup').valid();
+            }
+        });
+
+        $("#JobInstallationDetails_PostCode_Popup").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("ProcessRequest","User")',
+                    dataType: 'json',
+                    data: {
+                        excludePostBoxFlag: true,
+                        q: request.term
+                    },
+                    success: function (data) {
+                        var data1 = JSON.parse(data);
+                        if (data1.localities.locality instanceof Array)
+                            response($.map(data1.localities.locality, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                        else
+                            response($.map(data1.localities, function (item) {
+                                return {
+                                    label: item.location + ', ' + item.state + ', ' + item.postcode,
+                                    value: item.postcode,
+                                    state: item.state,
+                                    location: item.location
+                                }
+                            }));
+                    }
+                })
+            },
+            select: function (event, ui) {
+                $('#JobInstallationDetails_State_Popup').val(ui.item.state);
+                $('#JobInstallationDetails_Town_Popup').val(ui.item.location);
+                $('#JobInstallationDetails_State_Popup').valid();
+                $('#JobInstallationDetails_Town_Popup').valid();
+            }
+        });
+
+        $("#JobOwnerDetails_OwnerType_Popup").change(function (e) {
+
+            validateOrganisation_Popup();
+        });
+
+        Array.prototype.pushArray = function () {
+            var toPush = this.concat.apply([], arguments);
+            for (var i = 0, len = toPush.length; i < len; ++i) {
+                this.push(toPush[i]);
+            }
+        };
+        $.fn.serializeToJson = function () {
+            var $form = $(this[0]);
+
+            var items = $form.serializeArray();
+
+            var returnObj = {};
+            var nestedObjectNames = [];
+
+            $.each(items, function (i, item) {
+                //Split nested objects and assign properties
+                //You may want to make this recursive - currently only works one step deep, but that's all I need
+                if (item.name.indexOf('.') != -1) {
+                    var nameArray = item.name.split('.');
+                    if (nestedObjectNames.indexOf(nameArray[0]) < 0) {
+                        nestedObjectNames.push(nameArray[0]);
+                    }
+                    var tempObj = returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] || {};
+                    if (!tempObj[nameArray[1]]) {
+                        tempObj[nameArray[1]] = item.value;
+                    }
+                    returnObj[nestedObjectNames[nestedObjectNames.indexOf(nameArray[0])]] = tempObj;
+                } else if (!returnObj[item.name]) {
+                    returnObj[item.name] = item.value;
+                }
+            });
+
+            return returnObj;
+        };
+
+        $("#saveCreateJobPopup").click(function () {
+            //start code for get lat long from address when create job
+            fillInstallationAddressDetail();
+            //var hdnInstaddress = $("#hdnInstallationAdd").text().trim();
+            //loadMapScript(1);
+            //var geocoder = new google.maps.Geocoder();
+
+            //geocoder.geocode({ 'address': hdnInstaddress }, function (results, status) {
+            //    var InstlatitudePopup;
+            //    var InstlongitudePopup;
+            //    if (status == google.maps.GeocoderStatus.OK) {
+            //        InstlatitudePopup = results[0].geometry.location.lat();
+            //        InstlongitudePopup = results[0].geometry.location.lng();
+
+            //    }
+            //});
+            //end code for get lat long from address when create job
+           // LoadInstallationSignatureLocation($("#hdnInstallationAdd").text(), 1);
+            var geocoder = new google.maps.Geocoder();
+            var InstlatitudePopup;
+            var InstlongitudePopup;
+            var address = $("#hdnInstallationAdd").text().trim();
+            geocoder.geocode({ 'address': address }, function (results, status) {
+
+                if (status == google.maps.GeocoderStatus.OK) {
+                    InstlatitudePopup = results[0].geometry.location.lat();
+                    InstlongitudePopup = results[0].geometry.location.lng();
+                   // alert("Latitude: " + InstlatitudePopup + "\nLongitude: " + InstlongitudePopup);
+                }
+            });
+            setTimeout(function () {
+                if ($("#createJobNewPopup").valid()) {
+                    $('#JobInstallationDetails_latitude').val(InstlatitudePopup);
+                    $('#JobInstallationDetails_longitude').val(InstlongitudePopup);
+
+                    var DocObject = null;
+                    if ($('#tbodyDocItems').length > 0) {
+                        var $selectedLi = $('#tbodyDocItems').find('input[type=checkbox]:checked').closest('li'),
+                            data = [];
+
+                        for (var i = 0; i < $selectedLi.length; i++) {
+                            var $li = $($selectedLi[i]);
+                            data.push({
+                                name: $li.data('name'),
+                                path: $li.data('path'),
+                                TemplateName: $li.data('tempName') + ".pdf",
+                            });
+                        }
+                        DocObject = {
+
+                            docs: data,
+                            UserId: USERID,
+                            fillData: true,
+                            UseNewDocTemplate: true,
+                            type: typeOfFile
+                        }
+                    }
+
+                    var formdata = $('#createJobNewPopup').serializeToJson();
+                    formdata = {
+                        BasicDetails: formdata.BasicDetails,
+                        JobOwnerDetails: formdata.JobOwnerDetails,
+                        JobInstallationDetails: formdata.JobInstallationDetails,
+                        docObject: DocObject
+                    }
+
+                    var data = JSON.stringify(formdata);
+
+                $.ajax(
+                    {
+                        url: '@Url.Action("CreateJobPopup", "Job")',
+                        dataType: 'json',
+                        contentType: 'application/json; charset=utf-8', // Not to set any content header
+                        type: 'post',
+                        data: data,
+                        success: function (response) {
+                            if (response.status && response.jobId) {
+
+                            var data = response.jobName;
+                            $('#popupboxCreateJobPopup').modal('toggle');
+                            if(response.IsCreateJobNotification){
+                                $('#popupboxSuccessJobCreatePopup').modal({ backdrop: 'static', keyboard: false });
+                                $('#popupboxSuccessJobCreatePopup').find('#successJobCreateMessage').text(data + " was successfully created.");
+                                $('#popupboxSuccessJobCreatePopup').find('#viewCreatedJob').attr('jobId', response.jobId);
+                            }else{
+                                var url = urlIndexJob + "/" + response.jobId;
+                                window.location.href = url;
+                            }
+                            $('#createJobNewPopup').empty();
+
+                                if (response.docresult != null) {
+                                var failed = response.docresult.Data.filter(e => e.JobDocumentId === 0);
+                                if (failed.length > 0) {
+                                    var message = "";
+                                    for (var i = 0; i < failed.length; i++) {
+                                        message += '- ' + failed[i].message + '\n';
+                                    }
+                                    alert(message);
+                                }
+                            }
+                        }
+                        else {
+                            if (response.isLogout) {
+                                window.location.href = '@Url.Action("Logout", "Account")';
+                            }
+                            else {
+                                ShowCreatedJobErrorMessage(response.error);
+                            }
+                        }
+                    },
+                    error: function () {
+                        ShowCreatedJobErrorMessage("Job has not been created.");
+                    }
+                });
+            }
+            }, 1500);
+
+
+        });
+
+    });
+
+
+
+    FillDropDown('JobOwnerDetails_UnitTypeID_Popup', '@Url.Action("GetUnitType", "UnitType")', 0, true, null);
+    FillDropDown('JobOwnerDetails_StreetTypeID_Popup', '@Url.Action("GetStreetType", "StreetType")', 0, true, null);
+    FillDropDown('JobOwnerDetails_PostalAddressID_Popup', '@Url.Action("GetPostalAddress", "User")', 0, true, null);
+
+    FillDropDown('JobInstallationDetails_UnitTypeID_Popup', '@Url.Action("GetUnitType", "UnitType")', 0, true, null);
+    FillDropDown('JobInstallationDetails_StreetTypeID_Popup', '@Url.Action("GetStreetType", "StreetType")', 0, true, null);
+    FillDropDown('JobInstallationDetails_PostalAddressID_Popup', '@Url.Action("GetPostalAddress", "User")', 0, true, null);
+
+    FillDropDown('BasicDetails_JobStage_Popup', '@Url.Action("GetJobStage", "Job")', 1, true, null);
+    FillDropDown('BasicDetails_Priority_Popup', '@Url.Action("GetPriority", "Job")', 2, true, null);
+
+
+    function validateFormJob() {
+        validateOrganisation_Popup();
+        var isValidOwnerAdd = addressValidationRules("JobOwnerDetails");//addressOwnerValidationRules_Popup();
+        var isValidInstallationAdd = addressValidationRules("JobInstallationDetails");//addressInstallationValidationRules_Popup();
+        @*if(@ProjectSession.UserTypeId == 1 || @ProjectSession.UserTypeId == 3){
+            if($("#ResellerID").val().length == 0 || $("#SolarCompanyId").val().length == 0){
+                alert("Please select Reseller and SolarCompany");
+                return false;
+            }
+        }*@
+        $.validator.unobtrusive.parse("#createJobNewPopup");
+        if ($("#createJobNewPopup").valid() && isValidOwnerAdd && isValidInstallationAdd) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    function fillInstallationAddressDetail() {
+        var InstallationJson = [];
+        var InstallationPostcodeFromjson;
+
+        if ($("#JobInstallationDetails_Town_Popup").length > 0 && $("#JobInstallationDetails_Town_Popup").val().trim() != "" && $("#JobInstallationDetails_Town_Popup").val() != undefined && $("#JobInstallationDetails_Town_Popup").val() != null) {
+
+            if ($("#JobInstallationDetails_UnitTypeID_Popup").find('option').length > 0 && $("#JobInstallationDetails_StreetTypeID_Popup").find('option').length > 0) {
+                var address;
+                var UnitTypeId = $("#JobInstallationDetails_UnitTypeID_Popup").find("option:selected").text();
+                var UnitNumber = $("#JobInstallationDetails_UnitNumber_Popup").val();
+                var StreetNumber = $("#JobInstallationDetails_StreetNumber_Popup").val();
+                var StreetName = $("#JobInstallationDetails_StreetName_Popup").val();
+                var StreetTypeId = $("#JobInstallationDetails_StreetTypeID_Popup").find("option:selected").text();
+                //var PostalAddressID = $("#JobInstallationDetails_PostalAddressID").find("option:selected").text();
+                //var PostalDeliveryNumber = $("#JobInstallationDetails_PostalDeliveryNumber").val();
+                var Town = $("#JobInstallationDetails_Town_Popup").val();
+                var State = $("#JobInstallationDetails_State_Popup").val();
+                var PostCode = $("#JobInstallationDetails_PostCode_Popup").val();
+                if (UnitNumber != "") {
+                    address = UnitTypeId + ' ' + UnitNumber + "/" + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                } else {
+                    address = UnitTypeId + ' ' + StreetNumber + ' ' + StreetName + ' ' + StreetTypeId + ', ' + Town + ' ' + State + ' ' + PostCode;
+                    address = address.replace("Select", "");
+                }
+                InstallationJson.push({ UnitType: $("#JobInstallationDetails_UnitTypeID_Popup").val(), UnitNumber: $("#JobInstallationDetails_UnitNumber_Popup").val(), StreetNumber: $("#JobInstallationDetails_StreetNumber_Popup").val(), StreetName: $("#JobInstallationDetails_StreetName_Popup").val(), StreetType: $("#JobInstallationDetails_StreetTypeID_Popup").val(), Town: $("#JobInstallationDetails_Town_Popup").val(), State: $("#JobInstallationDetails_State_Popup").val(), PostCode: $("#JobInstallationDetails_PostCode_Popup").val() });
+
+                InstallationPostcodeFromjson = $("#JobInstallationDetails_PostCode_Popup").val();
+                address = address.replace("Select", "");
+                if (address.trim() != "/ ," && address.trim() != "/Select ,") {
+                    $("#hdnInstallationAdd").text(address);
+                    $('#hdnInstallationAdd').hide();
+                }
+            }
+        }
+    }
+
+
+
+
+
+    //function cancelJobPopup() {
+    //    $('#createJobNewPopup').empty();
+    //}
+
+    function addressOwnerValidationRules_Popup() {
+
+        $("#JobOwnerDetails_UnitTypeID_Popup").rules("add", {
+            required: false,
+        });
+        $("#JobOwnerDetails_UnitNumber_Popup").rules("add", {
+            required: false,
+        });
+        if ($("#JobOwnerDetails_UnitTypeID_Popup").val() == "" && $("#JobOwnerDetails_UnitNumber_Popup").val() == "") {
+            $('#lblOwnerUnitNumber_Popup').removeClass("required");
+            $('#lblOwnerUnitTypeID_Popup').removeClass("required");
+            $("#JobOwnerDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobOwnerDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+
+            $("#JobOwnerDetails_UnitNumber_Popup").next("span").attr('class', 'field-validation-valid');
+            $('#lblOwnerStreetNumber_Popup').addClass("required");
+            $("#JobOwnerDetails_StreetNumber_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Street Number is required."
+                }
+            });
+        }
+
+        if ($("#JobOwnerDetails_UnitTypeID_Popup").val() > 0 && $("#JobOwnerDetails_UnitNumber_Popup").val() != "") {
+            $('#lblOwnerStreetNumber_Popup').removeClass("required");
+            $("#JobOwnerDetails_StreetNumber_Popup").rules("add", {
+                required: false,
+            });
+            $('#lblOwnerUnitNumber_Popup').removeClass("required");
+            $('#lblOwnerUnitTypeID_Popup').removeClass("required");
+            $("#JobOwnerDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobOwnerDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+        }
+        if ($("#JobOwnerDetails_UnitTypeID_Popup").val() > 0 && $("#JobOwnerDetails_UnitNumber_Popup").val() == "") {
+            $("#JobOwnerDetails_UnitNumber_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Unit Number is required."
+                }
+            });
+            $('#lblOwnerUnitNumber_Popup').addClass("required");
+            $('#lblOwnerStreetNumber_Popup').removeClass("required");
+            $("#JobOwnerDetails_StreetNumber_Popup").rules("add", {
+                required: false,
+            });
+        }
+        if ($("#JobOwnerDetails_UnitTypeID_Popup").val() == "" && $("#JobOwnerDetails_UnitNumber_Popup").val() != "") {
+            $('#lblOwnerUnitNumber_Popup').addClass("required");
+            $('#lblOwnerUnitTypeID_Popup').removeClass("required");
+            $("#JobOwnerDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobOwnerDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+            $('#lblOwnerStreetNumber_Popup').addClass("required");
+            $("#JobOwnerDetails_StreetNumber_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Street Number is required."
+                }
+            });
+        }
+    }
+
+    function addressInstallationValidationRules_Popup() {
+
+        $("#JobInstallationDetails_UnitTypeID_Popup").rules("add", {
+            required: false,
+        });
+        $("#JobInstallationDetails_UnitNumber_Popup").rules("add", {
+            required: false,
+        });
+        if ($("#JobInstallationDetails_UnitTypeID_Popup").val() == "" && $("#JobInstallationDetails_UnitNumber_Popup").val() == "") {
+            $('#lblInstallationUnitNumber_Popup').removeClass("required");
+            $('#lblInstallationUnitTypeID_Popup').removeClass("required");
+            $("#JobInstallationDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobInstallationDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobInstallationDetails_UnitNumber_Popup").next("span").attr('class', 'field-validation-valid');
+            //$('#lblInstallationStreetNumber_Popup').addClass("required");
+            //$("#JobInstallationDetails_StreetNumber_Popup").rules("add", {
+            //    required: true,
+            //    messages: {
+            //        required: "Street Number is required."
+            //    }
+            //});
+        }
+
+        if ($("#JobInstallationDetails_UnitTypeID_Popup").val() > 0 && $("#JobInstallationDetails_UnitNumber_Popup").val() != "") {
+            //$('#lblInstallationStreetNumber_Popup').removeClass("required");
+            //$("#JobInstallationDetails_StreetNumber_Popup").rules("add", {
+            //    required: false,
+            //});
+            $('#lblInstallationUnitNumber_Popup').removeClass("required");
+            $('#lblInstallationUnitTypeID_Popup').removeClass("required");
+            $("#JobInstallationDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobInstallationDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+        }
+        if ($("#JobInstallationDetails_UnitTypeID_Popup").val() > 0 && $("#JobInstallationDetails_UnitNumber_Popup").val() == "") {
+            $("#JobInstallationDetails_UnitNumber_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Unit Number is required."
+                }
+            });
+            $('#lblInstallationUnitNumber_Popup').addClass("required");
+            //$('#lblInstallationStreetNumber_Popup').removeClass("required");
+            //$("#JobInstallationDetails_StreetNumber_Popup").rules("add", {
+            //    required: false,
+            //});
+        }
+        if ($("#JobInstallationDetails_UnitTypeID_Popup").val() == "" && $("#JobInstallationDetails_UnitNumber_Popup").val() != "") {
+            $('#lblInstallationUnitNumber_Popup').addClass("required");
+            $('#lblInstallationUnitTypeID_Popup').removeClass("required");
+            $("#JobInstallationDetails_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            $("#JobInstallationDetails_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+            //$('#lblInstallationStreetNumber_Popup').addClass("required");
+            //$("#JobInstallationDetails_StreetNumber_Popup").rules("add", {
+            //    required: true,
+            //    messages: {
+            //        required: "Street Number is required."
+            //    }
+            //});
+        }
+    }
+
+    function addressValidationRules(controlPrefix) {
+
+        var isValidLocation = true;
+        if ($("#" + controlPrefix + "_AddressID_Popup").val() == 1) {
+            $("#" + controlPrefix + "_UnitTypeID_Popup").rules("add", {
+                required: false,
+            });
+            $("#" + controlPrefix + "_UnitNumber_Popup").rules("add", {
+                required: false,
+            });
+            if ($("#" + controlPrefix + "_UnitTypeID_Popup").val() == "" && $("#" + controlPrefix + "_UnitNumber_Popup").val() == "") {
+                //$('#' + controlPrefix + '_UnitTypeID').parent("label").removeClass("required");
+                //$('#' + controlPrefix + '_UnitNumber').parent("label").removeClass("required");
+                $("label[for~='" + controlPrefix + "_UnitNumber_Popup']").removeClass("required");
+                $("label[for~='" + controlPrefix + "_UnitTypeID_Popup']").removeClass("required");
+                $("#" + controlPrefix + "_UnitNumber_Popup").rules("add", {
+                    required: false,
+                });
+                $("#" + controlPrefix + "_UnitTypeID_Popup").rules("add", {
+                    required: false,
+                });
+
+                $("#" + controlPrefix + "_UnitNumber_Popup").next("span").attr('class', 'field-validation-valid');
+                //$('#' + controlPrefix + '_StreetNumber').parent("label").addClass("required");
+                $("label[for~='" + controlPrefix + "_StreetNumber_Popup']").addClass("required");
+                $("#" + controlPrefix + "_StreetNumber_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+            if ($("#" + controlPrefix + "_UnitTypeID_Popup").val() > 0 && $("#" + controlPrefix + "_UnitNumber_Popup").val() != "") {
+                //$('#' + controlPrefix + '_StreetNumber').parent("label").removeClass("required");                 // Ashish Christain: Only working in veec job
+                $("label[for~='" + controlPrefix + "_StreetNumber_Popup']").removeClass("required");
+                $("#" + controlPrefix + "_StreetNumber_Popup").rules("add", {
+                    required: false,
+                });
+                //$('#' + controlPrefix + '_UnitNumber').parent("label").removeClass("required");
+                //$('#' + controlPrefix + '_UnitTypeID').parent("label").removeClass("required");
+                $("label[for~='" + controlPrefix + "_UnitNumber_Popup']").addClass("required");
+                $("label[for~='" + controlPrefix + "_UnitTypeID_Popup']").addClass("required");
+                $("#" + controlPrefix + "_UnitNumber_Popup").rules("add", {
+                    required: true,
+                });
+                $("#" + controlPrefix + "_UnitTypeID_Popup").rules("add", {
+                    required: true,
+                });
+            }
+            if ($("#" + controlPrefix + "_UnitTypeID_Popup").val() > 0 && $("#" + controlPrefix + "_UnitNumber_Popup").val() == "") {
+                $("#" + controlPrefix + "_UnitNumber_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Unit Number is required."
+                    }
+                });
+                //$('#' + controlPrefix + '_UnitNumber').parent("label").addClass("required");
+                //$('#' + controlPrefix + '_StreetNumber').parent("label").removeClass("required");
+                $("label[for~='" + controlPrefix + "_UnitNumber_Popup']").addClass("required");
+                $("label[for~='" + controlPrefix + "_UnitTypeID_Popup']").addClass("required");
+                $("label[for~='" + controlPrefix + "_StreetNumber_Popup']").removeClass("required");
+                $("#" + controlPrefix + "_StreetNumber_Popup").rules("add", {
+                    required: false,
+                });
+            }
+            if ($("#" + controlPrefix + "_UnitTypeID_Popup").val() == "" && $("#" + controlPrefix + "_UnitNumber_Popup").val() != "") {
+                //$('#' + controlPrefix + '_UnitNumber').parent("label").addClass("required");
+                //$('#' + controlPrefix + '_UnitTypeID').parent("label").removeClass("required");
+                $("label[for~='" + controlPrefix + "_UnitNumber_Popup']").addClass("required");
+                $("label[for~='" + controlPrefix + "_UnitTypeID_Popup']").addClass("required");
+                $("#" + controlPrefix + "_UnitNumber_Popup").rules("add", {
+                    required: true,
+                });
+                $("#" + controlPrefix + "_UnitTypeID_Popup").rules("add", {
+                    required: true,
+                });
+                //$('#' + controlPrefix + '_StreetNumber').parent("label").addClass("required");
+                $("label[for~='" + controlPrefix + "_StreetNumber_Popup']").addClass("required");
+                $("#" + controlPrefix + "_StreetNumber_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Number is required."
+                    }
+                });
+            }
+            if ($("#" + controlPrefix + "_StreetTypeID_Popup").val() == "" || $("#" + controlPrefix + "_StreetTypeID_Popup").val() == null) {
+                $("#" + controlPrefix + "_StreetTypeID_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Type is required."
+                    }
+                });
+            }
+            if ($("#" + controlPrefix + "_StreetName_Popup").val() == "") {
+                $("#" + controlPrefix + "_StreetName_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Street Name is required."
+                    }
+                });
+            }
+        }
+        else {
+            if ($("#" + controlPrefix + "_PostalAddressID_Popup").val() == "" || $("#" + controlPrefix + "_PostalAddressID_Popup").val() == null) {
+                $("#" + controlPrefix + "_PostalAddressID_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Postal Delivery Type is required."
+                    }
+                });
+            }
+            if ($("#" + controlPrefix + "_PostalDeliveryNumber_Popup").val() == "") {
+                $("#" + controlPrefix + "_PostalDeliveryNumber_Popup").rules("add", {
+                    required: true,
+                    messages: {
+                        required: "Postal Delivery Number is required."
+                    }
+                });
+            }
+        }
+        if ($("#" + controlPrefix + "_UnitTypeID_Popup").val() == "") {
+            $("#" + controlPrefix + "_UnitTypeID_Popup").val(0);
+            //$("#" + controlPrefix + "_UnitTypeID_Popup").val($("#" + controlPrefix + "_UnitTypeID_Popup option:first").val());
+        }
+        if ($("#" + controlPrefix + "_StreetTypeID_Popup").val() == "") {
+            $("#" + controlPrefix + "_StreetTypeID_Popup").val(0);
+        }
+
+        //validate town, state and postcode combination.
+
+        if ($("#" + controlPrefix + "_Town_Popup").val().length > 0 && $("#" + controlPrefix + "_State_Popup").val().length > 0 && $("#" + controlPrefix + "_PostCode_Popup").val().length > 0) {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("ProcessRequest","User")',
+                dataType: 'json',
+                data: {
+                    excludePostBoxFlag: true,
+                    q: $("#" + controlPrefix + "_Town_Popup").val().substring(0, 3)
+                },
+                async: false,
+                success: function (data) {
+                    var data1 = JSON.parse(data);
+                    var obj = data1.localities.locality;
+                    $.each(obj, function () {
+                        isValidLocation = false;
+                        if (this.location == $("#" + controlPrefix + "_Town_Popup").val() &&
+                            this.state == $("#" + controlPrefix + "_State_Popup").val() &&
+                            this.postcode == $("#" + controlPrefix + "_PostCode_Popup").val()
+                        ) {
+                            isValidLocation = true;
+                            return false;
+                        }
+                    })
+                    if (!isValidLocation) {
+                        $("#" + controlPrefix + "_LocationValidation_Popup").show();
+                    }
+                    else {
+                        $("#" + controlPrefix + "_LocationValidation_Popup").hide();
+                    }
+                }
+            })
+        }
+        return isValidLocation;
+    }
+
+    function validateOrganisation_Popup() {
+        if ($("#JobOwnerDetails_OwnerType_Popup").val() == 'Government body' || $("#JobOwnerDetails_OwnerType_Popup").val() == 'Corporate body' || $("#JobOwnerDetails_OwnerType_Popup").val() == 'Trustee') {
+
+            $('#JobOwnerDetails_CompanyABN_Popup').removeAttr("disabled");
+            $('#JobOwnerDetails_CompanyName_Popup').removeAttr("disabled");
+
+            $("#OwnerCompanyABN_Popup").addClass("required");
+            $("#OwnerCompanyName_Popup").addClass("required");
+            $("#OwnerEmail_Popup").addClass("required");
+
+            //if ($("#JobOwnerDetails_CompanyName_Popup").val() == '') {
+            //    $("#JobOwnerDetails_CompanyName_Popup").removeClass('valid');
+            //    $("#OwnerCompanyNameValidate_Popup").addClass("field-validation-error");
+            //}
+
+            $("#OwnerCompanyNameValidate_Popup").show();
+            $("#OwnerCompanyABNValidate_Popup").show();
+            $("#OwnerEmailValidate_Popup").show();
+
+            $("#JobOwnerDetails_CompanyName_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Company Name is required."
+                }
+            });
+            $("#JobOwnerDetails_CompanyABN_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Company ABN is required."
+                }
+            });
+            $("#JobOwnerDetails_Email_Popup").rules("add", {
+                required: true,
+                messages: {
+                    required: "Email is required."
+                }
+            });
+        }
+        else {
+            ////remove company mendatory
+            //$("#JobOwnerDetails_CompanyName_Popup").rules('remove');
+            //$("#JobOwnerDetails_CompanyName_Popup").removeClass('input-validation-error');
+            //$("#OwnerCompanyName_Popup").removeClass("required");
+            //$("#OwnerCompanyNameValidate_Popup").hide();
+
+            $('#JobOwnerDetails_CompanyABN_Popup').val('');
+            $('#JobOwnerDetails_CompanyABN_Popup').prop("disabled", true);
+            $("#JobOwnerDetails_CompanyABN_Popup").rules('remove');
+            $("#JobOwnerDetails_CompanyABN_Popup").removeClass('input-validation-error');
+            $("#OwnerCompanyABN_Popup").removeClass("required");
+            $("#OwnerCompanyABNValidate_Popup").hide();
+
+
+            $("#JobOwnerDetails_CompanyName_Popup").prop("selectedIndex", 0);
+            $('#JobOwnerDetails_CompanyName_Popup').prop("disabled", true);
+            $("#JobOwnerDetails_CompanyName_Popup").rules('remove');
+            $("#JobOwnerDetails_CompanyName_Popup").removeClass('input-validation-error');
+            $("#OwnerCompanyName").removeClass("required");
+            $("#OwnerCompanyNameValidate_Popup").hide();
+
+            $("#JobOwnerDetails_Email_Popup").rules('remove');
+            $("#JobOwnerDetails_Email_Popup").removeClass('input-validation-error');
+            $("#OwnerEmail_Popup").removeClass("required");
+            $("#OwnerEmailValidate_Popup").hide();
+
+
+
+        }
+    }
+
+    function isValidPhone(event, obj) {
+        if (!event.ctrlKey) {
+            if (event.which == 43 && $("#" + obj.id).val().length < 2) {
+                if ($("#" + obj.id).val().indexOf('+') == -1) {
+                    return true;
+                }
+            }
+            if (event.which > 31 && (event.which < 48 || event.which > 57)) {
+                return false;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    function ShowCreatedJobErrorMessage(message) {
+        $(".alert").hide();
+        $("#errorMsgRegionForCreateJobPopUp").html(closeButton + message);
+        $("#errorMsgRegionForCreateJobPopUp").show();
+    }
+
+    function GetDocument() {
+        var solarCompanyId = $("#SolarCompanyId").val();
+        var usertypeid =@ProjectSession.UserTypeId;
+        if (usertypeid == 4 || usertypeid == 8) {
+            solarCompanyId =@ProjectSession.SolarCompanyId;
+        }
+        if (solarCompanyId != 0 || solarCompanyId != '') {
+            $.ajax({
+                url: '@Url.Action("GetDocumentForCreateJob", "DocumentTemplate")',
+                type: 'GET',
+                data: {
+                    solarCompanyId: solarCompanyId,
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.lst != null && data.lst.length > 0) {
+                        $("#docOnCreateJob").show();
+                        var $tbody = $('#tbodyDocItems');
+                        $tbody.html('');
+                        for (var i = 0; i < data.lst.length; i++) {
+                            var li = $('<li/>').addClass('list-group-item').data({ 'path': data.lst[i].Path, 'name': data.lst[i].Path.split('/').pop(), 'tempName': data.lst[i].DocumentTemplateName }).appendTo($tbody);
+                            //var li = $('<li/>').addClass('list-group-item').data({ 'path': data[i].Path, 'name': data[i].DocumentTemplateName}).appendTo($tbody);
+                            var $div = $('<div/>').addClass('checkbox').appendTo(li);
+                            var $lable = $('<label/>').css({ 'word-wrap': 'break-word' }).appendTo($div);
+                            //var input = '<input type="checkbox">' + data[i].Path.split('/').pop();
+                            var input = '<input type="checkbox" >' + data.lst[i].DocumentTemplateName;
+                            $lable.html(input);
+                        }
+                        $('#tbodyDocItems').find('input[type=checkbox]').prop("checked", true);
+
+                    }
+                    else {
+                        $('#tbodyDocItems').html('');
+                        $("#docOnCreateJob").hide();
+                    }
+
+                },
+                error: function (e) {
+                    console.log(e);
+                }
+            });
+        }
+    }
+
+</script>
+
+<div class="modal-header">
+    <button type="button" class="close" aria-label="Close" id="btnClosepopupboxCreateJobPopup">
+        <img src="~/images/close-btn.png" alt="">
+    </button>
+    <h4 class="modal-title" id="myModalLabel">Create A Job</h4>
+</div>
+
+<div class="modal-body">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegionForCreateJobPopUp" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" aria-label="Close">
+            <img src="~/images/close-btn.png" alt="">
+        </button>
+    </div>
+
+    <div class="form-box">
+
+        <div class="row">
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+            {
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label required" id="lblResellerID">Reseller:</label>
+                        @Html.DropDownListFor(model => model.BasicDetails.ResellerId, new List<SelectListItem>(), new { id = "ResellerID", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.BasicDetails.ResellerId)
+                    </div>
+                </div>
+            }
+            @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3 || ProjectSession.UserTypeId == 2 || ProjectSession.UserTypeId == 5)
+            {
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="control-label required" id="lblSolarCompanyId">SolarCompany:</label>
+                        @Html.DropDownListFor(model => model.BasicDetails.SolarCompanyId, new List<SelectListItem>(), new { id = "SolarCompanyId", @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.BasicDetails.SolarCompanyId)
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Job Details:")
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.JobType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.BasicDetails.JobType, new List<SelectListItem> { new SelectListItem() { Text = "PVD", Value = "1" }, new SelectListItem() { Text = "SWH", Value = "2" } }, new { @class = "form-control", @tabindex = 201, @autofocus = "autofocus", @id = "BasicDetails_JobType_Popup" })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.JobType)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.RefNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.BasicDetails.RefNumber, new { @class = "form-control", @maxlength = "255", @tabindex = 202, @id = "BasicDetails_RefNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.RefNumber)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.JobStage, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.BasicDetails.JobStage, new List<SelectListItem>(), new { @class = "form-control", @id = "BasicDetails_JobStage_Popup", @tabindex = 203 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.JobStage)
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.Title, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.BasicDetails.Title, new { @class = "form-control", @maxlength = "100", @tabindex = 204 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.Title)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.strInstallationDate, new { @class = "control-label" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.BasicDetails.strInstallationDate, new { @class = "form-control date-pick", @tabindex = 205, @id = "BasicDetails_strInstallationDate_Popup" })
+                        <span class="input-group-addon sprite-img date-picker"></span>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.BasicDetails.strInstallationDate)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.Priority, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.BasicDetails.Priority, new List<SelectListItem>(), new { @class = "form-control", @id = "BasicDetails_Priority_Popup", @tabindex = 206 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.Priority)
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.BasicDetails.Description, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.BasicDetails.Description, new { @class = "form-control", @maxlength = "4000", @tabindex = 207 })
+                    @Html.ValidationMessageFor(m => m.BasicDetails.Description)
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Owner Details:")
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.OwnerType, new { @class = "control-label required" })
+                    @Html.DropDownListFor(m => m.JobOwnerDetails.OwnerType, new List<SelectListItem> { new SelectListItem() { Text = "Select", Value = "" }, new SelectListItem() { Text = "Individual", Value = "Individual" }, new SelectListItem() { Text = "Government body", Value = "Government body" }, new SelectListItem() { Text = "Corporate body", Value = "Corporate body" }, new SelectListItem() { Text = "Trustee", Value = "Trustee" } }, new { @class = "form-control", @tabindex = 208, @id = "JobOwnerDetails_OwnerType_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.OwnerType)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.CompanyABN, new { @class = "control-label required", @id = "OwnerCompanyABN_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.CompanyABN, new { @class = "form-control", @maxlength = 50, @tabindex = 20, @id = "JobOwnerDetails_CompanyABN_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.CompanyABN, "", new { id = "OwnerCompanyABNValidate_Popup" })
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.CompanyName, new { @class = "control-label", @id = "OwnerCompanyName_Popup" })
+                    @Html.DropDownListFor(m => m.JobOwnerDetails.CompanyName, new SelectList((ViewBag.OwnerCompanyPopup) as SelectList, "Value", "Text"), "Select", new { @class = "form-control", @tabindex = 21, @id = "JobOwnerDetails_CompanyName_Popup" })
+                    @*@Html.TextBoxFor(m => m.JobOwnerDetails.CompanyName, new { @class = "form-control", @maxlength = 200, @tabindex = 209, @autofocus = "autofocus", @id = "JobOwnerDetails_CompanyName_Popup" })*@
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.CompanyName, "", new { id = "OwnerCompanyNameValidate_Popup" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.FirstName, new { @class = "control-label required", @id = "OwnerFirstName_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.FirstName, new { @class = "form-control", @maxlength = 100, @tabindex = 210, @id = "JobOwnerDetails_FirstName_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.FirstName, "", new { id = "OwnerFirstNameValidate_Popup" })
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.LastName, new { @class = "control-label required", @id = "OwnerLastName_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.LastName, new { @class = "form-control", @maxlength = 100, @tabindex = 211, @id = "JobOwnerDetails_LastName_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.LastName, "", new { id = "OwnerLastNameValidate_Popup" })
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.Email, new { @class = "control-label", @id = "OwnerEmail_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.Email, new { @class = "form-control", @maxlength = 255, @tabindex = 212, @id = "JobOwnerDetails_Email_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.Email, "", new { id = "OwnerEmailValidate_Popup" })
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.Phone, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.Phone, new { @class = "form-control", @maxlength = 16, @tabindex = 213, onkeypress = "return isValidPhone(event,this);", @id = "JobOwnerDetails_Phone_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.Phone)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.Mobile, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.Mobile, new { @class = "form-control", @maxlength = 16, @tabindex = 214, onkeypress = "return isValidPhone(event,this);", @id = "JobOwnerDetails_Mobile_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.Mobile)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label required">Postal Address Type :</label>
+                    @Html.DropDownListFor(m => m.JobOwnerDetails.AddressID, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1" }, new SelectListItem() { Text = "P.O BOX", Value = "2" } }, new { @class = "form-control OwnerAddress_Popup", @tabindex = 215, @id = "JobOwnerDetails_AddressID_Popup" })
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerPDA_Popup" style="display:none">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.PostalAddressID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.JobOwnerDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 216, @id = "JobOwnerDetails_PostalAddressID_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalAddressID)
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerPDA_Popup" style="display:none">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 217, @id = "JobOwnerDetails_PostalDeliveryNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostalDeliveryNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.UnitTypeID, new { @class = "control-label", @id = "lblOwnerUnitTypeID_Popup" })
+                    @Html.DropDownListFor(model => model.JobOwnerDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 218, @id = "JobOwnerDetails_UnitTypeID_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitTypeID)
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "control-label", @id = "lblOwnerUnitNumber_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 219, @id = "JobOwnerDetails_UnitNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.UnitNumber)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 OwnerDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "control-label required", @id = "lblOwnerStreetNumber_Popup" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 220, @id = "JobOwnerDetails_StreetNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.StreetName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 221, @id = "JobOwnerDetails_StreetName_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetName)
+                </div>
+            </div>
+            <div class="col-sm-4 OwnerDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.StreetTypeID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.JobOwnerDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 222, @id = "JobOwnerDetails_StreetTypeID_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.StreetTypeID)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.Town, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 223, @id = "JobOwnerDetails_Town_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.Town)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.State, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 224, @readonly = "readonly", @id = "JobOwnerDetails_State_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.State)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobOwnerDetails.PostCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobOwnerDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 225, @id = "JobOwnerDetails_PostCode_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobOwnerDetails.PostCode)
+                </div>
+            </div>
+            <div class="alert" id="JobOwnerDetails_LocationValidation_Popup" style="display: none;color: #a94442;">
+                "Please enter valid state,town and postcode."
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Installation Address:")
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <div class="form-group">
+                    <label class="control-label">Same as Owner Address:</label>
+                    @Html.CheckBoxFor(m => m.JobInstallationDetails.IsSameAsOwnerAddress, new { @tabindex = 226, @id = "JobInstallationDetails_IsSameAsOwnerAddress_Popup" })
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    <label class="control-label required">Postal Address Type :</label>
+                    @*@Html.DropDownListFor(m => m.JobOwnerDetails.AddressID, new SelectList((ViewBag.PostalAddressType) as SelectList, "Value", "Text"), new { @class = "form-control OwnerAddress", @tabindex = 107 })*@
+                    @Html.DropDownListFor(m => m.JobInstallationDetails.AddressID, new List<SelectListItem> { new SelectListItem() { Text = "physical address", Value = "1" } }, new { @class = "form-control InstallationAddress_Popup", @tabindex = 227, @id = "JobInstallationDetails_AddressID_Popup" })
+                </div>
+            </div>
+            @*<div class="col-sm-4 InstallationPDA_Popup" style="display:none">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.PostalAddressID, new { @class = "control-label required" })
+                        @Html.DropDownListFor(model => model.JobInstallationDetails.PostalAddressID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 228, @id = "JobInstallationDetails_PostalAddressID_Popup" })
+                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalAddressID)
+                    </div>
+                </div>
+                <div class="col-sm-4 InstallationPDA_Popup" style="display:none">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "control-label required" })
+                        @Html.TextBoxFor(m => m.JobInstallationDetails.PostalDeliveryNumber, new { @class = "form-control", @maxlength = 11, @tabindex = 229, @id = "JobInstallationDetails_PostalDeliveryNumber_Popup" })
+                        @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostalDeliveryNumber)
+                    </div>
+                </div>*@
+            <div class="col-sm-4 InstallationDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.UnitTypeID, new { @class = "control-label", @id = "lblInstallationUnitTypeID_Popup" })
+                    @Html.DropDownListFor(model => model.JobInstallationDetails.UnitTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 230, @id = "JobInstallationDetails_UnitTypeID_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitTypeID)
+                </div>
+            </div>
+            <div class="col-sm-4 InstallationDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "control-label", @id = "lblInstallationUnitNumber_Popup" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.UnitNumber, new { @class = "form-control", @maxlength = 10, @tabindex = 231, @id = "JobInstallationDetails_UnitNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.UnitNumber)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4 InstallationDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "control-label required", @id = "lblInstallationStreetNumber_Popup" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.StreetNumber, new { @class = "form-control", @maxlength = 15, @tabindex = 232, @id = "JobInstallationDetails_StreetNumber_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetNumber)
+                </div>
+            </div>
+            <div class="col-sm-4 InstallationDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.StreetName, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.StreetName, new { @class = "form-control", @maxlength = 45, @tabindex = 233, @id = "JobInstallationDetails_StreetName_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetName)
+                </div>
+            </div>
+            <div class="col-sm-4 InstallationDPA_Popup">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.StreetTypeID, new { @class = "control-label required" })
+                    @Html.DropDownListFor(model => model.JobInstallationDetails.StreetTypeID, new List<SelectListItem>(), new { @class = "form-control", @tabindex = 234, @id = "JobInstallationDetails_StreetTypeID_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.StreetTypeID)
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.Town, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.Town, new { @class = "form-control", @maxlength = 80, @tabindex = 235, @id = "JobInstallationDetails_Town_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.Town)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.State, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.State, new { @class = "form-control", @maxlength = 3, @tabindex = 236, @readonly = "readonly", @id = "JobInstallationDetails_State_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.State)
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.PostCode, new { @class = "control-label required" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.PostCode, new { @class = "form-control", @maxlength = 8, @tabindex = 237, @id = "JobInstallationDetails_PostCode_Popup" })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.PostCode)
+                </div>
+            </div>
+            <div class="alert" id="JobInstallationDetails_LocationValidation_Popup" style="display: none;color: #a94442;">
+                "Please enter valid state,town and postcode."
+            </div>
+        </div>
+
+        <div class="row JobInstallationDetails_NMI">
+            <div class="col-sm-4">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.NMI, new { @class = "control-label", @id = "NMI" })
+                    @Html.TextBoxFor(m => m.JobInstallationDetails.NMI, new { @class = "form-control", @maxlength = 11, @tabindex = 3 })
+                    @Html.ValidationMessageFor(m => m.JobInstallationDetails.NMI)
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="form-group">
+                    @Html.LabelFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.JobInstallationDetails.AdditionalInstallationInformation, new { @class = "form-control", @maxlength = 4000, @tabindex = 238, @id = "JobInstallationDetails_AdditionalInstallationInformation_Popup" })
+                </div>
+            </div>
+        </div>
+
+        <input id="JobInstallationDetails_latitude" name="JobInstallationDetails.Latitude" type="hidden" value="">
+        <input id="JobInstallationDetails_longitude" name="JobInstallationDetails.Longitude" type="hidden" value="">
+        <label id="hdnInstallationAdd" hidden></label>
+
+
+        <div class="row" id="docOnCreateJob">
+            <div class="col-sm-12">
+                <div class="form-group">
+                    @Html.Label("Documents")
+                </div>
+            </div>
+            <div class="row">
+                <div class="mCustomScrollbar well" style="overflow:auto;max-height:300px;">
+                    <ul class="list-group checked-list-box" id="tbodyDocItems" style="margin-bottom:0px;"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn primary icon-btn" id="saveCreateJobPopup" tabindex="239
+            " onclick="return validateFormJob();">
+        <span class="sprite-img save_ic"></span>Save
+    </button>
+    <button type="button" class="btn default cancel_ic" id="cancelCreatePopup">Cancel</button>
+</div>
+
+<style type="text/css">
+    .vertical-alignment-helper {
+        display: table;
+        height: 100%;
+        width: 100%;
+    }
+
+    /*.SumoSelect {
+        display: block !important;
+        width: 100% !important;
+    }*/
+
+
+    .vertical-align-center {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 50%;
+    }
+
+    .vertical-align-center-serial {
+        /* To center vertically */
+        display: table-cell;
+        vertical-align: middle;
+        width: 40%;
+    }
+
+    .modal-content {
+        /* Bootstrap sets the size of the modal in the modal-dialog class, we need to inherit it */
+        width: inherit;
+        height: inherit;
+        /* To center horizontally */
+        margin: 0 auto;
+    }
+
+    .ui-autocomplete {
+        z-index: 10000 !important;
+    }
+</style>
+

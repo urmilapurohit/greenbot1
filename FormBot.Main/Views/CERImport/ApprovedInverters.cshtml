@@ -1,0 +1,340 @@
+﻿@model FormBot.Entity.Inverters
+@using FormBot.Helper;
+
+@*@Html.AntiForgeryToken()*@
+@Html.ValidationSummary(true)
+
+<div class="container-fluid">
+    <h1 class="title">Inverter List</h1>
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-success" id="successMessage" style="display:none;">
+                File has been imported successfully.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <div class="alert alert-danger" id="failureMessage" style="display:none;">
+                Invalid file format.
+                <button type="button" class="close" onclick="$(this).parent().hide();" aria-hidden="true">×</button>
+            </div>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("ApprovedInvertersFile", "CERImport", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-block", @style = "margin-bottom:8px;" }))
+    {
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Manufacturer:</label>
+                @Html.TextBoxFor(model => model.Manufacturer, new { @class = "form-control", @maxlength = "100" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Series:</label>
+                @Html.TextBoxFor(model => model.Series, new { @class = "form-control", @maxlength = "50" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Model Number:</label>
+                @Html.TextBoxFor(model => model.ModelNumber, new { @class = "form-control", @maxlength = "50" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Ac Power KW:</label>
+                @Html.TextBoxFor(model => model.AcPowerKW, new { @class = "form-control", @maxlength = "9" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Approval Date:</label>
+                @Html.TextBoxFor(model => model.ApprovalDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="col-sm-2">
+            <div class="form-group">
+                <label class="control-label">Expiry Date:</label>
+                @Html.TextBoxFor(model => model.ExpiryDate, new { @class = "form-control date-pick", @readonly = "readonly" })
+            </div>
+        </div>
+
+        <div class="form-group col-xs-12">
+            <input type="button" id="btnSendRequest" value="Search" class="primary search_ic">
+            <div class="default btn icon-btn" onclick="ResetSearchFilters();">
+                <span class="sprite-img reset_ic"></span>
+                <input type="button" id="btnReset" value="Reset" class="">
+            </div>
+        </div>
+    }
+
+    @*<div class="pull-right">
+            <div class="form-group">
+                <div class="fileUpload primary upload_ic">
+                    <span>Upload</span>
+                    <input type="file" id="fileUpload" class="upload" value="Upload" />
+                </div>
+            </div>
+        </div>
+
+        <div class="grid_topbar">
+            <p class="job_result" id="numRecords"></p>
+        </div>*@
+
+    <div class="row">
+        <div class="col-sm-2">
+            <div class="grid_topbar">
+                <p class="job_result" id="numRecords"></p>
+            </div>
+        </div>
+        <div class="col-sm-9 fco">
+            <div class="control-label" style="text-align:right;line-height:35px;" id="headerTitle">
+                @ViewBag.Version
+            </div>
+        </div>
+        @if (ProjectSession.UserTypeId == 1 || ProjectSession.UserTypeId == 3)
+        {
+            <div class="col-sm-1 fco">
+                <div class="form-group">
+                    <div class="fileUpload primary upload_ic">
+                        <span>Upload</span>
+                        <input type="file" id="fileUpload" class="upload" value="Upload" />
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <div class="row">
+        <div id="grid" class="col-xs-12">
+            <!-- Grid start -->
+            <div class="table-responsive">
+                <table id="datatable" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th width="10%"><span>@Html.DisplayName("Manufacturer") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Series") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Model Number") </span></th>
+                            <th width="10%"><span>@Html.DisplayName("Ac Power KW")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Approval Date")</span></th>
+                            <th width="10%"><span>@Html.DisplayName("Expiry Date")</span></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Styles.Render("~/datatableCSS")
+@section scripts{
+    @*<script src="~/Scripts/jquery-ui-1.0.js"></script>
+        <script src="~/Scripts/jquery.fileupload.js"></script>
+        <script src="~/Scripts/FormBot.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        <script src="~/Scripts/bootstrap-datepicker.js"></script>
+        @Scripts.Render("~/datatableJs")
+        @Scripts.Render("~/bundles/jqueryval")*@
+    <script>
+
+        $(document).ready(function () {
+
+            if (@ProjectSession.UserTypeId==3) {
+                $('.fco').hide();
+            }
+
+            $('#date-pick, #date-pick1, .date-pick').datepicker({
+                format: '@ProjectConfiguration.GetDateFormat',
+                autoclose: true
+            }).on('change', function () {
+                $(this).valid();
+                $(this).removeClass('input-validation-error');
+                $(this).datepicker('hide');
+            });
+
+            $("#fileUpload").change(function () {
+                $("#successMessage").hide();
+                $("#failureMessage").hide();
+
+                var fileUpload = $("#fileUpload").get(0);
+                var files = fileUpload.files;
+                if(files[0].name.split('.').pop().toLowerCase() == 'xlsx' || files[0].name.split('.').pop().toLowerCase() == 'xls')
+                {
+                    // Create FormData object
+                    var fileData = new FormData();
+
+                    // Looping over all files and add it to FormData object
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("ApprovedInvertersFile", "CERImport")',
+                        type: "POST",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result) {
+                            if(result[0] == "success") {
+                                $("#successMessage").show();
+                                $("#failureMessage").hide();
+                                $("#headerTitle").html(result[1]);
+                                Searching('', '', '', '', '', '');
+                            }
+                            else if (result[0] == "false") {
+                                $("#failureMessage").show();
+                                $("#successMessage").hide();
+                            }
+                            else {
+                                $("#failureMessage").html(result[0]).show();
+                                $("#successMessage").hide();
+                            }
+                            //$('.alert').fadeOut(2000);
+                        },
+                    });
+                }
+                else {
+                    $("#failureMessage").html('Please upload file with ".xlsx" or ".xls" extension only.').show();
+                    $("#successMessage").hide();
+                }                
+                this.value = null;
+            });
+
+            $('#btnSendRequest').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchInverters();
+            });
+
+
+            $('#datatable').DataTable({
+                iDisplayLength: 10,
+                lengthMenu:@ProjectConfiguration.GetPageSize,
+                language: {
+                    sLengthMenu: "Page Size: _MENU_"
+                },
+                columns: [
+                        { 'data': 'Manufacturer', "orderable": true },
+                        { 'data': 'Series' },
+                        { 'data': 'ModelNumber' },
+                        { 'data': 'AcPowerKW' },
+                        {
+                            'data': 'ApprovalDate',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                        {
+                            'data': 'ExpiryDate',
+                            "render": function (data) {
+                                return ConvertToDateWithFormat(data,'@FormBot.Helper.ProjectConfiguration.GetDateFormat');
+                            }
+                        },
+                ],
+                dom: "<<'table-responsive tbfix't><'paging grid-bottom prevar'p><'bottom'l><'clear'>>",
+                bServerSide: true,
+                sAjaxSource: '@Url.Action("GetInvertersList", "CERImport")',
+                "fnDrawCallback": function () {
+                    $("#datatable_wrapper").find(".bottom").find(".dataTables_paginate").remove();
+                    $(".paging a.previous").html("&nbsp");
+                    $(".paging a.next").html("&nbsp");
+                    $('.grid-bottom span:first').attr('id', 'spanMain');
+                    $("#spanMain span").html("");
+                    $(".ellipsis").html("...");
+
+                    if ($(".paging").find("span").length > 1) {
+                        $("#datatable_length").show();
+                    } else if ($("#datatable").find("tr").length >11) { $("#datatable_length").show();  } else { $("#datatable_length").hide(); }
+
+                    //--------To show display records from total records-------------------
+                    var table = $('#datatable').DataTable();
+                    var info = table.page.info();
+
+                    if(info.recordsTotal==0){
+                        document.getElementById("numRecords").innerHTML = '<b>' + 0 + '</b>  of  <b>' + info.recordsTotal +'</b>  Approved Inverter(s) found';
+                    }
+                    else{
+                        document.getElementById("numRecords").innerHTML = '<b>' + $('#datatable >tbody >tr').length + '</b>  of  <b>' + info.recordsTotal +'</b>  Approved Inverter(s) found';
+                    }
+                    //------------------------------------------------------------------------------------------------------------------------------
+                }
+            });
+
+            $("#ApprovalDate,#ExpiryDate").keydown(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                    return true;
+                } else if (e.which == 46 || e.which == 8 || e.which == 9) {
+                    return true;
+                }
+                return false;
+            });
+
+            $("#Manufacturer,#Series,#ModelNumber,#AcPowerKW").keypress(function (e) {
+                if (e.which == 13) {
+                    $('#btnSendRequest').click();
+                }
+            });
+
+            $("#Manufacturer").focus();
+        });
+
+
+
+        function ResetSearchFilters() {
+            $("#Manufacturer").val('');
+            $("#Series").val('');
+            $("#ModelNumber").val('');
+            $("#AcPowerKW").val('');
+            $("#ApprovalDate").val('');
+            $("#ExpiryDate").val('');
+            Searching('', '', '', '', '','');
+            $("#Manufacturer").focus();
+        }
+
+        function Searching(manufacturer, series, modelNumber, acPowerKW, approvalDate, expiryDate) {
+            var manufacturer = manufacturer;
+            var series = series;
+            var modelNumber = modelNumber;
+            var acPowerKW = acPowerKW;
+            var approvalDate = approvalDate;
+            var expiryDate = expiryDate;
+            var dTable = $("#datatable").dataTable();
+            var dSettings = dTable.fnSettings();
+            dSettings.sAjaxSource = '@Url.Action("GetInvertersList", "CERImport")' + '?manufacturer=' + manufacturer + "&series=" + series + "&modelNumber=" + modelNumber + "&acPowerKW=" + acPowerKW + "&approvalDate=" + approvalDate + "&expiryDate=" + expiryDate;
+            $('#datatable').DataTable().ajax.reload();
+        }
+
+        function searchInverters() {
+            var manufacturer = $("#Manufacturer").val();
+            var series = $("#Series").val();
+            var modelNumber = $("#ModelNumber").val();
+            var acPowerKW = $("#AcPowerKW").val();
+            var approvalDate = $("#ApprovalDate").val();
+            var expiryDate = $("#ExpiryDate").val();
+
+            if (approvalDate !='' && approvalDate!=undefined && approvalDate!=null) {
+                var tickapprovalDate = ConvertDateToTick(approvalDate, '@ProjectConfiguration.GetDateFormat');
+                approvalDate= moment(tickapprovalDate).format("YYYY-MM-DD");
+            }
+
+            if (expiryDate !='' && expiryDate!=undefined && expiryDate!=null) {
+                var tickexpiryDate = ConvertDateToTick(expiryDate, '@ProjectConfiguration.GetDateFormat');
+                expiryDate= moment(tickexpiryDate).format("YYYY-MM-DD");
+            }
+
+            Searching(manufacturer, series, modelNumber, acPowerKW, approvalDate, expiryDate);
+        }
+
+    </script>
+}

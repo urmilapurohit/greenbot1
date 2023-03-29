@@ -1,0 +1,219 @@
+﻿@model FormBot.Entity.FormBotReport
+@{
+    Layout = null;
+}
+<input type="hidden" name="SCABit" value="10" id="SCABit" />
+<input type="hidden" name="minSCA" value="1" id="minSCA" />
+
+<div class="row malti-list">
+    <div class="col-sm-5 ">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 " style="width:100%;padding:0;">
+                @Html.ListBoxFor(m => m.LstUsers, new MultiSelectList(Model.LstUsers, "Value", "Text"), new { id = "LstUsers1", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 2 })
+            </div>
+        </div>
+    </div>
+    <div class=" col-sm-2 tra-btn">
+        <div class="form-group">
+            <a id="btnLtoR_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value=">>" class="btn btn-info primary" tabindex="3" />
+            </a>
+            <a id="btnRtoL_SCA" href="javascript:void(0);" class="linkbutton">
+                <input type="button" value="<<" class="btn btn-info primary" tabindex="4" />
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-5">
+        <div class="form-group">
+            <div class="col-md-6 col-sm-6 custinput" style="width: 100%;padding: 0;">
+                @Html.ListBoxFor(m => m.FormBotSolarCompanyAssignedUser, new MultiSelectList(Model.LstSolarCompanyAssignedUser, "Value", "Text"), new { id = "LstUsersAssignedUser", @class = "form-control", style = "padding:0px;height: 400px;", @tabindex = 5 })
+                @Html.HiddenFor(m => m.hdnFormBotSolarCompanyAssignedUser, new { id = "hdnUsers" })
+            </div>
+        </div>
+    </div>
+</div>
+<div class="form-group defaultFormBot tab_bottomrow">
+    <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnUserSave" tabindex="6">
+    <div class="default btn icon-btn">
+        <span class="sprite-img reset_ic"></span>
+        <input type="button" value="Clear" id="btnClearUser" class="" tabindex="7">
+        </div>
+    </div>
+
+<script type="text/javascript">
+
+    $(document).on("click", "#btnLtoR_SCA", function () {
+        if (parseInt($('#SCABit').val()) == 0) {
+            $('#LstUsers1 option:selected').each(function () {
+                $(this).remove().appendTo("#LstUsersAssignedUser");
+            });
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        }
+        else {
+            var SCA_Acc = (($('#LstUsers1 option:selected').length + $('#LstUsersAssignedUser option').length) <= parseInt($('#SCABit').val()));
+            if (SCA_Acc) {
+                var LstSCA_Acc = $('#LstUsersAssignedUser option').length < parseInt($('#SCABit').val());
+                if (LstSCA_Acc) {
+                    $('#LstUsers1 option:selected').each(function () {
+                        $(this).remove().appendTo("#LstUsersAssignedUser");
+                    });
+                    var max = $('#SCABit').val();
+                    $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + max);
+                }
+                if (($('#LstUsersAssignedUser option').length == parseInt($('#SCABit').val()))) {
+                    $('#btnLtoR_SCA1').css('opacity', '0.5');
+                    $('#btnLtoR_SCA1').css('cursor', 'auto');
+                }
+                else {
+                    $('#btnLtoR_SCA1').css('opacity', '1');
+                    $('#btnLtoR_SCA1').css('cursor', 'poiter');
+                }
+            }
+        }
+    });
+
+    //$(document).on("click", "#btnRtoL_SCA", function () {
+    //    $('#LstUsersAssignedUser option:selected').each(function () {
+    //        $(this).remove().appendTo("#LstUsers");
+    //    });
+    //    $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+    //});
+
+    $(document).on("click", "#btnRtoL_SCA", function () {
+        $('#LstUsersAssignedUser option:selected').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+        var max = $('#SCABit').val();
+        if (max > 0) {
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        }
+        if (($('#LstUsersAssignedUser option').length < parseInt($('#SCABit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+    });
+
+    //$(document).on("click", "#", function () {
+    //    $('#popupUsers').modal('hide');
+    //    $('#cntUsers').html($('#LstUsersAssignedUser option').length);
+    //    disableSC();
+    //});
+
+    $(document).on("click", "#btnUserSave", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstUsersAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minSCA').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minSCA').val() > 0 && $('#LstUsersAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+            //$("#errorMsgRegion").removeClass("alert-success");
+            //$("#errorMsgRegion").addClass("alert-danger");
+            //$("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+            //$("#errorMsgRegion").show();
+        }
+        if (($('#LstUsersAssignedUser option').length <= parseInt($('#SCABit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minSCA').val() == 1 && $('#LstUsersAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnUsers").val(strAssignedAttendeeList);
+        $('#cntUsers').html($('#LstUsersAssignedUser option').length);
+        $('#popupUsers').modal('hide');
+        disableSC();
+    });
+
+    $(document).on("click", "#btnCancel", function () {
+        disableSC();
+    });
+
+    function disableSC() {
+        //disable solar company button
+        if ($('#ResellerID').length > 0) {
+            if ($('#LstUsersAssignedUser option').length > 0) {
+                document.getElementById('ResellerID').style.pointerEvents = 'none';
+                $('#ResellerID').css('opacity', '0.5');
+            }
+            else {
+                document.getElementById('ResellerID').style.pointerEvents = 'auto';
+                $('#ResellerID').css('opacity', '1');
+            }
+        }
+    }
+
+    $(document).on("click", "#btnClearUser", function () {
+        $('#LstUsersAssignedUser option').each(function () {
+            $(this).remove().appendTo("#LstUsers");
+        });
+        var max = $('#SCABit').val();
+        if (max > 0) {
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length + '/' + max);
+        } else {
+            $('#AvailableUsers').html($('#LstUsersAssignedUser option').length);
+        }
+        if (($('#LstUsersAssignedUser option').length < parseInt($('#SCABit').val()))) {
+            $('#btnLtoR_SCA').css('opacity', '1');
+            $('#btnLtoR_SCA').css('cursor', 'poiter');
+        }
+        else {
+            $('#btnLtoR_SCA').css('opacity', '0.5');
+            $('#btnLtoR_SCA').css('cursor', 'auto');
+        }
+        $("#hdnUsers").val('');
+    });
+
+    $(document).on("click", "#closeUsers", function () {
+        var strAssignedAttendeeList = [];
+        $('#LstUsersAssignedUser option').each(function (i) {
+            strAssignedAttendeeList.push($(this).val().trim());
+        });
+        if ($('#minSCA').val() > 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minSCA').val() > 0 && $('#LstUsersAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+
+            //$("#errorMsgRegion").removeClass("alert-success");
+            //$("#errorMsgRegion").addClass("alert-danger");
+            //$("#errorMsgRegion").html(closeButton + "Selected owner accounts lower than report allows.");
+            //$("#errorMsgRegion").show();
+        }
+        if (($('#LstUsersAssignedUser option').length <= parseInt($('#SCABit').val()))) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'auto';
+            $('#btnJobStatusBarReport').css('opacity', '1');
+            $("#errorMsgRegion").hide();
+        }
+        if ($('#minSCA').val() == 1 && $('#LstUsersAssignedUser option').length == 0) {
+            document.getElementById('btnJobStatusBarReport').style.pointerEvents = 'none';
+            $('#btnJobStatusBarReport').css('opacity', '0.5');
+        }
+        $("#hdnUsers").val(strAssignedAttendeeList);
+        $('#cntUsers').html($('#LstUsersAssignedUser option').length);
+        $('#popupUsers').modal('hide');
+        disableSC();
+    });
+</script>
+<style>
+    .malti-list .tra-btn {
+        margin-top: 140px;
+    }
+</style>

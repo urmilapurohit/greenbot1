@@ -1,0 +1,48 @@
+﻿@model FormBot.Entity.BasicDetails
+@{
+    ViewBag.Title = "Assign Job to SSC";
+    Layout = null;
+}
+
+<form id="UserDetails" style="background-color:#f8f8f8;clear:both;display:inline;width:100%;">
+    <div class="container-fluid">
+
+        <div class="alert alert-danger alert-dismissible" role="alert" id="popuperrorMsgRegion" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        </div>
+        <div id="msgSection">
+            @Html.RenderMessages()
+        </div>
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <label class="control-label required">Solar-Sub Contractor:</label>
+                    @Html.DropDownListFor(model => model.UserTypeID, new List<SelectListItem>(), new { id = "SSCID", @class = "form-control", @tabindex = 1 })
+                    @Html.ValidationMessageFor(m => m.UserTypeID)
+                </div>
+            </div>
+        </div>
+        <div class="row" id="sscNotes" style="display:none;">
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <label class="control-label required">Notes:</label>
+                    @Html.TextAreaFor(m => m.Notes, new { @class = "form-control noreadonly", @maxlength = 250,@tabindex = 2 , @autofocus = true, id = "RemoveSSCNote" })
+                    @Html.ValidationMessageFor(m => m.Notes)
+                </div>
+            </div>
+            <div class="col-sm-7" id="divRequestedBy">
+                <div>
+                    <label class="control-label">Requested By :</label>
+                </div>
+                <label class="control-label" style="padding-top:5px"><b id="requestBy"></b></label>
+            </div>
+        </div>
+        <div class="form-group defaultFormBot tab_bottomrow">
+            <input type="button" name="SaveMapping" value="Save" autofocus class="primary save_ic" id="btnJobSSCMapping" tabindex="3">
+            <input type="button" name="RemoveMapping" value="Remove Request" autofocus class="primary removeRequest_ic" id="btnSSCRemove" tabindex="4" style="display:none;">
+            <input type="button" name="RemoveMapping" value="Cancel Removal Request" autofocus class="primary removeRequest_ic" id="btnSSCCancelRemovalRequest" tabindex="4" style="display:none;" onclick="DeleteRemoveSSCRequest($('#SSCJobID').val());">
+            <input type="button" value="Cancel" id="btnCancel" class="default cancel_ic" data-dismiss="modal" tabindex="5">
+        </div>
+
+    </div>
+</form>

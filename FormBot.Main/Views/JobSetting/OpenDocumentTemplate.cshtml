@@ -1,0 +1,724 @@
+﻿@model FormBot.Entity.Documents.DocumentTemplate
+@using FormBot.Helper
+@using System.Web.Script.Serialization;
+@{
+    var a = Newtonsoft.Json.JsonConvert.SerializeObject(Model.JobFields.Select(x => new { label = x.Text, value = x.Value }).ToList());
+
+}
+<script src="@Url.Content("~/Scripts/pdf/pdf.min.js")"></script>
+<script src="@Url.Content("~/Scripts/pdf/underscore.js")"></script>
+<script src="~/Scripts/jquery-ui-1.0.js"></script>
+<script src="~/Scripts/jquery.fileupload.js"></script>
+@*<script src="https://cdnjs.cloudflare.com/ajax/libs/jSignature/2.1.2/jSignature.min.js"></script>*@
+<script src="~/Scripts/jSignature.dev.js"></script>
+<script src="~/Scripts/FormBot.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<script src="~/Scripts/set-number.min.js"></script>
+<script src="~/Scripts/spectrum.js"></script>
+<link href="~/Content/spectrum.css" rel="stylesheet" />
+<script src="~/Scripts/jquery.nicescroll.min.js"></script>
+<script src="~/Scripts/selectables.js"></script>
+@*<link href="~/content/style.css" rel="stylesheet" />*@
+<link href="~/Content/selectables.css" rel="stylesheet" />
+<form id="form1" runat="server">
+    <div class="alert alert-danger alert-dismissible" role="alert" id="errorMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div class="alert alert-success alert-dismissible" role="alert" id="successMsgRegion" style="display: none">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    </div>
+    <div id="section-editor">
+        <div class="doc-editor-header">
+            <div class="title-wrapper">
+                <div class="title" style="border:0px; padding-bottom:0px; margin-bottom:10px;">
+                    <h1>Document Builder</h1>:
+                    <div class="doc-title">
+                        <div class="pdf-input remove-icon">
+                            <span class="pdf-name">STC_Assignment_Form.pdf</span>
+                            <a href="#" title="Save" class="icon-btn sprite-img save_ic" id="saveFilename" style="display:none;"></a>
+                            <a href="#" title="Cancel" class="icon-btn cancel_ic" id="cancelFilename" style="display:none;"></a>
+                            <a href="#" title="Edit" class="edit-link"><img src="~/Images/Document/edit-icon.svg" /></a>
+                        </div>
+                    </div>
+                    <div class="right-block">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn primary dropdown-toggle icon-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="sprite-img preview_ic"></span>
+                                Preview File <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="javascript:void(0)" onclick="PreviewDocument(true);">Without Background Color</a></li>
+                                <li><a href="javascript:void(0)" onclick="PreviewDocument(false);">With Background Color</a></li>
+                            </ul>
+                        </div>
+                        <button type="button" data-type="other" id="btnDownloadFile" class="btn primary icon-btn">
+                            <span class="sprite-img download_ic"></span>Download File
+                        </button>
+                        <button type="button" id="btnSaveFile" class="btn primary icon-btn dropdown-toggle">
+                            <span class="sprite-img save_ic"></span>Save File
+                        </button>
+                        <div class="btn back-btn dropdown-toggle">
+                            <span class="sprite-img back-icon"></span>
+                            <input class="pull-right" value="Back" id="btnBack" type="button" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="folder-path">
+                <img src="~/Images/Document/folder-icon.svg" />
+                <span id="full-path"><span id="folder-name">STC </span> > <span class="pdf-name">STC_Assignment_Form.pdf</span></span>
+            </div>
+        </div>
+        <ul class="upper-toolbar">
+            <li class="has-line">
+                <select id="zoom-dropdown" class="form-control form-control-sm inline zoom-dropdown">
+                    <option value="25">25%</option>
+                    <option value="50">50%</option>
+                    <option value="75">75%</option>
+                    <option value="100">100%</option>
+                    <option value="125">125%</option>
+                    <option value="150">150%</option>
+                </select>
+            </li>
+            <li>
+                <a href="#" title="Zoom In" id="zoom-in"><img src="~/Images/Document/zoom-in-icon.svg" alt="Zoom In" /></a>
+            </li>
+            <li class="has-line">
+                <a href="#" title="Zoom Out" id="zoom-out"><img src="~/Images/Document/zoom-out-icon.svg" alt="Zoom Out" /></a>
+            </li>
+            <li>
+                <a href="#" title="Undo" id="undo" class="disabled"><img src="~/Images/Document/undo-icon.svg" alt="Undo" /></a>
+            </li>
+            <li class="has-line">
+                <a href="#" title="Redo" class="disabled" id="redo"><img src="~/Images/Document/redo-icon.svg" alt="Redo" /></a>
+            </li>
+            <li>
+                <a href="#" title="Copy" id="copy" class="disabled"><img src="~/Images/Document/copy-icon.svg" alt="Copy" /></a>
+            </li>
+            <li>
+                <a href="#" title="Paste" id="paste" class="disabled"><img src="~/Images/Document/paste-icon.svg" alt="Paste" /></a>
+            </li>
+            <li class="has-line">
+                <a href="#" title="Delete" id="delete" class="disabled"><img src="~/Images/Document/delete-icon.svg" alt="Delete" /></a>
+            </li>
+            <li>
+                <a href="#" title="Bring to Front" id="toFront" class="disabled"><img src="~/Images/Document/bring-to-front.svg" alt="Bring to Front" /></a>
+            </li>
+            <li class="has-line">
+                <a href="#" title="Bring to Back" id="toBack" class="disabled"><img src="~/Images/Document/bring-to-back.svg" alt="Bring to Back" /></a>
+            </li>
+            <li>
+                <a href="#" title="Left Align" id="align-to-left"><img src="~/Images/Document/left-alignment.svg" alt="Left Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Right Align" id="align-to-right"><img src="~/Images/Document/right-alignment.svg" alt="Right Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Top Align" id="align-to-top"><img src="~/Images/Document/top-align.svg" alt="Top Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Center Align" id="align-justify"><img src="~/Images/Document/center-align.svg" alt="Center Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Bottom Align" id="align-to-bottom"><img src="~/Images/Document/bottom-align.svg" alt="Bottom Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Middle Align" id="align-middle"><img src="~/Images/Document/middle-align.svg" alt="Middle Align" /></a>
+            </li>
+            <li>
+                <a href="#" title="Horizontal Distribute Center" id="horizontal-distribute-center"><img src="~/Images/Document/horizontal-distribute-center.svg" alt="horizontal-distribute-center" /></a>
+            </li>
+            <li class="has-line">
+                <a href="#" title="Vertical Distribute Center" id="vertical-distribute-center"><img src="~/Images/Document/vertical-distribute-center.svg" alt="Vertical Distribute Center" /></a>
+            </li>
+            <li>
+                <a href="#" title="Fill Width" id="fill-width"><img src="~/Images/Document/fill-width.svg" alt="Fill Width" /></a>
+            </li>
+            <li>
+                <a href="#" title="Fill Height" id="fill-height"><img src="~/Images/Document/fill-height.svg" alt="Fill Height" /></a>
+            </li>
+            <li>
+                <a href="#" title="Fill Content" id="fill-content"><img src="~/Images/Document/fill-content.svg" alt="Fill Content" /></a>
+            </li>
+            <li>
+                <a href="#" title="Fill Box to Image" id="fill-box-image"><img src="~/Images/Document/maximize.svg" alt="Fill Box to Image" /></a>
+            </li>
+        </ul>
+        <div class="row no-gutter editor-inner">
+
+            <div class="custom-list">
+                <h2 class="list-header has-filter-btn">
+                    Form Tool
+                    @*<a href="#" class="filter-btn" title="Click to Create">Click to Create</a>*@
+                </h2>
+                <ul id="selectable">
+                    <li class="has-icon" data-type="t"><a href="#" title="Text Box"><img src="~/Images/Document/text-field.svg" alt="Text Box" /><span>Text Box</span></a></li>
+                    <li class="has-icon" data-type="ta"><a href="#" title="Text Area"><img src="~/Images/Document/text-box.svg" alt="Text Area" /><span>Text Area</span></a></li>
+                    <li class="has-icon" data-type="sa"><a href="#" title="Signature"><img src="~/Images/Document/signature.svg" alt="Signature" /><span>Signature</span></a></li>
+                    <li class="has-icon" data-type="c"><a href="#" title="Checkbox"><img src="~/Images/Document/checkbox.svg" alt="Checkbox" /><span>Checkbox</span></a></li>
+                    <li class="has-icon" data-type="im"><a href="#" title="Images"><img src="~/Images/Document/gallery.svg" alt="Checkbox" /><span>Images</span></a></li>
+                    <li class="has-icon" data-type="dw"><a href="#" title="Images"><img src="~/Images/Document/pencil.svg" alt="Checkbox" /><span>Draw</span></a></li>
+                </ul>
+            </div>
+
+            <div class="pdf-editor">
+                <div class="caustam-editor-outer" style="background:#606060;">
+                    <div class="caustam-editor-con" id="holderParentDiv" style="background:#606060;">
+                        <div id="holder">
+                            <div id="the-svg" style="background:#ffffff;border-right:1px solid #606060"></div>
+                        </div>
+                        <div id="draggable" class="tag-controls" style="display:none;">
+                            <div id="controlProp">
+                            </div>
+                        </div>
+                        <div id="alignment" class="tag-controls" style="display:none;">
+                            <div id="controlProp">
+                                <div class="row">
+                                    <div class="form-group col-xs-12 jobFieldsli">
+                                        <label class="control-label">Alignment : </label>
+                                        <select class="form-control" id="alignmentId">
+                                            <option value="Left">Left</option>
+                                            <option value="Right">Right</option>
+                                            <option value="Center">Center</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="btn-block job-invoice-btn-block"><input class="btn primary" value="Save" id="btnSaveAlignment" type="button"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="pageing-block">
+                    <div class="pageping">
+                        <a href="#" id="previous-page" class="page-icon" style="display:none;"></a>
+                        page <input type="text" id="current-page" value="1"> of <span id="total-page">1</span>
+                        <a href="#" id="next-page" class="page-icon" style="display:none;"></a>
+                    </div>
+                    <div>
+                        <select class="form-control" id="document-paging">
+                            <option value="0">View Pages as scrolling</option>
+                            <option value="1">View pages one by one</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-properties">
+                <div id="field-properties">
+                    <ul class="nav nav-tabs nav-justified custom-tabs">
+                        <li role="presentation" class="disabled" id="properties-li"><a href="#properties-pane" title="Propeties" data-toggle="tab">Propeties</a></li>
+                        <li role="presentation" class="disabled" id="text-li"><a href="#text-pane" title="Text" data-toggle="tab">Text</a></li>
+                        <li role="presentation" class="active" id="outliner-li"><a href="#outliner-pane" title="Outliner" data-toggle="tab">Outliner</a></li>
+                    </ul>
+                    <div class="tab-content editor-panes">
+                        <div class="tab-pane" id="properties-pane">
+                            <div class="form-section has-line">
+                                <div class="row xs-gutter form-group field-label">
+                                    <div class="col-xs-12">
+                                        <span class="text-ellipse"><strong>Field Type:</strong><span id="job_field_type">  </span></span>
+                                    </div>
+                                    <div class="col-xs-12">
+                                        <span class="text-ellipse"><strong>Field Label:</strong><span id="job_field_label">  </span></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Max Length</label>
+                                    <input type="text" class="form-control" id="field_maxlength" />
+                                </div>
+                                <div class="form-group jobFieldsli">
+                                    <label class="control-label">Job Field</label>
+                                    <input type="text" class="form-control" id="jobFields" style="margin-top:0px;" />
+                                </div>
+                                <div class="form-group export" style="display:none;">
+                                    <label class="control-label">Export Value</label>
+                                    <select class="form-control" id="ddlExportValue" name="ddlExportValue"></select>
+                                </div>
+                            </div>
+                            <div class="form-section has-line wdht-properties">
+                                <table class="control-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="bold">Size</td>
+                                            <td class="text-right">
+                                                <a href="#" class="icon-btn" title="Autosize" id="field_autosize">
+                                                    <img src="~/Images/Document/autosize.svg" alt="Autosize" />
+                                                </a>
+                                            </td>
+                                            <td width="80">
+                                                <div class="number-control wdht">
+                                                    <input type="text" class="form-control" id="field_width" />
+                                                    <a href="#" title="Plus" class="plus" id="width-plus"></a>
+                                                    <a href="#" title="Minus" class="minus" id="width-minus"></a>
+                                                </div>
+                                            </td>
+                                            <td width="80">
+                                                <div class="number-control wdht">
+                                                    <input type="text" class="form-control" id="field_height" />
+                                                    <a href="#" title="Plus" class="plus" id="height-plus"></a>
+                                                    <a href="#" title="Minus" class="minus" id="height-minus"></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr class="wdht">
+                                            <td></td>
+                                            <td></td>
+                                            <td class="text-center bold light">Width</td>
+                                            <td class="text-center bold light">Height</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            @*<div class="form-section has-line image-properties">
+            <table class="control-table">
+                <tbody>
+                    <tr>
+                        <td>
+                            <input type="radio" name="aspectratio" value="0"> Aspect ratio
+                            <input type="radio" name="aspectratio" value="1" checked> Fit to size
+                        </td>
+                </tbody>
+            </table>
+        </div>*@
+                            <div class="form-section has-line pos-properties">
+                                <table class="control-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="bold">Position</td>
+                                            <td width="80">
+                                                <div class="number-control">
+                                                    <input type="text" class="form-control" id="field_left" />
+                                                    <a href="#" title="Plus" class="plus" id="pos-left-plus"></a>
+                                                    <a href="#" title="Minus" class="minus" id="pos-left-minus"></a>
+                                                </div>
+                                            </td>
+                                            <td width="80">
+                                                <div class="number-control">
+                                                    <input type="text" class="form-control" id="field_top" />
+                                                    <a href="#" title="Plus" class="plus" id="pos-top-plus"></a>
+                                                    <a href="#" title="Minus" class="minus" id="pos-top-minus"></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td class="text-center bold light">Left</td>
+                                            <td class="text-center bold light">Top</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="form-section has-line">
+                                <input type="button" class="btn-block" value="Rotate shape only by 90" id="rotate-90" />
+                            </div>
+                            <div class="form-section has-line checkbox-properties" style="display:none;">
+                                <ul>
+                                    <li class="option-box">
+                                        Check
+                                        <div class="onoffswitch">
+                                            <input type="checkbox" name="onOffSwitchChkChecked" class="onoffswitch-checkbox switch" id="onOffSwitchChkChecked" ison="1">
+                                            <label class="onoffswitch-label" for="onOffSwitchChkChecked">
+                                                <span class="onoffswitch-inner"></span>
+                                                <span class="onoffswitch-switch"></span>
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="form-section has-line draw-properties" style="display:none;">
+                                <ul>
+                                    <li class="option-box">
+                                        Draw Enable
+                                        <div class="onoffswitch">
+                                            <input type="checkbox" name="onOffSwitchDrawEnable" class="onoffswitch-checkbox switch" id="onOffSwitchDrawEnable" ison="1">
+                                            <label class="onoffswitch-label" for="onOffSwitchDrawEnable">
+                                                <span class="onoffswitch-inner"></span>
+                                                <span class="onoffswitch-switch"></span>
+                                            </label>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="form-section has-line" style="display:none;">
+                                <label class="control-label bold group">Group</label>
+                                <div class="btn-list group">
+                                    <input type="button" class="btn-block" value="Make Group" id="groupElement" />
+                                </div>
+                                <label class="control-label bold ungroup" style="display:none;">Ungroup</label>
+                                <div class="btn-list ungroup" style="display:none;">
+                                    <input type="button" class="btn-block" value="UnGroup" id="ungroupElement" />
+                                </div>
+                            </div>
+                            <div class="form-section has-line draw-properties">
+                                <table class="control-table">
+                                    <tbody>
+                                        <tr>
+                                            <td class="bold">Line Width</td>
+                                            <td width="80">
+                                                <div class="number-control">
+                                                    <input type="text" class="form-control" id="field_lineWidth" />
+                                                    <a href="#" title="Plus" class="plus" id="lineWidth-plus"></a>
+                                                    <a href="#" title="Minus" class="minus" id="lineWidth-minus"></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="form-section has-line image-align-properties">
+                                <label class="control-label bold">Align</label>
+                                <div class="btn-list">
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Left Align Image" id="left-align-img"><img src="/Images/Document/left-alignment-img.svg" alt="Left Align Image"></a>
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Center Align Image" id="center-align-img"><img src="/Images/Document/center-align-img.svg" alt="Center Align Image"></a>
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Right Align Image" id="right-align-img"><img src="/Images/Document/right-align-img.svg" alt="Right Align Image"></a>
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Top Align Image" id="top-align-img"><img src="/Images/Document/top-align-img.svg" alt="Top Align Image"></a>
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Middle Align Image" id="middle-align-img"><img src="/Images/Document/middle-align-img.svg" alt="Middle Align Image"></a>
+                                    <a href="#" class="btn btn-iconic btn-default no-cursor" title="Bottom Align Image" id="bottom-align-img"><img src="/Images/Document/bottom-align-img.svg" alt="Bottom Align Image"></a>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane font-edit-block" id="text-pane">
+                            <div class="form-section has-line">
+                                <div class="form-group">
+                                    <label class="control-label">Font</label>
+                                    <select class="form-control" id="FontFamily">
+                                        <option value="arialmt">Arial</option>
+                                        <option value="candara">Candara</option>
+                                        <option value="courier">Courier</option>
+                                        <option value="helvetica">Helvetica</option>
+                                    </select>
+                                </div>
+                                <div class="control-table">
+                                    <ul>
+                                        <li>
+                                            <a href="#" class="bold" id="text-bold"></a>
+                                            <a href="#" class="italic" id="text-italic"></a>
+                                            @*<a href="#" class="underline" id="text-underline"></a>*@
+                                        </li>
+                                        <li>
+                                            <div class="number-control">
+                                                <input type="text" class="form-control valid" id="font-size" value="10px">
+                                                <a href="#" title="Plus" class="plus" id="font-size-plus"></a>
+                                                <a href="#" title="Minus" class="minus" id="font-size-minus"></a>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <ul>
+                                        <li>
+                                            <a href="#" class="text-left active" id="text-left"></a>
+                                            <a href="#" class="text-center" id="text-center"></a>
+                                            <a href="#" class="text-right" id="text-right"></a>
+                                        </li>
+                                    </ul>
+                                    @*<ul>
+                                            <li>
+                                                <div class="form-section has-line line-height-div">
+                                                    <table class="control-table">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td class="bold">Line Height</td>
+                                                                <td width="80">
+                                                                    <div class="number-control">
+                                                                        <input type="text" class="form-control valid" id="line-height" value="18px">
+                                                                        <a href="#" title="Plus" class="plus" id="line-height-plus"></a>
+                                                                        <a href="#" title="Minus" class="minus" id="line-height-minus"></a>
+                                                                    </div>
+                                                                </td>
+
+                                                            </tr>
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                            </li>
+                                        </ul>*@
+                                </div>
+                            </div>
+                            <div class="form-section has-line color-properties">
+                                <table class="control-table">
+                                    <tr>
+                                        <td class="checkbox-block"><input type="checkbox" checked="" id="text-color-chk"></td>
+                                        <td>
+                                            <label class="control-label">Font Color</label>
+                                        </td>
+                                        <td align="right" id="text-color-choice">
+                                            <input type="text" id="text-color-spectrum">
+                                            @*<button type="button" class="geColorBtn"><div style="background-color:#000000;" id="text-color-spectrum"></div></button>*@
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="checkbox-block"><input type="checkbox" checked="" id="bg-color-chk"></td>
+                                        <td>
+                                            <label class="control-label">Background Color</label>
+                                        </td>
+                                        <td align="right" id="bg-color-choice">
+                                            <input type="text" id="bg-color-spectrum">
+                                            @*<button type="button" class="geColorBtn"><div style="background-color:#CBF7CB;" id="bg-color-spectrum"></div></button>*@
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="checkbox-block"><input type="checkbox" checked="" id="border-color-chk"></td>
+                                        <td>
+                                            <label class="control-label">Border Color</label>
+                                        </td>
+                                        <td align="right" id="border-color-choice">
+                                            <input type="text" id="border-color-spectrum">
+                                            @*<button type="button" class="geColorBtn"><div style="background-color:#0000ff;" id="border-color-spectrum"></div></button>*@
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="outliner-pane" class="tab-pane active">
+                            <div class="form-section">
+                                <div class="outliner-filter">
+                                    <label class="control-label">Filter outliner</label>
+                                    <ul class="outliner-filter-tag">
+                                        <li class="active">
+                                            <a href="#" title="Text Box" id="filter-textbox">
+                                                <svg width="100%" height="100%" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+                                                <g transform="matrix(1,0,0,1,0.705034,-14.2261)">
+                                                <g transform="matrix(1.48152,0,0,1.48152,-68.6326,92.8935)">
+                                                <path d="M160.244,43.953L91.124,43.953L91.124,18.897L257.876,18.897L257.876,43.953L188.756,43.953L188.756,220.497L160.244,220.497L160.244,43.953Z" style="fill:rgb(86,91,93);fill-rule:nonzero;" />
+                                                    </g>
+                                                <g transform="matrix(1.03933,0,0,1.03933,176.203,190.395)">
+                                                <path d="M160.244,43.953L91.124,43.953L91.124,18.897L257.876,18.897L257.876,43.953L188.756,43.953L188.756,220.497L160.244,220.497L160.244,43.953Z" style="fill:rgb(86,91,93);fill-rule:nonzero;" />
+                                                    </g>
+                                                    </g>
+                                                </svg>
+                                            </a>
+                                        </li>
+                                        <li class="active">
+                                            <a href="#" title="Text Area" id="filter-textarea">
+                                                <svg width="100%" height="100%" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+                                                <g transform="matrix(1,0,0,1,-9.75,-31.751)">
+                                                <path d="M479.751,68.749L447.75,68.749C438.914,68.749 431.751,75.912 431.751,84.751L431.751,92.752L99.749,92.752L99.749,84.751C99.749,75.912 92.586,68.749 83.75,68.749L51.749,68.749C42.913,68.749 35.75,75.912 35.75,84.751L35.75,116.749C35.75,125.585 42.913,132.748 51.749,132.748L59.75,132.748L59.75,442.748L51.749,442.748C42.913,442.748 35.75,449.911 35.75,458.75L35.75,490.748C35.75,499.584 42.913,506.753 51.749,506.753L83.75,506.753C92.586,506.753 99.749,499.584 99.749,490.748L99.749,482.75L431.751,482.75L431.751,490.748C431.751,499.584 438.914,506.753 447.75,506.753L479.751,506.753C488.587,506.753 495.75,499.584 495.75,490.748L495.75,458.75C495.75,449.911 488.587,442.748 479.751,442.748L471.75,442.748L471.75,132.748L479.751,132.748C488.587,132.748 495.75,125.585 495.75,116.749L495.75,84.751C495.75,75.912 488.587,68.749 479.751,68.749ZM455.748,442.748L447.75,442.748C438.914,442.748 431.751,449.911 431.751,458.75L431.751,466.751L99.749,466.751L99.749,458.75C99.749,449.911 92.586,442.748 83.75,442.748L75.752,442.748L75.752,132.748L83.75,132.748C92.586,132.748 99.749,125.585 99.749,116.749L99.749,108.751L431.751,108.751L431.751,116.749C431.751,125.585 438.914,132.748 447.75,132.748L455.748,132.748L455.748,442.748Z" style="fill:rgb(86,91,93);fill-rule:nonzero;stroke:rgb(86,91,93);stroke-width:5px;" />    </g>
+                                                <g transform="matrix(1,0,0,1,-0.647282,16.182)">
+                                                <rect x="297.75" y="145.412" width="110.038" height="22.655" style="fill:rgb(86,91,93);" />
+                                                </g>
+                                                <g transform="matrix(1,0,0,1,-0.647282,79.6157)">
+                                                <rect x="297.75" y="145.412" width="110.038" height="22.655" style="fill:rgb(86,91,93);" />
+                                                </g>
+                                                <g transform="matrix(1,0,0,1,-0.647282,144.991)">
+                                                <rect x="297.75" y="145.412" width="110.038" height="22.655" style="fill:rgb(86,91,93);" />
+                                                </g>
+                                                <g transform="matrix(0.845934,0,0,0.845934,40.4197,127.559)">
+                                                <path d="M160.244,43.953L91.124,43.953L91.124,18.897L257.876,18.897L257.876,43.953L188.756,43.953L188.756,220.497L160.244,220.497L160.244,43.953Z" style="fill:rgb(86,91,93);fill-rule:nonzero;" />
+                                                </g>
+                                                </svg>
+                                            </a>
+                                        </li>
+                                        <li class="active">
+                                            <a href="#" title="Signature" id="filter-signature">
+                                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve" width="512px" height="512px">
+                                                <g>
+                                                <g>
+                                                <path d="M256.052,61.773L145.959,16.169c-3.675-1.521-7.805-1.521-11.48,0c-3.675,1.522-6.596,4.442-8.118,8.118L81.627,132.285    L3.454,226.539c-3.155,3.805-4.233,8.919-2.884,13.673l42.436,149.457c1.252,4.411,4.453,8.007,8.689,9.762    c1.843,0.764,3.794,1.142,5.74,1.142c2.526,0,5.044-0.638,7.307-1.899L200.43,323c4.316-2.407,7.17-6.786,7.629-11.707    l11.376-121.926L264.17,81.372C267.34,73.719,263.706,64.944,256.052,61.773z M178.921,300.644l-91.12,50.817l38.828-93.74    c3.17-7.653-0.464-16.429-8.118-19.599c-7.653-3.17-16.429,0.464-19.599,8.118l-38.829,93.742L31.586,239.613L99.1,158.212    l44.823,18.565l44.823,18.566L178.921,300.644z M196.591,166.12l-58.626-24.282l-23.75-9.837l34.121-82.375l82.376,34.122    L196.591,166.12z" fill="#565b5d" />
+                                                </g>
+                                                </g>
+                                                <g>
+                                                <g>
+                                                <path d="M497,274.172H336.334c-34.849,0-63.201,28.352-63.201,63.201c0,34.848,28.352,63.199,63.201,63.199    c18.306,0,33.199,14.893,33.199,33.199c0,18.308-14.893,33.201-33.199,33.201H15c-8.284,0-15,6.716-15,15s6.716,15,15,15h321.334    c34.848,0,63.199-28.352,63.199-63.201c0-34.848-28.351-63.199-63.199-63.199c-18.307,0-33.201-14.894-33.201-33.199    c0-18.308,14.894-33.201,33.201-33.201H497c8.284,0,15-6.716,15-15S505.284,274.172,497,274.172z" fill="#565b5d" />                                                </g>
+                                                </g>
+                                                </svg>
+                                            </a>
+                                        </li>
+                                        <li class="active">
+                                            <a href="#" title="Checkbox" id="filter-checkbox">
+                                                <svg width="100%" height="100%" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+                                                <g>
+                                                <g transform="matrix(0.721871,0,0,0.721871,71.201,71.201)">
+                                                <path d="M225.067,339.465C226.637,340.719 228.523,341.333 230.4,341.333C232.755,341.333 235.102,340.361 236.783,338.466L373.316,184.866C376.448,181.35 376.132,175.949 372.608,172.826C369.075,169.685 363.691,170.01 360.559,173.534L229.41,321.075L150.4,257.869C146.731,254.925 141.346,255.539 138.411,259.2C135.467,262.886 136.064,268.254 139.742,271.198L225.067,339.465Z" style="fill:rgb(86,91,93);fill-rule:nonzero;" />
+                                                <path d="M367.16,161.662L367.37,161.666L367.581,161.673L367.791,161.682L368,161.693L368.21,161.707L368.421,161.724L368.629,161.743L368.839,161.764L369.05,161.788L369.258,161.815L369.468,161.844L369.677,161.876L369.886,161.91L370.094,161.947L370.302,161.986L370.511,162.028L370.717,162.072L370.924,162.119L371.131,162.169L371.338,162.221L371.544,162.276L371.75,162.333L371.955,162.393L372.158,162.455L372.362,162.52L372.566,162.588L372.77,162.658L372.971,162.731L373.173,162.806L373.374,162.884L373.574,162.964L373.773,163.048L373.971,163.133L374.17,163.222L374.368,163.313L374.562,163.405L374.758,163.501L374.952,163.6L375.145,163.701L375.338,163.804L375.529,163.91L375.719,164.019L375.908,164.13L376.096,164.244L376.283,164.36L376.469,164.479L376.654,164.6L376.837,164.724L377.018,164.85L377.198,164.978L377.377,165.11L377.556,165.244L377.732,165.38L377.906,165.518L378.079,165.658L378.252,165.802L378.422,165.948L378.585,166.091L378.747,166.236L378.912,166.388L379.076,166.543L379.236,166.698L379.394,166.855L379.551,167.015L379.704,167.176L379.856,167.339L380.005,167.502L380.152,167.668L380.298,167.837L380.439,168.005L380.579,168.175L380.717,168.347L380.852,168.521L380.984,168.695L381.115,168.872L381.243,169.049L381.368,169.228L381.491,169.409L381.612,169.59L381.731,169.773L381.846,169.957L381.959,170.142L382.07,170.328L382.179,170.516L382.284,170.703L382.387,170.892L382.489,171.084L382.587,171.275L382.683,171.466L382.776,171.659L382.867,171.854L382.955,172.049L383.041,172.244L383.125,172.441L383.206,172.64L383.285,172.837L383.36,173.035L383.434,173.235L383.504,173.435L383.573,173.636L383.639,173.838L383.702,174.039L383.763,174.241L383.822,174.444L383.878,174.651L383.931,174.853L383.982,175.056L384.03,175.262L384.077,175.47L384.12,175.676L384.161,175.881L384.2,176.088L384.236,176.295L384.269,176.502L384.3,176.71L384.328,176.918L384.354,177.126L384.378,177.334L384.399,177.543L384.418,177.752L384.434,177.962L384.447,178.171L384.458,178.38L384.467,178.589L384.473,178.798L384.476,179.009L384.477,179.221L384.476,179.43L384.472,179.639L384.465,179.85L384.457,180.059L384.445,180.267L384.431,180.478L384.414,180.689L384.395,180.899L384.374,181.107L384.35,181.316L384.323,181.527L384.294,181.735L384.263,181.942L384.228,182.153L384.191,182.362L384.152,182.568L384.11,182.776L384.066,182.984L384.018,183.191L383.969,183.398L383.917,183.602L383.862,183.81L383.805,184.015L383.745,184.22L383.683,184.424L383.618,184.628L383.55,184.832L383.481,185.033L383.408,185.235L383.332,185.438L383.254,185.639L383.174,185.839L383.092,186.036L383.006,186.236L382.917,186.434L382.827,186.631L382.734,186.826L382.638,187.022L382.539,187.217L382.438,187.409L382.335,187.601L382.229,187.793L382.12,187.984L382.009,188.172L381.895,188.361L381.778,188.548L381.659,188.734L381.538,188.917L381.414,189.101L381.288,189.283L381.159,189.463L381.027,189.643L380.895,189.819L380.757,189.997L380.618,190.172L380.478,190.344L380.334,190.517L380.188,190.687L380.062,190.83L243.496,344.467L243.357,344.622L243.192,344.8L243.027,344.974L242.858,345.146L242.689,345.315L242.515,345.484L242.341,345.648L242.166,345.809L241.988,345.967L241.809,346.123L241.628,346.276L241.444,346.428L241.258,346.576L241.072,346.721L240.883,346.864L240.692,347.004L240.502,347.14L240.309,347.274L240.114,347.406L239.919,347.534L239.722,347.659L239.523,347.782L239.323,347.902L239.121,348.02L238.918,348.134L238.716,348.244L238.511,348.353L238.304,348.459L238.096,348.562L237.889,348.662L237.68,348.758L237.47,348.852L237.259,348.944L237.046,349.032L236.834,349.117L236.621,349.2L236.406,349.279L236.19,349.356L235.973,349.431L235.757,349.501L235.54,349.569L235.32,349.635L235.101,349.697L234.884,349.756L234.662,349.813L234.441,349.867L234.22,349.918L233.997,349.966L233.777,350.01L233.555,350.052L233.329,350.092L233.106,350.128L232.883,350.162L232.658,350.192L232.434,350.22L232.208,350.245L231.982,350.266L231.756,350.285L231.532,350.301L231.306,350.315L231.079,350.325L230.853,350.332L230.626,350.336L230.384,350.338L230.039,350.334L229.679,350.323L229.319,350.305L228.959,350.279L228.599,350.246L228.24,350.205L227.88,350.157L227.521,350.101L227.165,350.038L226.807,349.967L226.45,349.889L226.096,349.803L225.743,349.71L225.39,349.609L225.038,349.501L224.688,349.384L224.341,349.261L223.996,349.129L223.652,348.991L223.312,348.845L222.972,348.69L222.635,348.528L222.301,348.359L221.97,348.182L221.642,347.998L221.317,347.806L220.996,347.607L220.679,347.4L220.364,347.186L220.054,346.965L219.748,346.736L219.482,346.528L134.093,278.21L133.941,278.086L133.769,277.943L133.598,277.798L133.431,277.651L133.265,277.502L133.101,277.351L132.94,277.199L132.78,277.044L132.623,276.888L132.468,276.73L132.316,276.57L132.165,276.409L132.017,276.246L131.871,276.082L131.727,275.915L131.587,275.748L131.447,275.579L131.311,275.408L131.176,275.236L131.045,275.063L130.915,274.888L130.788,274.712L130.663,274.534L130.54,274.355L130.421,274.176L130.303,273.994L130.188,273.812L130.075,273.629L129.964,273.443L129.856,273.258L129.751,273.072L129.648,272.883L129.547,272.694L129.449,272.505L129.353,272.314L129.26,272.122L129.169,271.929L129.081,271.736L128.994,271.541L128.911,271.345L128.83,271.15L128.751,270.953L128.675,270.755L128.601,270.556L128.53,270.358L128.461,270.158L128.395,269.957L128.331,269.757L128.269,269.555L128.21,269.352L128.154,269.15L128.1,268.947L128.048,268.743L127.999,268.538L127.952,268.333L127.908,268.129L127.866,267.922L127.827,267.716L127.79,267.51L127.756,267.302L127.724,267.095L127.695,266.887L127.668,266.68L127.644,266.472L127.622,266.262L127.602,266.053L127.585,265.845L127.571,265.636L127.559,265.427L127.549,265.217L127.543,265.006L127.538,264.797L127.536,264.587L127.537,264.376L127.54,264.166L127.545,263.957L127.553,263.746L127.564,263.535L127.577,263.326L127.593,263.115L127.611,262.906L127.632,262.696L127.655,262.485L127.681,262.275L127.71,262.065L127.741,261.856L127.774,261.646L127.81,261.438L127.849,261.229L127.89,261.02L127.934,260.813L127.98,260.604L128.029,260.396L128.081,260.189L128.135,259.982L128.192,259.776L128.251,259.571L128.313,259.365L128.378,259.159L128.445,258.954L128.515,258.751L128.587,258.549L128.662,258.346L128.739,258.143L128.82,257.942L128.902,257.742L128.988,257.542L129.076,257.342L129.166,257.145L129.259,256.948L129.355,256.751L129.454,256.555L129.555,256.361L129.658,256.167L129.764,255.975L129.872,255.784L129.984,255.593L130.098,255.403L130.214,255.216L130.333,255.029L130.455,254.843L130.579,254.658L130.705,254.476L130.834,254.294L130.966,254.113L131.1,253.934L131.236,253.757L131.38,253.574L131.527,253.393L131.67,253.221L131.816,253.051L131.963,252.883L132.112,252.718L132.263,252.554L132.416,252.393L132.57,252.234L132.727,252.077L132.884,251.923L133.044,251.771L133.205,251.62L133.369,251.472L133.533,251.327L133.699,251.184L133.866,251.043L134.036,250.904L134.206,250.768L134.378,250.634L134.551,250.502L134.727,250.373L134.902,250.247L135.079,250.122L135.258,250L135.438,249.88L135.618,249.764L135.801,249.648L135.984,249.536L136.168,249.426L136.354,249.318L136.541,249.213L136.728,249.11L136.917,249.01L137.106,248.912L137.297,248.817L137.489,248.723L137.681,248.633L137.874,248.545L138.067,248.459L138.263,248.375L138.459,248.294L138.655,248.216L138.853,248.14L139.051,248.066L139.249,247.995L139.448,247.927L139.648,247.86L139.849,247.797L140.05,247.735L140.252,247.676L140.454,247.62L140.657,247.566L140.861,247.514L141.065,247.465L141.269,247.418L141.474,247.374L141.679,247.333L141.886,247.293L142.091,247.256L142.298,247.222L142.506,247.19L142.713,247.161L142.92,247.134L143.128,247.109L143.337,247.087L143.544,247.067L143.753,247.05L143.962,247.036L144.172,247.023L144.382,247.014L144.591,247.007L144.8,247.002L145.009,247L145.22,247L145.431,247.003L145.64,247.008L145.85,247.016L146.061,247.026L146.271,247.039L146.481,247.055L146.691,247.073L146.901,247.093L147.112,247.116L147.322,247.142L147.531,247.17L147.74,247.201L147.95,247.234L148.16,247.27L148.369,247.308L148.578,247.35L148.785,247.393L148.993,247.439L149.202,247.488L149.41,247.54L149.617,247.594L149.823,247.65L150.03,247.709L150.236,247.771L150.441,247.836L150.646,247.903L150.85,247.972L151.054,248.045L151.257,248.12L151.459,248.197L151.662,248.278L151.862,248.361L152.062,248.446L152.261,248.534L152.461,248.625L152.658,248.719L152.856,248.815L153.052,248.914L153.247,249.015L153.441,249.119L153.634,249.225L153.826,249.335L154.017,249.446L154.206,249.56L154.396,249.678L154.583,249.797L154.769,249.919L154.954,250.044L155.138,250.172L155.32,250.301L155.501,250.434L155.68,250.568L155.858,250.705L156.007,250.823L228.36,308.704L353.847,167.531L353.977,167.387L354.13,167.221L354.284,167.059L354.438,166.9L354.595,166.742L354.754,166.587L354.915,166.433L355.078,166.281L355.241,166.133L355.407,165.986L355.574,165.842L355.742,165.701L355.913,165.561L356.085,165.423L356.257,165.289L356.432,165.156L356.608,165.026L356.785,164.899L356.964,164.773L357.143,164.651L357.325,164.53L357.508,164.412L357.69,164.296L357.875,164.184L358.061,164.072L358.248,163.964L358.435,163.859L358.626,163.755L358.815,163.654L359.005,163.557L359.198,163.46L359.392,163.366L359.585,163.276L359.78,163.187L359.975,163.101L360.171,163.018L360.368,162.937L360.566,162.859L360.765,162.782L360.964,162.709L361.163,162.638L361.365,162.569L361.567,162.503L361.769,162.439L361.97,162.379L362.174,162.32L362.378,162.264L362.582,162.21L362.787,162.159L362.991,162.11L363.197,162.064L363.403,162.021L363.61,161.979L363.817,161.941L364.023,161.905L364.231,161.871L364.439,161.84L364.647,161.811L364.855,161.785L365.063,161.761L365.273,161.74L365.483,161.722L365.691,161.705L365.9,161.692L366.11,161.681L366.32,161.672L366.53,161.666L366.739,161.662L366.95,161.661L367.16,161.662ZM366.842,170.666L366.74,170.668L366.637,170.671L366.535,170.675L366.433,170.681L366.331,170.687L366.229,170.695L366.127,170.704L366.025,170.714L365.923,170.726L365.822,170.739L365.72,170.753L365.619,170.768L365.518,170.784L365.417,170.802L365.316,170.821L365.216,170.841L365.116,170.862L365.016,170.884L364.916,170.908L364.816,170.933L364.717,170.959L364.618,170.986L364.519,171.015L364.42,171.045L364.322,171.075L364.224,171.108L364.127,171.141L364.03,171.175L363.933,171.211L363.836,171.248L363.74,171.286L363.645,171.326L363.549,171.366L363.454,171.408L363.36,171.451L363.266,171.495L363.172,171.54L363.079,171.587L362.987,171.634L362.895,171.683L362.803,171.733L362.712,171.785L362.621,171.837L362.531,171.891L362.442,171.946L362.353,172.002L362.264,172.059L362.176,172.117L362.089,172.177L362.002,172.238L361.916,172.3L361.831,172.363L361.746,172.427L361.662,172.493L361.579,172.559L361.496,172.627L361.414,172.696L361.332,172.767L361.252,172.838L361.172,172.911L361.092,172.984L361.014,173.059L360.936,173.136L360.859,173.213L360.783,173.291L360.707,173.371L360.633,173.452L360.559,173.534L229.41,321.075L150.4,257.869L150.314,257.8L150.227,257.733L150.139,257.668L150.051,257.603L149.962,257.54L149.873,257.478L149.783,257.418L149.693,257.358L149.602,257.3L149.511,257.244L149.419,257.188L149.326,257.134L149.233,257.081L149.14,257.03L149.046,256.98L148.952,256.931L148.857,256.883L148.762,256.836L148.666,256.791L148.57,256.747L148.474,256.705L148.377,256.664L148.28,256.624L148.183,256.585L148.085,256.547L147.987,256.511L147.888,256.476L147.789,256.442L147.69,256.41L147.591,256.379L147.491,256.349L147.391,256.32L147.291,256.293L147.191,256.266L147.09,256.241L146.99,256.218L146.889,256.195L146.787,256.174L146.686,256.154L146.585,256.136L146.483,256.118L146.381,256.102L146.279,256.087L146.177,256.073L146.075,256.061L145.973,256.05L145.87,256.04L145.768,256.031L145.666,256.023L145.563,256.017L145.461,256.012L145.358,256.008L145.255,256.006L145.153,256.004L145.05,256.004L144.948,256.005L144.845,256.008L144.743,256.011L144.641,256.016L144.538,256.022L144.436,256.029L144.334,256.037L144.232,256.047L144.13,256.058L144.028,256.07L143.927,256.083L143.825,256.097L143.724,256.113L143.623,256.13L143.522,256.148L143.422,256.167L143.321,256.187L143.221,256.209L143.121,256.232L143.021,256.256L142.922,256.281L142.822,256.307L142.724,256.335L142.625,256.364L142.527,256.394L142.429,256.425L142.331,256.457L142.234,256.491L142.137,256.526L142.04,256.561L141.944,256.598L141.848,256.637L141.753,256.676L141.658,256.717L141.564,256.758L141.47,256.801L141.376,256.846L141.283,256.891L141.19,256.937L141.098,256.985L141.006,257.034L140.915,257.084L140.825,257.135L140.735,257.187L140.645,257.24L140.556,257.295L140.468,257.351L140.38,257.407L140.293,257.465L140.206,257.525L140.12,257.585L140.035,257.646L139.95,257.709L139.866,257.773L139.783,257.838L139.7,257.904L139.618,257.971L139.537,258.039L139.456,258.109L139.376,258.179L139.297,258.251L139.219,258.324L139.142,258.398L139.065,258.473L138.989,258.549L138.914,258.627L138.839,258.705L138.766,258.785L138.693,258.866L138.621,258.948L138.55,259.031L138.48,259.115L138.411,259.2L138.342,259.287L138.275,259.374L138.209,259.462L138.145,259.55L138.082,259.639L138.02,259.729L137.959,259.819L137.9,259.91L137.842,260.001L137.785,260.093L137.73,260.185L137.676,260.278L137.623,260.371L137.571,260.465L137.521,260.559L137.472,260.653L137.424,260.748L137.377,260.844L137.332,260.939L137.288,261.035L137.246,261.132L137.204,261.229L137.164,261.326L137.125,261.424L137.088,261.522L137.051,261.62L137.016,261.719L136.982,261.818L136.95,261.917L136.918,262.016L136.888,262.116L136.859,262.216L136.832,262.316L136.806,262.417L136.781,262.517L136.757,262.618L136.734,262.719L136.713,262.82L136.693,262.922L136.674,263.023L136.657,263.125L136.64,263.227L136.625,263.329L136.611,263.431L136.599,263.533L136.587,263.635L136.577,263.738L136.568,263.84L136.561,263.942L136.554,264.045L136.549,264.147L136.545,264.25L136.542,264.352L136.541,264.455L136.541,264.558L136.542,264.66L136.544,264.762L136.547,264.865L136.552,264.967L136.558,265.069L136.565,265.172L136.573,265.274L136.582,265.376L136.593,265.477L136.605,265.579L136.618,265.681L136.632,265.782L136.648,265.883L136.665,265.984L136.683,266.085L136.702,266.186L136.722,266.286L136.744,266.386L136.766,266.486L136.79,266.586L136.816,266.685L136.842,266.784L136.869,266.883L136.898,266.982L136.928,267.08L136.959,267.178L136.992,267.275L137.025,267.373L137.06,267.469L137.096,267.566L137.133,267.662L137.171,267.758L137.21,267.853L137.251,267.948L137.293,268.042L137.336,268.137L137.38,268.23L137.425,268.323L137.472,268.416L137.519,268.508L137.568,268.6L137.618,268.691L137.669,268.781L137.722,268.871L137.775,268.961L137.83,269.05L137.886,269.138L137.943,269.226L138.001,269.313L138.06,269.4L138.121,269.486L138.182,269.571L138.245,269.656L138.309,269.74L138.374,269.824L138.441,269.906L138.508,269.988L138.577,270.07L138.646,270.15L138.717,270.23L138.789,270.309L138.862,270.388L138.936,270.465L139.012,270.542L139.088,270.618L139.166,270.694L139.245,270.768L139.325,270.842L139.406,270.915L139.488,270.987L139.572,271.058L139.656,271.128L139.742,271.198L225.067,339.465L225.215,339.58L225.365,339.692L225.516,339.8L225.67,339.905L225.825,340.006L225.981,340.103L226.139,340.196L226.298,340.286L226.459,340.372L226.621,340.454L226.785,340.532L226.949,340.607L227.115,340.678L227.282,340.746L227.449,340.809L227.618,340.869L227.788,340.926L227.958,340.978L228.13,341.027L228.301,341.073L228.474,341.114L228.647,341.153L228.821,341.187L228.995,341.218L229.17,341.245L229.345,341.268L229.521,341.288L229.696,341.304L229.872,341.317L230.048,341.326L230.224,341.332L230.4,341.333L230.51,341.333L230.621,341.33L230.731,341.327L230.841,341.322L230.952,341.316L231.062,341.308L231.172,341.298L231.282,341.288L231.391,341.276L231.501,341.262L231.61,341.247L231.72,341.231L231.829,341.213L231.937,341.194L232.046,341.174L232.155,341.152L232.263,341.128L232.371,341.104L232.478,341.077L232.585,341.05L232.692,341.021L232.799,340.991L232.905,340.959L233.011,340.926L233.117,340.891L233.222,340.855L233.327,340.818L233.431,340.779L233.535,340.739L233.639,340.697L233.742,340.654L233.844,340.61L233.946,340.564L234.048,340.517L234.149,340.469L234.249,340.419L234.349,340.368L234.449,340.315L234.547,340.261L234.646,340.206L234.743,340.149L234.84,340.091L234.936,340.031L235.032,339.971L235.127,339.908L235.221,339.845L235.315,339.78L235.408,339.713L235.5,339.646L235.591,339.576L235.682,339.506L235.771,339.434L235.86,339.361L235.949,339.286L236.036,339.211L236.123,339.133L236.208,339.055L236.293,338.975L236.377,338.893L236.46,338.811L236.542,338.726L236.623,338.641L236.704,338.554L236.783,338.466L373.316,184.866L373.389,184.783L373.461,184.7L373.531,184.616L373.6,184.531L373.667,184.446L373.734,184.36L373.799,184.273L373.863,184.186L373.926,184.098L373.987,184.01L374.047,183.921L374.106,183.831L374.164,183.741L374.22,183.65L374.276,183.559L374.33,183.467L374.382,183.375L374.434,183.283L374.484,183.189L374.533,183.096L374.58,183.002L374.627,182.907L374.672,182.812L374.716,182.717L374.759,182.621L374.8,182.525L374.84,182.429L374.879,182.332L374.917,182.235L374.953,182.137L374.988,182.039L375.022,181.941L375.055,181.842L375.087,181.743L375.117,181.644L375.146,181.545L375.174,181.445L375.2,181.345L375.225,181.245L375.25,181.145L375.272,181.044L375.294,180.943L375.314,180.842L375.333,180.741L375.351,180.64L375.368,180.538L375.383,180.437L375.398,180.335L375.411,180.233L375.422,180.131L375.433,180.029L375.442,179.927L375.45,179.825L375.457,179.722L375.463,179.62L375.467,179.518L375.47,179.415L375.472,179.313L375.473,179.21L375.472,179.108L375.471,179.006L375.468,178.903L375.464,178.801L375.458,178.699L375.452,178.597L375.444,178.494L375.435,178.392L375.424,178.291L375.413,178.189L375.4,178.087L375.386,177.986L375.371,177.884L375.355,177.783L375.337,177.682L375.319,177.581L375.299,177.481L375.277,177.381L375.255,177.28L375.231,177.18L375.207,177.081L375.181,176.981L375.153,176.882L375.125,176.783L375.095,176.685L375.064,176.587L375.032,176.489L374.999,176.391L374.965,176.294L374.929,176.197L374.892,176.101L374.854,176.005L374.815,175.909L374.774,175.814L374.733,175.719L374.69,175.624L374.646,175.53L374.601,175.437L374.554,175.343L374.507,175.251L374.458,175.159L374.408,175.067L374.356,174.976L374.304,174.885L374.25,174.795L374.196,174.706L374.14,174.617L374.082,174.528L374.024,174.441L373.965,174.353L373.904,174.267L373.842,174.181L373.779,174.095L373.714,174.011L373.649,173.927L373.582,173.843L373.514,173.761L373.445,173.679L373.375,173.597L373.304,173.517L373.231,173.437L373.157,173.358L373.082,173.279L373.006,173.202L372.929,173.125L372.851,173.049L372.771,172.974L372.69,172.899L372.608,172.826L372.525,172.753L372.441,172.681L372.357,172.611L372.272,172.541L372.186,172.473L372.099,172.407L372.012,172.341L371.925,172.277L371.837,172.214L371.748,172.153L371.659,172.093L371.569,172.034L371.479,171.976L371.388,171.919L371.296,171.864L371.204,171.81L371.112,171.757L371.019,171.706L370.926,171.655L370.832,171.606L370.738,171.559L370.643,171.512L370.548,171.467L370.453,171.423L370.357,171.38L370.26,171.339L370.164,171.298L370.067,171.259L369.969,171.222L369.872,171.185L369.774,171.15L369.675,171.116L369.577,171.083L369.478,171.052L369.379,171.021L369.279,170.992L369.179,170.964L369.079,170.938L368.979,170.913L368.879,170.889L368.778,170.866L368.677,170.844L368.576,170.824L368.475,170.805L368.374,170.787L368.272,170.77L368.171,170.755L368.069,170.74L367.967,170.727L367.865,170.716L367.763,170.705L367.661,170.696L367.559,170.688L367.456,170.681L367.354,170.676L367.252,170.671L367.149,170.668L367.047,170.666L366.944,170.666L366.842,170.666Z" style="fill:rgb(86,91,93);" />
+                                                </g>
+                                                <g transform="matrix(0.721871,0,0,0.721871,71.201,71.201)">
+                                                <path d="M0,0L0,512L512,512L512,0L0,0ZM494.933,494.933L17.067,494.933L17.067,17.067L494.933,17.067L494.933,494.933Z" style="fill:rgb(86,91,93);fill-rule:nonzero;" />
+                                                <path d="M514.651,-6.399L516.898,-4.898L518.399,-2.651L518.926,0L518.926,512L518.399,514.651L516.898,516.898L514.651,518.399L512,518.926L0,518.926L-2.651,518.399L-4.898,516.898L-6.399,514.651L-6.926,512L-6.926,0L-6.399,-2.651L-4.898,-4.898L-2.651,-6.399L0,-6.926L512,-6.926L514.651,-6.399ZM0,0L0,512L512,512L512,0L0,0ZM494.933,494.933L17.067,494.933L17.067,17.067L494.933,17.067L494.933,494.933ZM23.993,23.993L23.993,488.007L488.007,488.007L488.007,23.993L23.993,23.993Z" style="fill:rgb(86,91,93);" />
+                                                </g>
+                                                </g>
+                                                </svg>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <label class="control-label">Filter By Page</label>
+                                    <select id="filter-outliner-bypage" class="form-control"></select>
+                                </div>
+                                <div class="form-group search-outliner">
+                                    <label class="control-label">Job Fields</label>
+                                    <input class="form-control" type="text" id="searchOutliner" onkeyup="serachOutliner();" placeholder="Search for outliners.." title="Type in a outliner">
+                                </div>
+                                <div id="field_outliner_dropdown" class="outliner_list">
+
+                                </div>
+                                @*<select class="form-control" id="field_outliner_dropdown" size="50" style="height:100%;" />*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @Html.HiddenFor(m => m.DocumentTemplateId)
+    @Html.Hidden("jobFieldValue")
+    @Html.Hidden("jobFieldLabel")
+    <div hidden="hidden">
+        @Html.DropDownList("jobFields", Model.JobFields, new { @class = "form-control" })
+    </div>
+</form>
+
+@*<div class="modal fade popupSelectOptionForDocumentPreviewDownload" tabindex="-1" id="popupSelectOptionForDocumentPreviewDownload">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center-serial">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close sprite-img" data-dismiss="modal" aria-label="Close"></button>
+                    <h4 class="modal-title">Select option for preview/download document</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="option-box">
+                            Without background color
+                            <div class="onoffswitch">
+                                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch" id="without-bg-color" checked="">
+                                <label class="onoffswitch-label" for="without-bg-color">
+                                    <span class="onoffswitch-inner"></span>
+                                    <span class="onoffswitch-switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="btn primary icon-btn dropdown-toggle">
+                        <span class="sprite-img preview_ic"></span>
+                        <input value="Preview" id="btnPreview" type="button">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>*@
+
+<div class="modal fade popupDocPreview" tabindex="-1" role="dialog" id="popupDocPreview">
+    <div class="vertical-alignment-helper">
+        <div class="modal-dialog vertical-align-center modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" style="display: inline-block;">Document Preview</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body" style="padding:0px">
+                    <div id="divViewer"></div>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+</div>
+<script>
+    var pdfUrl = '@Model.PDFURL';
+    var pdfname = '@Path.GetFileNameWithoutExtension(Model.PDFURL)';
+    var pdfloadurl = '@Model.PDFURL?h=@DateTime.Now.Ticks';
+    var stateId = '@Model.StateID';
+    var stateName = '@Model.StateName';
+    var pdfItemsStr = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model.Data))';
+    var jsonData = @Html.Raw(new JavaScriptSerializer().Serialize(a));
+    var pdfWorkerJsUrl = '@Url.Content("~/Scripts/pdf/pdf.worker.min.js")';
+    var textHashCode = '@SystemEnums.InputTypes.TEXT_FIELD.GetHashCode()';
+    var buttonHashCode = '@SystemEnums.InputTypes.BUTTON.GetHashCode()';
+    var radioButtonHashCode = '@SystemEnums.InputTypes.RADIO_BUTTON.GetHashCode()';
+    var checkBoxHashCode = '@SystemEnums.InputTypes.CHECK_BOX.GetHashCode()';
+    var renameFilenamUrl = '@Url.Action("RenameDocumentTemplateName", "DocumentTemplate")';
+    var getExportFieldValueUrl = '@Url.Action("GetExportValueByJobFieldId", "DocumentTemplate")';
+    var saveOpenDocumentTemplateUrl = '@Url.Action("SaveOpenDocumentTemplate", "DocumentTemplate")';
+    var jobSettingUrl = '@Url.Action("JobSetting", "JobSetting")';
+    var previewDocumentUrl = '@Url.Action("PreviewDocument", "JobSetting")';
+    var downloadDocumentUrl = '@Url.Action("DownloadDocument", "JobSetting")';
+</script>
+<script src="~/Scripts/View/Job/DocumentTemplate.dev.js?v=@ProjectConfiguration.ScriptVersion"></script>
+@*<script src="~/Scripts/View/Job/DocumentTemplate.dev.js"></script>*@
+
+<script>
+    jQuery.fn.onPositionChanged = function (trigger, millis) {
+        if (millis == null) millis = 100;
+        var o = $(this[0]); // our jquery object
+        if (o.length < 1) return o;
+
+        var lastPos = null;
+        var lastOff = null;
+        setInterval(function () {
+            if (o == null || o.length < 1) return o; // abort if element is non existend eny more
+            if (lastPos == null) lastPos = o.position();
+            if (lastOff == null) lastOff = o.offset();
+            var newPos = o.position();
+            var newOff = o.offset();
+            if (lastPos.top != newPos.top || lastPos.left != newPos.left) {
+                $(this).trigger('onPositionChanged', { lastPos: lastPos, newPos: newPos });
+                if (typeof (trigger) == "function") trigger(lastPos, newPos);
+                lastPos = o.position();
+            }
+            if (lastOff.top != newOff.top || lastOff.left != newOff.left) {
+                $(this).trigger('onOffsetChanged', { lastOff: lastOff, newOff: newOff });
+                if (typeof (trigger) == "function") trigger(lastOff, newOff);
+                lastOff = o.offset();
+            }
+        }, millis);
+
+        return o;
+    };
+
+
+</script>
+<style>
+
+    .signature canvas {
+        margin-right: 6% !important;
+        margin-left: 6% !important;
+        width: 88% !important;
+        height: 70% !important;
+        border: 1px dotted !important;
+    }
+    .drawing canvas{
+        margin:0px !important;
+        height:100% !important;
+    }
+    /*#holder .ui-selected {
+        background: #F39814;
+        color: white;
+    }*/
+    .blueBorder {
+        border: 3px solid blue !important;
+    }
+    /*#the-svg{
+        background :none !important;
+    }*/
+
+    .redBorder {
+        border: 2px solid red !important;
+    }
+
+    .document-icon {
+        height: 20px;
+        height: 20px;
+        width: 20px;
+    }
+
+    .image {
+        position: absolute;
+        object-fit: fill;
+    }
+    #filter-outliner-bypage{
+        height:35px;
+    }
+    .selection {
+        position: absolute;
+        border: 1px solid #89B;
+        background: #BCE;
+        background-color: #BEC;
+        border-color: #8B9;
+    }
+</style>
